@@ -20,7 +20,7 @@ export type Brand = {
 };
 
 type SessionLike = {
-  role: "agency" | "client" | "professional";
+  role: "admin" | "agency" | "client" | "professional";
   brandSource?: "agency" | "platform";
 } | null;
 

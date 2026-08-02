@@ -5,7 +5,7 @@ import { listProfessionals } from "./marketplace-db";
 export type User = {
   id: string;
   username: string;
-  role: "agency" | "client" | "professional";
+  role: "admin" | "agency" | "client" | "professional";
   refId: string | null;
   name: string;
   createdAt: string;
@@ -102,6 +102,17 @@ export function userExistsForRef(refId: string): boolean {
 // Seed: cria logins (senha luccas123) para a agência e para todos os
 // clientes/profissionais já cadastrados — idempotente
 const DEFAULT_PASSWORD = "luccas123";
+// Admin geral da plataforma: controla agências, clientes, profissionais,
+// planos e receita. Login: admin / luccas123
+if (!db.prepare("SELECT 1 FROM users WHERE role = 'admin'").get()) {
+  createUser({
+    username: "admin",
+    password: DEFAULT_PASSWORD,
+    role: "admin",
+    refId: null,
+    name: "Admin da Plataforma",
+  });
+}
 if (!db.prepare("SELECT 1 FROM users WHERE role = 'agency'").get()) {
   createUser({
     username: "agencia",

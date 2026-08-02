@@ -6,7 +6,7 @@ export const SESSION_COOKIE = "agencyhub_session";
 
 export type SessionPayload = {
   userId: string;
-  role: "agency" | "client" | "professional";
+  role: "admin" | "agency" | "client" | "professional";
   refId: string | null; // clientId ou professionalId
   name: string;
   // Whitelabel: "agency" = vê a marca da agência que o convidou; "platform" =

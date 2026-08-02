@@ -17,6 +17,16 @@ export async function middleware(request: NextRequest) {
     url.pathname = "/login";
     return NextResponse.redirect(url);
   }
+  // /admin é exclusivo do admin da plataforma
+  if (pathname.startsWith("/admin") && session.role !== "admin") {
+    const url = request.nextUrl.clone();
+    url.pathname = "/";
+    return NextResponse.redirect(url);
+  }
+  // Admin e agência circulam livremente (admin vê tudo)
+  if (session.role === "admin") {
+    return NextResponse.next();
+  }
   if (session.role === "client") {
     const allowed = `/portal/client/${session.refId}`;
     if (!pathname.startsWith(allowed)) {

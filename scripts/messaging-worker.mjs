@@ -47,16 +47,33 @@ function run(cmd, args) {
   });
 }
 
-// Garante Playwright + Chromium instalados (usuário não usa terminal).
+// Garante o PACOTE Playwright instalado (usuário não usa terminal).
 async function ensurePlaywright() {
   try {
     return (await import("playwright")).chromium;
   } catch {
     writeStatus("installing", "Instalando o motor de automação (uma vez só)…");
     await run("npm", ["install", "-D", "playwright"]);
-    await run("npx", ["playwright", "install", "chromium"]);
-    writeStatus("installing", "Motor instalado, abrindo…");
+    writeStatus("installing", "Motor instalado, preparando o navegador…");
     return (await import("playwright")).chromium;
+  }
+}
+
+// Abre o contexto persistente; se o BINÁRIO do Chromium não estiver baixado
+// (erro "Executable doesn't exist"), baixa sob demanda e tenta de novo.
+async function launchContext(chromium) {
+  const opts = { headless: false, viewport: { width: 1100, height: 800 } };
+  try {
+    return await chromium.launchPersistentContext(userDataDir, opts);
+  } catch (e) {
+    const msg = String(e?.message ?? e);
+    if (msg.includes("Executable doesn't exist") || msg.includes("playwright install")) {
+      writeStatus("installing", "Baixando o navegador (uma vez só, ~1 min)…");
+      await run("npx", ["playwright", "install", "chromium"]);
+      writeStatus("starting", "Navegador pronto, abrindo…");
+      return await chromium.launchPersistentContext(userDataDir, opts);
+    }
+    throw e;
   }
 }
 
