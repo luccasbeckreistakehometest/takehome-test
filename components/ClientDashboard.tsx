@@ -124,6 +124,9 @@ export default function ClientDashboard({
           <Link href={`/portal/client/${client.id}`}>
             <Button variant="ghost">👤 Ver como cliente</Button>
           </Link>
+          <Link href="/plans">
+            <Button variant="ghost">💎 Planos & coins</Button>
+          </Link>
         </div>
       </Card>
 

@@ -4,6 +4,7 @@ import { createGeneration, getClient, listGenerations } from "@/lib/db";
 import { createJob, finishJob, getPlatformSnapshot, logActivity } from "@/lib/marketplace-db";
 import { buildGenerationSpec } from "@/lib/prompts";
 import { generateSchema } from "@/lib/validation";
+import { chargeUsage } from "@/lib/billing-db";
 
 // Gerações com pesquisa web e landing pages podem levar alguns minutos
 export const maxDuration = 300;
@@ -18,6 +19,16 @@ export async function POST(request: Request) {
   const client = getClient(clientId);
   if (!client) {
     return NextResponse.json({ error: "Cliente não encontrado" }, { status: 404 });
+  }
+
+  // Metering de IA: cobra coins da conta do cliente. Só bloqueia se o
+  // enforcement estiver ligado (default OFF) — senão apenas registra o uso.
+  const charge = chargeUsage({ accountType: "client", accountId: clientId, action: type });
+  if (!charge.ok) {
+    return NextResponse.json(
+      { error: charge.reason ?? "Sem créditos de IA. Assine um plano ou compre coins." },
+      { status: 402 }
+    );
   }
 
   // A análise estratégica mais recente alimenta os demais entregáveis,

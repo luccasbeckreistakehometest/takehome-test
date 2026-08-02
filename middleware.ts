@@ -36,6 +36,10 @@ export async function middleware(request: NextRequest) {
   if (session.role === "admin") {
     return NextResponse.next();
   }
+  // Páginas de billing são acessíveis a qualquer conta logada
+  if (pathname.startsWith("/plans")) {
+    return NextResponse.next();
+  }
   if (session.role === "client") {
     const allowed = `/portal/client/${session.refId}`;
     if (!pathname.startsWith(allowed)) {

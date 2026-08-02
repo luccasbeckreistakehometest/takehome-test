@@ -37,6 +37,7 @@ const AGENCY_NAV: { href: string; label: string; icon: IconName }[] = [
   { href: "/professionals", label: "Profissionais", icon: "users" },
   { href: "/agenda", label: "Agenda", icon: "calendar" },
   { href: "/ideas", label: "Ideias", icon: "lightbulb" },
+  { href: "/plans", label: "Planos", icon: "money" },
 ];
 
 export default async function RootLayout({
