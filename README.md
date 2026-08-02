@@ -92,6 +92,8 @@ data/               # SQLite + uploads (gitignored)
 - **Pagamentos reais** (Stripe/Mercado Pago) por trás do fluxo de escrow
 - **Integrações OAuth** (Meta Ads, Google Ads/GA4, TikTok, Canva, Figma,
   Calendar/Meet, CRMs) — o hub e o catálogo já existem em Configurações
-- Radar de mercado agendado (cron diário chamando `POST /api/generate`)
+- **Agendamentos executáveis** (job runner/cron): radar de mercado diário,
+  lembretes de prazo de entrega e auto-publicação do calendário social nas
+  redes (via integrações)
 - Exportação de relatórios em PDF/slides e notificações (e-mail/WhatsApp)
 ```
