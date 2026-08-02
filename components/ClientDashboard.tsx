@@ -10,6 +10,7 @@ import type { Meeting } from "@/lib/marketplace-db";
 import type { TierInfo } from "@/lib/ranking";
 import { googleCalendarUrl } from "@/lib/gcal";
 import TierBadge, { TierProgress } from "./TierBadge";
+import OnboardingModal from "./OnboardingModal";
 import { Button, Card, SectionTitle, Spinner, Tag } from "./ui";
 
 type DashboardData = {
@@ -59,6 +60,7 @@ export default function ClientDashboard({
 
   return (
     <div className="space-y-6">
+      <OnboardingModal role="client" />
       {isNew && (
         <Card className="border-accent/40 bg-accent/5">
           <SectionTitle>👋 Comece por aqui</SectionTitle>

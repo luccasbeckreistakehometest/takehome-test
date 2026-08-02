@@ -11,6 +11,7 @@ type SettingsView = AgencySettings & {
   hasHfKey?: boolean;
 };
 import { Button, Card, CopyButton, ErrorBox, Input, Label, SectionTitle } from "@/components/ui";
+import InviteGenerator from "@/components/InviteGenerator";
 
 type IntegrationStatus = "live" | "beta" | "soon";
 const INTEGRATIONS: {
@@ -357,35 +358,7 @@ export default function SettingsPage() {
         </div>
       </Card>
 
-      <Card className="space-y-3">
-        <SectionTitle>Convites para externos</SectionTitle>
-        <p className="text-sm text-muted">
-          Compartilhe estes links para trazer gente de fora para dentro da
-          plataforma — cada um cai direto no fluxo certo do seu papel.
-        </p>
-        {[
-          {
-            label: "Convite para cliente (auto-cadastro de briefing)",
-            path: "/cadastro",
-          },
-          {
-            label: "Convite para fotógrafo/designer (cadastro de perfil)",
-            path: "/professionals/new",
-          },
-          { label: "Porta de entrada por papel (agência/cliente/profissional)", path: "/portal" },
-        ].map((invite) => (
-          <div
-            key={invite.path}
-            className="flex flex-wrap items-center justify-between gap-2 rounded-md border border-edge bg-surface-2 px-3 py-2 text-sm"
-          >
-            <div>
-              <p className="font-medium">{invite.label}</p>
-              <p className="font-mono text-xs text-muted">{origin + invite.path}</p>
-            </div>
-            <CopyButton text={origin + invite.path} label="Copiar link" />
-          </div>
-        ))}
-      </Card>
+      <InviteGenerator origin={origin} />
 
       <Card className="space-y-3">
         <SectionTitle>Integrações</SectionTitle>

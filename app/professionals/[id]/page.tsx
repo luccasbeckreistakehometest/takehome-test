@@ -14,6 +14,7 @@ import type { ProfessionalStats } from "@/lib/marketplace-db";
 import type { TierInfo } from "@/lib/ranking";
 import ProfessionalForm from "@/components/ProfessionalForm";
 import TierBadge, { TierProgress } from "@/components/TierBadge";
+import OnboardingModal from "@/components/OnboardingModal";
 import { Button, Card, SectionTitle, Spinner, Tag } from "@/components/ui";
 
 type Profile = Professional & {
@@ -59,6 +60,7 @@ export default function ProfessionalPage({
 
   return (
     <div className="space-y-6">
+      <OnboardingModal role="professional" welcomeOnly />
       <div className="flex flex-wrap items-start justify-between gap-4">
         <div>
           <h1 className="font-[family-name:var(--font-display)] text-3xl font-bold tracking-tight">

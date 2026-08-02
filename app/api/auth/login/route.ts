@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server";
 import { z } from "zod";
-import { verifyLogin } from "@/lib/auth";
+import { homeForUser, verifyLogin } from "@/lib/auth";
 import { SESSION_COOKIE, signSession } from "@/lib/auth-shared";
 
 export async function POST(request: Request) {
@@ -19,13 +19,9 @@ export async function POST(request: Request) {
     role: user.role,
     refId: user.refId,
     name: user.name,
+    brandSource: user.brandSource,
   });
-  const home =
-    user.role === "client"
-      ? `/portal/client/${user.refId}`
-      : user.role === "professional"
-        ? `/professionals/${user.refId}`
-        : "/";
+  const home = homeForUser(user);
   const response = NextResponse.json({ ok: true, home, role: user.role });
   response.cookies.set(SESSION_COOKIE, token, {
     httpOnly: true,

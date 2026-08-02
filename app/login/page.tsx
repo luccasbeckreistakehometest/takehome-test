@@ -1,15 +1,17 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import Link from "next/link";
 import { api } from "@/lib/api";
 import { Button, Card, ErrorBox, Input, Label } from "@/components/ui";
 
 type UserRow = { username: string; role: string; name: string };
 
 const ROLE_LABEL: Record<string, string> = {
-  agency: "🏢 Agência",
-  client: "👤 Cliente",
-  professional: "📸 Profissional",
+  admin: "Admin",
+  agency: "Agência",
+  client: "Cliente",
+  professional: "Profissional",
 };
 
 export default function LoginPage() {
@@ -72,6 +74,12 @@ export default function LoginPage() {
         <Button className="w-full" onClick={() => login()} disabled={loading}>
           {loading ? "Entrando..." : "Entrar"}
         </Button>
+        <div className="border-t border-edge pt-3 text-center text-sm text-muted">
+          Ainda não tem conta?{" "}
+          <Link href="/criar-conta" className="font-medium text-accent hover:underline">
+            Criar conta grátis →
+          </Link>
+        </div>
       </Card>
 
       {users.length > 0 && (

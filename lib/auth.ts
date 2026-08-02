@@ -2,12 +2,17 @@ import { randomUUID, scryptSync, timingSafeEqual } from "crypto";
 import { db, listClients } from "./db";
 import { listProfessionals } from "./marketplace-db";
 
+export type BrandSource = "agency" | "platform";
+
 export type User = {
   id: string;
   username: string;
   role: "admin" | "agency" | "client" | "professional";
   refId: string | null;
   name: string;
+  // whitelabel: "agency" = convidado por uma agência (vê a marca dela);
+  // "platform" = auto-cadastrado (vê a marca da plataforma)
+  brandSource: BrandSource;
   createdAt: string;
 };
 
@@ -19,9 +24,23 @@ db.exec(`
     role TEXT NOT NULL,
     refId TEXT,
     name TEXT NOT NULL,
+    brandSource TEXT NOT NULL DEFAULT 'agency',
+    onboardedAt TEXT,
     createdAt TEXT NOT NULL
   );
 `);
+// Migração leve
+{
+  const cols = (db.prepare("PRAGMA table_info(users)").all() as { name: string }[]).map(
+    (c) => c.name
+  );
+  if (!cols.includes("brandSource")) {
+    db.exec("ALTER TABLE users ADD COLUMN brandSource TEXT NOT NULL DEFAULT 'agency'");
+  }
+  if (!cols.includes("onboardedAt")) {
+    db.exec("ALTER TABLE users ADD COLUMN onboardedAt TEXT");
+  }
+}
 
 function hashPassword(password: string): string {
   const salt = randomUUID().slice(0, 8);
@@ -53,25 +72,35 @@ export function createUser(input: {
   role: User["role"];
   refId: string | null;
   name: string;
-}): { username: string } {
+  brandSource?: BrandSource;
+}): { username: string; id: string } {
   let username = input.username ?? slugify(input.name);
   let suffix = 1;
   while (db.prepare("SELECT 1 FROM users WHERE username = ?").get(username)) {
     suffix += 1;
     username = `${input.username ?? slugify(input.name)}${suffix}`;
   }
+  const id = randomUUID();
   db.prepare(
-    "INSERT INTO users (id, username, passwordHash, role, refId, name, createdAt) VALUES (?, ?, ?, ?, ?, ?, ?)"
+    "INSERT INTO users (id, username, passwordHash, role, refId, name, brandSource, createdAt) VALUES (?, ?, ?, ?, ?, ?, ?, ?)"
   ).run(
-    randomUUID(),
+    id,
     username,
     hashPassword(input.password),
     input.role,
     input.refId,
     input.name,
+    input.brandSource ?? "agency",
     new Date().toISOString()
   );
-  return { username };
+  return { username, id };
+}
+
+export function markOnboarded(userId: string): void {
+  db.prepare("UPDATE users SET onboardedAt = ? WHERE id = ?").run(
+    new Date().toISOString(),
+    userId
+  );
 }
 
 export function verifyLogin(username: string, password: string): User | null {
@@ -85,8 +114,17 @@ export function verifyLogin(username: string, password: string): User | null {
     role: row.role,
     refId: row.refId,
     name: row.name,
+    brandSource: (row.brandSource as BrandSource) ?? "agency",
     createdAt: row.createdAt,
   };
+}
+
+// Home de destino por papel após o login.
+export function homeForUser(user: Pick<User, "role" | "refId">): string {
+  if (user.role === "admin") return "/admin";
+  if (user.role === "client") return `/portal/client/${user.refId}`;
+  if (user.role === "professional") return `/professionals/${user.refId}`;
+  return "/";
 }
 
 export function listUsers(): { username: string; role: string; name: string }[] {

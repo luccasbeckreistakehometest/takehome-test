@@ -19,7 +19,8 @@ import type { ApplicationWithProfessional, Meeting } from "@/lib/marketplace-db"
 import type { DemandSuggestions, MatchResult, SketchResult } from "@/lib/marketplace-schemas";
 import { googleCalendarUrl } from "@/lib/gcal";
 import DeliverableViewer from "./DeliverableViewer";
-import { Button, Card, ErrorBox, Input, Label, SectionTitle, Spinner, Tag, Textarea } from "./ui";
+import { Button, Card, ErrorBox, Input, Label, SectionTitle, Skeleton, Spinner, Tag, Textarea } from "./ui";
+import { Icon, type IconName } from "@/components/icons";
 
 type ProjectDetailData = Project & {
   professional: Professional | null;
@@ -122,7 +123,17 @@ export default function ProjectsTab({
     load();
   }
 
-  if (!projects) return <Spinner label="Carregando demandas..." />;
+  if (!projects) {
+    return (
+      <div className="space-y-3">
+        <Skeleton className="h-24 w-full rounded-xl" />
+        <div className="grid gap-3 sm:grid-cols-2">
+          <Skeleton className="h-24 w-full rounded-xl" />
+          <Skeleton className="h-24 w-full rounded-xl" />
+        </div>
+      </div>
+    );
+  }
 
   if (selectedId) {
     return (
@@ -147,9 +158,17 @@ export default function ProjectsTab({
         {!creating ? (
           <div className="space-y-3">
             <div className="flex flex-wrap items-center gap-2">
-              <Button onClick={() => setCreating(true)}>+ Nova demanda</Button>
+              <Button onClick={() => setCreating(true)}>
+                <Icon name="plus" size={15} /> Nova demanda
+              </Button>
               <Button variant="ghost" onClick={() => suggest(false)} disabled={suggesting}>
-                {suggesting ? "Analisando o plano..." : "✦ Gerar demandas do plano (IA)"}
+                {suggesting ? (
+                  "Analisando o plano..."
+                ) : (
+                  <>
+                    <Icon name="sparkle" size={15} /> Gerar demandas do plano (IA)
+                  </>
+                )}
               </Button>
               {suggesting && <Spinner label="Lendo estratégia, campanha e calendário..." />}
             </div>
@@ -161,7 +180,7 @@ export default function ProjectsTab({
                 className="max-w-md"
               />
               <Button variant="ghost" onClick={() => suggest(true)} disabled={suggesting || !idea.trim()}>
-                ✦ Escrever brief com IA
+                <Icon name="sparkle" size={15} /> Escrever brief com IA
               </Button>
             </div>
             {error && <ErrorBox message={error} />}
@@ -173,7 +192,7 @@ export default function ProjectsTab({
                     <div className="flex flex-wrap items-center justify-between gap-2">
                       <p className="font-semibold">{demand.title}</p>
                       {createdFromSuggestion.has(index) ? (
-                        <span className="text-xs text-accent">✓ Criada</span>
+                        <span className="inline-flex items-center gap-1.5 text-xs text-accent"><Icon name="check" size={13} /> Criada</span>
                       ) : (
                         <Button className="!px-2.5 !py-1 text-xs" onClick={() => createFromSuggestion(index)}>
                           Criar demanda
@@ -198,20 +217,21 @@ export default function ProjectsTab({
               <div className="flex gap-2">
                 {(
                   [
-                    { value: "marketplace", label: "🌐 Com freelas da plataforma" },
-                    { value: "internal", label: "🏠 Interna (meu time)" },
+                    { value: "marketplace", label: "Com freelas da plataforma", icon: "globe" },
+                    { value: "internal", label: "Interna (meu time)", icon: "home" },
                   ] as const
                 ).map((option) => (
                   <button
                     key={option.value}
                     type="button"
                     onClick={() => setForm((f) => ({ ...f, mode: option.value }))}
-                    className={`rounded-md border px-3 py-1.5 text-sm transition-colors ${
+                    className={`inline-flex items-center gap-1.5 rounded-md border px-3 py-1.5 text-sm transition-colors ${
                       form.mode === option.value
                         ? "border-accent bg-accent/10 text-accent"
                         : "border-edge bg-surface-2 text-muted hover:border-muted"
                     }`}
                   >
+                    <Icon name={option.icon} size={15} />
                     {option.label}
                   </button>
                 ))}
@@ -430,43 +450,53 @@ function ProjectDetail({ projectId, onBack }: { projectId: string; onBack: () =>
     }
   }
 
-  if (!project) return <Spinner label="Carregando demanda..." />;
+  if (!project) {
+    return (
+      <div className="space-y-6">
+        <Skeleton className="h-8 w-64 rounded-md" />
+        <Skeleton className="h-40 w-full rounded-xl" />
+        <Skeleton className="h-40 w-full rounded-xl" />
+      </div>
+    );
+  }
 
   const references = project.deliverables.filter((d) => d.kind === "reference");
   const deliveries = project.deliverables.filter((d) => d.kind !== "reference");
 
   const internal = project.mode === "internal";
-  const nextActions: { label: string; body: Record<string, unknown> }[] = [];
+  const nextActions: { label: string; icon?: IconName; body: Record<string, unknown> }[] = [];
   if (internal) {
     if (project.status === "open") {
       nextActions.push({ label: "🚀 Iniciar produção", body: { status: "in_progress" } });
     }
     if (project.status === "in_review") {
-      nextActions.push({ label: "✅ Aprovar entrega", body: { status: "approved" } });
+      nextActions.push({ label: "Aprovar entrega", icon: "check", body: { status: "approved" } });
       nextActions.push({ label: "↩ Voltar para produção", body: { status: "in_progress" } });
     }
     if (project.status === "approved") {
-      nextActions.push({ label: "✔ Concluir demanda", body: { status: "paid" } });
+      nextActions.push({ label: "Concluir demanda", icon: "check", body: { status: "paid" } });
     }
   } else {
     if (project.status === "matched" && project.escrow === "none") {
       nextActions.push({
-        label: "💰 Reservar pagamento (escrow) e iniciar produção",
+        label: "Reservar pagamento (escrow) e iniciar produção",
+        icon: "money",
         body: { escrow: "held", status: "in_progress" },
       });
     }
     if (project.status === "in_review") {
-      nextActions.push({ label: "👤 Enviar para aprovação do cliente", body: { status: "client_approval" } });
-      nextActions.push({ label: "✅ Aprovar direto", body: { status: "approved" } });
+      nextActions.push({ label: "Enviar para aprovação do cliente", icon: "user", body: { status: "client_approval" } });
+      nextActions.push({ label: "Aprovar direto", icon: "check", body: { status: "approved" } });
       nextActions.push({ label: "↩ Voltar para produção (ajustes)", body: { status: "in_progress" } });
     }
     if (project.status === "client_approval") {
-      nextActions.push({ label: "✅ Aprovar em nome do cliente", body: { status: "approved" } });
+      nextActions.push({ label: "Aprovar em nome do cliente", icon: "check", body: { status: "approved" } });
       nextActions.push({ label: "↩ Voltar para produção", body: { status: "in_progress" } });
     }
     if (project.status === "approved" && project.escrow === "held") {
       nextActions.push({
-        label: "🏦 Liberar pagamento ao profissional",
+        label: "Liberar pagamento ao profissional",
+        icon: "money",
         body: { escrow: "released", status: "paid" },
       });
     }
@@ -492,6 +522,7 @@ function ProjectDetail({ projectId, onBack }: { projectId: string; onBack: () =>
         <div className="flex flex-wrap gap-2">
           {nextActions.map((action) => (
             <Button key={action.label} onClick={() => patch(action.body)}>
+              {action.icon && <Icon name={action.icon} size={15} />}
               {action.label}
             </Button>
           ))}
@@ -528,7 +559,7 @@ function ProjectDetail({ projectId, onBack }: { projectId: string; onBack: () =>
               alert("Demanda duplicada — veja na lista de demandas.");
             }}
           >
-            ⧉ Duplicar
+            <Icon name="copy" size={15} /> Duplicar
           </Button>
         </div>
       </div>
@@ -689,7 +720,13 @@ function ProjectDetail({ projectId, onBack }: { projectId: string; onBack: () =>
           <>
             <div className="flex items-center gap-3">
               <Button onClick={runMatch} disabled={matching}>
-                {matching ? "Analisando fit..." : "✦ Match por IA"}
+                {matching ? (
+                  "Analisando fit..."
+                ) : (
+                  <>
+                    <Icon name="sparkle" size={15} /> Match por IA
+                  </>
+                )}
               </Button>
               {matching && (
                 <Spinner label="Cruzando briefing, estratégia e track record dos profissionais..." />
@@ -844,7 +881,7 @@ function ProjectDetail({ projectId, onBack }: { projectId: string; onBack: () =>
                         load();
                       }}
                     >
-                      ✕
+                      <Icon name="trash" size={14} />
                     </button>
                   </span>
                 </div>
@@ -878,7 +915,11 @@ function ProjectDetail({ projectId, onBack }: { projectId: string; onBack: () =>
                 ? "Desenhando..."
                 : project.sketch
                   ? "↻ Regerar sketch"
-                  : "✏️ Gerar sketch da composição"}
+                  : (
+                    <>
+                      <Icon name="edit" size={15} /> Gerar sketch da composição
+                    </>
+                  )}
             </Button>
             <Button
               disabled={mocking}
@@ -895,7 +936,13 @@ function ProjectDetail({ projectId, onBack }: { projectId: string; onBack: () =>
                 }
               }}
             >
-              {mocking ? "Compondo imagem..." : "🖼 Gerar mockup fotorrealista"}
+              {mocking ? (
+                "Compondo imagem..."
+              ) : (
+                <>
+                  <Icon name="image" size={15} /> Gerar mockup fotorrealista
+                </>
+              )}
             </Button>
             <Button
               variant="ghost"
@@ -917,7 +964,13 @@ function ProjectDetail({ projectId, onBack }: { projectId: string; onBack: () =>
               }}
               title="Gera 4 imagens-conceito grátis (text-to-image, sem custo)"
             >
-              {concepting ? "Gerando 4 conceitos..." : "✨ Gerar 4 conceitos (grátis)"}
+              {concepting ? (
+                "Gerando 4 conceitos..."
+              ) : (
+                <>
+                  <Icon name="sparkle" size={15} /> Gerar 4 conceitos (grátis)
+                </>
+              )}
             </Button>
           </span>
         </div>
@@ -1035,10 +1088,10 @@ function ProjectDetail({ projectId, onBack }: { projectId: string; onBack: () =>
                     href={googleCalendarUrl(meeting)}
                     target="_blank"
                     rel="noreferrer"
-                    className="ml-2 text-muted hover:text-accent"
+                    className="ml-2 inline-flex items-center gap-1 text-muted hover:text-accent"
                     title="Adicionar ao Google Calendar (e anexar o Meet por lá)"
                   >
-                    📅 Calendar
+                    <Icon name="calendar" size={13} /> Calendar
                   </a>
                 </p>
                 <button

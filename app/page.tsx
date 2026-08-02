@@ -6,6 +6,7 @@ import { api } from "@/lib/api";
 import type { Client } from "@/lib/types";
 import type { TierInfo } from "@/lib/ranking";
 import TierBadge, { TierProgress } from "@/components/TierBadge";
+import OnboardingModal from "@/components/OnboardingModal";
 import { Card, SectionTitle, Spinner, Tag } from "@/components/ui";
 
 type Overview = {
@@ -53,6 +54,7 @@ export default function AgencyHome() {
 
   return (
     <div className="space-y-6">
+      <OnboardingModal role="agency" />
       <div className="flex flex-wrap items-center justify-between gap-3">
         <div>
           <h1 className="font-[family-name:var(--font-display)] text-2xl font-bold tracking-tight">

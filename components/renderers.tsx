@@ -14,6 +14,7 @@ import type {
 } from "@/lib/schemas";
 import type { ClientReport } from "@/lib/marketplace-schemas";
 import { Card, CopyButton, SectionTitle, Tag } from "./ui";
+import { Icon } from "@/components/icons";
 
 function Item({ title, children }: { title: string; children: React.ReactNode }) {
   return (
@@ -48,7 +49,11 @@ function CreateDemandButton({
 }) {
   const [state, setState] = useState<"idle" | "creating" | "done">("idle");
   if (state === "done") {
-    return <span className="text-xs text-accent">✓ Demanda criada (aba Demandas)</span>;
+    return (
+      <span className="inline-flex items-center gap-1.5 text-xs text-accent">
+        <Icon name="check" size={13} /> Demanda criada (aba Demandas)
+      </span>
+    );
   }
   return (
     <button
@@ -73,9 +78,15 @@ function CreateDemandButton({
           setState("idle");
         }
       }}
-      className="rounded border border-edge bg-surface-2 px-2 py-0.5 text-xs text-muted transition-colors hover:border-accent hover:text-accent disabled:opacity-50"
+      className="inline-flex items-center justify-center gap-1.5 rounded border border-edge bg-surface-2 px-2 py-0.5 text-xs text-muted transition-colors hover:border-accent hover:text-accent disabled:opacity-50"
     >
-      {state === "creating" ? "Criando..." : "→ Criar demanda de produção"}
+      {state === "creating" ? (
+        "Criando..."
+      ) : (
+        <>
+          <Icon name="send" size={13} /> Criar demanda de produção
+        </>
+      )}
     </button>
   );
 }
@@ -99,15 +110,19 @@ function SchedulePostButton({
   const [when, setWhen] = useState("");
 
   if (state === "done") {
-    return <span className="text-xs text-accent">🕐 Agendado ✓ (veja em Agenda)</span>;
+    return (
+      <span className="inline-flex items-center gap-1.5 text-xs text-accent">
+        <Icon name="clock" size={13} /> Agendado <Icon name="check" size={13} /> (veja em Agenda)
+      </span>
+    );
   }
   if (state === "idle") {
     return (
       <button
         onClick={() => setState("picking")}
-        className="rounded border border-edge bg-surface-2 px-2 py-0.5 text-xs text-muted transition-colors hover:border-accent hover:text-accent"
+        className="inline-flex items-center gap-1.5 rounded border border-edge bg-surface-2 px-2 py-0.5 text-xs text-muted transition-colors hover:border-accent hover:text-accent"
       >
-        🕐 Agendar publicação
+        <Icon name="clock" size={13} /> Agendar publicação
       </button>
     );
   }
@@ -174,7 +189,7 @@ function ActionButton({
   onClick,
   busyLabel,
 }: {
-  label: string;
+  label: React.ReactNode;
   onClick: () => void | Promise<void>;
   busyLabel?: string;
 }) {
@@ -190,7 +205,7 @@ function ActionButton({
           setBusy(false);
         }
       }}
-      className="rounded border border-edge bg-background px-2 py-1 text-xs text-muted transition-colors hover:border-accent hover:text-accent disabled:opacity-50"
+      className="inline-flex items-center justify-center gap-1.5 rounded border border-edge bg-background px-2 py-1 text-xs text-muted transition-colors hover:border-accent hover:text-accent disabled:opacity-50"
     >
       {busy ? (busyLabel ?? "...") : label}
     </button>
@@ -253,9 +268,9 @@ export function StrategyAnalysisView({
                   onClick={() =>
                     actions.onPosts(`conteúdo para a persona "${b.persona}": ${b.profile}`)
                   }
-                  className="mt-2 rounded border border-edge bg-background px-2 py-1 text-xs text-muted transition-colors hover:border-accent hover:text-accent"
+                  className="mt-2 inline-flex items-center gap-1.5 rounded border border-edge bg-background px-2 py-1 text-xs text-muted transition-colors hover:border-accent hover:text-accent"
                 >
-                  ✍️ Gerar posts para esta persona
+                  <Icon name="edit" size={13} /> Gerar posts para esta persona
                 </button>
               )}
             </div>
@@ -300,9 +315,9 @@ export function StrategyAnalysisView({
                   <div className="mt-2 flex flex-wrap gap-2">
                     <button
                       onClick={() => actions.onCampaign(`${f.recommendation} — ${f.why}`)}
-                      className="rounded border border-edge bg-background px-2 py-1 text-xs text-muted transition-colors hover:border-accent hover:text-accent"
+                      className="inline-flex items-center gap-1.5 rounded border border-edge bg-background px-2 py-1 text-xs text-muted transition-colors hover:border-accent hover:text-accent"
                     >
-                      🎯 Gerar campanha desta aposta
+                      <Icon name="target" size={13} /> Gerar campanha desta aposta
                     </button>
                     <button
                       disabled={creatingDemand === i}
@@ -314,11 +329,15 @@ export function StrategyAnalysisView({
                           setCreatingDemand(null);
                         }
                       }}
-                      className="rounded border border-edge bg-background px-2 py-1 text-xs text-muted transition-colors hover:border-accent hover:text-accent disabled:opacity-50"
+                      className="inline-flex items-center justify-center gap-1.5 rounded border border-edge bg-background px-2 py-1 text-xs text-muted transition-colors hover:border-accent hover:text-accent disabled:opacity-50"
                     >
-                      {creatingDemand === i
-                        ? "IA escrevendo o brief..."
-                        : "📋 Criar demanda desta aposta"}
+                      {creatingDemand === i ? (
+                        "IA escrevendo o brief..."
+                      ) : (
+                        <>
+                          <Icon name="clipboard" size={13} /> Criar demanda desta aposta
+                        </>
+                      )}
                     </button>
                   </div>
                 )}
@@ -410,15 +429,15 @@ export function MarketPulseView({
                 {actions && (
                   <div className="mt-2 flex flex-wrap gap-2">
                     <ActionButton
-                      label="🎯 Aplicar em campanha"
+                      label={<><Icon name="target" size={13} /> Aplicar em campanha</>}
                       onClick={() => actions.onCampaign(`${r.recommendation} — ${r.rationale}`)}
                     />
                     <ActionButton
-                      label="✍️ Gerar posts sobre isso"
+                      label={<><Icon name="edit" size={13} /> Gerar posts sobre isso</>}
                       onClick={() => actions.onPosts(r.recommendation)}
                     />
                     <ActionButton
-                      label="📋 Criar demanda"
+                      label={<><Icon name="clipboard" size={13} /> Criar demanda</>}
                       busyLabel="IA escrevendo o brief..."
                       onClick={() => actions.onDemand(`${r.recommendation} — ${r.rationale}`)}
                     />
@@ -457,12 +476,12 @@ export function CampaignPlanView({
           <div className="mt-3 flex flex-wrap gap-2">
             {actions.onSocial && (
               <ActionButton
-                label="📆 Gerar calendário social deste plano"
+                label={<><Icon name="calendar" size={13} /> Gerar calendário social deste plano</>}
                 onClick={() => actions.onSocial!()}
               />
             )}
             <ActionButton
-              label="✍️ Gerar posts do tema"
+              label={<><Icon name="edit" size={13} /> Gerar posts do tema</>}
               onClick={() => actions.onPosts(data.theme)}
             />
           </div>
@@ -495,7 +514,7 @@ export function CampaignPlanView({
                 {actions && (
                   <div className="mt-2">
                     <ActionButton
-                      label="📋 Criar demanda desta semana"
+                      label={<><Icon name="clipboard" size={13} /> Criar demanda desta semana</>}
                       busyLabel="IA escrevendo o brief..."
                       onClick={() =>
                         actions.onDemand(
@@ -563,7 +582,7 @@ export function CampaignPlanView({
                   )}
                   {influencer.contactEmail && (
                     <span className="flex items-center gap-1 text-muted">
-                      ✉ {influencer.contactEmail}
+                      <Icon name="mail" size={13} /> {influencer.contactEmail}
                       <CopyButton text={influencer.contactEmail} label="Copiar" />
                     </span>
                   )}
@@ -678,7 +697,9 @@ export function RoiProjectionView({
               {savingActuals === "saving" ? "Salvando..." : "Salvar valores reais"}
             </button>
             {savingActuals === "saved" && (
-              <span className="text-xs text-accent">Salvos ✓ — projeção × realidade registrada</span>
+              <span className="inline-flex items-center gap-1.5 text-xs text-accent">
+                <Icon name="check" size={13} /> Salvos — projeção × realidade registrada
+              </span>
             )}
           </div>
         )}
@@ -703,13 +724,13 @@ export function RoiProjectionView({
               {actions && (
                 <div className="mt-2 flex flex-wrap gap-2">
                   <ActionButton
-                    label="🎯 Campanha desta fase"
+                    label={<><Icon name="target" size={13} /> Campanha desta fase</>}
                     onClick={() =>
                       actions.onCampaign(`Fase "${r.phase}" (${r.period}) do roadmap: ${r.milestones.join("; ")}`)
                     }
                   />
                   <ActionButton
-                    label="📋 Criar demanda desta fase"
+                    label={<><Icon name="clipboard" size={13} /> Criar demanda desta fase</>}
                     busyLabel="IA escrevendo o brief..."
                     onClick={() =>
                       actions.onDemand(
@@ -804,13 +825,13 @@ export function SocialCalendarView({
               <span className="ml-auto flex items-center gap-2">
                 {generationId && editingIndex !== index && (
                   <button
-                    className="rounded border border-edge bg-surface-2 px-2 py-0.5 text-xs text-muted transition-colors hover:border-accent hover:text-accent"
+                    className="inline-flex items-center gap-1.5 rounded border border-edge bg-surface-2 px-2 py-0.5 text-xs text-muted transition-colors hover:border-accent hover:text-accent"
                     onClick={() => {
                       setEditingIndex(index);
                       setDraft({ caption: post.caption, hashtags: post.hashtags.join(" ") });
                     }}
                   >
-                    ✏️ Editar
+                    <Icon name="edit" size={13} /> Editar
                   </button>
                 )}
                 <CopyButton text={`${post.caption}\n\n${post.hashtags.join(" ")}`} label="Copiar legenda" />
@@ -853,7 +874,7 @@ export function SocialCalendarView({
             )}
             <div className="mt-3 rounded-md border border-edge bg-surface-2 p-3 text-xs text-muted">
               <p>
-                <span className="font-semibold text-foreground/80">🎨 Direção de arte: </span>
+                <span className="inline-flex items-center gap-1.5 font-semibold text-foreground/80"><Icon name="palette" size={13} /> Direção de arte:</span>
                 {post.artDirection}
               </p>
               <p className="mt-1">
@@ -927,13 +948,13 @@ export function PostBatchView({
             <span className="ml-auto flex items-center gap-2">
               {generationId && editingIndex !== index && (
                 <button
-                  className="rounded border border-edge bg-surface-2 px-2 py-0.5 text-xs text-muted transition-colors hover:border-accent hover:text-accent"
+                  className="inline-flex items-center gap-1.5 rounded border border-edge bg-surface-2 px-2 py-0.5 text-xs text-muted transition-colors hover:border-accent hover:text-accent"
                   onClick={() => {
                     setEditingIndex(index);
                     setDraft({ caption: post.caption, hashtags: post.hashtags.join(" ") });
                   }}
                 >
-                  ✏️ Editar
+                  <Icon name="edit" size={13} /> Editar
                 </button>
               )}
               <CopyButton text={`${post.caption}\n\n${post.hashtags.join(" ")}`} label="Copiar legenda" />
@@ -976,7 +997,7 @@ export function PostBatchView({
           )}
           <div className="mt-3 rounded-md border border-edge bg-surface-2 p-3 text-xs text-muted">
             <p>
-              <span className="font-semibold text-foreground/80">🎨 Direção de arte: </span>
+              <span className="inline-flex items-center gap-1.5 font-semibold text-foreground/80"><Icon name="palette" size={13} /> Direção de arte:</span>
               {post.artDirection}
             </p>
             <p className="mt-1">
@@ -1153,9 +1174,9 @@ export function ClientReportView({
                 <p className="text-muted">{step}</p>
                 {actions && (
                   <div className="mt-2 flex flex-wrap gap-2">
-                    <ActionButton label="🎯 Virar campanha" onClick={() => actions.onCampaign(step)} />
+                    <ActionButton label={<><Icon name="target" size={13} /> Virar campanha</>} onClick={() => actions.onCampaign(step)} />
                     <ActionButton
-                      label="📋 Criar demanda"
+                      label={<><Icon name="clipboard" size={13} /> Criar demanda</>}
                       busyLabel="IA escrevendo o brief..."
                       onClick={() => actions.onDemand(step)}
                     />
@@ -1217,15 +1238,15 @@ export function ProductRecsView({
               {actions && (
                 <div className="mt-2 flex flex-wrap gap-2">
                   <ActionButton
-                    label="🎯 Campanha de lançamento"
+                    label={<><Icon name="target" size={13} /> Campanha de lançamento</>}
                     onClick={() => actions.onCampaign(`Lançamento: ${o.name} — ${o.whatItIs}`)}
                   />
                   <ActionButton
-                    label="✍️ Posts sobre isso"
+                    label={<><Icon name="edit" size={13} /> Posts sobre isso</>}
                     onClick={() => actions.onPosts(`${o.name}: ${o.whatItIs}`)}
                   />
                   <ActionButton
-                    label="📋 Criar demanda"
+                    label={<><Icon name="clipboard" size={13} /> Criar demanda</>}
                     busyLabel="IA escrevendo o brief..."
                     onClick={() => actions.onDemand(`Materiais de lançamento de "${o.name}": ${o.whatItIs}. Como começar: ${o.howToStart}`)}
                   />
@@ -1249,7 +1270,7 @@ export function ProductRecsView({
               {actions && (
                 <div className="mt-2">
                   <ActionButton
-                    label="🎯 Enfatizar em campanha"
+                    label={<><Icon name="target" size={13} /> Enfatizar em campanha</>}
                     onClick={() => actions.onCampaign(`Enfatizar ${r.area}: ${r.recommendation}`)}
                   />
                 </div>

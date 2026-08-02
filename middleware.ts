@@ -4,7 +4,16 @@ import { SESSION_COOKIE, verifySession } from "@/lib/auth-shared";
 // Painéis separados por login: agência vê tudo; cliente só o próprio portal;
 // profissional só o próprio perfil. APIs ficam abertas localmente (a proteção
 // fina por rota entra com o deploy).
-const PUBLIC_PREFIXES = ["/login", "/api", "/_next", "/favicon", "/cadastro", "/print"];
+const PUBLIC_PREFIXES = [
+  "/login",
+  "/api",
+  "/_next",
+  "/favicon",
+  "/cadastro",
+  "/criar-conta",
+  "/convite",
+  "/print",
+];
 
 export async function middleware(request: NextRequest) {
   const { pathname } = request.nextUrl;
