@@ -8,12 +8,24 @@ import { Button, Card, ErrorBox, Input, Label, Spinner, Tag } from "@/components
 
 export default function ProspectingPage() {
   const [prospects, setProspects] = useState<Prospect[] | null>(null);
+  const [lastSearch, setLastSearch] = useState<{
+    query: string;
+    summary: string;
+    resultCount: number;
+    createdAt: string;
+  } | null>(null);
   const [form, setForm] = useState({ niche: "", region: "", notes: "" });
   const [searching, setSearching] = useState(false);
   const [summary, setSummary] = useState("");
   const [error, setError] = useState("");
 
-  const load = () => api<Prospect[]>("/api/prospects").then(setProspects);
+  const load = () =>
+    api<{ prospects: Prospect[]; lastSearch: typeof lastSearch }>("/api/prospects").then(
+      (data) => {
+        setProspects(data.prospects);
+        setLastSearch(data.lastSearch);
+      }
+    );
   useEffect(() => {
     load();
     const handler = () => load();
@@ -98,6 +110,22 @@ export default function ProspectingPage() {
         </div>
         {error && <ErrorBox message={error} />}
         {summary && <p className="text-sm text-muted">{summary}</p>}
+        {!summary && lastSearch && (
+          <div
+            className={`rounded-md border p-3 text-sm ${
+              lastSearch.resultCount === 0
+                ? "border-amber-700/60 bg-amber-950/30"
+                : "border-edge bg-surface-2"
+            }`}
+          >
+            <p className="text-xs font-semibold uppercase tracking-wide text-muted">
+              Última busca: {lastSearch.query} ·{" "}
+              {new Date(lastSearch.createdAt).toLocaleString("pt-BR")} ·{" "}
+              {lastSearch.resultCount} resultado(s)
+            </p>
+            <p className="mt-1 text-muted">{lastSearch.summary}</p>
+          </div>
+        )}
       </Card>
 
       {!prospects ? (

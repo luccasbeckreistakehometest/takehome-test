@@ -138,6 +138,13 @@ db.exec(`
     status TEXT NOT NULL DEFAULT 'pending',
     createdAt TEXT NOT NULL
   );
+  CREATE TABLE IF NOT EXISTS prospect_searches (
+    id TEXT PRIMARY KEY,
+    query TEXT NOT NULL,
+    summary TEXT NOT NULL,
+    resultCount INTEGER NOT NULL DEFAULT 0,
+    createdAt TEXT NOT NULL
+  );
   CREATE TABLE IF NOT EXISTS jobs (
     id TEXT PRIMARY KEY,
     kind TEXT NOT NULL,
@@ -1078,6 +1085,33 @@ export function deleteScheduledPost(id: string): boolean {
 }
 
 // ---------- Prospecção ----------
+
+export type ProspectSearch = {
+  id: string;
+  query: string;
+  summary: string;
+  resultCount: number;
+  createdAt: string;
+};
+
+export function createProspectSearch(input: {
+  query: string;
+  summary: string;
+  resultCount: number;
+}): void {
+  db.prepare(
+    "INSERT INTO prospect_searches (id, query, summary, resultCount, createdAt) VALUES (?, ?, ?, ?, ?)"
+  ).run(randomUUID(), input.query, input.summary, input.resultCount, now());
+}
+
+export function latestProspectSearch(): ProspectSearch | null {
+  return (
+    (db
+      .prepare("SELECT * FROM prospect_searches ORDER BY createdAt DESC LIMIT 1")
+      .get() as ProspectSearch) ?? null
+  );
+}
+
 
 export function listProspects(): Prospect[] {
   return db

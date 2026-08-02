@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server";
 import { z } from "zod";
 import { GenerationError, generateStructured } from "@/lib/claude";
-import { createJob, createProspect, finishJob, listProspects } from "@/lib/marketplace-db";
+import { createJob, createProspect, createProspectSearch, finishJob, latestProspectSearch, listProspects } from "@/lib/marketplace-db";
 import { prospectingSchema, type ProspectingResult } from "@/lib/marketplace-schemas";
 
 export const maxDuration = 300;
@@ -13,7 +13,10 @@ const searchSchema = z.object({
 });
 
 export async function GET() {
-  return NextResponse.json(listProspects());
+  return NextResponse.json({
+    prospects: listProspects(),
+    lastSearch: latestProspectSearch(),
+  });
 }
 
 // Prospecção ativa: a IA pesquisa na web negócios reais do nicho/região que
@@ -45,6 +48,7 @@ Para cada empresa encontrada:
 Priorize empresas com maior probabilidade de fechar: dor visível + capacidade de investir.`,
       schema: prospectingSchema,
       useWebSearch: true,
+      webSearchMaxUses: 10,
       tier: "standard",
       maxTokens: 24000,
     });
@@ -53,6 +57,12 @@ Priorize empresas com maior probabilidade de fechar: dor visível + capacidade d
     const saved = result.prospects.map((prospect) =>
       createProspect({ ...prospect, searchQuery })
     );
+    // Resumo persistente: sobrevive a refresh e explica buscas vazias
+    createProspectSearch({
+      query: searchQuery,
+      summary: result.summary,
+      resultCount: saved.length,
+    });
     finishJob(job.id, "done");
     return NextResponse.json({ summary: result.summary, prospects: saved }, { status: 201 });
   } catch (error) {

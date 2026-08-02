@@ -80,6 +80,7 @@ type RequestOptions = {
   prompt: string;
   maxTokens: number;
   useWebSearch?: boolean;
+  webSearchMaxUses?: number;
   outputSchema?: Record<string, unknown>;
   images?: {
     base64: string;
@@ -121,7 +122,9 @@ async function runMessage(options: RequestOptions): Promise<Anthropic.Message> {
       thinking: { type: "adaptive" },
       system: options.system,
       messages,
-      ...(options.useWebSearch ? { tools: [WEB_SEARCH_TOOL] } : {}),
+      ...(options.useWebSearch
+        ? { tools: [{ ...WEB_SEARCH_TOOL, max_uses: options.webSearchMaxUses ?? WEB_SEARCH_TOOL.max_uses }] }
+        : {}),
       ...(options.outputSchema
         ? {
             output_config: {
@@ -145,6 +148,7 @@ export async function generateStructured<T>(options: {
   schema: Record<string, unknown>;
   maxTokens?: number;
   useWebSearch?: boolean;
+  webSearchMaxUses?: number;
   images?: RequestOptions["images"];
   tier?: ModelTier;
 }): Promise<T> {
@@ -154,6 +158,7 @@ export async function generateStructured<T>(options: {
       prompt: options.prompt,
       maxTokens: options.maxTokens ?? 32000,
       useWebSearch: options.useWebSearch,
+      webSearchMaxUses: options.webSearchMaxUses,
       outputSchema: options.schema,
       images: options.images,
       tier: options.tier,
