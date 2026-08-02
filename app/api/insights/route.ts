@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { db, listClients } from "@/lib/db";
 import { getAgencyStats, getClientStats } from "@/lib/marketplace-db";
+import { agencySalesTotal } from "@/lib/integrations-db";
 import { agencyTier, clientTier } from "@/lib/ranking";
 import { PROJECT_STATUSES, type ProjectStatus } from "@/lib/marketplace-types";
 
@@ -74,8 +75,11 @@ export async function GET() {
     )
     .all(weekAgo) as { day: string; c: number }[];
 
+  const sales = agencySalesTotal();
+
   return NextResponse.json({
     agency: { tier: agencyTier(agencyStats), stats: agencyStats },
+    sales,
     funnel: { byStatus, totalProjects },
     deliverables: {
       byType: byType.map((t) => ({ ...t, avgScore: null })),

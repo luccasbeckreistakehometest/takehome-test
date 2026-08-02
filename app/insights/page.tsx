@@ -30,6 +30,7 @@ type Insights = {
     avgScore: number | null;
   }[];
   activityByDay: { day: string; c: number }[];
+  sales: { revenue: number; clientsWithSales: number };
   counts: {
     openDemands: number;
     inProduction: number;
@@ -76,12 +77,18 @@ export default function InsightsPage() {
     );
   }
 
-  const kpis: { label: string; value: number; icon: IconName; href: string }[] = [
-    { label: "Demandas abertas", value: data.counts.openDemands, icon: "briefcase", href: "/production" },
-    { label: "Em produção", value: data.counts.inProduction, icon: "kanban", href: "/production" },
-    { label: "Aguardando aprovação", value: data.counts.awaitingApproval, icon: "check", href: "/production" },
-    { label: "Reuniões futuras", value: data.counts.meetingsUpcoming, icon: "calendar", href: "/agenda" },
-    { label: "Posts agendados", value: data.counts.scheduledPosts, icon: "send", href: "/agenda" },
+  const kpis: { label: string; value: string; icon: IconName; href: string }[] = [
+    {
+      label: "Receita rastreada",
+      value: data.sales.revenue.toLocaleString("pt-BR", { style: "currency", currency: "BRL", maximumFractionDigits: 0 }),
+      icon: "money",
+      href: "/clients",
+    },
+    { label: "Demandas abertas", value: String(data.counts.openDemands), icon: "briefcase", href: "/production" },
+    { label: "Em produção", value: String(data.counts.inProduction), icon: "kanban", href: "/production" },
+    { label: "Aguardando aprovação", value: String(data.counts.awaitingApproval), icon: "check", href: "/production" },
+    { label: "Reuniões futuras", value: String(data.counts.meetingsUpcoming), icon: "calendar", href: "/agenda" },
+    { label: "Posts agendados", value: String(data.counts.scheduledPosts), icon: "send", href: "/agenda" },
   ];
 
   const funnelMax = Math.max(1, ...Object.values(data.funnel.byStatus));
@@ -116,12 +123,12 @@ export default function InsightsPage() {
       </Card>
 
       {/* KPIs */}
-      <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-5">
+      <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-6">
         {kpis.map((kpi, i) => (
           <Link key={kpi.label} href={kpi.href} style={{ animationDelay: `${i * 40}ms` }} className="animate-fade-in">
             <Card hover className="h-full">
               <Icon name={kpi.icon} size={20} className="text-accent" />
-              <p className="mt-2 font-[family-name:var(--font-display)] text-3xl font-bold">
+              <p className="mt-2 font-[family-name:var(--font-display)] text-2xl font-bold">
                 {kpi.value}
               </p>
               <p className="text-xs text-muted">{kpi.label}</p>

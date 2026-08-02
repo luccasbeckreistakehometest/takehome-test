@@ -26,6 +26,7 @@ import type { Project } from "@/lib/marketplace-types";
 import type { AgencySettings } from "@/lib/settings";
 import BrandAssets from "./BrandAssets";
 import ClientDashboard from "./ClientDashboard";
+import SalesIntegrations from "./SalesIntegrations";
 import ClientForm from "./ClientForm";
 import GeneratorTab from "./GeneratorTab";
 import LandingPreview from "./LandingPreview";
@@ -43,7 +44,7 @@ import {
 } from "./renderers";
 import { Button, Card, ErrorBox, Spinner, Tag } from "./ui";
 
-type TabKey = "dashboard" | "briefing" | "projects" | GenerationType;
+type TabKey = "dashboard" | "briefing" | "projects" | "sales" | GenerationType;
 
 function nextMonthLabel(): string {
   const date = new Date();
@@ -174,6 +175,7 @@ export default function Workspace({
       ? [{ key: "landing_page" as TabKey, label: "Landing pages" }]
       : []),
     { key: "projects", label: "Demandas" },
+    { key: "sales", label: "Vendas & Dados" },
     { key: "client_report", label: "Relatório" },
   ];
 
@@ -500,6 +502,8 @@ export default function Workspace({
       {tab === "projects" && (
         <ProjectsTab client={client} initialProjectId={initialProjectId} />
       )}
+
+      {tab === "sales" && <SalesIntegrations clientId={client.id} />}
 
       {tab === "client_report" && (
         <GeneratorTab
