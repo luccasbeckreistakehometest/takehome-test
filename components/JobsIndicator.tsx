@@ -37,7 +37,7 @@ export default function JobsIndicator() {
   if (running.length === 0) return null;
 
   return (
-    <div className="fixed bottom-5 right-5 z-50 w-72 space-y-1.5">
+    <div className="fixed bottom-5 left-5 z-50 w-72 space-y-1.5">
       {running.map((job) => (
         <div
           key={job.id}

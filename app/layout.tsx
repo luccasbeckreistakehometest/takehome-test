@@ -8,6 +8,7 @@ import Translator, { LangToggle } from "@/components/Translator";
 import ActivityBell, { LogoutButton } from "@/components/ActivityBell";
 import JobsIndicator from "@/components/JobsIndicator";
 import GlobalSearch from "@/components/GlobalSearch";
+import AssistantWidget from "@/components/AssistantWidget";
 import "./globals.css";
 
 const geistSans = Geist({ variable: "--font-geist-sans", subsets: ["latin"] });
@@ -31,7 +32,6 @@ const AGENCY_NAV = [
   { href: "/professionals", label: "Profissionais" },
   { href: "/agenda", label: "Agenda" },
   { href: "/ideas", label: "Ideias" },
-  { href: "/assistant", label: "Assistente" },
   { href: "/settings", label: "Configurações" },
 ];
 
@@ -112,6 +112,7 @@ export default async function RootLayout({
           </div>
         </header>
         <main className="mx-auto w-full max-w-6xl flex-1 px-4 py-8">{children}</main>
+        {session?.role === "agency" && <AssistantWidget />}
         <footer className="border-t border-edge py-4 text-center text-xs text-muted">
           {settings.agencyName} — {settings.tagline}
         </footer>
