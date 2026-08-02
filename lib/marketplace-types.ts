@@ -14,6 +14,9 @@ export type Professional = {
   portfolio: { title: string; url: string }[];
   priceRange: string;
   availability: string; // disponibilidade (dias/horários livres)
+  // freelancer = vê o marketplace aberto e se candidata; employee = full-time
+  // da agência, vê as demandas dos clientes da agência (inclui internas).
+  employmentType: "freelancer" | "employee";
   createdAt: string;
 };
 

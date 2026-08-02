@@ -23,6 +23,7 @@ const EMPTY: ProfessionalInput = {
   portfolio: [],
   priceRange: "",
   availability: "",
+  employmentType: "freelancer",
 };
 
 export default function ProfessionalForm({
@@ -160,13 +161,28 @@ export default function ProfessionalForm({
             />
           </div>
         </div>
-        <div>
-          <Label>Disponibilidade</Label>
-          <Input
-            value={form.availability}
-            onChange={(e) => set("availability", e.target.value)}
-            placeholder="Ex.: seg-sex após 14h; fins de semana livres"
-          />
+        <div className="grid gap-4 sm:grid-cols-2">
+          <div>
+            <Label>Disponibilidade</Label>
+            <Input
+              value={form.availability}
+              onChange={(e) => set("availability", e.target.value)}
+              placeholder="Ex.: seg-sex após 14h; fins de semana livres"
+            />
+          </div>
+          <div>
+            <Label>Vínculo</Label>
+            <select
+              value={form.employmentType}
+              onChange={(e) =>
+                set("employmentType", e.target.value as "freelancer" | "employee")
+              }
+              className="w-full rounded-md border border-edge bg-surface-2 px-3 py-2 text-sm text-foreground outline-none transition-colors focus:border-accent"
+            >
+              <option value="freelancer">Freelancer (marketplace aberto)</option>
+              <option value="employee">Funcionário full-time (só demandas da agência)</option>
+            </select>
+          </div>
         </div>
         <div>
           <Label>Bio</Label>

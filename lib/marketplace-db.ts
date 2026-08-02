@@ -28,6 +28,7 @@ db.exec(`
     bio TEXT NOT NULL DEFAULT '',
     portfolio TEXT NOT NULL DEFAULT '[]',
     priceRange TEXT NOT NULL DEFAULT '',
+    employmentType TEXT NOT NULL DEFAULT 'freelancer',
     createdAt TEXT NOT NULL
   );
   CREATE TABLE IF NOT EXISTS projects (
@@ -216,6 +217,9 @@ const professionalColumns = (
 if (professionalColumns.length > 0 && !professionalColumns.includes("availability")) {
   db.exec("ALTER TABLE professionals ADD COLUMN availability TEXT NOT NULL DEFAULT ''");
 }
+if (professionalColumns.length > 0 && !professionalColumns.includes("employmentType")) {
+  db.exec("ALTER TABLE professionals ADD COLUMN employmentType TEXT NOT NULL DEFAULT 'freelancer'");
+}
 const annotationColumns = (
   db.prepare("PRAGMA table_info(annotations)").all() as { name: string }[]
 ).map((column) => column.name);
@@ -257,8 +261,8 @@ export function getProfessional(id: string): Professional | null {
 export function createProfessional(input: ProfessionalInput): Professional {
   const professional: Professional = { ...input, id: randomUUID(), createdAt: now() };
   db.prepare(
-    `INSERT INTO professionals (id, name, role, email, phone, location, skills, specialties, marketFocus, bio, portfolio, priceRange, availability, createdAt)
-     VALUES (@id, @name, @role, @email, @phone, @location, @skills, @specialties, @marketFocus, @bio, @portfolio, @priceRange, @availability, @createdAt)`
+    `INSERT INTO professionals (id, name, role, email, phone, location, skills, specialties, marketFocus, bio, portfolio, priceRange, availability, employmentType, createdAt)
+     VALUES (@id, @name, @role, @email, @phone, @location, @skills, @specialties, @marketFocus, @bio, @portfolio, @priceRange, @availability, @employmentType, @createdAt)`
   ).run({
     ...professional,
     skills: JSON.stringify(professional.skills),
@@ -273,7 +277,7 @@ export function updateProfessional(
 ): Professional | null {
   if (!getProfessional(id)) return null;
   db.prepare(
-    `UPDATE professionals SET name=@name, role=@role, email=@email, phone=@phone, location=@location, skills=@skills, specialties=@specialties, marketFocus=@marketFocus, bio=@bio, portfolio=@portfolio, priceRange=@priceRange, availability=@availability WHERE id=@id`
+    `UPDATE professionals SET name=@name, role=@role, email=@email, phone=@phone, location=@location, skills=@skills, specialties=@specialties, marketFocus=@marketFocus, bio=@bio, portfolio=@portfolio, priceRange=@priceRange, availability=@availability, employmentType=@employmentType WHERE id=@id`
   ).run({
     ...input,
     id,

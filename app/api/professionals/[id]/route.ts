@@ -24,9 +24,15 @@ export async function GET(_request: Request, { params }: Context) {
     stats,
     tier: professionalTier(stats),
     projects: listProjects({ professionalId: id }),
-    opportunities: listProjects({ openOnly: true }).filter(
-      (project) => project.mode !== "internal"
-    ),
+    // Freelancer: só o marketplace aberto (demandas externas, precisa se
+    // candidatar). Funcionário full-time: vê as demandas da agência, incluindo
+    // as internas — é do time da casa. (Multi-agência filtraria por agencyId.)
+    opportunities:
+      professional.employmentType === "employee"
+        ? listProjects({ openOnly: true })
+        : listProjects({ openOnly: true }).filter(
+            (project) => project.mode !== "internal"
+          ),
     applications: listApplicationsByProfessional(id),
   });
 }

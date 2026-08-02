@@ -44,6 +44,7 @@ export const professionalSchema = z.object({
     .default([]),
   priceRange: z.string().trim().default(""),
   availability: z.string().trim().default(""),
+  employmentType: z.enum(["freelancer", "employee"]).default("freelancer"),
 });
 
 export const projectSchema = z.object({
