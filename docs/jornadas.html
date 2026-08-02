@@ -1,0 +1,319 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<title>AgencyHub — Jornadas Completas</title>
+<style>
+  @page { size: A4; margin: 16mm 14mm; }
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body {
+    font-family: "Helvetica Neue", Arial, sans-serif;
+    color: #16181d; font-size: 10.5pt; line-height: 1.5;
+  }
+  .cover { padding: 10mm 0 8mm; border-bottom: 3px solid #16181d; margin-bottom: 8mm; }
+  .cover .brand { display: inline-block; background: #c6f24e; color: #141605; font-weight: 800;
+    padding: 2mm 4mm; border-radius: 2mm; font-size: 13pt; letter-spacing: .5px; }
+  .cover h1 { font-size: 24pt; font-weight: 800; margin-top: 5mm; letter-spacing: -.5px; }
+  .cover p.sub { color: #555; margin-top: 2mm; font-size: 11pt; max-width: 160mm; }
+  .cover p.meta { color: #999; margin-top: 3mm; font-size: 8.5pt; text-transform: uppercase; letter-spacing: 1px; }
+
+  h2.journey {
+    font-size: 16pt; font-weight: 800; margin: 0 0 1.5mm;
+    padding-top: 6mm; letter-spacing: -.3px;
+  }
+  .journey-block { page-break-before: always; }
+  .no-break-before { page-break-before: avoid; }
+  p.journey-sub { color: #555; margin-bottom: 5mm; max-width: 165mm; }
+  .kicker { display: inline-block; background: #16181d; color: #c6f24e; font-size: 8pt;
+    font-weight: 700; text-transform: uppercase; letter-spacing: 1.5px;
+    padding: 1mm 3mm; border-radius: 1.5mm; margin-bottom: 2mm; }
+
+  .step { display: flex; gap: 4mm; margin-bottom: 3.2mm; page-break-inside: avoid; }
+  .step .num {
+    flex: 0 0 9mm; height: 9mm; background: #c6f24e; color: #141605; border-radius: 2mm;
+    display: flex; align-items: center; justify-content: center; font-weight: 800; font-size: 12pt;
+  }
+  .step .body { flex: 1; border-bottom: 1px solid #e4e6ea; padding-bottom: 3mm; }
+  .step h3 { font-size: 11pt; font-weight: 700; }
+  .step h3 .where { font-weight: 600; color: #7a7f8c; font-size: 8.5pt; margin-left: 2mm; }
+  .step p { color: #3c404a; margin-top: 1mm; }
+  .step ul { margin: 1.5mm 0 0 5mm; color: #3c404a; }
+  .step li { margin-bottom: .8mm; }
+  .ai { color: #141605; background: #eef7d0; border-radius: 1mm; padding: 0 1.5mm; font-weight: 600; white-space: nowrap; }
+
+  .pipeline { display: flex; flex-wrap: wrap; gap: 2mm; margin: 3mm 0 5mm; }
+  .pipeline span { background: #f1f2f5; border: 1px solid #d9dce2; border-radius: 5mm;
+    padding: 1.2mm 3.5mm; font-size: 8.5pt; font-weight: 600; color: #3c404a; }
+  .pipeline span.hot { background: #c6f24e; border-color: #a7d232; color: #141605; }
+  .pipeline .arrow { border: 0; background: none; padding: 1.2mm 0; color: #b0b4bf; }
+
+  table.elo { width: 100%; border-collapse: collapse; margin: 3mm 0 5mm; font-size: 9.5pt; page-break-inside: avoid; }
+  table.elo th { text-align: left; font-size: 8pt; text-transform: uppercase; letter-spacing: 1px;
+    color: #7a7f8c; padding: 1.5mm 3mm; border-bottom: 2px solid #16181d; }
+  table.elo td { padding: 2mm 3mm; border-bottom: 1px solid #e4e6ea; vertical-align: top; }
+  .tier { font-weight: 800; }
+  .t-bronze { color: #a05a1c; } .t-prata { color: #6e7480; } .t-ouro { color: #a8860a; } .t-platina { color: #0e9d8a; }
+
+  .grid2 { display: flex; gap: 5mm; page-break-inside: avoid; }
+  .box { flex: 1; background: #f7f8fa; border: 1px solid #e4e6ea; border-radius: 2.5mm; padding: 4mm; margin-bottom: 4mm; }
+  .box h4 { font-size: 9pt; text-transform: uppercase; letter-spacing: 1px; color: #7a7f8c; margin-bottom: 2mm; }
+  .box p, .box li { font-size: 9.5pt; color: #3c404a; }
+  .box ul { margin-left: 5mm; }
+
+  .footer-note { margin-top: 6mm; padding-top: 3mm; border-top: 1px solid #e4e6ea;
+    color: #999; font-size: 8.5pt; }
+</style>
+</head>
+<body>
+
+<div class="cover">
+  <span class="brand">AgencyHub</span>
+  <h1>Jornadas completas da plataforma</h1>
+  <p class="sub">Como cliente, agência e profissionais terceirizados se conectam do primeiro contato ao pagamento —
+  com IA orquestrando estratégia, produção, qualidade e crescimento em todas as pontas.</p>
+  <p class="meta">Documento de produto · Agosto 2026</p>
+</div>
+
+<span class="kicker">Visão geral</span>
+<h2 class="no-break-before" style="font-size:14pt; margin-bottom:2mm;">O triângulo da plataforma</h2>
+<p style="color:#3c404a; max-width:170mm;">A plataforma conecta três papéis, cada um com seu portal e sua jornada.
+O <strong>cliente</strong> entrega contexto (briefing) e recebe resultado. A <strong>agência</strong> opera o hub:
+estratégia, produção com IA e gestão das demandas. O <strong>profissional</strong> (fotógrafo/designer) executa
+produções com pagamento garantido e reputação construída por dados reais. A cada etapa marcada com
+<span class="ai">IA</span>, a plataforma pesquisa, gera, avalia ou recomenda automaticamente.</p>
+
+<div class="pipeline" style="margin-top:4mm;">
+  <span>Briefing</span><span class="arrow">→</span>
+  <span class="hot">Estratégia com pesquisa real</span><span class="arrow">→</span>
+  <span class="hot">Entregáveis gerados por IA</span><span class="arrow">→</span>
+  <span>Demandas com profissionais</span><span class="arrow">→</span>
+  <span class="hot">Match + revisão com nota IA</span><span class="arrow">→</span>
+  <span>Pagamento garantido</span><span class="arrow">→</span>
+  <span class="hot">Relatórios + radar contínuo</span>
+</div>
+
+<div class="grid2">
+  <div class="box"><h4>Portas de entrada</h4>
+    <ul>
+      <li><strong>/portal</strong> — escolha de papel (agência, cliente, profissional)</li>
+      <li><strong>/cadastro</strong> — auto-cadastro de clientes (link de convite)</li>
+      <li><strong>/professionals/new</strong> — cadastro de profissionais (link de convite)</li>
+    </ul>
+  </div>
+  <div class="box"><h4>Motores de IA transversais</h4>
+    <ul>
+      <li><strong>Radar de mercado</strong> — o que mudou nos últimos dias + ajustes</li>
+      <li><strong>Motor de ideias</strong> — propostas proativas para as 3 pontas</li>
+      <li><strong>Relatório executivo</strong> — automatizado com dados reais da conta</li>
+    </ul>
+  </div>
+</div>
+
+<!-- ================= CLIENTE ================= -->
+<div class="journey-block">
+<span class="kicker">Jornada 1</span>
+<h2 class="journey">🧑‍💼 Jornada do Cliente</h2>
+<p class="journey-sub">Do primeiro contato ao acompanhamento contínuo — o cliente entrega contexto uma única vez
+e passa a receber estratégia, produção e relatórios sob medida.</p>
+
+<div class="step"><div class="num">1</div><div class="body">
+  <h3>Descoberta <span class="where">Prospecção da agência ou indicação</span></h3>
+  <p>O cliente pode nem conhecer a plataforma ainda: a agência o encontra via <span class="ai">IA de prospecção</span>
+  (pesquisa real na web por nicho/região) e faz a abordagem sugerida — ou ele chega por indicação/convite.</p>
+</div></div>
+
+<div class="step"><div class="num">2</div><div class="body">
+  <h3>Cadastro &amp; briefing <span class="where">/cadastro (auto-serviço) ou pela agência</span></h3>
+  <p>Preenche o briefing da empresa: segmento, público, tom de voz, objetivos, verba, canais, diferenciais,
+  concorrentes e idioma dos entregáveis (PT-BR/EN). Esse briefing é a fonte única que alimenta toda a IA.</p>
+</div></div>
+
+<div class="step"><div class="num">3</div><div class="body">
+  <h3>Onboarding estratégico <span class="where">conduzido pela agência</span></h3>
+  <p>A agência roda o deep dive: <span class="ai">IA + pesquisa web</span> mapeia tendências do segmento (com fontes),
+  personas de target buyers, concorrentes e metas SMART. O cliente valida o direcionamento em reunião.</p>
+</div></div>
+
+<div class="step"><div class="num">4</div><div class="body">
+  <h3>Recebe o kit da marca <span class="where">gerado em um clique pela agência</span></h3>
+  <ul>
+    <li>Plano de campanha mensal com KPIs e cronograma semanal;</li>
+    <li>Projeção de ROI com métricas <strong>antes → depois</strong> e roadmap por fases;</li>
+    <li>Identidade visual (logos, paleta, tipografia, tom de voz) e calendário social;</li>
+    <li>Landing page responsiva pronta para publicar.</li>
+  </ul>
+</div></div>
+
+<div class="step"><div class="num">5</div><div class="body">
+  <h3>Acompanha tudo no portal <span class="where">/portal/client — visão do cliente</span></h3>
+  <p>Vê produções em andamento (com status e garantia de pagamento), baixa os arquivos do contrato
+  (fotos, artes, HTML das landing pages) e lê os relatórios executivos em linguagem de negócio.</p>
+</div></div>
+
+<div class="step"><div class="num">6</div><div class="body">
+  <h3>Produções sob demanda <span class="where">demandas com profissionais</span></h3>
+  <p>Quando a conta precisa de foto/design, a agência abre uma demanda; o <span class="ai">match por IA</span> aloca
+  o profissional com mais propensão a entregar resultado para <em>aquela</em> marca. A qualidade de cada entrega é
+  auditada com <span class="ai">nota 0-100 da IA</span> no contexto da campanha — o cliente recebe consistência, não sorte.</p>
+</div></div>
+
+<div class="step"><div class="num">7</div><div class="body">
+  <h3>Evolução contínua <span class="where">radar + ideias + relatórios</span></h3>
+  <p>O <span class="ai">radar de mercado</span> adapta as recomendações às mudanças diárias do mercado; o
+  <span class="ai">motor de ideias</span> propõe novas campanhas puxadas por trends; relatórios periódicos mostram
+  o que foi feito, a qualidade e os próximos passos. O relacionamento evolui o elo da empresa (Bronze → Platina).</p>
+</div></div>
+</div>
+
+<!-- ================= AGÊNCIA ================= -->
+<div class="journey-block">
+<span class="kicker">Jornada 2</span>
+<h2 class="journey">🏢 Jornada da Agência</h2>
+<p class="journey-sub">A agência opera o hub inteiro: adquire clientes, produz com IA, orquestra profissionais
+e entrega resultado com margem — tudo com a própria marca.</p>
+
+<div class="step"><div class="num">1</div><div class="body">
+  <h3>Setup whitelabel <span class="where">Configurações</span></h3>
+  <p>Define nome, tagline e cor da marca — a plataforma vira "a plataforma da agência" para clientes e
+  profissionais. Copia os links de convite (cliente, profissional, portal) e usa a página de Treinamento
+  para embarcar o time.</p>
+</div></div>
+
+<div class="step"><div class="num">2</div><div class="body">
+  <h3>Aquisição de clientes <span class="where">Prospecção</span></h3>
+  <p>Informa nicho + região e a <span class="ai">IA pesquisa a web</span> por empresas reais, qualificando cada lead:
+  por que é fit, maturidade de marketing e abordagem de venda personalizada. Um clique converte o prospect em
+  cliente com cadastro pré-preenchido. Em paralelo, o link de auto-cadastro traz clientes por conta própria.</p>
+</div></div>
+
+<div class="step"><div class="num">3</div><div class="body">
+  <h3>Briefing &amp; estratégia <span class="where">workspace do cliente → Briefing / Estratégia</span></h3>
+  <p>Completa o briefing e roda o deep dive. A estratégia vigente passa a alimentar automaticamente todos os
+  outros entregáveis — a conta inteira fica coerente com um único direcionamento.</p>
+</div></div>
+
+<div class="step"><div class="num">4</div><div class="body">
+  <h3>Produção com IA <span class="where">✦ Kit completo ou abas individuais</span></h3>
+  <ul>
+    <li><strong>One-shot:</strong> um clique gera estratégia → campanha → ROI → identidade → social → landing page em sequência;</li>
+    <li><strong>Refinamento humano:</strong> cada aba aceita instruções do time e evolui versões anteriores em vez de recomeçar;</li>
+    <li><strong>Posts avulsos</strong> por tema/canal com ângulos criativos diferentes, prontos para publicar.</li>
+  </ul>
+</div></div>
+
+<div class="step"><div class="num">5</div><div class="body">
+  <h3>Orquestra os terceirizados <span class="where">aba Demandas</span></h3>
+  <p>Abre a demanda com brief, skills, local, verba e prazo. O <span class="ai">match por IA</span> rankeia os
+  profissionais cadastrados pelo fit com <em>aquele cliente</em> — pesando skills, localização, estética, preço e
+  <strong>track record real</strong> (nota média + demandas concluídas) — e entrega um mini-brief personalizado por candidato.
+  Agenda a reunião de alinhamento (com link Meet/Zoom) e conversa no chat do projeto.</p>
+</div></div>
+
+<div class="step"><div class="num">6</div><div class="body">
+  <h3>Garante e controla o dinheiro <span class="where">pipeline com escrow</span></h3>
+  <div class="pipeline">
+    <span>Aberta</span><span class="arrow">→</span><span>Vinculado</span><span class="arrow">→</span>
+    <span class="hot">💰 Pagamento reservado</span><span class="arrow">→</span><span>Produção</span><span class="arrow">→</span>
+    <span>Revisão</span><span class="arrow">→</span><span>Aprovada</span><span class="arrow">→</span>
+    <span class="hot">🏦 Pagamento liberado</span>
+  </div>
+  <p>O valor fica reservado <em>antes</em> da produção começar e só é liberado na aprovação — proteção para os dois lados.</p>
+</div></div>
+
+<div class="step"><div class="num">7</div><div class="body">
+  <h3>Revisa com precisão <span class="where">entregas da demanda</span></h3>
+  <p>Clica em qualquer ponto da imagem para marcar ajustes (pins numerados, resolver/reabrir) e roda a
+  <span class="ai">análise de arte da IA</span>: nota 0-100 por critérios profissionais (composição, técnica,
+  alinhamento ao briefing, consistência de marca, potencial de performance) + fit no contexto da campanha +
+  notas de revisão acionáveis para o profissional.</p>
+</div></div>
+
+<div class="step"><div class="num">8</div><div class="body">
+  <h3>Reporta e cresce <span class="where">Relatório / Radar / Ideias</span></h3>
+  <p>O <span class="ai">relatório executivo</span> se monta sozinho com os dados reais da conta — na visão certa
+  para cliente, time interno ou profissional. O radar diário mantém a agência ahead of the game e o motor de
+  ideias sugere a próxima jogada para cada conta da carteira.</p>
+</div></div>
+</div>
+
+<!-- ================= PROFISSIONAL ================= -->
+<div class="journey-block">
+<span class="kicker">Jornada 3</span>
+<h2 class="journey">📸 Jornada do Profissional (fotógrafo / designer)</h2>
+<p class="journey-sub">Trabalho com fit real, pagamento garantido antes de produzir e reputação que cresce
+com dados — não com autopromoção.</p>
+
+<div class="step"><div class="num">1</div><div class="body">
+  <h3>Cadastro <span class="where">/professionals/new (link de convite)</span></h3>
+  <p>Cria o perfil: atuação (foto/design), <strong>localização</strong>, skills, especialidades, foco de mercado,
+  bio, portfolio (links) e faixa de preço. É exatamente o que o match da IA usa — perfil completo = mais trabalho.</p>
+</div></div>
+
+<div class="step"><div class="num">2</div><div class="body">
+  <h3>Descobre oportunidades <span class="where">portal do profissional</span></h3>
+  <p>Vê as demandas abertas da plataforma (skills, local, verba, prazo) e recebe do <span class="ai">motor de ideias</span>
+  recomendações personalizadas: skills em alta no mercado, formatos para o portfolio e demandas abertas com fit para o seu perfil.</p>
+</div></div>
+
+<div class="step"><div class="num">3</div><div class="body">
+  <h3>É escolhido por mérito <span class="where">match por IA</span></h3>
+  <p>Quando uma demanda combina com o perfil, a <span class="ai">IA rankeia o fit (0-100%)</span> com razões objetivas —
+  e o histórico real na plataforma (nota média das entregas, demandas concluídas, elo) pesa a favor de quem entrega qualidade.</p>
+</div></div>
+
+<div class="step"><div class="num">4</div><div class="body">
+  <h3>Alinha sem ruído <span class="where">chat + reunião da demanda</span></h3>
+  <p>Recebe o brief da demanda + o mini-brief personalizado gerado no match ("como atacar este job"), conversa
+  no chat do projeto e participa da reunião de alinhamento agendada na plataforma.</p>
+</div></div>
+
+<div class="step"><div class="num">5</div><div class="body">
+  <h3>Produz com pagamento garantido <span class="where">escrow reservado</span></h3>
+  <p>A produção só começa depois que a agência <strong>reserva o pagamento</strong> — o profissional nunca trabalha
+  no fiado. O valor fica travado até a aprovação.</p>
+</div></div>
+
+<div class="step"><div class="num">6</div><div class="body">
+  <h3>Entrega e recebe feedback objetivo <span class="where">entregas da demanda</span></h3>
+  <p>Sobe a arte/foto na demanda. A revisão vem em duas camadas: <strong>pins clicados na imagem</strong>
+  (ajustes pontuais, sem "muda tudo" genérico) e a <span class="ai">análise da IA</span> com nota 0-100 e notas
+  de revisão acionáveis. Ajusta, reenvia, resolve os pins.</p>
+</div></div>
+
+<div class="step"><div class="num">7</div><div class="body">
+  <h3>Aprovação → pagamento liberado <span class="where">pipeline da demanda</span></h3>
+  <p>Com a entrega aprovada, a agência libera o valor reservado. A demanda vira "paga &amp; concluída" e entra
+  no histórico do profissional. Os arquivos ficam disponíveis para download por todos os integrantes do contrato.</p>
+</div></div>
+
+<div class="step"><div class="num">8</div><div class="body">
+  <h3>Sobe de elo <span class="where">ranking calculado por dados reais</span></h3>
+  <p>Demandas concluídas + nota média das entregas definem o elo — que aparece no perfil, pesa nos próximos
+  matches e vira vitrine para o mercado.</p>
+</div></div>
+
+<table class="elo">
+  <tr><th>Elo</th><th>Como alcançar</th><th>O que significa</th></tr>
+  <tr><td class="tier t-bronze">Bronze</td><td>Início de jornada</td><td>Perfil ativo, construindo histórico</td></tr>
+  <tr><td class="tier t-prata">Prata</td><td>2+ demandas concluídas com média ≥ 60</td><td>Entrega consistente comprovada</td></tr>
+  <tr><td class="tier t-ouro">Ouro</td><td>5+ demandas concluídas com média ≥ 75</td><td>Alta qualidade recorrente — prioridade nos matches</td></tr>
+  <tr><td class="tier t-platina">Platina</td><td>10+ demandas concluídas com média ≥ 85</td><td>Elite da plataforma — vitrine e demanda máxima</td></tr>
+</table>
+
+<div class="grid2">
+  <div class="box"><h4>Elo das empresas (clientes)</h4>
+    <p>Empresas também têm elo — cresce com demandas pagas e entregáveis gerados: Prata (2+ pagas ou 10+ entregáveis),
+    Ouro (6+ pagas), Platina (15+ pagas). Relacionamento vira status.</p>
+  </div>
+  <div class="box"><h4>Próxima fase da plataforma</h4>
+    <p>Autenticação por papel (senha/SSO), pagamentos reais no escrow (Stripe/Mercado Pago), integrações OAuth
+    (Meta, Google, TikTok, Canva, Figma, Calendar) e agendamentos executáveis (radar diário, auto-publicação, lembretes).</p>
+  </div>
+</div>
+
+<p class="footer-note">AgencyHub — documento de produto gerado em agosto/2026. As etapas marcadas com destaque
+verde usam IA (Claude) com pesquisa real na web, análise de imagem ou geração estruturada.</p>
+</div>
+
+</body>
+</html>
