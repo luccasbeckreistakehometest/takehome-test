@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { Geist, Geist_Mono, Space_Grotesk } from "next/font/google";
 import { getSettings } from "@/lib/settings";
+import Translator, { LangToggle } from "@/components/Translator";
 import "./globals.css";
 
 const geistSans = Geist({
@@ -51,6 +52,7 @@ export default function RootLayout({
       style={{ ["--accent" as string]: settings.accentColor }}
     >
       <body className="min-h-full flex flex-col">
+        <Translator />
         <header className="sticky top-0 z-40 border-b border-edge bg-background/80 backdrop-blur">
           <div className="mx-auto flex h-14 w-full max-w-6xl items-center justify-between gap-4 px-4">
             <Link href="/" className="flex shrink-0 items-center gap-2">
@@ -77,6 +79,7 @@ export default function RootLayout({
               >
                 Portal
               </Link>
+              <LangToggle />
             </nav>
           </div>
         </header>

@@ -15,7 +15,12 @@ export function pickModel(tier: ModelTier): string {
   return tier === "standard" ? STANDARD_MODEL : PREMIUM_MODEL;
 }
 
-const client = new Anthropic();
+// Cliente por chamada: usa a chave salva nos Settings se existir; senão a do
+// ambiente (.env.local ou perfil)
+function getAnthropicClient(): Anthropic {
+  const key = getSettings().anthropicApiKey;
+  return key ? new Anthropic({ apiKey: key }) : new Anthropic();
+}
 
 export class GenerationError extends Error {
   status: number;
@@ -110,7 +115,7 @@ async function runMessage(options: RequestOptions): Promise<Anthropic.Message> {
   let messages: Anthropic.MessageParam[] = [{ role: "user", content }];
 
   for (let attempt = 0; attempt < 6; attempt++) {
-    const stream = client.messages.stream({
+    const stream = getAnthropicClient().messages.stream({
       model: pickModel(options.tier ?? "premium"),
       max_tokens: options.maxTokens,
       thinking: { type: "adaptive" },

@@ -333,6 +333,7 @@ function ProjectDetail({ projectId, onBack }: { projectId: string; onBack: () =>
   const [sketching, setSketching] = useState(false);
   const [refMeaning, setRefMeaning] = useState<string>(REFERENCE_MEANINGS[0]);
   const [refUploading, setRefUploading] = useState(false);
+  const [mocking, setMocking] = useState(false);
 
   const load = useCallback(() => {
     api<ProjectDetailData>(`/api/projects/${projectId}`).then((data) => {
@@ -811,28 +812,47 @@ function ProjectDetail({ projectId, onBack }: { projectId: string; onBack: () =>
       <Card className="space-y-3">
         <div className="flex flex-wrap items-center justify-between gap-2">
           <SectionTitle>Sketch de referência (IA)</SectionTitle>
-          <Button
-            variant="ghost"
-            disabled={sketching}
-            onClick={async () => {
-              setSketching(true);
-              setError("");
-              try {
-                await api(`/api/projects/${projectId}/sketch`, { method: "POST" });
-                load();
-              } catch (err) {
-                setError(err instanceof Error ? err.message : "Erro no sketch");
-              } finally {
-                setSketching(false);
-              }
-            }}
-          >
-            {sketching
-              ? "Desenhando..."
-              : project.sketch
-                ? "↻ Regerar sketch"
-                : "✏️ Gerar sketch da composição"}
-          </Button>
+          <span className="flex flex-wrap gap-2">
+            <Button
+              variant="ghost"
+              disabled={sketching}
+              onClick={async () => {
+                setSketching(true);
+                setError("");
+                try {
+                  await api(`/api/projects/${projectId}/sketch`, { method: "POST" });
+                  load();
+                } catch (err) {
+                  setError(err instanceof Error ? err.message : "Erro no sketch");
+                } finally {
+                  setSketching(false);
+                }
+              }}
+            >
+              {sketching
+                ? "Desenhando..."
+                : project.sketch
+                  ? "↻ Regerar sketch"
+                  : "✏️ Gerar sketch da composição"}
+            </Button>
+            <Button
+              disabled={mocking}
+              onClick={async () => {
+                setMocking(true);
+                setError("");
+                try {
+                  await api(`/api/projects/${projectId}/mockup`, { method: "POST" });
+                  load();
+                } catch (err) {
+                  setError(err instanceof Error ? err.message : "Erro no mockup");
+                } finally {
+                  setMocking(false);
+                }
+              }}
+            >
+              {mocking ? "Compondo imagem..." : "🖼 Gerar mockup fotorrealista"}
+            </Button>
+          </span>
         </div>
         {sketching && <Spinner label="A IA está desenhando o rafe da composição (1-2 min)..." />}
         {project.sketch ? (

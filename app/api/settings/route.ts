@@ -11,10 +11,29 @@ const settingsSchema = z.object({
     .regex(/^#[0-9a-fA-F]{6}$/, "Cor em formato #rrggbb"),
   landingPagesEnabled: z.boolean().default(false),
   aiMode: z.enum(["economy", "balanced", "premium"]).default("balanced"),
+  // Chaves: string vazia = manter a atual; "clear" = apagar
+  anthropicApiKey: z.string().trim().default(""),
+  googleAiApiKey: z.string().trim().default(""),
 });
 
+// As chaves nunca voltam ao navegador — só o status de configuração
+function publicView() {
+  const settings = getSettings();
+  return {
+    agencyName: settings.agencyName,
+    tagline: settings.tagline,
+    accentColor: settings.accentColor,
+    landingPagesEnabled: settings.landingPagesEnabled,
+    aiMode: settings.aiMode,
+    anthropicApiKey: "",
+    googleAiApiKey: "",
+    hasAnthropicKey: Boolean(settings.anthropicApiKey || process.env.ANTHROPIC_API_KEY),
+    hasGoogleAiKey: Boolean(settings.googleAiApiKey),
+  };
+}
+
 export async function GET() {
-  return NextResponse.json(getSettings());
+  return NextResponse.json(publicView());
 }
 
 export async function PUT(request: Request) {
@@ -25,5 +44,20 @@ export async function PUT(request: Request) {
       { status: 400 }
     );
   }
-  return NextResponse.json(saveSettings(parsed.data));
+  const current = getSettings();
+  const resolveKey = (incoming: string, existing: string) => {
+    if (incoming === "") return existing; // em branco = mantém
+    if (incoming.toLowerCase() === "clear") return ""; // "clear" = apaga
+    return incoming;
+  };
+  saveSettings({
+    agencyName: parsed.data.agencyName,
+    tagline: parsed.data.tagline,
+    accentColor: parsed.data.accentColor,
+    landingPagesEnabled: parsed.data.landingPagesEnabled,
+    aiMode: parsed.data.aiMode,
+    anthropicApiKey: resolveKey(parsed.data.anthropicApiKey, current.anthropicApiKey),
+    googleAiApiKey: resolveKey(parsed.data.googleAiApiKey, current.googleAiApiKey),
+  });
+  return NextResponse.json(publicView());
 }

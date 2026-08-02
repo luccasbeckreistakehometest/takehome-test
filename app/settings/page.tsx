@@ -3,6 +3,11 @@
 import { useEffect, useState } from "react";
 import { api } from "@/lib/api";
 import type { AgencySettings } from "@/lib/settings";
+
+type SettingsView = AgencySettings & {
+  hasAnthropicKey?: boolean;
+  hasGoogleAiKey?: boolean;
+};
 import { Button, Card, CopyButton, ErrorBox, Input, Label, SectionTitle } from "@/components/ui";
 
 const INTEGRATIONS = [
@@ -19,14 +24,14 @@ const INTEGRATIONS = [
 ];
 
 export default function SettingsPage() {
-  const [settings, setSettings] = useState<AgencySettings | null>(null);
+  const [settings, setSettings] = useState<SettingsView | null>(null);
   const [saving, setSaving] = useState(false);
   const [saved, setSaved] = useState(false);
   const [error, setError] = useState("");
   const [origin, setOrigin] = useState("");
 
   useEffect(() => {
-    api<AgencySettings>("/api/settings").then(setSettings);
+    api<SettingsView>("/api/settings").then(setSettings);
     setOrigin(window.location.origin);
   }, []);
 
@@ -149,6 +154,56 @@ export default function SettingsPage() {
               </span>
             </span>
           </label>
+        </div>
+        <div className="space-y-2 border-t border-edge pt-4">
+          <p className="text-xs font-semibold uppercase tracking-wider text-muted">
+            Chaves de API
+          </p>
+          <p className="text-xs text-muted">
+            As chaves ficam apenas no banco local e nunca voltam ao navegador.
+            Deixe em branco para manter a atual; digite <code>clear</code> para
+            apagar.
+          </p>
+          <div className="grid gap-4 sm:grid-cols-2">
+            <div>
+              <Label>
+                Anthropic (Claude){" "}
+                {settings.hasAnthropicKey ? (
+                  <span className="normal-case text-accent">configurada ✓</span>
+                ) : (
+                  <span className="normal-case text-red-400">não configurada</span>
+                )}
+              </Label>
+              <Input
+                type="password"
+                value={settings.anthropicApiKey}
+                onChange={(e) =>
+                  setSettings({ ...settings, anthropicApiKey: e.target.value })
+                }
+                placeholder="sk-ant-... (em branco = manter)"
+              />
+            </div>
+            <div>
+              <Label>
+                Google AI — mockups de imagem{" "}
+                {settings.hasGoogleAiKey ? (
+                  <span className="normal-case text-accent">configurada ✓</span>
+                ) : (
+                  <span className="normal-case text-muted">
+                    opcional — aistudio.google.com
+                  </span>
+                )}
+              </Label>
+              <Input
+                type="password"
+                value={settings.googleAiApiKey}
+                onChange={(e) =>
+                  setSettings({ ...settings, googleAiApiKey: e.target.value })
+                }
+                placeholder="AIza... (habilita mockup fotorrealista)"
+              />
+            </div>
+          </div>
         </div>
         {error && <ErrorBox message={error} />}
         <div className="flex items-center gap-3">

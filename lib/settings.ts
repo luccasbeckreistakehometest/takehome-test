@@ -12,6 +12,9 @@ export type AgencySettings = {
   accentColor: string;
   landingPagesEnabled: boolean; // gerador de landing page (alto consumo de tokens)
   aiMode: AiMode;
+  // Chaves de API gerenciadas pela UI (armazenadas no banco local)
+  anthropicApiKey: string; // vazia = usa ANTHROPIC_API_KEY do .env.local
+  googleAiApiKey: string; // Google AI Studio (geração de imagem/mockup)
 };
 
 const DEFAULTS: AgencySettings = {
@@ -20,6 +23,8 @@ const DEFAULTS: AgencySettings = {
   accentColor: "#c6f24e",
   landingPagesEnabled: false,
   aiMode: "balanced",
+  anthropicApiKey: "",
+  googleAiApiKey: "",
 };
 
 db.exec(`
@@ -29,7 +34,10 @@ db.exec(`
     tagline TEXT NOT NULL,
     accentColor TEXT NOT NULL,
     landingPagesEnabled INTEGER NOT NULL DEFAULT 0,
-    economyMode INTEGER NOT NULL DEFAULT 1
+    economyMode INTEGER NOT NULL DEFAULT 1,
+    aiMode TEXT NOT NULL DEFAULT 'balanced',
+    anthropicApiKey TEXT NOT NULL DEFAULT '',
+    googleAiApiKey TEXT NOT NULL DEFAULT ''
   );
 `);
 
@@ -48,6 +56,10 @@ if (!settingsColumns.includes("economyMode")) {
 if (!settingsColumns.includes("aiMode")) {
   db.exec("ALTER TABLE settings ADD COLUMN aiMode TEXT NOT NULL DEFAULT 'balanced'");
 }
+if (!settingsColumns.includes("anthropicApiKey")) {
+  db.exec("ALTER TABLE settings ADD COLUMN anthropicApiKey TEXT NOT NULL DEFAULT ''");
+  db.exec("ALTER TABLE settings ADD COLUMN googleAiApiKey TEXT NOT NULL DEFAULT ''");
+}
 
 type SettingsRow = {
   agencyName: string;
@@ -55,6 +67,8 @@ type SettingsRow = {
   accentColor: string;
   landingPagesEnabled: number;
   aiMode: string;
+  anthropicApiKey: string;
+  googleAiApiKey: string;
 };
 
 export function getSettings(): AgencySettings {
@@ -70,15 +84,17 @@ export function getSettings(): AgencySettings {
     aiMode: (["economy", "balanced", "premium"] as const).includes(row.aiMode as AiMode)
       ? (row.aiMode as AiMode)
       : "balanced",
+    anthropicApiKey: row.anthropicApiKey ?? "",
+    googleAiApiKey: row.googleAiApiKey ?? "",
   };
 }
 
 export function saveSettings(settings: AgencySettings): AgencySettings {
   db.prepare(
-    `INSERT INTO settings (id, agencyName, tagline, accentColor, landingPagesEnabled, aiMode)
-     VALUES (1, @agencyName, @tagline, @accentColor, @landingPagesEnabled, @aiMode)
+    `INSERT INTO settings (id, agencyName, tagline, accentColor, landingPagesEnabled, aiMode, anthropicApiKey, googleAiApiKey)
+     VALUES (1, @agencyName, @tagline, @accentColor, @landingPagesEnabled, @aiMode, @anthropicApiKey, @googleAiApiKey)
      ON CONFLICT(id) DO UPDATE SET agencyName=@agencyName, tagline=@tagline, accentColor=@accentColor,
-       landingPagesEnabled=@landingPagesEnabled, aiMode=@aiMode`
+       landingPagesEnabled=@landingPagesEnabled, aiMode=@aiMode, anthropicApiKey=@anthropicApiKey, googleAiApiKey=@googleAiApiKey`
   ).run({
     ...settings,
     landingPagesEnabled: settings.landingPagesEnabled ? 1 : 0,
