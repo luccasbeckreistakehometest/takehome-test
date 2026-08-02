@@ -696,6 +696,7 @@ function SessionWorker({ onSavedConnection }: { onSavedConnection: () => void })
   const [testPhone, setTestPhone] = useState("");
   const [busy, setBusy] = useState(false);
   const [note, setNote] = useState("");
+  const [qrTick, setQrTick] = useState(0);
 
   const poll = useCallback(() => {
     api<{ state: string; message: string; running: boolean }>("/api/messaging/worker")
@@ -705,7 +706,10 @@ function SessionWorker({ onSavedConnection }: { onSavedConnection: () => void })
 
   useEffect(() => {
     poll();
-    const interval = setInterval(poll, 3000);
+    const interval = setInterval(() => {
+      poll();
+      setQrTick((t) => t + 1); // força recarregar o QR (ele expira/muda)
+    }, 3000);
     return () => clearInterval(interval);
   }, [poll]);
 
@@ -762,6 +766,23 @@ function SessionWorker({ onSavedConnection }: { onSavedConnection: () => void })
         <span className={`text-xs font-semibold ${label.cls}`}>{label.text}</span>
       </div>
       {status.message && <p className="text-xs text-muted">{status.message}</p>}
+
+      {/* QR code capturado do WhatsApp Web (headless no servidor) para escanear */}
+      {status.state === "awaiting_login" && (
+        <div className="flex flex-col items-center gap-2 rounded-md border border-edge bg-surface p-3">
+          {/* eslint-disable-next-line @next/next/no-img-element */}
+          <img
+            src={`/api/messaging/worker/qr?t=${qrTick}`}
+            alt="QR code do WhatsApp"
+            className="size-48 rounded bg-white p-1"
+            onError={(e) => ((e.currentTarget.style.opacity = "0.3"))}
+          />
+          <p className="text-center text-xs text-muted">
+            Abra o WhatsApp no celular → <strong>Aparelhos conectados</strong> → <strong>Conectar aparelho</strong> e escaneie.
+          </p>
+        </div>
+      )}
+
       <div className="flex flex-wrap gap-2">
         {status.running ? (
           <Button variant="ghost" onClick={() => act("stop")} disabled={busy}>
@@ -769,7 +790,7 @@ function SessionWorker({ onSavedConnection }: { onSavedConnection: () => void })
           </Button>
         ) : (
           <Button onClick={() => act("start")} disabled={busy}>
-            <Icon name="whatsapp" size={15} /> Conectar (abrir login)
+            <Icon name="whatsapp" size={15} /> Conectar WhatsApp
           </Button>
         )}
       </div>

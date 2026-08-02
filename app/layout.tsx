@@ -133,7 +133,7 @@ export default async function RootLayout({
               )}
               <div className="mx-1 hidden h-5 w-px bg-edge sm:block" />
               <ThemeToggle />
-              {session && (
+              {session && session.role !== "admin" && (
                 <ActivityBell
                   audience={session.role}
                   clientId={session.role === "client" ? (session.refId ?? undefined) : undefined}

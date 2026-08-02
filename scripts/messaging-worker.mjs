@@ -1,14 +1,16 @@
-// Worker de envio pela SESSÃO PRÓPRIA do usuário (WhatsApp Web).
+// Worker de envio pela SESSÃO do usuário (WhatsApp Web) — modelo SERVIDOR.
 //
-// Filosofia: dirige uma sessão que VOCÊ loga manualmente, para enviar
-// mensagens que VOCÊ compôs, aos SEUS contatos. NÃO burla detecção de bot
-// (nada de stealth/spoof de fingerprint) — isso viola o ToS e bane a conta.
-// Só respeita pausas entre envios para não parecer rajada.
+// Arquitetura: em produção o app roda no backend, então o Chromium roda
+// HEADLESS no servidor, com um PERFIL PERSISTENTE POR CONTA (userDataDir
+// separado). Quando não há login, o worker tira PRINT do QR code do WhatsApp
+// Web e salva num arquivo que o front exibe; o usuário escaneia com o celular
+// e a sessão fica salva no perfil daquela conta no servidor. Nos próximos
+// envios já entra logado, sem QR. Funciona igual em localhost.
 //
-// Este worker é iniciado pela UI (botão "Conectar") — o usuário NÃO precisa
-// de terminal. Ele: auto-instala o Playwright se faltar, abre o WhatsApp Web
-// para login (QR), e fica drenando a fila. Publica status em
-// data/messaging-worker-status.json para a interface acompanhar ao vivo.
+// NÃO burla detecção de bot (nada de stealth/spoof) — só respeita pausas
+// entre envios. Iniciado pela UI (botão "Conectar"), sem terminal.
+//
+// Args: --channel=whatsapp  --profile=<id da conta>  [--headful]
 
 import path from "path";
 import fs from "fs";
@@ -17,25 +19,39 @@ import { fileURLToPath } from "url";
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const root = path.join(__dirname, "..");
-const statusFile = path.join(root, "data", "messaging-worker-status.json");
-const userDataDir = path.join(root, "data", "messaging-session");
+const dataDir = path.join(root, "data");
 
-const channelArg = process.argv.find((a) => a.startsWith("--channel="));
-const channel = channelArg ? channelArg.split("=")[1] : "whatsapp";
+const arg = (name, def) => {
+  const found = process.argv.find((a) => a.startsWith(`--${name}=`));
+  return found ? found.split("=")[1] : def;
+};
+const channel = arg("channel", "whatsapp");
+const profile = arg("profile", "default");
+const headful = process.argv.includes("--headful");
+
+const statusFile = path.join(dataDir, "messaging-worker-status.json");
+const qrFile = path.join(dataDir, `messaging-qr-${profile}.png`);
+const userDataDir = path.join(dataDir, `messaging-session-${profile}`);
 
 const nowIso = () => new Date().toISOString();
 const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
 
-// Publica o estado atual para a UI ler (via /api/messaging/worker).
 function writeStatus(state, message = "") {
   try {
-    fs.mkdirSync(path.dirname(statusFile), { recursive: true });
+    fs.mkdirSync(dataDir, { recursive: true });
     fs.writeFileSync(
       statusFile,
-      JSON.stringify({ pid: process.pid, channel, state, message, updatedAt: nowIso() })
+      JSON.stringify({ pid: process.pid, channel, profile, state, message, updatedAt: nowIso() })
     );
   } catch {
-    // status é best-effort
+    // best-effort
+  }
+}
+function clearQr() {
+  try {
+    if (fs.existsSync(qrFile)) fs.unlinkSync(qrFile);
+  } catch {
+    /* ignore */
   }
 }
 
@@ -47,7 +63,6 @@ function run(cmd, args) {
   });
 }
 
-// Garante o PACOTE Playwright instalado (usuário não usa terminal).
 async function ensurePlaywright() {
   try {
     return (await import("playwright")).chromium;
@@ -59,10 +74,8 @@ async function ensurePlaywright() {
   }
 }
 
-// Abre o contexto persistente; se o BINÁRIO do Chromium não estiver baixado
-// (erro "Executable doesn't exist"), baixa sob demanda e tenta de novo.
 async function launchContext(chromium) {
-  const opts = { headless: false, viewport: { width: 1100, height: 800 } };
+  const opts = { headless: !headful, viewport: { width: 1100, height: 900 } };
   try {
     return await chromium.launchPersistentContext(userDataDir, opts);
   } catch (e) {
@@ -77,39 +90,51 @@ async function launchContext(chromium) {
   }
 }
 
-async function loadDb() {
-  const Database = (await import("better-sqlite3")).default;
-  return new Database(path.join(root, "data", "agencyhub.db"));
+let shuttingDown = false;
+for (const sig of ["SIGTERM", "SIGINT"]) {
+  process.on(sig, () => {
+    shuttingDown = true;
+    writeStatus("stopped", "Encerrado.");
+    if (sig === "SIGINT") process.exit(0);
+  });
 }
 
-let shuttingDown = false;
-process.on("SIGTERM", () => {
-  shuttingDown = true;
-  writeStatus("stopped", "Encerrado.");
-});
-process.on("SIGINT", () => {
-  shuttingDown = true;
-  writeStatus("stopped", "Encerrado.");
-  process.exit(0);
-});
-
 async function isLoggedIn(page) {
-  // Logado: painel de conversas presente. Sem login: tela de QR.
-  const loggedIn = await page
+  return page
     .locator('#pane-side, [aria-label="Lista de conversas"], [data-testid="chat-list"]')
     .first()
     .isVisible()
     .catch(() => false);
-  return loggedIn;
+}
+
+// Captura o QR (canvas do WhatsApp Web) para o front exibir.
+async function captureQr(page) {
+  try {
+    const canvas = page.locator('canvas[aria-label*="Scan"], div[data-ref] canvas, canvas').first();
+    if (await canvas.isVisible().catch(() => false)) {
+      await canvas.screenshot({ path: qrFile });
+      return true;
+    }
+  } catch {
+    /* QR ainda não renderizou */
+  }
+  return false;
 }
 
 async function waitForLogin(page) {
-  writeStatus("awaiting_login", "Escaneie o QR do WhatsApp Web na janela que abriu.");
   await page.goto("https://web.whatsapp.com", { waitUntil: "domcontentloaded" }).catch(() => {});
-  // Espera até 3 min o usuário escanear o QR
-  for (let i = 0; i < 90 && !shuttingDown; i++) {
-    if (await isLoggedIn(page)) return true;
-    await sleep(2000);
+  // Até ~4 min para escanear; re-captura o QR (ele expira e muda)
+  for (let i = 0; i < 120 && !shuttingDown; i++) {
+    if (await isLoggedIn(page)) {
+      clearQr();
+      return true;
+    }
+    const got = await captureQr(page);
+    writeStatus(
+      "awaiting_login",
+      got ? "Escaneie o QR code no app com o WhatsApp do seu celular." : "Carregando o QR code…"
+    );
+    await sleep(3000);
   }
   return isLoggedIn(page);
 }
@@ -134,7 +159,8 @@ async function main() {
   let chromium, db;
   try {
     chromium = await ensurePlaywright();
-    db = await loadDb();
+    db = (await import("better-sqlite3")).default;
+    db = new db(path.join(dataDir, "agencyhub.db"));
   } catch (e) {
     writeStatus("error", `Falha ao preparar: ${String(e?.message ?? e).slice(0, 160)}`);
     return;
@@ -148,21 +174,20 @@ async function main() {
          ON CONFLICT(channel) DO UPDATE SET sessionReady = ?, updatedAt = ?`
       ).run(ready ? 1 : 0, nowIso(), ready ? 1 : 0, nowIso());
     } catch {
-      // tabela pode não existir ainda — ignora
+      /* tabela pode não existir */
     }
   };
 
-  const context = await chromium.launchPersistentContext(userDataDir, {
-    headless: false,
-    viewport: { width: 1100, height: 800 },
-  });
+  const context = await launchContext(chromium);
   const page = context.pages()[0] ?? (await context.newPage());
 
   if (!(await waitForLogin(page))) {
     writeStatus("error", "Login não concluído. Feche e tente conectar de novo.");
+    clearQr();
     await context.close().catch(() => {});
     return;
   }
+  clearQr();
   markSession(true);
   writeStatus("connected", "Conectado. Enviando mensagens da fila automaticamente.");
 
@@ -180,7 +205,6 @@ async function main() {
       .prepare("UPDATE message_outbox SET status = ?, error = ?, sentAt = ? WHERE id = ?")
       .run(status, error, status === "sent" ? nowIso() : null, id);
 
-  // Loop contínuo: drena a fila e fica de prontidão (inclui agendados).
   while (!shuttingDown) {
     const messages = due();
     for (const msg of messages) {
