@@ -116,7 +116,7 @@ async function runMessage(options: RequestOptions): Promise<Anthropic.Message> {
   let messages: Anthropic.MessageParam[] = [{ role: "user", content }];
 
   for (let attempt = 0; attempt < 6; attempt++) {
-    const stream = getAnthropicClient().messages.stream({
+    const message = await streamWithRetry({
       model: pickModel(options.tier ?? "premium"),
       max_tokens: options.maxTokens,
       thinking: { type: "adaptive" },
@@ -133,13 +133,43 @@ async function runMessage(options: RequestOptions): Promise<Anthropic.Message> {
           }
         : {}),
     });
-    const message = await stream.finalMessage();
     if (message.stop_reason !== "pause_turn") return message;
     messages = [...messages, { role: "assistant", content: message.content }];
   }
   throw new GenerationError(
     "A pesquisa de mercado excedeu o limite de iterações. Tente novamente."
   );
+}
+
+const sleep = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms));
+
+// Sobrecarga (529 overloaded_error) e 5xx são transitórios: o servidor da
+// Anthropic está com pico. Reexecutamos com backoff exponencial + jitter em
+// vez de deixar a geração inteira falhar por um blip momentâneo.
+function isRetryable(error: unknown): boolean {
+  if (error instanceof Anthropic.APIError) {
+    const status = error.status ?? 0;
+    return status === 429 || status === 529 || status >= 500;
+  }
+  if (error instanceof Anthropic.APIConnectionError) return true;
+  return false;
+}
+
+async function streamWithRetry(
+  params: Anthropic.MessageStreamParams
+): Promise<Anthropic.Message> {
+  const maxRetries = 4;
+  for (let attempt = 0; ; attempt++) {
+    try {
+      const stream = getAnthropicClient().messages.stream(params);
+      return await stream.finalMessage();
+    } catch (error) {
+      if (attempt >= maxRetries || !isRetryable(error)) throw error;
+      // 1.5s, 3s, 6s, 12s (+ jitter) — dá tempo do pico passar
+      const backoff = 1500 * 2 ** attempt + Math.floor(Math.random() * 500);
+      await sleep(backoff);
+    }
+  }
 }
 
 export async function generateStructured<T>(options: {

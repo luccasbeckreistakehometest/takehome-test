@@ -5,15 +5,27 @@ import { useState } from "react";
 export function Card({
   children,
   className = "",
+  hover = false,
 }: {
   children: React.ReactNode;
   className?: string;
+  hover?: boolean;
 }) {
   return (
-    <div className={`rounded-xl border border-edge bg-surface p-5 ${className}`}>
+    <div
+      className={`rounded-xl border border-edge bg-surface p-5 shadow-sm ${
+        hover ? "card-hover" : ""
+      } ${className}`}
+    >
       {children}
     </div>
   );
+}
+
+// Placeholder animado enquanto dados carregam — leitura mais profissional
+// que um spinner solitário.
+export function Skeleton({ className = "" }: { className?: string }) {
+  return <div className={`skeleton ${className}`} />;
 }
 
 export function SectionTitle({ children }: { children: React.ReactNode }) {
@@ -42,15 +54,15 @@ export function Button({
 }) {
   const styles = {
     primary:
-      "bg-accent text-accent-ink hover:opacity-90 disabled:opacity-40 font-medium",
+      "bg-accent text-accent-ink hover:opacity-90 hover:-translate-y-px active:translate-y-0 disabled:opacity-40 font-medium shadow-sm",
     ghost:
-      "border border-edge bg-surface-2 text-foreground hover:border-muted disabled:opacity-40",
+      "border border-edge bg-surface-2 text-foreground hover:border-muted hover:-translate-y-px active:translate-y-0 disabled:opacity-40",
     danger:
-      "border border-red-900/60 bg-red-950/40 text-red-300 hover:border-red-700 disabled:opacity-40",
+      "border border-red-500/40 bg-red-500/10 text-red-500 hover:border-red-500/70 disabled:opacity-40",
   }[variant];
   return (
     <button
-      className={`rounded-md px-3.5 py-2 text-sm transition-all disabled:cursor-not-allowed ${styles} ${className}`}
+      className={`inline-flex items-center justify-center gap-1.5 rounded-md px-3.5 py-2 text-sm transition-all duration-150 disabled:cursor-not-allowed disabled:hover:translate-y-0 ${styles} ${className}`}
       {...props}
     >
       {children}

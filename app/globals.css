@@ -1,6 +1,8 @@
 @import "tailwindcss";
 
-:root {
+/* Tema escuro é o default da casa (whitelabel troca só o --accent). */
+:root,
+:root[data-theme="dark"] {
   --background: #0b0c10;
   --surface: #13151b;
   --surface-2: #1a1d25;
@@ -9,6 +11,21 @@
   --muted: #8b90a0;
   --accent: #c6f24e;
   --accent-ink: #141605;
+  --shadow: 0 8px 30px rgba(0, 0, 0, 0.35);
+  color-scheme: dark;
+}
+
+:root[data-theme="light"] {
+  --background: #f6f7f9;
+  --surface: #ffffff;
+  --surface-2: #eef0f4;
+  --edge: #dfe3e9;
+  --foreground: #16181d;
+  --muted: #5b6472;
+  /* --accent / --accent-ink NÃO trocam: são a cor de marca (whitelabel),
+     constante entre temas. Herdam do :root default ou do style inline. */
+  --shadow: 0 8px 30px rgba(16, 24, 40, 0.08);
+  color-scheme: light;
 }
 
 @theme inline {
@@ -29,11 +46,50 @@ body {
   background: var(--background);
   color: var(--foreground);
   font-family: var(--font-geist-sans), system-ui, sans-serif;
+  /* Transição suave ao alternar tema */
+  transition: background-color 0.3s ease, color 0.3s ease;
 }
 
 ::selection {
   background: var(--accent);
   color: var(--accent-ink);
+}
+
+/* Cursor pointer consistente em tudo que é acionável */
+button:not(:disabled),
+a[href],
+[role="button"],
+summary,
+label[for],
+select,
+.cursor-pointer {
+  cursor: pointer;
+}
+button:disabled {
+  cursor: not-allowed;
+}
+
+/* Scrollbar discreta que segue o tema */
+* {
+  scrollbar-width: thin;
+  scrollbar-color: var(--edge) transparent;
+}
+*::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+*::-webkit-scrollbar-thumb {
+  background: var(--edge);
+  border-radius: 999px;
+}
+*::-webkit-scrollbar-thumb:hover {
+  background: var(--muted);
+}
+
+/* Foco acessível e no tom do tema */
+:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 2px;
 }
 
 /* Impressão/PDF: esconde a moldura do app e força fundo claro */
@@ -45,6 +101,7 @@ body {
   }
   body {
     background: #ffffff !important;
+    color: #000 !important;
   }
   main {
     padding: 0 !important;
@@ -52,7 +109,7 @@ body {
   }
 }
 
-/* Animações do assistente flutuante */
+/* ---------- Animações ---------- */
 @keyframes pop-in {
   from {
     opacity: 0;
@@ -73,6 +130,24 @@ body {
     transform: translateY(14px) scale(0.92);
   }
 }
+@keyframes fade-in-up {
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+@keyframes shimmer {
+  0% {
+    background-position: -400px 0;
+  }
+  100% {
+    background-position: 400px 0;
+  }
+}
 .animate-pop-in {
   animation: pop-in 0.22s cubic-bezier(0.16, 1, 0.3, 1);
   transform-origin: bottom right;
@@ -80,4 +155,38 @@ body {
 .animate-pop-out {
   animation: pop-out 0.18s ease-in forwards;
   transform-origin: bottom right;
+}
+.animate-fade-in {
+  animation: fade-in-up 0.35s cubic-bezier(0.16, 1, 0.3, 1) both;
+}
+
+/* Skeleton de carregamento */
+.skeleton {
+  background: linear-gradient(
+    90deg,
+    var(--surface-2) 25%,
+    var(--edge) 37%,
+    var(--surface-2) 63%
+  );
+  background-size: 800px 100%;
+  animation: shimmer 1.4s infinite linear;
+  border-radius: 8px;
+}
+
+/* Elevação e transição padrão para cards/itens interativos */
+.card-hover {
+  transition: transform 0.18s ease, border-color 0.18s ease, box-shadow 0.18s ease;
+}
+.card-hover:hover {
+  transform: translateY(-2px);
+  box-shadow: var(--shadow);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    transition-duration: 0.01ms !important;
+  }
 }

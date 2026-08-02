@@ -9,6 +9,8 @@ import ActivityBell, { LogoutButton } from "@/components/ActivityBell";
 import JobsIndicator from "@/components/JobsIndicator";
 import GlobalSearch from "@/components/GlobalSearch";
 import AssistantWidget from "@/components/AssistantWidget";
+import ThemeToggle from "@/components/ThemeToggle";
+import { Icon, type IconName } from "@/components/icons";
 import "./globals.css";
 
 const geistSans = Geist({ variable: "--font-geist-sans", subsets: ["latin"] });
@@ -24,15 +26,17 @@ export const metadata: Metadata = {
     "Centralize briefings, conecte clientes, agência e profissionais, e gere estratégia, campanhas, identidade e landing pages com IA.",
 };
 
-const AGENCY_NAV = [
-  { href: "/", label: "Hoje" },
-  { href: "/clients", label: "Clientes" },
-  { href: "/production", label: "Produção" },
-  { href: "/prospecting", label: "Prospecção" },
-  { href: "/professionals", label: "Profissionais" },
-  { href: "/agenda", label: "Agenda" },
-  { href: "/ideas", label: "Ideias" },
-  { href: "/settings", label: "Configurações" },
+const AGENCY_NAV: { href: string; label: string; icon: IconName }[] = [
+  { href: "/", label: "Hoje", icon: "home" },
+  { href: "/clients", label: "Clientes", icon: "briefcase" },
+  { href: "/production", label: "Produção", icon: "kanban" },
+  { href: "/insights", label: "Insights", icon: "chart" },
+  { href: "/messages", label: "Mensagens", icon: "message" },
+  { href: "/prospecting", label: "Prospecção", icon: "radar" },
+  { href: "/professionals", label: "Profissionais", icon: "users" },
+  { href: "/agenda", label: "Agenda", icon: "calendar" },
+  { href: "/ideas", label: "Ideias", icon: "lightbulb" },
+  { href: "/settings", label: "Configurações", icon: "settings" },
 ];
 
 export default async function RootLayout({
@@ -48,7 +52,16 @@ export default async function RootLayout({
       lang="pt-BR"
       className={`${geistSans.variable} ${geistMono.variable} ${spaceGrotesk.variable} h-full antialiased`}
       style={{ ["--accent" as string]: settings.accentColor }}
+      suppressHydrationWarning
     >
+      <head>
+        {/* Aplica o tema salvo antes da pintura (sem flash) */}
+        <script
+          dangerouslySetInnerHTML={{
+            __html: `try{var t=localStorage.getItem('theme');if(!t){t=window.matchMedia('(prefers-color-scheme: light)').matches?'light':'dark'}document.documentElement.setAttribute('data-theme',t)}catch(e){document.documentElement.setAttribute('data-theme','dark')}`,
+          }}
+        />
+      </head>
       <body className="min-h-full flex flex-col">
         <Translator />
         <JobsIndicator />
@@ -72,17 +85,42 @@ export default async function RootLayout({
                 {settings.agencyName}
               </span>
             </Link>
-            <nav className="flex items-center gap-4 overflow-x-auto text-sm text-muted">
-              {session?.role === "agency" &&
-                AGENCY_NAV.map((item) => (
-                  <Link
-                    key={item.href}
-                    href={item.href}
-                    className="whitespace-nowrap transition-colors hover:text-foreground"
-                  >
-                    {item.label}
-                  </Link>
-                ))}
+            <nav className="flex items-center gap-1 text-sm text-muted">
+              {session?.role === "agency" && (
+                <div className="hidden items-center gap-0.5 lg:flex">
+                  {AGENCY_NAV.map((item) => (
+                    <Link
+                      key={item.href}
+                      href={item.href}
+                      className="group flex items-center gap-1.5 whitespace-nowrap rounded-md px-2.5 py-1.5 transition-colors hover:bg-surface-2 hover:text-foreground"
+                    >
+                      <Icon name={item.icon} size={16} className="opacity-70 transition-opacity group-hover:opacity-100" />
+                      {item.label}
+                    </Link>
+                  ))}
+                </div>
+              )}
+              {session?.role === "agency" && (
+                <details className="relative lg:hidden">
+                  <summary className="grid size-8 list-none place-items-center rounded-md hover:bg-surface-2 [&::-webkit-details-marker]:hidden">
+                    <Icon name="kanban" size={18} />
+                  </summary>
+                  <div className="absolute right-0 top-10 z-50 w-52 rounded-xl border border-edge bg-surface p-1.5 shadow-2xl">
+                    {AGENCY_NAV.map((item) => (
+                      <Link
+                        key={item.href}
+                        href={item.href}
+                        className="flex items-center gap-2.5 rounded-md px-3 py-2 transition-colors hover:bg-surface-2 hover:text-foreground"
+                      >
+                        <Icon name={item.icon} size={16} />
+                        {item.label}
+                      </Link>
+                    ))}
+                  </div>
+                </details>
+              )}
+              <div className="mx-1 hidden h-5 w-px bg-edge sm:block" />
+              <ThemeToggle />
               {session && (
                 <ActivityBell
                   audience={session.role}
