@@ -3,13 +3,14 @@
 import { useCallback, useEffect, useState } from "react";
 import { api } from "@/lib/api";
 import type { Client } from "@/lib/types";
-import type { MeetingWithNames } from "@/lib/marketplace-db";
+import type { MeetingWithNames, ScheduledPostWithClient } from "@/lib/marketplace-db";
 import type { MeetingRecs } from "@/lib/marketplace-schemas";
 import { googleCalendarUrl } from "@/lib/gcal";
 import { Button, Card, ErrorBox, Input, Label, SectionTitle, Select, Spinner, Tag } from "@/components/ui";
 
 export default function AgendaPage() {
   const [meetings, setMeetings] = useState<MeetingWithNames[] | null>(null);
+  const [posts, setPosts] = useState<ScheduledPostWithClient[]>([]);
   const [clients, setClients] = useState<Client[]>([]);
   const [recs, setRecs] = useState<MeetingRecs | null>(null);
   const [recommending, setRecommending] = useState(false);
@@ -19,6 +20,7 @@ export default function AgendaPage() {
 
   const load = useCallback(() => {
     api<MeetingWithNames[]>("/api/meetings").then(setMeetings);
+    api<ScheduledPostWithClient[]>("/api/scheduled-posts").then(setPosts);
   }, []);
 
   useEffect(() => {
@@ -114,6 +116,81 @@ export default function AgendaPage() {
           ))}
         </Card>
       )}
+
+      <Card className="space-y-3">
+        <SectionTitle>Fila de publicações</SectionTitle>
+        <p className="text-sm text-muted">
+          Posts agendados a partir do calendário/posts dos clientes. A publicação
+          automática nas redes é ativada quando a integração (Meta/TikTok) estiver
+          conectada — até lá, publique manualmente e confirme aqui.
+        </p>
+        {posts.filter((p) => p.status !== "canceled").length === 0 ? (
+          <p className="text-sm text-muted">
+            Nada na fila — agende pelo botão 🕐 nos posts de cada cliente.
+          </p>
+        ) : (
+          <div className="space-y-1.5">
+            {posts
+              .filter((p) => p.status !== "canceled")
+              .map((post) => {
+                const due =
+                  post.status === "scheduled" && new Date(post.scheduledFor) <= new Date();
+                return (
+                  <div
+                    key={post.id}
+                    className={`rounded-md border px-3 py-2 text-sm ${
+                      due ? "border-amber-700/60 bg-amber-950/30" : "border-edge bg-surface-2"
+                    }`}
+                  >
+                    <div className="flex flex-wrap items-center justify-between gap-2">
+                      <p>
+                        <span className="font-medium">{post.title}</span>{" "}
+                        <span className="text-xs text-muted">
+                          · {post.channel} · {post.clientName} ·{" "}
+                          {new Date(post.scheduledFor).toLocaleString("pt-BR")}
+                        </span>
+                        {post.status === "published" && (
+                          <span className="ml-2 text-xs text-accent">✓ Publicado</span>
+                        )}
+                        {due && (
+                          <span className="ml-2 text-xs font-semibold text-amber-400">
+                            ⏰ Na hora — publicar agora
+                          </span>
+                        )}
+                      </p>
+                      <span className="flex items-center gap-2 text-xs">
+                        {post.status === "scheduled" && (
+                          <button
+                            className="rounded bg-accent px-2 py-0.5 font-medium text-accent-ink"
+                            onClick={async () => {
+                              await api(`/api/scheduled-posts/${post.id}`, {
+                                method: "PATCH",
+                                body: JSON.stringify({ status: "published" }),
+                              });
+                              load();
+                            }}
+                          >
+                            ✓ Marcar publicado
+                          </button>
+                        )}
+                        <button
+                          className="text-muted hover:text-red-400"
+                          onClick={async () => {
+                            await api(`/api/scheduled-posts/${post.id}`, { method: "DELETE" });
+                            load();
+                          }}
+                        >
+                          Excluir
+                        </button>
+                      </span>
+                    </div>
+                    <p className="mt-1 line-clamp-2 text-xs text-muted">{post.caption}</p>
+                  </div>
+                );
+              })}
+          </div>
+        )}
+      </Card>
 
       <Card className="space-y-3">
         <SectionTitle>Agendar manualmente</SectionTitle>

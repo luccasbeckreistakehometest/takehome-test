@@ -138,6 +138,18 @@ db.exec(`
     status TEXT NOT NULL DEFAULT 'pending',
     createdAt TEXT NOT NULL
   );
+  CREATE TABLE IF NOT EXISTS scheduled_posts (
+    id TEXT PRIMARY KEY,
+    clientId TEXT NOT NULL REFERENCES clients(id) ON DELETE CASCADE,
+    title TEXT NOT NULL,
+    channel TEXT NOT NULL,
+    caption TEXT NOT NULL,
+    hashtags TEXT NOT NULL DEFAULT '[]',
+    scheduledFor TEXT NOT NULL,
+    status TEXT NOT NULL DEFAULT 'scheduled',
+    publishedAt TEXT,
+    createdAt TEXT NOT NULL
+  );
   CREATE TABLE IF NOT EXISTS client_assets (
     id TEXT PRIMARY KEY,
     clientId TEXT NOT NULL REFERENCES clients(id) ON DELETE CASCADE,
@@ -672,6 +684,82 @@ export function createClientAsset(input: {
 
 export function deleteClientAsset(id: string): boolean {
   return db.prepare("DELETE FROM client_assets WHERE id = ?").run(id).changes > 0;
+}
+
+// ---------- Publicações agendadas ----------
+
+export type ScheduledPost = {
+  id: string;
+  clientId: string;
+  title: string;
+  channel: string;
+  caption: string;
+  hashtags: string[];
+  scheduledFor: string;
+  // scheduled = na fila; published = publicado (auto via integração ou
+  // confirmação manual); canceled = cancelado
+  status: "scheduled" | "published" | "canceled";
+  publishedAt: string | null;
+  createdAt: string;
+};
+
+export type ScheduledPostWithClient = ScheduledPost & { clientName: string };
+
+type ScheduledPostRow = Omit<ScheduledPost, "hashtags"> & { hashtags: string };
+
+export function listScheduledPosts(clientId?: string): ScheduledPostWithClient[] {
+  const where = clientId ? "WHERE sp.clientId = ?" : "";
+  const rows = db
+    .prepare(
+      `SELECT sp.*, c.name AS clientName FROM scheduled_posts sp
+       JOIN clients c ON c.id = sp.clientId ${where}
+       ORDER BY sp.scheduledFor ASC`
+    )
+    .all(...(clientId ? [clientId] : [])) as (ScheduledPostRow & { clientName: string })[];
+  return rows.map((row) => ({ ...row, hashtags: JSON.parse(row.hashtags) }));
+}
+
+export function createScheduledPost(input: {
+  clientId: string;
+  title: string;
+  channel: string;
+  caption: string;
+  hashtags: string[];
+  scheduledFor: string;
+}): ScheduledPost {
+  const post: ScheduledPost = {
+    ...input,
+    id: randomUUID(),
+    status: "scheduled",
+    publishedAt: null,
+    createdAt: now(),
+  };
+  db.prepare(
+    `INSERT INTO scheduled_posts (id, clientId, title, channel, caption, hashtags, scheduledFor, status, publishedAt, createdAt)
+     VALUES (@id, @clientId, @title, @channel, @caption, @hashtags, @scheduledFor, @status, @publishedAt, @createdAt)`
+  ).run({ ...post, hashtags: JSON.stringify(post.hashtags) });
+  return post;
+}
+
+export function updateScheduledPost(
+  id: string,
+  patch: Partial<Pick<ScheduledPost, "scheduledFor" | "status" | "caption">>
+): boolean {
+  const existing = db.prepare("SELECT * FROM scheduled_posts WHERE id = ?").get(id) as
+    | ScheduledPostRow
+    | undefined;
+  if (!existing) return false;
+  const merged = { ...existing, ...patch };
+  const publishedAt =
+    patch.status === "published" ? now() : merged.publishedAt ?? null;
+  db.prepare(
+    "UPDATE scheduled_posts SET scheduledFor = ?, status = ?, caption = ?, publishedAt = ? WHERE id = ?"
+  ).run(merged.scheduledFor, merged.status, merged.caption, publishedAt, id);
+  return true;
+}
+
+export function deleteScheduledPost(id: string): boolean {
+  return db.prepare("DELETE FROM scheduled_posts WHERE id = ?").run(id).changes > 0;
 }
 
 // ---------- Prospecção ----------

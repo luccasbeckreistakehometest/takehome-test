@@ -80,6 +80,80 @@ function CreateDemandButton({
   );
 }
 
+
+// Agenda a publicação do post na fila (auto-publicação liga com a integração)
+function SchedulePostButton({
+  clientId,
+  title,
+  channel,
+  caption,
+  hashtags,
+}: {
+  clientId: string;
+  title: string;
+  channel: string;
+  caption: string;
+  hashtags: string[];
+}) {
+  const [state, setState] = useState<"idle" | "picking" | "saving" | "done">("idle");
+  const [when, setWhen] = useState("");
+
+  if (state === "done") {
+    return <span className="text-xs text-accent">🕐 Agendado ✓ (veja em Agenda)</span>;
+  }
+  if (state === "idle") {
+    return (
+      <button
+        onClick={() => setState("picking")}
+        className="rounded border border-edge bg-surface-2 px-2 py-0.5 text-xs text-muted transition-colors hover:border-accent hover:text-accent"
+      >
+        🕐 Agendar publicação
+      </button>
+    );
+  }
+  return (
+    <span className="inline-flex flex-wrap items-center gap-1.5">
+      <input
+        type="datetime-local"
+        value={when}
+        onChange={(e) => setWhen(e.target.value)}
+        className="rounded border border-edge bg-surface-2 px-2 py-0.5 text-xs outline-none focus:border-accent"
+      />
+      <button
+        disabled={!when || state === "saving"}
+        onClick={async () => {
+          setState("saving");
+          try {
+            await api("/api/scheduled-posts", {
+              method: "POST",
+              body: JSON.stringify({
+                clientId,
+                title,
+                channel,
+                caption,
+                hashtags,
+                scheduledFor: when,
+              }),
+            });
+            setState("done");
+          } catch {
+            setState("picking");
+          }
+        }}
+        className="rounded bg-accent px-2 py-0.5 text-xs font-medium text-accent-ink disabled:opacity-50"
+      >
+        {state === "saving" ? "..." : "Confirmar"}
+      </button>
+      <button
+        onClick={() => setState("idle")}
+        className="text-xs text-muted hover:text-foreground"
+      >
+        cancelar
+      </button>
+    </span>
+  );
+}
+
 function postSkills(format: string, channel: string): string[] {
   const text = `${format} ${channel}`.toLowerCase();
   if (/foto|photo/.test(text)) return ["Fotografia de produto"];
@@ -788,7 +862,14 @@ export function SocialCalendarView({
               </p>
             </div>
             {clientId && (
-              <div className="mt-2">
+              <div className="mt-2 flex flex-wrap items-center gap-2">
+                <SchedulePostButton
+                  clientId={clientId}
+                  title={post.title}
+                  channel={post.channel}
+                  caption={post.caption}
+                  hashtags={post.hashtags}
+                />
                 <CreateDemandButton
                   clientId={clientId}
                   title={`Produção — ${post.title}`}
@@ -904,7 +985,14 @@ export function PostBatchView({
             </p>
           </div>
           {clientId && (
-            <div className="mt-2">
+            <div className="mt-2 flex flex-wrap items-center gap-2">
+              <SchedulePostButton
+                clientId={clientId}
+                title={post.hook.slice(0, 60)}
+                channel={post.channel}
+                caption={post.caption}
+                hashtags={post.hashtags}
+              />
               <CreateDemandButton
                 clientId={clientId}
                 title={`Produção — ${post.hook.slice(0, 60)}`}
