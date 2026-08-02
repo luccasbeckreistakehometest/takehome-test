@@ -1,11 +1,12 @@
 import { NextResponse } from "next/server";
 import { db, listClients } from "@/lib/db";
 import {
+  getAgencyStats,
   getClientStats,
   listActivities,
   listScheduledPosts,
 } from "@/lib/marketplace-db";
-import { clientTier } from "@/lib/ranking";
+import { agencyTier, clientTier } from "@/lib/ranking";
 
 // Home operacional da agência: "o que preciso fazer hoje" cross-contas
 export async function GET() {
@@ -56,7 +57,9 @@ export async function GET() {
     tier: clientTier(getClientStats(client.id)),
   }));
   const unread = listActivities({ audience: "agency" }).filter((a) => !a.readAt).length;
+  const agencyStats = getAgencyStats();
   return NextResponse.json({
+    agency: { tier: agencyTier(agencyStats), stats: agencyStats },
     pendingApplications,
     inReview,
     awaitingClient,

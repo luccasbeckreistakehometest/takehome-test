@@ -163,10 +163,35 @@ export async function generateStructured<T>(options: {
       images: options.images,
       tier: options.tier,
     });
-    return JSON.parse(extractText(message)) as T;
+    return extractJson<T>(message);
   } catch (error) {
     translateError(error);
   }
+}
+
+// Com web search o modelo emite blocos de texto intermediários entre as
+// buscas — só o último bloco carrega o JSON do structured output. Tenta do
+// fim para o início e cai no join completo como último recurso.
+function extractJson<T>(message: Anthropic.Message): T {
+  const blocks = message.content
+    .filter((block): block is Anthropic.TextBlock => block.type === "text")
+    .map((block) => block.text.trim())
+    .filter(Boolean);
+  if (blocks.length === 0) {
+    throw new GenerationError("A IA retornou uma resposta vazia. Tente novamente.");
+  }
+  const candidates = [...blocks].reverse().concat(blocks.join(""));
+  for (const candidate of candidates) {
+    const cleaned = candidate.replace(/^```(?:json)?\s*/i, "").replace(/\s*```$/, "");
+    try {
+      return JSON.parse(cleaned) as T;
+    } catch {
+      // tenta o próximo bloco
+    }
+  }
+  throw new GenerationError(
+    "A IA respondeu fora do formato esperado. Tente novamente."
+  );
 }
 
 export async function generateHtml(options: {

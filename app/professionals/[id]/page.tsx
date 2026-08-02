@@ -13,7 +13,7 @@ import {
 import type { ProfessionalStats } from "@/lib/marketplace-db";
 import type { TierInfo } from "@/lib/ranking";
 import ProfessionalForm from "@/components/ProfessionalForm";
-import TierBadge from "@/components/TierBadge";
+import TierBadge, { TierProgress } from "@/components/TierBadge";
 import { Button, Card, SectionTitle, Spinner, Tag } from "@/components/ui";
 
 type Profile = Professional & {
@@ -68,8 +68,9 @@ export default function ProfessionalPage({
             {ROLE_LABELS[profile.role]} · {profile.location}
             {profile.priceRange && ` · ${profile.priceRange}`}
           </p>
-          <div className="mt-3">
-            <TierBadge info={profile.tier} detailed />
+          <div className="mt-3 max-w-md space-y-2">
+            <TierBadge info={profile.tier} />
+            <TierProgress info={profile.tier} />
           </div>
         </div>
         <div className="flex gap-2">

@@ -5,7 +5,7 @@ import Link from "next/link";
 import { api } from "@/lib/api";
 import type { Client } from "@/lib/types";
 import type { TierInfo } from "@/lib/ranking";
-import TierBadge from "@/components/TierBadge";
+import TierBadge, { TierProgress } from "@/components/TierBadge";
 import { Card, SectionTitle, Spinner, Tag } from "@/components/ui";
 
 type Overview = {
@@ -22,6 +22,7 @@ type Overview = {
   duePosts: { id: string; title: string; clientName: string; scheduledFor: string }[];
   meetingsToday: { id: string; title: string; scheduledAt: string; clientName: string | null }[];
   clients: (Client & { tier: TierInfo })[];
+  agency: { tier: TierInfo };
 };
 
 // Home operacional da agência: o que precisa da sua ação agora
@@ -70,6 +71,21 @@ export default function AgencyHome() {
           + Novo cliente
         </Link>
       </div>
+
+      {data.agency && (
+        <Card>
+          <div className="flex flex-wrap items-start justify-between gap-4">
+            <div>
+              <SectionTitle>Elo da agência</SectionTitle>
+              <TierBadge info={data.agency.tier} />
+              <p className="mt-1.5 text-xs text-muted">{data.agency.tier.reason}</p>
+            </div>
+            <div className="w-full max-w-xl flex-1">
+              <TierProgress info={data.agency.tier} />
+            </div>
+          </div>
+        </Card>
+      )}
 
       <div className="grid gap-6 lg:grid-cols-2">
         {data.pendingApplications.length > 0 && (

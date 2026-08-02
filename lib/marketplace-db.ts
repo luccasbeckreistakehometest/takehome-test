@@ -1264,3 +1264,25 @@ export function getClientStats(clientId: string): {
     .get(clientId) as { c: number };
   return { paidProjects: paid.c, totalProjects: total.c, generations: generations.c };
 }
+
+// ---------- Estatísticas da agência (gamification) ----------
+
+import type { AgencyStats } from "./ranking";
+
+export function getAgencyStats(): AgencyStats {
+  const count = (sql: string, ...params: unknown[]) =>
+    (db.prepare(sql).get(...params) as { c: number }).c;
+  const review = db.prepare("SELECT AVG(score) as avg FROM art_reviews").get() as {
+    avg: number | null;
+  };
+  const weekAgo = new Date(Date.now() - 7 * 24 * 60 * 60 * 1000).toISOString();
+  return {
+    activeClients: count("SELECT COUNT(*) as c FROM clients"),
+    paidProjects: count("SELECT COUNT(*) as c FROM projects WHERE status = 'paid'"),
+    generations: count("SELECT COUNT(*) as c FROM generations"),
+    avgScore: review.avg !== null ? Math.round(review.avg) : null,
+    professionals: count("SELECT COUNT(*) as c FROM professionals"),
+    meetingsHeld: count("SELECT COUNT(*) as c FROM meetings WHERE scheduledAt < ?", new Date().toISOString()),
+    weeklyActions: count("SELECT COUNT(*) as c FROM activities WHERE createdAt >= ?", weekAgo),
+  };
+}

@@ -3,6 +3,16 @@
 // da UI — textos de entregáveis não batem com o dicionário e passam intocados
 // (eles já são localizados por cliente na geração).
 export const UI_DICT: Record<string, string> = {
+  "Elo da agência": "Agency rank",
+  "Progresso para o próximo elo": "Progress to the next rank",
+  "Clientes ativos": "Active clients",
+  "Demandas pagas": "Paid demands",
+  "Entregáveis gerados": "Deliverables generated",
+  "Nota média das entregas": "Average delivery score",
+  "Profissionais na rede": "Professionals in network",
+  "Ações nos últimos 7 dias": "Actions in the last 7 days",
+  "Demandas concluídas": "Completed demands",
+
   // Navegação / layout
   "Clientes": "Clients",
   "Prospecção": "Prospecting",
@@ -302,8 +312,6 @@ export const UI_DICT: Record<string, string> = {
   "Editar perfil": "Edit profile",
   "Excluir perfil": "Delete profile",
   "Perfil": "Profile",
-  "Demandas concluídas": "Completed jobs",
-  "Nota média das entregas": "Average delivery score",
   "Demandas ativas": "Active jobs",
   "Minhas demandas": "My jobs",
   "Oportunidades abertas na plataforma": "Open opportunities on the platform",
@@ -398,7 +406,6 @@ export const UI_DICT: Record<string, string> = {
   "Cadastro recebido! 🎉": "Registration received! 🎉",
   // Dashboard do cliente
   "Elo da conta": "Account tier",
-  "Entregáveis gerados": "Generated deliverables",
   "Aguardando revisão": "Awaiting review",
   "Ações rápidas": "Quick actions",
   "📡 Rodar radar de mercado": "📡 Run market radar",

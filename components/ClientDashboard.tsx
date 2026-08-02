@@ -9,7 +9,7 @@ import { PROJECT_STATUS_LABELS, type Project } from "@/lib/marketplace-types";
 import type { Meeting } from "@/lib/marketplace-db";
 import type { TierInfo } from "@/lib/ranking";
 import { googleCalendarUrl } from "@/lib/gcal";
-import TierBadge from "./TierBadge";
+import TierBadge, { TierProgress } from "./TierBadge";
 import { Button, Card, SectionTitle, Spinner, Tag } from "./ui";
 
 type DashboardData = {
@@ -82,7 +82,9 @@ export default function ClientDashboard({
           <div className="mt-1.5">
             <TierBadge info={data.tier} />
           </div>
-          <p className="mt-1.5 text-xs text-muted">{data.tier.nextStep}</p>
+          <div className="mt-2.5">
+            <TierProgress info={data.tier} compact />
+          </div>
         </Card>
         {[
           { label: "Entregáveis gerados", value: data.stats.generations, tab: "strategy_analysis" },

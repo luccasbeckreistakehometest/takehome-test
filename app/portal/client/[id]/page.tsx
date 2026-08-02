@@ -13,7 +13,7 @@ import {
 import type { ClientReport } from "@/lib/marketplace-schemas";
 import type { TierInfo } from "@/lib/ranking";
 import { ClientReportView } from "@/components/renderers";
-import TierBadge from "@/components/TierBadge";
+import TierBadge, { TierProgress } from "@/components/TierBadge";
 import { Button, Card, Input, SectionTitle, Spinner, Tag, Textarea } from "@/components/ui";
 import type { AccountMessage } from "@/lib/marketplace-db";
 
@@ -136,6 +136,11 @@ export default function ClientPortalPage({
             ? "Sua conta em modo autônomo — você no controle, com a IA de copiloto."
             : "Acompanhe aqui o que a agência está construindo para a sua marca."}
         </p>
+        {tier && (
+          <div className="mt-3 max-w-md">
+            <TierProgress info={tier} />
+          </div>
+        )}
         {client.selfServe && (
           <a
             href={`/clients/${client.id}`}
