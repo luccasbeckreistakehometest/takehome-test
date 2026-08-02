@@ -10,10 +10,17 @@ function translateText(text: string): string | null {
   const trimmed = text.trim();
   if (!trimmed) return null;
   const hit = UI_DICT[trimmed];
-  if (hit) return text.replace(trimmed, hit);
+  if (hit) {
+    const out = text.replace(trimmed, hit);
+    // CRÍTICO: retornar null quando nada muda — reescrever o mesmo valor
+    // dispara nova mutação e criaria loop infinito com o MutationObserver
+    return out === text ? null : out;
+  }
   for (const [pattern, replacement] of UI_REGEX_RULES) {
     if (pattern.test(trimmed)) {
-      return text.replace(trimmed, trimmed.replace(pattern, replacement));
+      const replaced = trimmed.replace(pattern, replacement);
+      if (replaced === trimmed) continue;
+      return text.replace(trimmed, replaced);
     }
   }
   return null;
@@ -27,7 +34,9 @@ function translateTree(root: Node) {
   while (walker.nextNode()) textNodes.push(walker.currentNode as Text);
   for (const node of textNodes) {
     const translated = translateText(node.textContent ?? "");
-    if (translated !== null) node.textContent = translated;
+    if (translated !== null && translated !== node.textContent) {
+      node.textContent = translated;
+    }
   }
   const elements =
     root instanceof Element
@@ -52,7 +61,9 @@ export default function Translator() {
       for (const mutation of mutations) {
         if (mutation.type === "characterData" && mutation.target.textContent) {
           const translated = translateText(mutation.target.textContent);
-          if (translated !== null) mutation.target.textContent = translated;
+          if (translated !== null && translated !== mutation.target.textContent) {
+            mutation.target.textContent = translated;
+          }
         }
         for (const node of mutation.addedNodes) translateTree(node);
       }
