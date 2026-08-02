@@ -16,6 +16,15 @@ const SUGGESTIONS = [
 // entre páginas (sessionStorage) enquanto o navegador estiver aberto.
 export default function AssistantWidget() {
   const [open, setOpen] = useState(false);
+  const [closing, setClosing] = useState(false);
+
+  function close() {
+    setClosing(true);
+    setTimeout(() => {
+      setOpen(false);
+      setClosing(false);
+    }, 170);
+  }
   const [messages, setMessages] = useState<ChatMessage[]>([]);
   const [input, setInput] = useState("");
   const [busy, setBusy] = useState(false);
@@ -67,7 +76,7 @@ export default function AssistantWidget() {
     return (
       <button
         onClick={() => setOpen(true)}
-        className="fixed bottom-5 right-5 z-50 grid size-14 place-items-center rounded-full bg-accent text-2xl text-accent-ink shadow-2xl transition-transform hover:scale-105"
+        className="animate-pop-in fixed bottom-5 right-5 z-50 grid size-14 place-items-center rounded-full bg-accent text-2xl text-accent-ink shadow-2xl transition-transform hover:scale-105"
         title="Assistente — fale o que precisa e ele executa"
       >
         ✦
@@ -76,7 +85,9 @@ export default function AssistantWidget() {
   }
 
   return (
-    <div className="fixed bottom-5 right-5 z-50 flex h-[34rem] w-[24rem] max-w-[calc(100vw-2.5rem)] flex-col overflow-hidden rounded-2xl border border-edge bg-surface shadow-2xl">
+    <div className={`fixed bottom-5 right-5 z-50 flex h-[34rem] w-[24rem] max-w-[calc(100vw-2.5rem)] flex-col overflow-hidden rounded-2xl border border-edge bg-surface shadow-2xl ${
+        closing ? "animate-pop-out" : "animate-pop-in"
+      }`}>
       {/* Cabeçalho */}
       <div className="flex items-center justify-between border-b border-edge bg-surface-2 px-4 py-3">
         <div className="flex items-center gap-2.5">
@@ -104,7 +115,7 @@ export default function AssistantWidget() {
             </button>
           )}
           <button
-            onClick={() => setOpen(false)}
+            onClick={close}
             className="rounded-md px-2 py-1 text-sm text-muted transition-colors hover:text-foreground"
             title="Minimizar"
           >
