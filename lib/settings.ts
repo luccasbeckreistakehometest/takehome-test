@@ -14,7 +14,9 @@ export type AgencySettings = {
   aiMode: AiMode;
   // Chaves de API gerenciadas pela UI (armazenadas no banco local)
   anthropicApiKey: string; // vazia = usa ANTHROPIC_API_KEY do .env.local
-  googleAiApiKey: string; // Google AI Studio (geração de imagem/mockup)
+  googleAiApiKey: string; // Google AI Studio (mockup fiel imagem+imagem)
+  togetherApiKey: string; // Together AI (FLUX.1-schnell-Free, conceitos grátis)
+  imageProvider: "pollinations" | "together"; // provedor de conceitos free
   houseStyle: string; // "estilo da casa": diretrizes injetadas em todos os prompts
 };
 
@@ -26,6 +28,8 @@ const DEFAULTS: AgencySettings = {
   aiMode: "balanced",
   anthropicApiKey: "",
   googleAiApiKey: "",
+  togetherApiKey: "",
+  imageProvider: "pollinations",
   houseStyle: "",
 };
 
@@ -40,6 +44,8 @@ db.exec(`
     aiMode TEXT NOT NULL DEFAULT 'balanced',
     anthropicApiKey TEXT NOT NULL DEFAULT '',
     googleAiApiKey TEXT NOT NULL DEFAULT '',
+    togetherApiKey TEXT NOT NULL DEFAULT '',
+    imageProvider TEXT NOT NULL DEFAULT 'pollinations',
     houseStyle TEXT NOT NULL DEFAULT ''
   );
 `);
@@ -66,6 +72,10 @@ if (!settingsColumns.includes("anthropicApiKey")) {
 if (!settingsColumns.includes("houseStyle")) {
   db.exec("ALTER TABLE settings ADD COLUMN houseStyle TEXT NOT NULL DEFAULT ''");
 }
+if (!settingsColumns.includes("togetherApiKey")) {
+  db.exec("ALTER TABLE settings ADD COLUMN togetherApiKey TEXT NOT NULL DEFAULT ''");
+  db.exec("ALTER TABLE settings ADD COLUMN imageProvider TEXT NOT NULL DEFAULT 'pollinations'");
+}
 
 type SettingsRow = {
   agencyName: string;
@@ -75,6 +85,8 @@ type SettingsRow = {
   aiMode: string;
   anthropicApiKey: string;
   googleAiApiKey: string;
+  togetherApiKey: string;
+  imageProvider: string;
   houseStyle: string;
 };
 
@@ -93,16 +105,18 @@ export function getSettings(): AgencySettings {
       : "balanced",
     anthropicApiKey: row.anthropicApiKey ?? "",
     googleAiApiKey: row.googleAiApiKey ?? "",
+    togetherApiKey: row.togetherApiKey ?? "",
+    imageProvider: row.imageProvider === "together" ? "together" : "pollinations",
     houseStyle: row.houseStyle ?? "",
   };
 }
 
 export function saveSettings(settings: AgencySettings): AgencySettings {
   db.prepare(
-    `INSERT INTO settings (id, agencyName, tagline, accentColor, landingPagesEnabled, aiMode, anthropicApiKey, googleAiApiKey, houseStyle)
-     VALUES (1, @agencyName, @tagline, @accentColor, @landingPagesEnabled, @aiMode, @anthropicApiKey, @googleAiApiKey, @houseStyle)
+    `INSERT INTO settings (id, agencyName, tagline, accentColor, landingPagesEnabled, aiMode, anthropicApiKey, googleAiApiKey, togetherApiKey, imageProvider, houseStyle)
+     VALUES (1, @agencyName, @tagline, @accentColor, @landingPagesEnabled, @aiMode, @anthropicApiKey, @googleAiApiKey, @togetherApiKey, @imageProvider, @houseStyle)
      ON CONFLICT(id) DO UPDATE SET agencyName=@agencyName, tagline=@tagline, accentColor=@accentColor,
-       landingPagesEnabled=@landingPagesEnabled, aiMode=@aiMode, anthropicApiKey=@anthropicApiKey, googleAiApiKey=@googleAiApiKey, houseStyle=@houseStyle`
+       landingPagesEnabled=@landingPagesEnabled, aiMode=@aiMode, anthropicApiKey=@anthropicApiKey, googleAiApiKey=@googleAiApiKey, togetherApiKey=@togetherApiKey, imageProvider=@imageProvider, houseStyle=@houseStyle`
   ).run({
     ...settings,
     landingPagesEnabled: settings.landingPagesEnabled ? 1 : 0,

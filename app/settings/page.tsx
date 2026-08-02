@@ -7,6 +7,7 @@ import type { AgencySettings } from "@/lib/settings";
 type SettingsView = AgencySettings & {
   hasAnthropicKey?: boolean;
   hasGoogleAiKey?: boolean;
+  hasTogetherKey?: boolean;
 };
 import { Button, Card, CopyButton, ErrorBox, Input, Label, SectionTitle } from "@/components/ui";
 
@@ -211,6 +212,51 @@ export default function SettingsPage() {
                 }
                 placeholder="AIza... (habilita mockup fotorrealista)"
               />
+            </div>
+          </div>
+
+          <div className="mt-4 rounded-lg border border-edge bg-surface-2 p-4">
+            <Label>Conceitos de imagem (grátis, gera várias)</Label>
+            <p className="mb-3 text-xs text-muted">
+              Para <strong>testar e mostrar</strong> direções visuais sem custo. O botão
+              “Gerar 4 conceitos” em cada demanda usa este provedor. (Para mockup
+              <em> fiel</em> compondo foto real de produto/modelo, use o Google AI acima.)
+            </p>
+            <div className="grid gap-4 sm:grid-cols-2">
+              <div>
+                <Label>Provedor</Label>
+                <select
+                  value={settings.imageProvider}
+                  onChange={(e) =>
+                    setSettings({
+                      ...settings,
+                      imageProvider: e.target.value as "pollinations" | "together",
+                    })
+                  }
+                  className="w-full rounded-md border border-edge bg-surface px-3 py-2 text-sm text-foreground outline-none focus:border-accent"
+                >
+                  <option value="pollinations">Pollinations — grátis, sem chave (FLUX)</option>
+                  <option value="together">Together AI — FLUX.1-schnell-Free (chave)</option>
+                </select>
+              </div>
+              <div>
+                <Label>
+                  Together API Key{" "}
+                  {settings.hasTogetherKey ? (
+                    <span className="normal-case text-accent">configurada ✓</span>
+                  ) : (
+                    <span className="normal-case text-muted">opcional — api.together.ai</span>
+                  )}
+                </Label>
+                <Input
+                  type="password"
+                  value={settings.togetherApiKey}
+                  onChange={(e) =>
+                    setSettings({ ...settings, togetherApiKey: e.target.value })
+                  }
+                  placeholder="together key (só se usar Together)"
+                />
+              </div>
             </div>
           </div>
         </div>

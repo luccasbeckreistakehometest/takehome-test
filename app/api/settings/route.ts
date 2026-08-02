@@ -14,6 +14,8 @@ const settingsSchema = z.object({
   // Chaves: string vazia = manter a atual; "clear" = apagar
   anthropicApiKey: z.string().trim().default(""),
   googleAiApiKey: z.string().trim().default(""),
+  togetherApiKey: z.string().trim().default(""),
+  imageProvider: z.enum(["pollinations", "together"]).default("pollinations"),
   houseStyle: z.string().trim().default(""),
 });
 
@@ -27,10 +29,13 @@ function publicView() {
     landingPagesEnabled: settings.landingPagesEnabled,
     aiMode: settings.aiMode,
     houseStyle: settings.houseStyle,
+    imageProvider: settings.imageProvider,
     anthropicApiKey: "",
     googleAiApiKey: "",
+    togetherApiKey: "",
     hasAnthropicKey: Boolean(settings.anthropicApiKey || process.env.ANTHROPIC_API_KEY),
     hasGoogleAiKey: Boolean(settings.googleAiApiKey),
+    hasTogetherKey: Boolean(settings.togetherApiKey),
   };
 }
 
@@ -59,8 +64,10 @@ export async function PUT(request: Request) {
     landingPagesEnabled: parsed.data.landingPagesEnabled,
     aiMode: parsed.data.aiMode,
     houseStyle: parsed.data.houseStyle,
+    imageProvider: parsed.data.imageProvider,
     anthropicApiKey: resolveKey(parsed.data.anthropicApiKey, current.anthropicApiKey),
     googleAiApiKey: resolveKey(parsed.data.googleAiApiKey, current.googleAiApiKey),
+    togetherApiKey: resolveKey(parsed.data.togetherApiKey, current.togetherApiKey),
   });
   return NextResponse.json(publicView());
 }

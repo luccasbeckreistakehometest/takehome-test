@@ -352,6 +352,7 @@ function ProjectDetail({ projectId, onBack }: { projectId: string; onBack: () =>
   const [refMeaning, setRefMeaning] = useState<string>(REFERENCE_MEANINGS[0]);
   const [refUploading, setRefUploading] = useState(false);
   const [mocking, setMocking] = useState(false);
+  const [concepting, setConcepting] = useState(false);
 
   const load = useCallback(() => {
     api<ProjectDetailData>(`/api/projects/${projectId}`).then((data) => {
@@ -896,8 +897,33 @@ function ProjectDetail({ projectId, onBack }: { projectId: string; onBack: () =>
             >
               {mocking ? "Compondo imagem..." : "🖼 Gerar mockup fotorrealista"}
             </Button>
+            <Button
+              variant="ghost"
+              disabled={concepting}
+              onClick={async () => {
+                setConcepting(true);
+                setError("");
+                try {
+                  await api(`/api/projects/${projectId}/concepts`, {
+                    method: "POST",
+                    body: JSON.stringify({ count: 4 }),
+                  });
+                  load();
+                } catch (err) {
+                  setError(err instanceof Error ? err.message : "Erro nos conceitos");
+                } finally {
+                  setConcepting(false);
+                }
+              }}
+              title="Gera 4 imagens-conceito grátis (text-to-image, sem custo)"
+            >
+              {concepting ? "Gerando 4 conceitos..." : "✨ Gerar 4 conceitos (grátis)"}
+            </Button>
           </span>
         </div>
+        {concepting && (
+          <Spinner label="Gerando conceitos grátis (Pollinations/Together FLUX)..." />
+        )}
         {sketching && <Spinner label="A IA está desenhando o rafe da composição (1-2 min)..." />}
         {project.sketches.length > 1 && (
           <div className="flex flex-wrap gap-1.5">
