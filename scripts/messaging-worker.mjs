@@ -75,19 +75,39 @@ async function ensurePlaywright() {
 }
 
 async function launchContext(chromium) {
-  const opts = { headless: !headful, viewport: { width: 1100, height: 900 } };
-  try {
-    return await chromium.launchPersistentContext(userDataDir, opts);
-  } catch (e) {
-    const msg = String(e?.message ?? e);
-    if (msg.includes("Executable doesn't exist") || msg.includes("playwright install")) {
-      writeStatus("installing", "Baixando o navegador (uma vez só, ~1 min)…");
-      await run("npx", ["playwright", "install", "chromium"]);
-      writeStatus("starting", "Navegador pronto, abrindo…");
-      return await chromium.launchPersistentContext(userDataDir, opts);
+  const base = { headless: !headful, viewport: { width: 1100, height: 900 } };
+  // Ordem de tentativa:
+  // 1) Chrome do sistema (channel "chrome") — não baixa nada e funciona em
+  //    macOS 13 arm64, onde o Chromium empacotado do Playwright não roda.
+  // 2) Chromium empacotado (se já baixado).
+  // 3) Baixar o Chromium (outras plataformas; falha no mac13-arm64, mas aí a
+  //    estratégia 1 já cobriu).
+  const attempts = [
+    { label: "Chrome do sistema", opts: { ...base, channel: "chrome" } },
+    { label: "Chromium empacotado", opts: base },
+  ];
+  let lastErr;
+  for (const attempt of attempts) {
+    try {
+      return await chromium.launchPersistentContext(userDataDir, attempt.opts);
+    } catch (e) {
+      lastErr = e;
+      const msg = String(e?.message ?? e);
+      const missingBundled =
+        attempt.opts.channel === undefined &&
+        (msg.includes("Executable doesn't exist") || msg.includes("playwright install"));
+      if (missingBundled) {
+        try {
+          writeStatus("installing", "Baixando o navegador (uma vez só)…");
+          await run("npx", ["playwright", "install", "chromium"]);
+          return await chromium.launchPersistentContext(userDataDir, attempt.opts);
+        } catch (e2) {
+          lastErr = e2;
+        }
+      }
     }
-    throw e;
   }
+  throw lastErr;
 }
 
 let shuttingDown = false;
@@ -178,7 +198,16 @@ async function main() {
     }
   };
 
-  const context = await launchContext(chromium);
+  let context;
+  try {
+    context = await launchContext(chromium);
+  } catch (e) {
+    writeStatus(
+      "error",
+      `Não consegui abrir o navegador: ${String(e?.message ?? e).slice(0, 140)}. Instale o Google Chrome e tente de novo.`
+    );
+    return;
+  }
   const page = context.pages()[0] ?? (await context.newPage());
 
   if (!(await waitForLogin(page))) {
