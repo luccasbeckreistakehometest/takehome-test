@@ -29,6 +29,7 @@ export default function SettingsPage() {
   const [saving, setSaving] = useState(false);
   const [saved, setSaved] = useState(false);
   const [error, setError] = useState("");
+  const [logoVersion, setLogoVersion] = useState(0);
   const [origin, setOrigin] = useState("");
 
   useEffect(() => {
@@ -91,6 +92,57 @@ export default function SettingsPage() {
                 value={settings.accentColor}
                 onChange={(e) => setSettings({ ...settings, accentColor: e.target.value })}
               />
+            </div>
+          </div>
+        </div>
+        <div className="flex items-center gap-4 border-t border-edge pt-4">
+          <div className="grid size-14 shrink-0 place-items-center overflow-hidden rounded-lg border border-edge bg-surface-2">
+            {settings.logoMime ? (
+              // eslint-disable-next-line @next/next/no-img-element
+              <img src={`/api/settings/logo?v=${logoVersion}`} alt="logo" className="size-full object-contain" />
+            ) : (
+              <span className="text-xl font-bold text-accent">
+                {settings.agencyName.charAt(0).toUpperCase()}
+              </span>
+            )}
+          </div>
+          <div>
+            <Label>Logo da agência</Label>
+            <p className="mb-2 text-xs text-muted">
+              Aparece no cabeçalho e nas telas que o cliente/profissional vê ao entrar pelo convite.
+            </p>
+            <div className="flex items-center gap-2">
+              <label className="cursor-pointer rounded-md border border-edge bg-surface-2 px-3 py-1.5 text-sm transition-colors hover:border-accent">
+                Enviar logo
+                <input
+                  type="file"
+                  accept="image/png,image/jpeg,image/webp"
+                  className="hidden"
+                  onChange={async (e) => {
+                    const file = e.target.files?.[0];
+                    if (!file) return;
+                    const fd = new FormData();
+                    fd.append("file", file);
+                    const res = await fetch("/api/settings/logo", { method: "POST", body: fd });
+                    if (res.ok) {
+                      setSettings((prev) => (prev ? { ...prev, logoMime: file.type } : prev));
+                      setLogoVersion((v) => v + 1);
+                    }
+                  }}
+                />
+              </label>
+              {settings.logoMime && (
+                <button
+                  onClick={async () => {
+                    await fetch("/api/settings/logo", { method: "DELETE" });
+                    setSettings((prev) => (prev ? { ...prev, logoMime: "" } : prev));
+                    setLogoVersion((v) => v + 1);
+                  }}
+                  className="rounded-md border border-edge px-3 py-1.5 text-sm text-muted transition-colors hover:border-red-500/60 hover:text-red-500"
+                >
+                  Remover
+                </button>
+              )}
             </div>
           </div>
         </div>

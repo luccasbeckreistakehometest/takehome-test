@@ -78,9 +78,18 @@ export default async function RootLayout({
               }
               className="flex shrink-0 items-center gap-2"
             >
-              <span className="grid size-7 place-items-center rounded-md bg-accent font-[family-name:var(--font-display)] text-sm font-bold text-accent-ink">
-                {settings.agencyName.charAt(0).toUpperCase()}
-              </span>
+              {settings.logoMime ? (
+                // eslint-disable-next-line @next/next/no-img-element
+                <img
+                  src="/api/settings/logo"
+                  alt={settings.agencyName}
+                  className="size-7 rounded-md object-contain"
+                />
+              ) : (
+                <span className="grid size-7 place-items-center rounded-md bg-accent font-[family-name:var(--font-display)] text-sm font-bold text-accent-ink">
+                  {settings.agencyName.charAt(0).toUpperCase()}
+                </span>
+              )}
               <span className="font-[family-name:var(--font-display)] text-lg font-semibold tracking-tight">
                 {settings.agencyName}
               </span>

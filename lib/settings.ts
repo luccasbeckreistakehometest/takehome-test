@@ -17,6 +17,7 @@ export type AgencySettings = {
   googleAiApiKey: string; // Google AI Studio (mockup fiel imagem+imagem)
   togetherApiKey: string; // Together AI (FLUX.1-schnell-Free, conceitos grátis)
   imageProvider: "pollinations" | "together"; // provedor de conceitos free
+  logoMime: string; // mime do logo whitelabel (vazio = sem logo, usa inicial)
   houseStyle: string; // "estilo da casa": diretrizes injetadas em todos os prompts
 };
 
@@ -30,6 +31,7 @@ const DEFAULTS: AgencySettings = {
   googleAiApiKey: "",
   togetherApiKey: "",
   imageProvider: "pollinations",
+  logoMime: "",
   houseStyle: "",
 };
 
@@ -46,6 +48,7 @@ db.exec(`
     googleAiApiKey TEXT NOT NULL DEFAULT '',
     togetherApiKey TEXT NOT NULL DEFAULT '',
     imageProvider TEXT NOT NULL DEFAULT 'pollinations',
+    logoMime TEXT NOT NULL DEFAULT '',
     houseStyle TEXT NOT NULL DEFAULT ''
   );
 `);
@@ -76,6 +79,9 @@ if (!settingsColumns.includes("togetherApiKey")) {
   db.exec("ALTER TABLE settings ADD COLUMN togetherApiKey TEXT NOT NULL DEFAULT ''");
   db.exec("ALTER TABLE settings ADD COLUMN imageProvider TEXT NOT NULL DEFAULT 'pollinations'");
 }
+if (!settingsColumns.includes("logoMime")) {
+  db.exec("ALTER TABLE settings ADD COLUMN logoMime TEXT NOT NULL DEFAULT ''");
+}
 
 type SettingsRow = {
   agencyName: string;
@@ -87,6 +93,7 @@ type SettingsRow = {
   googleAiApiKey: string;
   togetherApiKey: string;
   imageProvider: string;
+  logoMime: string;
   houseStyle: string;
 };
 
@@ -107,16 +114,17 @@ export function getSettings(): AgencySettings {
     googleAiApiKey: row.googleAiApiKey ?? "",
     togetherApiKey: row.togetherApiKey ?? "",
     imageProvider: row.imageProvider === "together" ? "together" : "pollinations",
+    logoMime: row.logoMime ?? "",
     houseStyle: row.houseStyle ?? "",
   };
 }
 
 export function saveSettings(settings: AgencySettings): AgencySettings {
   db.prepare(
-    `INSERT INTO settings (id, agencyName, tagline, accentColor, landingPagesEnabled, aiMode, anthropicApiKey, googleAiApiKey, togetherApiKey, imageProvider, houseStyle)
-     VALUES (1, @agencyName, @tagline, @accentColor, @landingPagesEnabled, @aiMode, @anthropicApiKey, @googleAiApiKey, @togetherApiKey, @imageProvider, @houseStyle)
+    `INSERT INTO settings (id, agencyName, tagline, accentColor, landingPagesEnabled, aiMode, anthropicApiKey, googleAiApiKey, togetherApiKey, imageProvider, logoMime, houseStyle)
+     VALUES (1, @agencyName, @tagline, @accentColor, @landingPagesEnabled, @aiMode, @anthropicApiKey, @googleAiApiKey, @togetherApiKey, @imageProvider, @logoMime, @houseStyle)
      ON CONFLICT(id) DO UPDATE SET agencyName=@agencyName, tagline=@tagline, accentColor=@accentColor,
-       landingPagesEnabled=@landingPagesEnabled, aiMode=@aiMode, anthropicApiKey=@anthropicApiKey, googleAiApiKey=@googleAiApiKey, togetherApiKey=@togetherApiKey, imageProvider=@imageProvider, houseStyle=@houseStyle`
+       landingPagesEnabled=@landingPagesEnabled, aiMode=@aiMode, anthropicApiKey=@anthropicApiKey, googleAiApiKey=@googleAiApiKey, togetherApiKey=@togetherApiKey, imageProvider=@imageProvider, logoMime=@logoMime, houseStyle=@houseStyle`
   ).run({
     ...settings,
     landingPagesEnabled: settings.landingPagesEnabled ? 1 : 0,

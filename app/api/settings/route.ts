@@ -30,6 +30,7 @@ function publicView() {
     aiMode: settings.aiMode,
     houseStyle: settings.houseStyle,
     imageProvider: settings.imageProvider,
+    logoMime: settings.logoMime,
     anthropicApiKey: "",
     googleAiApiKey: "",
     togetherApiKey: "",
@@ -65,6 +66,7 @@ export async function PUT(request: Request) {
     aiMode: parsed.data.aiMode,
     houseStyle: parsed.data.houseStyle,
     imageProvider: parsed.data.imageProvider,
+    logoMime: current.logoMime, // gerenciado pela rota /logo, preservado aqui
     anthropicApiKey: resolveKey(parsed.data.anthropicApiKey, current.anthropicApiKey),
     googleAiApiKey: resolveKey(parsed.data.googleAiApiKey, current.googleAiApiKey),
     togetherApiKey: resolveKey(parsed.data.togetherApiKey, current.togetherApiKey),
