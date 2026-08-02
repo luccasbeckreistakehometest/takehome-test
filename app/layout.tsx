@@ -7,6 +7,7 @@ import { SESSION_COOKIE, verifySession } from "@/lib/auth-shared";
 import Translator, { LangToggle } from "@/components/Translator";
 import ActivityBell, { LogoutButton } from "@/components/ActivityBell";
 import JobsIndicator from "@/components/JobsIndicator";
+import GlobalSearch from "@/components/GlobalSearch";
 import "./globals.css";
 
 const geistSans = Geist({ variable: "--font-geist-sans", subsets: ["latin"] });
@@ -51,6 +52,7 @@ export default async function RootLayout({
       <body className="min-h-full flex flex-col">
         <Translator />
         <JobsIndicator />
+        <GlobalSearch />
         <header className="sticky top-0 z-40 border-b border-edge bg-background/80 backdrop-blur">
           <div className="mx-auto flex h-14 w-full max-w-6xl items-center justify-between gap-4 px-4">
             <Link

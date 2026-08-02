@@ -508,6 +508,27 @@ function ProjectDetail({ projectId, onBack }: { projectId: string; onBack: () =>
           >
             {editing ? "Fechar edição" : "Editar demanda"}
           </Button>
+          <Button
+            variant="ghost"
+            onClick={async () => {
+              await api(`/api/projects`, {
+                method: "POST",
+                body: JSON.stringify({
+                  clientId: project.clientId,
+                  title: `${project.title} (cópia)`,
+                  brief: project.brief,
+                  skillsNeeded: project.skillsNeeded,
+                  location: project.location,
+                  budget: project.budget,
+                  deadline: "",
+                  mode: project.mode,
+                }),
+              });
+              alert("Demanda duplicada — veja na lista de demandas.");
+            }}
+          >
+            ⧉ Duplicar
+          </Button>
         </div>
       </div>
       {editing ? (

@@ -51,12 +51,30 @@ export default function ClientDashboard({
 
   if (!data) return <Spinner label="Carregando dashboard..." />;
 
+  const isNew = data.stats.generations === 0;
+
   const deliverableTypes = (
     Object.keys(GENERATION_LABELS) as GenerationType[]
   ).filter((type) => landingEnabled || type !== "landing_page");
 
   return (
     <div className="space-y-6">
+      {isNew && (
+        <Card className="border-accent/40 bg-accent/5">
+          <SectionTitle>👋 Comece por aqui</SectionTitle>
+          <ol className="mt-1 list-decimal space-y-1.5 pl-5 text-sm text-muted">
+            <li>
+              Complete o <button className="text-accent hover:underline" onClick={() => onNavigate("briefing")}>briefing</button> — ele alimenta toda a IA.
+            </li>
+            <li>
+              Gere a <button className="text-accent hover:underline" onClick={() => onNavigate("strategy_analysis")}>Estratégia & Deep Dive</button> (pesquisa real de mercado).
+            </li>
+            <li>
+              Rode o <button className="text-accent hover:underline" onClick={onRunKit}>✦ Kit completo</button> — campanha, ROI, identidade e social de uma vez.
+            </li>
+          </ol>
+        </Card>
+      )}
       {/* Números principais */}
       <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
         <Card>

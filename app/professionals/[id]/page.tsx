@@ -154,6 +154,42 @@ export default function ProfessionalPage({
           )}
 
           <Card>
+            <SectionTitle>Meus ganhos</SectionTitle>
+            <div className="grid gap-3 sm:grid-cols-2">
+              <div className="rounded-lg border border-edge bg-surface-2 p-3 text-sm">
+                <p className="text-xs uppercase tracking-wide text-muted">A receber (escrow reservado)</p>
+                {profile.projects.filter((p) => p.escrow === "held").length === 0 ? (
+                  <p className="mt-1 text-muted">Nada reservado no momento.</p>
+                ) : (
+                  profile.projects
+                    .filter((p) => p.escrow === "held")
+                    .map((p) => (
+                      <p key={p.id} className="mt-1">
+                        {p.title.slice(0, 40)} — <span className="text-accent">{p.budget || "a definir"}</span>
+                      </p>
+                    ))
+                )}
+              </div>
+              <div className="rounded-lg border border-edge bg-surface-2 p-3 text-sm">
+                <p className="text-xs uppercase tracking-wide text-muted">Recebido (demandas pagas)</p>
+                {profile.projects.filter((p) => p.status === "paid").length === 0 ? (
+                  <p className="mt-1 text-muted">Nenhum pagamento ainda.</p>
+                ) : (
+                  profile.projects
+                    .filter((p) => p.status === "paid")
+                    .map((p) => (
+                      <p key={p.id} className="mt-1">
+                        {p.title.slice(0, 40)} — <span className="text-accent">{p.budget || "n/d"}</span>
+                      </p>
+                    ))
+                )}
+              </div>
+            </div>
+          </Card>
+
+          <PortfolioGallery professionalId={profile.id} />
+
+          <Card>
             <SectionTitle>Minhas demandas</SectionTitle>
             {profile.projects.length === 0 ? (
               <p className="text-sm text-muted">Nenhuma demanda vinculada ainda.</p>
@@ -294,5 +330,77 @@ export default function ProfessionalPage({
         </>
       )}
     </div>
+  );
+}
+
+
+function PortfolioGallery({ professionalId }: { professionalId: string }) {
+  const [assets, setAssets] = useState<{ id: string; title: string }[]>([]);
+  const [uploading, setUploading] = useState(false);
+  const load = useCallback(() => {
+    api<{ id: string; title: string }[]>(`/api/professionals/${professionalId}/assets`).then(
+      setAssets
+    );
+  }, [professionalId]);
+  useEffect(load, [load]);
+  return (
+    <Card>
+      <div className="flex items-center justify-between">
+        <SectionTitle>Portfolio na plataforma</SectionTitle>
+        <label className="cursor-pointer rounded-md border border-edge bg-surface-2 px-3 py-1.5 text-xs transition-colors hover:border-accent">
+          {uploading ? "Enviando..." : "⬆ Adicionar imagem"}
+          <input
+            type="file"
+            accept="image/jpeg,image/png,image/webp,image/gif"
+            className="hidden"
+            disabled={uploading}
+            onChange={async (event) => {
+              const file = event.target.files?.[0];
+              if (!file) return;
+              setUploading(true);
+              try {
+                const body = new FormData();
+                body.append("file", file);
+                await fetch(`/api/professionals/${professionalId}/assets`, {
+                  method: "POST",
+                  body,
+                });
+                load();
+              } finally {
+                setUploading(false);
+                event.target.value = "";
+              }
+            }}
+          />
+        </label>
+      </div>
+      {assets.length === 0 ? (
+        <p className="text-sm text-muted">
+          Suba seus melhores trabalhos — o match da IA e as agências veem esta vitrine.
+        </p>
+      ) : (
+        <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
+          {assets.map((asset) => (
+            <div key={asset.id} className="group relative">
+              {/* eslint-disable-next-line @next/next/no-img-element */}
+              <img
+                src={`/api/professional-assets/${asset.id}`}
+                alt={asset.title}
+                className="h-32 w-full rounded-lg border border-edge object-cover"
+              />
+              <button
+                onClick={async () => {
+                  await api(`/api/professional-assets/${asset.id}`, { method: "DELETE" });
+                  load();
+                }}
+                className="absolute right-1 top-1 hidden rounded bg-black/70 px-1.5 text-xs text-white group-hover:block"
+              >
+                ✕
+              </button>
+            </div>
+          ))}
+        </div>
+      )}
+    </Card>
   );
 }
