@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 import { createClient, listClients } from "@/lib/db";
+import { createUser } from "@/lib/auth";
 import { clientSchema } from "@/lib/validation";
 
 export async function GET() {
@@ -14,5 +15,15 @@ export async function POST(request: Request) {
       { status: 400 }
     );
   }
-  return NextResponse.json(createClient(parsed.data), { status: 201 });
+  const client = createClient(parsed.data);
+  const login = createUser({
+    password: "luccas123",
+    role: "client",
+    refId: client.id,
+    name: client.name,
+  });
+  return NextResponse.json(
+    { ...client, login: { username: login.username, password: "luccas123" } },
+    { status: 201 }
+  );
 }

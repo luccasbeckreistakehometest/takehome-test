@@ -15,6 +15,7 @@ export type AgencySettings = {
   // Chaves de API gerenciadas pela UI (armazenadas no banco local)
   anthropicApiKey: string; // vazia = usa ANTHROPIC_API_KEY do .env.local
   googleAiApiKey: string; // Google AI Studio (geração de imagem/mockup)
+  houseStyle: string; // "estilo da casa": diretrizes injetadas em todos os prompts
 };
 
 const DEFAULTS: AgencySettings = {
@@ -25,6 +26,7 @@ const DEFAULTS: AgencySettings = {
   aiMode: "balanced",
   anthropicApiKey: "",
   googleAiApiKey: "",
+  houseStyle: "",
 };
 
 db.exec(`
@@ -37,7 +39,8 @@ db.exec(`
     economyMode INTEGER NOT NULL DEFAULT 1,
     aiMode TEXT NOT NULL DEFAULT 'balanced',
     anthropicApiKey TEXT NOT NULL DEFAULT '',
-    googleAiApiKey TEXT NOT NULL DEFAULT ''
+    googleAiApiKey TEXT NOT NULL DEFAULT '',
+    houseStyle TEXT NOT NULL DEFAULT ''
   );
 `);
 
@@ -60,6 +63,9 @@ if (!settingsColumns.includes("anthropicApiKey")) {
   db.exec("ALTER TABLE settings ADD COLUMN anthropicApiKey TEXT NOT NULL DEFAULT ''");
   db.exec("ALTER TABLE settings ADD COLUMN googleAiApiKey TEXT NOT NULL DEFAULT ''");
 }
+if (!settingsColumns.includes("houseStyle")) {
+  db.exec("ALTER TABLE settings ADD COLUMN houseStyle TEXT NOT NULL DEFAULT ''");
+}
 
 type SettingsRow = {
   agencyName: string;
@@ -69,6 +75,7 @@ type SettingsRow = {
   aiMode: string;
   anthropicApiKey: string;
   googleAiApiKey: string;
+  houseStyle: string;
 };
 
 export function getSettings(): AgencySettings {
@@ -86,15 +93,16 @@ export function getSettings(): AgencySettings {
       : "balanced",
     anthropicApiKey: row.anthropicApiKey ?? "",
     googleAiApiKey: row.googleAiApiKey ?? "",
+    houseStyle: row.houseStyle ?? "",
   };
 }
 
 export function saveSettings(settings: AgencySettings): AgencySettings {
   db.prepare(
-    `INSERT INTO settings (id, agencyName, tagline, accentColor, landingPagesEnabled, aiMode, anthropicApiKey, googleAiApiKey)
-     VALUES (1, @agencyName, @tagline, @accentColor, @landingPagesEnabled, @aiMode, @anthropicApiKey, @googleAiApiKey)
+    `INSERT INTO settings (id, agencyName, tagline, accentColor, landingPagesEnabled, aiMode, anthropicApiKey, googleAiApiKey, houseStyle)
+     VALUES (1, @agencyName, @tagline, @accentColor, @landingPagesEnabled, @aiMode, @anthropicApiKey, @googleAiApiKey, @houseStyle)
      ON CONFLICT(id) DO UPDATE SET agencyName=@agencyName, tagline=@tagline, accentColor=@accentColor,
-       landingPagesEnabled=@landingPagesEnabled, aiMode=@aiMode, anthropicApiKey=@anthropicApiKey, googleAiApiKey=@googleAiApiKey`
+       landingPagesEnabled=@landingPagesEnabled, aiMode=@aiMode, anthropicApiKey=@anthropicApiKey, googleAiApiKey=@googleAiApiKey, houseStyle=@houseStyle`
   ).run({
     ...settings,
     landingPagesEnabled: settings.landingPagesEnabled ? 1 : 0,

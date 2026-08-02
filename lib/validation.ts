@@ -43,6 +43,7 @@ export const professionalSchema = z.object({
     .array(z.object({ title: z.string().trim(), url: z.string().trim() }))
     .default([]),
   priceRange: z.string().trim().default(""),
+  availability: z.string().trim().default(""),
 });
 
 export const projectSchema = z.object({
@@ -59,7 +60,7 @@ export const projectSchema = z.object({
 export const projectPatchSchema = z.object({
   professionalId: z.string().nullable().optional(),
   status: z
-    .enum(["open", "matched", "in_progress", "in_review", "approved", "paid"])
+    .enum(["open", "matched", "in_progress", "in_review", "client_approval", "approved", "paid"])
     .optional(),
   escrow: z.enum(["none", "held", "released"]).optional(),
   title: z.string().trim().min(1).optional(),

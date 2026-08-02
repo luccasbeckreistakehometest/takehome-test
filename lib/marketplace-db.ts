@@ -138,6 +138,49 @@ db.exec(`
     status TEXT NOT NULL DEFAULT 'pending',
     createdAt TEXT NOT NULL
   );
+  CREATE TABLE IF NOT EXISTS jobs (
+    id TEXT PRIMARY KEY,
+    kind TEXT NOT NULL,
+    label TEXT NOT NULL,
+    clientId TEXT,
+    status TEXT NOT NULL DEFAULT 'running',
+    error TEXT NOT NULL DEFAULT '',
+    createdAt TEXT NOT NULL,
+    finishedAt TEXT
+  );
+  CREATE TABLE IF NOT EXISTS activities (
+    id TEXT PRIMARY KEY,
+    audience TEXT NOT NULL DEFAULT 'agency',
+    clientId TEXT,
+    professionalId TEXT,
+    projectId TEXT,
+    text TEXT NOT NULL,
+    href TEXT NOT NULL DEFAULT '',
+    readAt TEXT,
+    createdAt TEXT NOT NULL
+  );
+  CREATE TABLE IF NOT EXISTS account_messages (
+    id TEXT PRIMARY KEY,
+    clientId TEXT NOT NULL REFERENCES clients(id) ON DELETE CASCADE,
+    sender TEXT NOT NULL,
+    text TEXT NOT NULL,
+    createdAt TEXT NOT NULL
+  );
+  CREATE TABLE IF NOT EXISTS professional_assets (
+    id TEXT PRIMARY KEY,
+    professionalId TEXT NOT NULL REFERENCES professionals(id) ON DELETE CASCADE,
+    title TEXT NOT NULL,
+    mime TEXT NOT NULL,
+    createdAt TEXT NOT NULL
+  );
+  CREATE TABLE IF NOT EXISTS sketches (
+    id TEXT PRIMARY KEY,
+    projectId TEXT NOT NULL REFERENCES projects(id) ON DELETE CASCADE,
+    svg TEXT NOT NULL,
+    rationale TEXT NOT NULL DEFAULT '',
+    neededReferences TEXT NOT NULL DEFAULT '[]',
+    createdAt TEXT NOT NULL
+  );
   CREATE TABLE IF NOT EXISTS scheduled_posts (
     id TEXT PRIMARY KEY,
     clientId TEXT NOT NULL REFERENCES clients(id) ON DELETE CASCADE,
@@ -160,6 +203,12 @@ db.exec(`
     createdAt TEXT NOT NULL
   );
 `);
+const professionalColumns = (
+  db.prepare("PRAGMA table_info(professionals)").all() as { name: string }[]
+).map((column) => column.name);
+if (professionalColumns.length > 0 && !professionalColumns.includes("availability")) {
+  db.exec("ALTER TABLE professionals ADD COLUMN availability TEXT NOT NULL DEFAULT ''");
+}
 const annotationColumns = (
   db.prepare("PRAGMA table_info(annotations)").all() as { name: string }[]
 ).map((column) => column.name);
@@ -201,8 +250,8 @@ export function getProfessional(id: string): Professional | null {
 export function createProfessional(input: ProfessionalInput): Professional {
   const professional: Professional = { ...input, id: randomUUID(), createdAt: now() };
   db.prepare(
-    `INSERT INTO professionals (id, name, role, email, phone, location, skills, specialties, marketFocus, bio, portfolio, priceRange, createdAt)
-     VALUES (@id, @name, @role, @email, @phone, @location, @skills, @specialties, @marketFocus, @bio, @portfolio, @priceRange, @createdAt)`
+    `INSERT INTO professionals (id, name, role, email, phone, location, skills, specialties, marketFocus, bio, portfolio, priceRange, availability, createdAt)
+     VALUES (@id, @name, @role, @email, @phone, @location, @skills, @specialties, @marketFocus, @bio, @portfolio, @priceRange, @availability, @createdAt)`
   ).run({
     ...professional,
     skills: JSON.stringify(professional.skills),
@@ -217,7 +266,7 @@ export function updateProfessional(
 ): Professional | null {
   if (!getProfessional(id)) return null;
   db.prepare(
-    `UPDATE professionals SET name=@name, role=@role, email=@email, phone=@phone, location=@location, skills=@skills, specialties=@specialties, marketFocus=@marketFocus, bio=@bio, portfolio=@portfolio, priceRange=@priceRange WHERE id=@id`
+    `UPDATE professionals SET name=@name, role=@role, email=@email, phone=@phone, location=@location, skills=@skills, specialties=@specialties, marketFocus=@marketFocus, bio=@bio, portfolio=@portfolio, priceRange=@priceRange, availability=@availability WHERE id=@id`
   ).run({
     ...input,
     id,
@@ -684,6 +733,272 @@ export function createClientAsset(input: {
 
 export function deleteClientAsset(id: string): boolean {
   return db.prepare("DELETE FROM client_assets WHERE id = ?").run(id).changes > 0;
+}
+
+// ---------- Jobs de IA (sobrevivem a refresh da página) ----------
+
+export type Job = {
+  id: string;
+  kind: string;
+  label: string;
+  clientId: string | null;
+  status: "running" | "done" | "error";
+  error: string;
+  createdAt: string;
+  finishedAt: string | null;
+};
+
+export function createJob(input: {
+  kind: string;
+  label: string;
+  clientId?: string | null;
+}): Job {
+  const job: Job = {
+    id: randomUUID(),
+    kind: input.kind,
+    label: input.label,
+    clientId: input.clientId ?? null,
+    status: "running",
+    error: "",
+    createdAt: now(),
+    finishedAt: null,
+  };
+  db.prepare(
+    "INSERT INTO jobs (id, kind, label, clientId, status, error, createdAt, finishedAt) VALUES (@id, @kind, @label, @clientId, @status, @error, @createdAt, @finishedAt)"
+  ).run(job);
+  return job;
+}
+
+export function finishJob(id: string, status: "done" | "error", error = ""): void {
+  db.prepare("UPDATE jobs SET status = ?, error = ?, finishedAt = ? WHERE id = ?").run(
+    status,
+    error,
+    now(),
+    id
+  );
+}
+
+export function listJobs(): Job[] {
+  // Jobs rodando + os finalizados nos últimos 2 minutos (para a UI reagir)
+  const cutoff = new Date(Date.now() - 2 * 60 * 1000).toISOString();
+  return db
+    .prepare(
+      "SELECT * FROM jobs WHERE status = 'running' OR finishedAt > ? ORDER BY createdAt DESC LIMIT 20"
+    )
+    .all(cutoff) as Job[];
+}
+
+// Jobs órfãos de sessões antigas do servidor (ficariam 'running' para sempre)
+db.prepare(
+  "UPDATE jobs SET status = 'error', error = 'Servidor reiniciou durante a geração', finishedAt = ? WHERE status = 'running' AND createdAt < ?"
+).run(now(), new Date(Date.now() - 15 * 60 * 1000).toISOString());
+
+// ---------- Central de atividade ----------
+
+export type Activity = {
+  id: string;
+  audience: "agency" | "client" | "professional" | "all";
+  clientId: string | null;
+  professionalId: string | null;
+  projectId: string | null;
+  text: string;
+  href: string;
+  readAt: string | null;
+  createdAt: string;
+};
+
+export function logActivity(input: {
+  audience: Activity["audience"];
+  text: string;
+  href?: string;
+  clientId?: string | null;
+  professionalId?: string | null;
+  projectId?: string | null;
+}): void {
+  db.prepare(
+    "INSERT INTO activities (id, audience, clientId, professionalId, projectId, text, href, readAt, createdAt) VALUES (?, ?, ?, ?, ?, ?, ?, NULL, ?)"
+  ).run(
+    randomUUID(),
+    input.audience,
+    input.clientId ?? null,
+    input.professionalId ?? null,
+    input.projectId ?? null,
+    input.text,
+    input.href ?? "",
+    now()
+  );
+}
+
+export function listActivities(filter: {
+  audience: Activity["audience"];
+  clientId?: string;
+  professionalId?: string;
+  limit?: number;
+}): Activity[] {
+  const clauses = ["(audience = @audience OR audience = 'all')"];
+  const params: Record<string, unknown> = {
+    audience: filter.audience,
+    limit: filter.limit ?? 30,
+  };
+  if (filter.clientId) {
+    clauses.push("clientId = @clientId");
+    params.clientId = filter.clientId;
+  }
+  if (filter.professionalId) {
+    clauses.push("professionalId = @professionalId");
+    params.professionalId = filter.professionalId;
+  }
+  return db
+    .prepare(
+      `SELECT * FROM activities WHERE ${clauses.join(" AND ")} ORDER BY createdAt DESC LIMIT @limit`
+    )
+    .all(params) as Activity[];
+}
+
+export function markActivitiesRead(audience: Activity["audience"]): void {
+  db.prepare(
+    "UPDATE activities SET readAt = ? WHERE readAt IS NULL AND (audience = ? OR audience = 'all')"
+  ).run(now(), audience);
+}
+
+// ---------- Chat da conta (cliente ↔ agência) ----------
+
+export type AccountMessage = {
+  id: string;
+  clientId: string;
+  sender: "agency" | "client";
+  text: string;
+  createdAt: string;
+};
+
+export function listAccountMessages(clientId: string): AccountMessage[] {
+  return db
+    .prepare("SELECT * FROM account_messages WHERE clientId = ? ORDER BY createdAt ASC")
+    .all(clientId) as AccountMessage[];
+}
+
+export function createAccountMessage(input: {
+  clientId: string;
+  sender: "agency" | "client";
+  text: string;
+}): AccountMessage {
+  const message: AccountMessage = { ...input, id: randomUUID(), createdAt: now() };
+  db.prepare(
+    "INSERT INTO account_messages (id, clientId, sender, text, createdAt) VALUES (@id, @clientId, @sender, @text, @createdAt)"
+  ).run(message);
+  return message;
+}
+
+// ---------- Portfolio hospedado do profissional ----------
+
+export type ProfessionalAsset = {
+  id: string;
+  professionalId: string;
+  title: string;
+  mime: string;
+  createdAt: string;
+};
+
+export function listProfessionalAssets(professionalId: string): ProfessionalAsset[] {
+  return db
+    .prepare(
+      "SELECT * FROM professional_assets WHERE professionalId = ? ORDER BY createdAt DESC"
+    )
+    .all(professionalId) as ProfessionalAsset[];
+}
+
+export function createProfessionalAsset(input: {
+  professionalId: string;
+  title: string;
+  mime: string;
+}): ProfessionalAsset {
+  const asset: ProfessionalAsset = { ...input, id: randomUUID(), createdAt: now() };
+  db.prepare(
+    "INSERT INTO professional_assets (id, professionalId, title, mime, createdAt) VALUES (@id, @professionalId, @title, @mime, @createdAt)"
+  ).run(asset);
+  return asset;
+}
+
+export function deleteProfessionalAsset(id: string): boolean {
+  return db.prepare("DELETE FROM professional_assets WHERE id = ?").run(id).changes > 0;
+}
+
+// ---------- Sketches (histórico versionado) ----------
+
+export type Sketch = {
+  id: string;
+  projectId: string;
+  svg: string;
+  rationale: string;
+  neededReferences: string[];
+  createdAt: string;
+};
+
+type SketchRow = Omit<Sketch, "neededReferences"> & { neededReferences: string };
+
+export function listSketches(projectId: string): Sketch[] {
+  return (
+    db
+      .prepare("SELECT * FROM sketches WHERE projectId = ? ORDER BY createdAt DESC")
+      .all(projectId) as SketchRow[]
+  ).map((row) => {
+    let needed: string[] = [];
+    try {
+      needed = JSON.parse(row.neededReferences);
+    } catch {
+      needed = [];
+    }
+    return { ...row, neededReferences: needed };
+  });
+}
+
+export function createSketch(input: {
+  projectId: string;
+  svg: string;
+  rationale: string;
+  neededReferences: string[];
+}): Sketch {
+  const sketch: Sketch = { ...input, id: randomUUID(), createdAt: now() };
+  db.prepare(
+    "INSERT INTO sketches (id, projectId, svg, rationale, neededReferences, createdAt) VALUES (@id, @projectId, @svg, @rationale, @neededReferences, @createdAt)"
+  ).run({ ...sketch, neededReferences: JSON.stringify(sketch.neededReferences) });
+  return sketch;
+}
+
+export function deleteSketch(id: string): boolean {
+  return db.prepare("DELETE FROM sketches WHERE id = ?").run(id).changes > 0;
+}
+
+// Migração: sketches antigos gravados na coluna projects.sketch viram a
+// primeira versão do histórico
+for (const row of db
+  .prepare("SELECT id, sketch, createdAt FROM projects WHERE sketch != ''")
+  .all() as { id: string; sketch: string; createdAt: string }[]) {
+  const existing = db
+    .prepare("SELECT COUNT(*) as c FROM sketches WHERE projectId = ?")
+    .get(row.id) as { c: number };
+  if (existing.c > 0) continue;
+  try {
+    const parsed = JSON.parse(row.sketch) as {
+      svg?: string;
+      rationale?: string;
+      neededReferences?: string[];
+    };
+    if (parsed.svg) {
+      db.prepare(
+        "INSERT INTO sketches (id, projectId, svg, rationale, neededReferences, createdAt) VALUES (?, ?, ?, ?, ?, ?)"
+      ).run(
+        randomUUID(),
+        row.id,
+        parsed.svg,
+        parsed.rationale ?? "",
+        JSON.stringify(parsed.neededReferences ?? []),
+        row.createdAt
+      );
+    }
+  } catch {
+    // sketch antigo ilegível: ignora
+  }
 }
 
 // ---------- Publicações agendadas ----------

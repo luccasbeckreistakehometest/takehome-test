@@ -22,6 +22,7 @@ const EMPTY: ProfessionalInput = {
   bio: "",
   portfolio: [],
   priceRange: "",
+  availability: "",
 };
 
 export default function ProfessionalForm({
@@ -158,6 +159,14 @@ export default function ProfessionalForm({
               placeholder="Ex.: restaurantes e cafés premium, moda feminina..."
             />
           </div>
+        </div>
+        <div>
+          <Label>Disponibilidade</Label>
+          <Input
+            value={form.availability}
+            onChange={(e) => set("availability", e.target.value)}
+            placeholder="Ex.: seg-sex após 14h; fins de semana livres"
+          />
         </div>
         <div>
           <Label>Bio</Label>

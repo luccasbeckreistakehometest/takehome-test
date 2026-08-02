@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server";
 import { GenerationError, generateHtml, generateStructured } from "@/lib/claude";
 import { createGeneration, getClient, listGenerations } from "@/lib/db";
-import { getPlatformSnapshot } from "@/lib/marketplace-db";
+import { createJob, finishJob, getPlatformSnapshot, logActivity } from "@/lib/marketplace-db";
 import { buildGenerationSpec } from "@/lib/prompts";
 import { generateSchema } from "@/lib/validation";
 
@@ -32,6 +32,7 @@ export async function POST(request: Request) {
     strategy: latestStrategy?.content.slice(0, 8000),
   });
 
+  const job = createJob({ kind: type, label: `${spec.title} — ${client.name}`, clientId });
   try {
     const content =
       type === "landing_page"
@@ -50,14 +51,21 @@ export async function POST(request: Request) {
       params,
       content,
     });
+    logActivity({
+      audience: "client",
+      clientId,
+      text: `✨ Novo entregável na sua conta: ${spec.title}`,
+      href: `/portal/client/${clientId}`,
+    });
+    finishJob(job.id, "done");
     return NextResponse.json(generation, { status: 201 });
   } catch (error) {
+    const message =
+      error instanceof GenerationError ? error.message : "Erro inesperado ao gerar conteúdo.";
+    finishJob(job.id, "error", message);
     if (error instanceof GenerationError) {
       return NextResponse.json({ error: error.message }, { status: error.status });
     }
-    return NextResponse.json(
-      { error: "Erro inesperado ao gerar conteúdo." },
-      { status: 500 }
-    );
+    return NextResponse.json({ error: message }, { status: 500 });
   }
 }

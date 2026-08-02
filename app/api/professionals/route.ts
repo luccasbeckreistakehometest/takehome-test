@@ -6,6 +6,7 @@ import {
 } from "@/lib/marketplace-db";
 import { professionalTier } from "@/lib/ranking";
 import { professionalSchema } from "@/lib/validation";
+import { createUser } from "@/lib/auth";
 
 export async function GET() {
   const professionals = listProfessionals().map((professional) => {
@@ -23,5 +24,15 @@ export async function POST(request: Request) {
       { status: 400 }
     );
   }
-  return NextResponse.json(createProfessional(parsed.data), { status: 201 });
+  const professional = createProfessional(parsed.data);
+  const login = createUser({
+    password: "luccas123",
+    role: "professional",
+    refId: professional.id,
+    name: professional.name,
+  });
+  return NextResponse.json(
+    { ...professional, login: { username: login.username, password: "luccas123" } },
+    { status: 201 }
+  );
 }

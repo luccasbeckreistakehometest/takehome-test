@@ -155,6 +155,15 @@ export default function SettingsPage() {
             </span>
           </label>
         </div>
+        <div className="border-t border-edge pt-4">
+          <Label>Estilo da casa (injetado em todas as gerações de IA)</Label>
+          <textarea
+            value={settings.houseStyle}
+            onChange={(e) => setSettings({ ...settings, houseStyle: e.target.value })}
+            placeholder="Diretrizes da agência que valem para todos os clientes: tom, o que nunca fazer, formatos preferidos..."
+            className="min-h-20 w-full rounded-md border border-edge bg-surface-2 px-3 py-2 text-sm outline-none focus:border-accent"
+          />
+        </div>
         <div className="space-y-2 border-t border-edge pt-4">
           <p className="text-xs font-semibold uppercase tracking-wider text-muted">
             Chaves de API

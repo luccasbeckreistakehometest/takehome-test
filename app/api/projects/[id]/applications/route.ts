@@ -5,6 +5,7 @@ import {
   getProfessional,
   getProject,
   listApplications,
+  logActivity,
 } from "@/lib/marketplace-db";
 
 type Context = { params: Promise<{ id: string }> };
@@ -37,6 +38,16 @@ export async function POST(request: Request, { params }: Context) {
     return NextResponse.json({ error: "Candidatura inválida" }, { status: 400 });
   }
   const application = createApplication({ projectId: id, ...parsed.data });
+  if (application) {
+    const professional = getProfessional(parsed.data.professionalId);
+    logActivity({
+      audience: "agency",
+      clientId: project.clientId,
+      projectId: id,
+      text: `✋ ${professional?.name ?? "Um profissional"} se candidatou à demanda "${project.title}"`,
+      href: `/clients/${project.clientId}?project=${id}`,
+    });
+  }
   if (!application) {
     return NextResponse.json(
       { error: "Você já se candidatou a esta demanda" },

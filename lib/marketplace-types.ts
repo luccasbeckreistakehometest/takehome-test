@@ -13,6 +13,7 @@ export type Professional = {
   bio: string;
   portfolio: { title: string; url: string }[];
   priceRange: string;
+  availability: string; // disponibilidade (dias/horários livres)
   createdAt: string;
 };
 
@@ -43,6 +44,7 @@ export const PROJECT_STATUSES = [
   "matched",
   "in_progress",
   "in_review",
+  "client_approval",
   "approved",
   "paid",
 ] as const;
@@ -54,6 +56,7 @@ export const PROJECT_STATUS_LABELS: Record<ProjectStatus, string> = {
   matched: "Profissional vinculado",
   in_progress: "Em produção",
   in_review: "Em revisão",
+  client_approval: "Aguardando aprovação do cliente",
   approved: "Aprovada",
   paid: "Paga & concluída",
 };

@@ -16,6 +16,9 @@ export default function ProspectingPage() {
   const load = () => api<Prospect[]>("/api/prospects").then(setProspects);
   useEffect(() => {
     load();
+    const handler = () => load();
+    window.addEventListener("jobs:changed", handler);
+    return () => window.removeEventListener("jobs:changed", handler);
   }, []);
 
   async function discover() {

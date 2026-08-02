@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server";
 import { z } from "zod";
 import { GenerationError, generateStructured } from "@/lib/claude";
-import { createProspect, listProspects } from "@/lib/marketplace-db";
+import { createJob, createProspect, finishJob, listProspects } from "@/lib/marketplace-db";
 import { prospectingSchema, type ProspectingResult } from "@/lib/marketplace-schemas";
 
 export const maxDuration = 300;
@@ -27,6 +27,7 @@ export async function POST(request: Request) {
     );
   }
   const { niche, region, notes } = parsed.data;
+  const job = createJob({ kind: "prospecting", label: `Prospecção: ${niche} — ${region}` });
 
   try {
     const result = await generateStructured<ProspectingResult>({
@@ -52,8 +53,10 @@ Priorize empresas com maior probabilidade de fechar: dor visível + capacidade d
     const saved = result.prospects.map((prospect) =>
       createProspect({ ...prospect, searchQuery })
     );
+    finishJob(job.id, "done");
     return NextResponse.json({ summary: result.summary, prospects: saved }, { status: 201 });
   } catch (error) {
+    finishJob(job.id, "error", error instanceof GenerationError ? error.message : "erro");
     if (error instanceof GenerationError) {
       return NextResponse.json({ error: error.message }, { status: error.status });
     }

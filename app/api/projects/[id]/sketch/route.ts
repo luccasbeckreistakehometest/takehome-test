@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server";
 import { GenerationError, generateStructured } from "@/lib/claude";
 import { getClient, listGenerations } from "@/lib/db";
-import { getProject, listDeliverables, updateProject } from "@/lib/marketplace-db";
+import { createSketch, getProject, listDeliverables, updateProject } from "@/lib/marketplace-db";
 import { sketchSchema, type SketchResult } from "@/lib/marketplace-schemas";
 import { clientContext } from "@/lib/prompts";
 import { readUpload, type AllowedImageMime } from "@/lib/uploads";
@@ -83,6 +83,13 @@ Regras do sketch:
     });
 
     updateProject(id, { sketch: JSON.stringify(result) });
+    // Histórico versionado: cada geração vira uma versão consultável
+    createSketch({
+      projectId: id,
+      svg: result.svg,
+      rationale: result.rationale,
+      neededReferences: result.neededReferences ?? [],
+    });
     return NextResponse.json(result, { status: 201 });
   } catch (error) {
     if (error instanceof GenerationError) {

@@ -1,5 +1,5 @@
 import { NextResponse } from "next/server";
-import { createDeliverable, getProject, listDeliverables } from "@/lib/marketplace-db";
+import { createDeliverable, getProject, listDeliverables, logActivity } from "@/lib/marketplace-db";
 import { ALLOWED_IMAGE_MIMES, saveUpload, type AllowedImageMime } from "@/lib/uploads";
 
 type Context = { params: Promise<{ id: string }> };
@@ -52,5 +52,15 @@ export async function POST(request: Request, { params }: Context) {
     meaning,
   });
   saveUpload(deliverable.id, file.type, Buffer.from(await file.arrayBuffer()));
+  if (kind === "delivery") {
+    const project = getProject(id)!;
+    logActivity({
+      audience: "agency",
+      clientId: project.clientId,
+      projectId: id,
+      text: `📤 Nova entrega "${deliverable.title}" na demanda "${project.title}" — revisar`,
+      href: `/clients/${project.clientId}?project=${id}`,
+    });
+  }
   return NextResponse.json(deliverable, { status: 201 });
 }

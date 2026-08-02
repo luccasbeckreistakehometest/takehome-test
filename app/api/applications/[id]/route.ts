@@ -3,6 +3,7 @@ import { z } from "zod";
 import {
   getApplication,
   getProject,
+  logActivity,
   setApplicationStatus,
   updateProject,
 } from "@/lib/marketplace-db";
@@ -24,6 +25,19 @@ export async function PATCH(request: Request, { params }: Context) {
     return NextResponse.json({ error: "Dados inválidos" }, { status: 400 });
   }
   setApplicationStatus(id, parsed.data.status);
+  if (parsed.data.status === "accepted" || parsed.data.status === "rejected") {
+    const project = getProject(application.projectId);
+    logActivity({
+      audience: "professional",
+      professionalId: application.professionalId,
+      projectId: application.projectId,
+      text:
+        parsed.data.status === "accepted"
+          ? `🎉 Sua candidatura à demanda "${project?.title ?? ""}" foi aceita!`
+          : `Sua candidatura à demanda "${project?.title ?? ""}" foi recusada.`,
+      href: `/professionals/${application.professionalId}`,
+    });
+  }
   // Primeira aceitação tira a demanda de "aberta"
   if (parsed.data.status === "accepted") {
     const project = getProject(application.projectId);

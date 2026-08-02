@@ -14,6 +14,7 @@ const settingsSchema = z.object({
   // Chaves: string vazia = manter a atual; "clear" = apagar
   anthropicApiKey: z.string().trim().default(""),
   googleAiApiKey: z.string().trim().default(""),
+  houseStyle: z.string().trim().default(""),
 });
 
 // As chaves nunca voltam ao navegador — só o status de configuração
@@ -25,6 +26,7 @@ function publicView() {
     accentColor: settings.accentColor,
     landingPagesEnabled: settings.landingPagesEnabled,
     aiMode: settings.aiMode,
+    houseStyle: settings.houseStyle,
     anthropicApiKey: "",
     googleAiApiKey: "",
     hasAnthropicKey: Boolean(settings.anthropicApiKey || process.env.ANTHROPIC_API_KEY),
@@ -56,6 +58,7 @@ export async function PUT(request: Request) {
     accentColor: parsed.data.accentColor,
     landingPagesEnabled: parsed.data.landingPagesEnabled,
     aiMode: parsed.data.aiMode,
+    houseStyle: parsed.data.houseStyle,
     anthropicApiKey: resolveKey(parsed.data.anthropicApiKey, current.anthropicApiKey),
     googleAiApiKey: resolveKey(parsed.data.googleAiApiKey, current.googleAiApiKey),
   });

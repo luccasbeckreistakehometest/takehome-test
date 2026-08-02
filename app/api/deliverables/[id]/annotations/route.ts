@@ -3,7 +3,9 @@ import { z } from "zod";
 import {
   createAnnotation,
   getDeliverable,
+  getProject,
   listAnnotations,
+  logActivity,
 } from "@/lib/marketplace-db";
 
 type Context = { params: Promise<{ id: string }> };
@@ -30,8 +32,20 @@ export async function POST(request: Request, { params }: Context) {
   if (!parsed.success) {
     return NextResponse.json({ error: "Anotação inválida" }, { status: 400 });
   }
-  return NextResponse.json(
-    createAnnotation({ deliverableId: id, ...parsed.data }),
-    { status: 201 }
-  );
+  const annotation = createAnnotation({ deliverableId: id, ...parsed.data });
+  const deliverable = getDeliverable(id)!;
+  const project = getProject(deliverable.projectId);
+  if (project) {
+    const audience =
+      parsed.data.audience === "all" ? "agency" : parsed.data.audience;
+    logActivity({
+      audience,
+      clientId: project.clientId,
+      professionalId: project.professionalId,
+      projectId: project.id,
+      text: `📌 Nova revisão em "${deliverable.title}": "${parsed.data.comment.slice(0, 60)}"`,
+      href: `/clients/${project.clientId}?project=${project.id}`,
+    });
+  }
+  return NextResponse.json(annotation, { status: 201 });
 }

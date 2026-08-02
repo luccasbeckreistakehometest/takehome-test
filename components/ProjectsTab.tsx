@@ -27,6 +27,15 @@ type ProjectDetailData = Project & {
   deliverables: Deliverable[];
   meetings: Meeting[];
   applications: ApplicationWithProfessional[];
+  sketches: SketchRecord[];
+};
+
+type SketchRecord = {
+  id: string;
+  svg: string;
+  rationale: string;
+  neededReferences: string[];
+  createdAt: string;
 };
 
 export default function ProjectsTab({
@@ -339,6 +348,7 @@ function ProjectDetail({ projectId, onBack }: { projectId: string; onBack: () =>
   const [editing, setEditing] = useState(false);
   const [editForm, setEditForm] = useState({ title: "", brief: "", budget: "", deadline: "" });
   const [sketching, setSketching] = useState(false);
+  const [sketchIndex, setSketchIndex] = useState(0);
   const [refMeaning, setRefMeaning] = useState<string>(REFERENCE_MEANINGS[0]);
   const [refUploading, setRefUploading] = useState(false);
   const [mocking, setMocking] = useState(false);
@@ -445,8 +455,13 @@ function ProjectDetail({ projectId, onBack }: { projectId: string; onBack: () =>
       });
     }
     if (project.status === "in_review") {
-      nextActions.push({ label: "✅ Aprovar entrega", body: { status: "approved" } });
+      nextActions.push({ label: "👤 Enviar para aprovação do cliente", body: { status: "client_approval" } });
+      nextActions.push({ label: "✅ Aprovar direto", body: { status: "approved" } });
       nextActions.push({ label: "↩ Voltar para produção (ajustes)", body: { status: "in_progress" } });
+    }
+    if (project.status === "client_approval") {
+      nextActions.push({ label: "✅ Aprovar em nome do cliente", body: { status: "approved" } });
+      nextActions.push({ label: "↩ Voltar para produção", body: { status: "in_progress" } });
     }
     if (project.status === "approved" && project.escrow === "held") {
       nextActions.push({
@@ -863,9 +878,37 @@ function ProjectDetail({ projectId, onBack }: { projectId: string; onBack: () =>
           </span>
         </div>
         {sketching && <Spinner label="A IA está desenhando o rafe da composição (1-2 min)..." />}
-        {project.sketch ? (
+        {project.sketches.length > 1 && (
+          <div className="flex flex-wrap gap-1.5">
+            {project.sketches.map((version, index) => (
+              <button
+                key={version.id}
+                onClick={() => setSketchIndex(index)}
+                className={`rounded-md border px-2.5 py-1 text-xs transition-colors ${
+                  index === sketchIndex
+                    ? "border-accent bg-accent/10 text-accent"
+                    : "border-edge bg-surface-2 text-muted hover:border-muted"
+                }`}
+              >
+                v{project.sketches.length - index} ·{" "}
+                {new Date(version.createdAt).toLocaleString("pt-BR", {
+                  day: "2-digit",
+                  month: "2-digit",
+                  hour: "2-digit",
+                  minute: "2-digit",
+                })}
+              </button>
+            ))}
+          </div>
+        )}
+        {project.sketches.length > 0 ? (
           (() => {
-            const sketch = JSON.parse(project.sketch) as SketchResult;
+            const record = project.sketches[Math.min(sketchIndex, project.sketches.length - 1)];
+            const sketch: SketchResult = {
+              svg: record.svg,
+              rationale: record.rationale,
+              neededReferences: record.neededReferences,
+            };
             return (
               <div className="grid gap-4 lg:grid-cols-2">
                 <div className="rounded-lg border border-edge bg-white p-3">

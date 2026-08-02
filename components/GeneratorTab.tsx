@@ -63,6 +63,13 @@ export default function GeneratorTab({
     loadHistory();
   }, [loadHistory]);
 
+  // Gerações concluídas no servidor (mesmo após refresh) recarregam o histórico
+  useEffect(() => {
+    const handler = () => loadHistory();
+    window.addEventListener("jobs:changed", handler);
+    return () => window.removeEventListener("jobs:changed", handler);
+  }, [loadHistory]);
+
   async function generate() {
     setGenerating(true);
     setError("");
