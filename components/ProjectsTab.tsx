@@ -14,7 +14,7 @@ import {
   type Deliverable,
 } from "@/lib/marketplace-types";
 import type { Meeting } from "@/lib/marketplace-db";
-import type { DemandSuggestions, MatchResult } from "@/lib/marketplace-schemas";
+import type { DemandSuggestions, MatchResult, SketchResult } from "@/lib/marketplace-schemas";
 import { googleCalendarUrl } from "@/lib/gcal";
 import DeliverableViewer from "./DeliverableViewer";
 import { Button, Card, ErrorBox, Input, Label, SectionTitle, Spinner, Tag, Textarea } from "./ui";
@@ -302,6 +302,7 @@ function ProjectDetail({ projectId, onBack }: { projectId: string; onBack: () =>
   const [meetingForm, setMeetingForm] = useState({ title: "", scheduledAt: "", link: "" });
   const [editing, setEditing] = useState(false);
   const [editForm, setEditForm] = useState({ title: "", brief: "", budget: "", deadline: "" });
+  const [sketching, setSketching] = useState(false);
 
   const load = useCallback(() => {
     api<ProjectDetailData>(`/api/projects/${projectId}`).then((data) => {
@@ -564,6 +565,75 @@ function ProjectDetail({ projectId, onBack }: { projectId: string; onBack: () =>
               </div>
             )}
           </>
+        )}
+      </Card>
+
+      <Card className="space-y-3">
+        <div className="flex flex-wrap items-center justify-between gap-2">
+          <SectionTitle>Sketch de referência (IA)</SectionTitle>
+          <Button
+            variant="ghost"
+            disabled={sketching}
+            onClick={async () => {
+              setSketching(true);
+              setError("");
+              try {
+                await api(`/api/projects/${projectId}/sketch`, { method: "POST" });
+                load();
+              } catch (err) {
+                setError(err instanceof Error ? err.message : "Erro no sketch");
+              } finally {
+                setSketching(false);
+              }
+            }}
+          >
+            {sketching
+              ? "Desenhando..."
+              : project.sketch
+                ? "↻ Regerar sketch"
+                : "✏️ Gerar sketch da composição"}
+          </Button>
+        </div>
+        {sketching && <Spinner label="A IA está desenhando o rafe da composição (1-2 min)..." />}
+        {project.sketch ? (
+          (() => {
+            const sketch = JSON.parse(project.sketch) as SketchResult;
+            return (
+              <div className="grid gap-4 lg:grid-cols-2">
+                <div className="rounded-lg border border-edge bg-white p-3">
+                  {/* eslint-disable-next-line @next/next/no-img-element */}
+                  <img
+                    src={`data:image/svg+xml;utf8,${encodeURIComponent(sketch.svg)}`}
+                    alt="Sketch de referência"
+                    className="mx-auto max-h-[60vh] w-auto max-w-full"
+                  />
+                </div>
+                <div className="space-y-2 text-sm text-muted">
+                  <p>
+                    <span className="font-semibold text-foreground/80">
+                      Direção de arte:{" "}
+                    </span>
+                    {sketch.rationale}
+                  </p>
+                  <a
+                    href={`data:image/svg+xml;utf8,${encodeURIComponent(sketch.svg)}`}
+                    download="sketch-referencia.svg"
+                    className="inline-block rounded-md border border-edge bg-surface-2 px-3 py-1.5 text-xs transition-colors hover:border-accent hover:text-accent"
+                  >
+                    ⬇ Baixar SVG para enviar ao profissional
+                  </a>
+                </div>
+              </div>
+            );
+          })()
+        ) : (
+          !sketching && (
+            <p className="text-sm text-muted">
+              Gere um rafe visual da composição esperada (enquadramento, posição de
+              produto, texto e CTA) para anexar ao brief — o profissional executa sem
+              ambiguidade.
+            </p>
+          )
         )}
       </Card>
 

@@ -43,6 +43,7 @@ db.exec(`
     status TEXT NOT NULL DEFAULT 'open',
     escrow TEXT NOT NULL DEFAULT 'none',
     matchResult TEXT NOT NULL DEFAULT '',
+    sketch TEXT NOT NULL DEFAULT '',
     createdAt TEXT NOT NULL
   );
   CREATE TABLE IF NOT EXISTS project_messages (
@@ -104,6 +105,14 @@ db.exec(`
 `);
 
 const now = () => new Date().toISOString();
+
+// Migração: coluna do sketch de referência da IA
+const projectColumns = (
+  db.prepare("PRAGMA table_info(projects)").all() as { name: string }[]
+).map((column) => column.name);
+if (projectColumns.length > 0 && !projectColumns.includes("sketch")) {
+  db.exec("ALTER TABLE projects ADD COLUMN sketch TEXT NOT NULL DEFAULT ''");
+}
 
 // ---------- Profissionais ----------
 
@@ -260,11 +269,12 @@ export function createProject(input: {
     status: "open",
     escrow: "none",
     matchResult: "",
+    sketch: "",
     createdAt: now(),
   };
   db.prepare(
-    `INSERT INTO projects (id, clientId, professionalId, title, brief, skillsNeeded, location, budget, deadline, status, escrow, matchResult, createdAt)
-     VALUES (@id, @clientId, @professionalId, @title, @brief, @skillsNeeded, @location, @budget, @deadline, @status, @escrow, @matchResult, @createdAt)`
+    `INSERT INTO projects (id, clientId, professionalId, title, brief, skillsNeeded, location, budget, deadline, status, escrow, matchResult, sketch, createdAt)
+     VALUES (@id, @clientId, @professionalId, @title, @brief, @skillsNeeded, @location, @budget, @deadline, @status, @escrow, @matchResult, @sketch, @createdAt)`
   ).run({ ...project, skillsNeeded: JSON.stringify(project.skillsNeeded) });
   return project;
 }
@@ -272,20 +282,21 @@ export function createProject(input: {
 export function updateProject(
   id: string,
   patch: Partial<
-    Pick<Project, "professionalId" | "status" | "escrow" | "matchResult" | "title" | "brief" | "budget" | "deadline">
+    Pick<Project, "professionalId" | "status" | "escrow" | "matchResult" | "sketch" | "title" | "brief" | "budget" | "deadline">
   >
 ): Project | null {
   const existing = getProject(id);
   if (!existing) return null;
   const merged = { ...existing, ...patch };
   db.prepare(
-    `UPDATE projects SET professionalId=@professionalId, status=@status, escrow=@escrow, matchResult=@matchResult, title=@title, brief=@brief, budget=@budget, deadline=@deadline WHERE id=@id`
+    `UPDATE projects SET professionalId=@professionalId, status=@status, escrow=@escrow, matchResult=@matchResult, sketch=@sketch, title=@title, brief=@brief, budget=@budget, deadline=@deadline WHERE id=@id`
   ).run({
     id,
     professionalId: merged.professionalId,
     status: merged.status,
     escrow: merged.escrow,
     matchResult: merged.matchResult,
+    sketch: merged.sketch,
     title: merged.title,
     brief: merged.brief,
     budget: merged.budget,

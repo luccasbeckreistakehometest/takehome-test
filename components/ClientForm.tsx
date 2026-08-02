@@ -22,6 +22,7 @@ const EMPTY: ClientInput = {
   notes: "",
   language: "pt-BR",
   source: "agency",
+  country: "Brasil",
 };
 
 export default function ClientForm({
@@ -76,7 +77,7 @@ export default function ClientForm({
     <form onSubmit={submit} className="space-y-5">
       {error && <ErrorBox message={error} />}
       <Card className="space-y-4">
-        <div className="grid gap-4 sm:grid-cols-3">
+        <div className="grid gap-4 sm:grid-cols-4">
           <div className="sm:col-span-2">
             <Label>Nome do cliente *</Label>
             <Input
@@ -84,6 +85,14 @@ export default function ClientForm({
               onChange={(e) => set("name", e.target.value)}
               placeholder="Ex.: Café Aurora"
               required
+            />
+          </div>
+          <div>
+            <Label>País / mercado-alvo</Label>
+            <Input
+              value={form.country}
+              onChange={(e) => set("country", e.target.value)}
+              placeholder="Ex.: Brasil"
             />
           </div>
           <div>

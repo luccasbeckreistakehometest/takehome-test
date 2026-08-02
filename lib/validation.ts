@@ -18,6 +18,7 @@ export const clientSchema = z.object({
   notes: z.string().trim().default(""),
   language: z.enum(["pt-BR", "en"]).default("pt-BR"),
   source: z.enum(["agency", "self"]).default("agency"),
+  country: z.string().trim().min(1).default("Brasil"),
 });
 
 export const generateSchema = z.object({

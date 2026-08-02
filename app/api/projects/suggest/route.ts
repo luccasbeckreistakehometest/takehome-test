@@ -53,7 +53,7 @@ ${planBlock || "A conta ainda não tem plano gerado — proponha com base no bri
 ${
         idea
           ? `A agência quer criar UMA demanda de produção a partir desta ideia: "${idea}".
-Escreva a demanda completa: título objetivo, brief detalhado (o que produzir, quantidades, referências de estilo coerentes com a marca, entregáveis e formatos), skills necessárias, local (cidade do cliente se for foto presencial, "Remoto" se design), sugestão de verba realista para o mercado brasileiro e prazo sugerido.`
+Escreva a demanda completa: título objetivo, brief detalhado (o que produzir, quantidades, referências de estilo coerentes com a marca, entregáveis e formatos), skills necessárias, local (cidade do cliente se for foto presencial, "Remoto" se design), sugestão de verba realista para o mercado do país do cliente e prazo sugerido.`
           : `Liste as demandas de produção (foto, vídeo curto, design) necessárias para EXECUTAR o plano atual desta conta — 3 a 6 demandas, sem redundância.
 Para cada uma: título objetivo, brief detalhado (o que produzir, quantidades, referências de estilo coerentes com a marca, entregáveis e formatos), skills necessárias, local (cidade do cliente se presencial, "Remoto" se design), verba sugerida realista e prazo sugerido. No campo "source", diga de onde do plano a demanda vem (ex.: "reels da semana 2 da campanha", "fotos do calendário social").`
       }

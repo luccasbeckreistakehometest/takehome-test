@@ -28,6 +28,7 @@ function createDb() {
       notes TEXT NOT NULL DEFAULT '',
       language TEXT NOT NULL DEFAULT 'pt-BR',
       source TEXT NOT NULL DEFAULT 'agency',
+      country TEXT NOT NULL DEFAULT 'Brasil',
       createdAt TEXT NOT NULL
     );
     CREATE TABLE IF NOT EXISTS generations (
@@ -52,6 +53,9 @@ function createDb() {
   }
   if (!clientColumns.includes("source")) {
     db.exec("ALTER TABLE clients ADD COLUMN source TEXT NOT NULL DEFAULT 'agency'");
+  }
+  if (!clientColumns.includes("country")) {
+    db.exec("ALTER TABLE clients ADD COLUMN country TEXT NOT NULL DEFAULT 'Brasil'");
   }
 
   return db;
@@ -99,8 +103,8 @@ export function createClient(input: ClientInput): Client {
     createdAt: new Date().toISOString(),
   };
   db.prepare(
-    `INSERT INTO clients (id, name, industry, description, audience, tone, goals, budget, channels, differentials, competitors, brandColors, website, instagram, notes, language, source, createdAt)
-     VALUES (@id, @name, @industry, @description, @audience, @tone, @goals, @budget, @channels, @differentials, @competitors, @brandColors, @website, @instagram, @notes, @language, @source, @createdAt)`
+    `INSERT INTO clients (id, name, industry, description, audience, tone, goals, budget, channels, differentials, competitors, brandColors, website, instagram, notes, language, source, country, createdAt)
+     VALUES (@id, @name, @industry, @description, @audience, @tone, @goals, @budget, @channels, @differentials, @competitors, @brandColors, @website, @instagram, @notes, @language, @source, @country, @createdAt)`
   ).run({ ...client, channels: JSON.stringify(client.channels) });
   return client;
 }
@@ -109,7 +113,7 @@ export function updateClient(id: string, input: ClientInput): Client | null {
   const existing = getClient(id);
   if (!existing) return null;
   db.prepare(
-    `UPDATE clients SET name=@name, industry=@industry, description=@description, audience=@audience, tone=@tone, goals=@goals, budget=@budget, channels=@channels, differentials=@differentials, competitors=@competitors, brandColors=@brandColors, website=@website, instagram=@instagram, notes=@notes, language=@language
+    `UPDATE clients SET name=@name, industry=@industry, description=@description, audience=@audience, tone=@tone, goals=@goals, budget=@budget, channels=@channels, differentials=@differentials, competitors=@competitors, brandColors=@brandColors, website=@website, instagram=@instagram, notes=@notes, language=@language, country=@country
      WHERE id=@id`
   ).run({ ...input, id, channels: JSON.stringify(input.channels) });
   return getClient(id);

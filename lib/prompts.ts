@@ -38,6 +38,7 @@ export function clientContext(client: Client): string {
     field("Site", client.website),
     field("Instagram", client.instagram),
     field("Observações", client.notes),
+    `País / mercado-alvo: ${client.country || "Brasil"}`,
     `Idioma dos entregáveis: ${client.language === "en" ? "inglês (US)" : "português (BR)"}`,
   ].filter(Boolean);
   return `<briefing_do_cliente>\n${lines.join("\n")}\n</briefing_do_cliente>`;
@@ -109,6 +110,8 @@ export function buildGenerationSpec(
 
 Faça um deep dive estratégico completo deste cliente, fundamentado em pesquisa real na web (use a busca para dados atuais do segmento, tendências e concorrentes — cite as fontes no campo "source").${focus ? ` Foco especial solicitado pela agência: ${focus}.` : ""}
 
+Foco geográfico: pesquise prioritariamente o mercado de ${client.country || "Brasil"} (concorrentes, comportamento do consumidor, dados locais). Complemente com o que está acontecendo no exterior nesse segmento — movimentos que ainda não chegaram a ${client.country || "Brasil"} e que podem virar tendência lá; quando citar um insight internacional, sinalize a origem e por que tende a migrar para o mercado-alvo.
+
 Requisitos:
 - Sumário executivo direto ao ponto.
 - 4 a 6 tendências atuais do mercado deste segmento, cada uma com implicação prática para o cliente e fonte da informação.
@@ -129,7 +132,7 @@ Requisitos:
           maxTokens: 24000,
           prompt: `${briefing}
 
-Você é o radar diário desta conta. Pesquise na web o que mudou RECENTEMENTE (últimos dias/semanas) no mercado deste cliente: notícias do segmento, movimentos de concorrentes, mudanças de plataforma/algoritmo, trends de conteúdo e comportamento do consumidor.
+Você é o radar diário desta conta. Pesquise na web o que mudou RECENTEMENTE (últimos dias/semanas) no mercado deste cliente: notícias do segmento, movimentos de concorrentes, mudanças de plataforma/algoritmo, trends de conteúdo e comportamento do consumidor. Priorize o mercado de ${client.country || "Brasil"}, mas inclua também movimentos internacionais do segmento que ainda não chegaram lá e podem virar tendência — sinalizando a origem.
 
 Requisitos:
 - Resumo do momento em um parágrafo.
@@ -182,7 +185,7 @@ Requisitos:
 - Tabela de métricas antes → depois (ex.: tráfego, leads/mês, taxa de conversão, CAC, ticket médio, receita atribuída), com uplift esperado.
 - Cálculo de ROI: investimento total no período, retorno projetado, ROI em %, payback e explicação da conta em linguagem simples.
 - Roadmap por fases (ex.: fundação, tração, escala) com período, marcos concretos e impacto esperado de cada fase.
-- Use a moeda adequada ao idioma do cliente (R$ para pt-BR, US$ para inglês).`,
+- Use a moeda do país do cliente (${client.country || "Brasil"}) e valores realistas para aquele mercado.`,
         };
       }
 

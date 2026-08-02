@@ -1,12 +1,17 @@
 import { db } from "./db";
 
+// Quanto gastar com IA:
+// - economy: modelo mais barato (Sonnet) em tudo
+// - balanced: Sonnet nos entregáveis táticos, Opus nas decisões críticas
+// - premium: Opus em tudo
+export type AiMode = "economy" | "balanced" | "premium";
+
 export type AgencySettings = {
   agencyName: string;
   tagline: string;
   accentColor: string;
-  // Feature flags / custo
   landingPagesEnabled: boolean; // gerador de landing page (alto consumo de tokens)
-  economyMode: boolean; // usa modelo mais barato nos entregáveis táticos
+  aiMode: AiMode;
 };
 
 const DEFAULTS: AgencySettings = {
@@ -14,7 +19,7 @@ const DEFAULTS: AgencySettings = {
   tagline: "sua agência, centralizada e acelerada por IA",
   accentColor: "#c6f24e",
   landingPagesEnabled: false,
-  economyMode: true,
+  aiMode: "balanced",
 };
 
 db.exec(`
@@ -40,13 +45,16 @@ if (!settingsColumns.includes("landingPagesEnabled")) {
 if (!settingsColumns.includes("economyMode")) {
   db.exec("ALTER TABLE settings ADD COLUMN economyMode INTEGER NOT NULL DEFAULT 1");
 }
+if (!settingsColumns.includes("aiMode")) {
+  db.exec("ALTER TABLE settings ADD COLUMN aiMode TEXT NOT NULL DEFAULT 'balanced'");
+}
 
 type SettingsRow = {
   agencyName: string;
   tagline: string;
   accentColor: string;
   landingPagesEnabled: number;
-  economyMode: number;
+  aiMode: string;
 };
 
 export function getSettings(): AgencySettings {
@@ -59,20 +67,21 @@ export function getSettings(): AgencySettings {
     tagline: row.tagline,
     accentColor: row.accentColor,
     landingPagesEnabled: row.landingPagesEnabled === 1,
-    economyMode: row.economyMode === 1,
+    aiMode: (["economy", "balanced", "premium"] as const).includes(row.aiMode as AiMode)
+      ? (row.aiMode as AiMode)
+      : "balanced",
   };
 }
 
 export function saveSettings(settings: AgencySettings): AgencySettings {
   db.prepare(
-    `INSERT INTO settings (id, agencyName, tagline, accentColor, landingPagesEnabled, economyMode)
-     VALUES (1, @agencyName, @tagline, @accentColor, @landingPagesEnabled, @economyMode)
+    `INSERT INTO settings (id, agencyName, tagline, accentColor, landingPagesEnabled, aiMode)
+     VALUES (1, @agencyName, @tagline, @accentColor, @landingPagesEnabled, @aiMode)
      ON CONFLICT(id) DO UPDATE SET agencyName=@agencyName, tagline=@tagline, accentColor=@accentColor,
-       landingPagesEnabled=@landingPagesEnabled, economyMode=@economyMode`
+       landingPagesEnabled=@landingPagesEnabled, aiMode=@aiMode`
   ).run({
     ...settings,
     landingPagesEnabled: settings.landingPagesEnabled ? 1 : 0,
-    economyMode: settings.economyMode ? 1 : 0,
   });
   return settings;
 }

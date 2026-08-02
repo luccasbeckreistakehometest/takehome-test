@@ -39,6 +39,7 @@ export async function PATCH(request: Request, { params }: Context) {
       notes: `Origem: prospecção (${prospect.searchQuery}). Maturidade: ${prospect.marketingMaturity}. Abordagem usada: ${prospect.suggestedApproach}`,
       language: "pt-BR",
       source: "agency",
+      country: "Brasil",
     });
     const updated = updateProspect(id, { status: "converted", clientId: client.id });
     return NextResponse.json({ prospect: updated, clientId: client.id });

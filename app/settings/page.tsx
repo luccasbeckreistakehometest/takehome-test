@@ -92,23 +92,46 @@ export default function SettingsPage() {
           <p className="text-xs font-semibold uppercase tracking-wider text-muted">
             Custo & features de IA
           </p>
-          <label className="flex items-start gap-3 rounded-md border border-edge bg-surface-2 p-3 text-sm">
-            <input
-              type="checkbox"
-              checked={settings.economyMode}
-              onChange={(e) => setSettings({ ...settings, economyMode: e.target.checked })}
-              className="mt-0.5 accent-[var(--accent)]"
-            />
-            <span>
-              <span className="font-medium">Modo econômico</span>
-              <span className="block text-xs text-muted">
-                Usa um modelo ~3x mais barato (Sonnet) nos entregáveis táticos
-                (campanha, social, posts, ROI, radar, relatório, ideias, prospecção).
-                Estratégia, identidade, match e análise de arte continuam no modelo
-                premium (Opus).
-              </span>
-            </span>
-          </label>
+          <div className="grid gap-2 sm:grid-cols-3">
+            {(
+              [
+                {
+                  value: "economy",
+                  label: "💸 Econômico",
+                  desc: "Modelo mais barato (Sonnet) em tudo. Menor custo possível.",
+                },
+                {
+                  value: "balanced",
+                  label: "⚖️ Equilibrado",
+                  desc: "Sonnet nos entregáveis táticos; Opus em estratégia, identidade, match e análise de arte.",
+                },
+                {
+                  value: "premium",
+                  label: "👑 Premium",
+                  desc: "Opus (modelo topo) em todas as gerações. Máxima qualidade, maior custo.",
+                },
+              ] as const
+            ).map((mode) => (
+              <label
+                key={mode.value}
+                className={`cursor-pointer rounded-md border p-3 text-sm transition-colors ${
+                  settings.aiMode === mode.value
+                    ? "border-accent bg-accent/10"
+                    : "border-edge bg-surface-2 hover:border-muted"
+                }`}
+              >
+                <input
+                  type="radio"
+                  name="aiMode"
+                  className="hidden"
+                  checked={settings.aiMode === mode.value}
+                  onChange={() => setSettings({ ...settings, aiMode: mode.value })}
+                />
+                <span className="font-medium">{mode.label}</span>
+                <span className="mt-1 block text-xs text-muted">{mode.desc}</span>
+              </label>
+            ))}
+          </div>
           <label className="flex items-start gap-3 rounded-md border border-edge bg-surface-2 p-3 text-sm">
             <input
               type="checkbox"

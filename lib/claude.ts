@@ -9,8 +9,10 @@ export const STANDARD_MODEL = "claude-sonnet-5";
 export type ModelTier = "premium" | "standard";
 
 export function pickModel(tier: ModelTier): string {
-  if (tier === "standard" && getSettings().economyMode) return STANDARD_MODEL;
-  return PREMIUM_MODEL;
+  const mode = getSettings().aiMode;
+  if (mode === "economy") return STANDARD_MODEL;
+  if (mode === "premium") return PREMIUM_MODEL;
+  return tier === "standard" ? STANDARD_MODEL : PREMIUM_MODEL;
 }
 
 const client = new Anthropic();

@@ -79,6 +79,7 @@ export type Project = {
   status: ProjectStatus;
   escrow: EscrowStatus;
   matchResult: string; // JSON do último match da IA (ou "")
+  sketch: string; // JSON {svg, rationale} do sketch de referência da IA (ou "")
   createdAt: string;
 };
 

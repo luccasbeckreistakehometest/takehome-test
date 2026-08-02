@@ -17,6 +17,7 @@ export type Client = {
   instagram: string;
   notes: string;
   language: ClientLanguage;
+  country: string;
   source: "agency" | "self";
   createdAt: string;
 };

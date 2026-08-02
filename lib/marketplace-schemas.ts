@@ -119,6 +119,13 @@ export type IdeasResult = {
   }[];
 };
 
+export const sketchSchema = obj({
+  rationale: str, // explicação das escolhas de composição para o profissional
+  svg: str, // sketch vetorial completo da composição
+});
+
+export type SketchResult = { rationale: string; svg: string };
+
 export const demandSuggestionsSchema = obj({
   summary: str,
   demands: {
