@@ -127,10 +127,15 @@ export default function SalesIntegrations({ clientId }: { clientId: string }) {
     load();
   }
 
-  async function connect(platform: string, accountId: string, accessToken: string) {
+  async function connect(
+    platform: string,
+    accountId: string,
+    accessToken: string,
+    oauth?: { refreshToken: string; oauthClientId: string; oauthClientSecret: string }
+  ) {
     await api(`/api/clients/${clientId}/connections`, {
       method: "POST",
-      body: JSON.stringify({ platform, accountId, accessToken }),
+      body: JSON.stringify({ platform, accountId, accessToken, ...oauth }),
     });
     load();
   }
@@ -308,6 +313,8 @@ export default function SalesIntegrations({ clientId }: { clientId: string }) {
   );
 }
 
+type OAuthFields = { refreshToken: string; oauthClientId: string; oauthClientSecret: string };
+
 function ConnectionRow({
   platform,
   conn,
@@ -315,11 +322,15 @@ function ConnectionRow({
 }: {
   platform: { key: string; label: string; account: string };
   conn?: Connection;
-  onConnect: (platform: string, accountId: string, token: string) => void;
+  onConnect: (platform: string, accountId: string, token: string, oauth?: OAuthFields) => void;
 }) {
   const [open, setOpen] = useState(false);
   const [accountId, setAccountId] = useState(conn?.accountId ?? "");
   const [token, setToken] = useState("");
+  const [refreshToken, setRefreshToken] = useState("");
+  const [oauthClientId, setOauthClientId] = useState("");
+  const [oauthClientSecret, setOauthClientSecret] = useState("");
+  const supportsOAuth = platform.key === "ga4"; // GA4/Google usa refresh token
 
   return (
     <div className="rounded-md border border-edge bg-surface-2 px-3 py-2 text-sm">
@@ -343,11 +354,28 @@ function ConnectionRow({
         <div className="mt-2 space-y-2">
           <Input value={accountId} onChange={(e) => setAccountId(e.target.value)} placeholder={platform.account} />
           <Input type="password" value={token} onChange={(e) => setToken(e.target.value)} placeholder="Token de acesso" />
+          {supportsOAuth && (
+            <div className="space-y-2 rounded border border-edge bg-surface p-2">
+              <p className="text-[11px] text-muted">
+                Opcional — OAuth para renovar o token automaticamente (o token do GA4 expira em ~1h):
+              </p>
+              <Input type="password" value={refreshToken} onChange={(e) => setRefreshToken(e.target.value)} placeholder="Refresh token" />
+              <Input value={oauthClientId} onChange={(e) => setOauthClientId(e.target.value)} placeholder="OAuth Client ID" />
+              <Input type="password" value={oauthClientSecret} onChange={(e) => setOauthClientSecret(e.target.value)} placeholder="OAuth Client Secret" />
+            </div>
+          )}
           <Button
             onClick={() => {
-              onConnect(platform.key, accountId, token);
+              onConnect(
+                platform.key,
+                accountId,
+                token,
+                supportsOAuth ? { refreshToken, oauthClientId, oauthClientSecret } : undefined
+              );
               setOpen(false);
               setToken("");
+              setRefreshToken("");
+              setOauthClientSecret("");
             }}
           >
             Salvar

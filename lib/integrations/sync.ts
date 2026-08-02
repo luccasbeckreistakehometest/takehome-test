@@ -1,9 +1,35 @@
 import {
   markSync,
   saveSnapshot,
+  updateAccessToken,
   type ClientConnection,
   type ConnectorPlatform,
 } from "../integrations-db";
+
+// Renova o access token via OAuth refresh (Google/GA4). Resolve o problema do
+// token que expira em ~1h: com refreshToken + clientId/secret salvos, geramos
+// um token novo antes de cada sync. Atualiza a conexão e retorna o token novo.
+async function refreshGoogleToken(conn: ClientConnection): Promise<string> {
+  if (!conn.refreshToken || !conn.oauthClientId || !conn.oauthClientSecret) {
+    return conn.accessToken; // sem credenciais de refresh: usa o token colado
+  }
+  const res = await fetch("https://oauth2.googleapis.com/token", {
+    method: "POST",
+    headers: { "Content-Type": "application/x-www-form-urlencoded" },
+    body: new URLSearchParams({
+      client_id: conn.oauthClientId,
+      client_secret: conn.oauthClientSecret,
+      refresh_token: conn.refreshToken,
+      grant_type: "refresh_token",
+    }),
+  });
+  const payload = await res.json();
+  if (!res.ok || !payload.access_token) {
+    throw new Error(payload?.error_description ?? payload?.error ?? "falha no refresh OAuth");
+  }
+  updateAccessToken(conn.id, payload.access_token);
+  return payload.access_token as string;
+}
 
 // Puxa métricas REAIS de cada plataforma quando há token configurado. Cada
 // adapter fala a API oficial. Sem token → conexão fica "disconnected" e nada
@@ -99,9 +125,12 @@ export async function syncConnection(conn: ClientConnection): Promise<Metrics> {
   const { start, end } = last30();
   let metrics: Metrics;
   switch (conn.platform) {
-    case "ga4":
-      metrics = await syncGa4(conn, start, end);
+    case "ga4": {
+      // Renova o token via OAuth (se configurado) antes de consultar o GA4.
+      const fresh = await refreshGoogleToken(conn);
+      metrics = await syncGa4({ ...conn, accessToken: fresh }, start, end);
       break;
+    }
     case "meta_ads":
       metrics = await syncMetaAds(conn, start, end);
       break;

@@ -22,6 +22,10 @@ const schema = z.object({
   platform: z.enum(["ga4", "meta_ads", "google_ads", "tiktok_ads", "sales_api"]),
   accountId: z.string().trim().default(""),
   accessToken: z.string().trim().default(""),
+  // OAuth (opcional) — para renovar o token automaticamente (GA4/Google)
+  refreshToken: z.string().trim().default(""),
+  oauthClientId: z.string().trim().default(""),
+  oauthClientSecret: z.string().trim().default(""),
 });
 
 export async function POST(request: Request, { params }: Context) {

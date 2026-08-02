@@ -244,12 +244,32 @@ export default function Workspace({
         </Card>
       )}
 
-      <nav className="flex gap-1 overflow-x-auto border-b border-edge pb-px">
+      {/* Mobile: compact native select mirroring the tabs */}
+      <div className="sm:hidden">
+        <label htmlFor="workspace-tab" className="sr-only">
+          Seção do workspace
+        </label>
+        <select
+          id="workspace-tab"
+          value={tab}
+          onChange={(e) => setTab(e.target.value as TabKey)}
+          className="w-full rounded-md border border-edge bg-surface px-3 py-2 text-sm font-medium text-accent"
+        >
+          {tabs.map(({ key, label }) => (
+            <option key={key} value={key} className="bg-surface text-foreground">
+              {label}
+            </option>
+          ))}
+        </select>
+      </div>
+
+      {/* Desktop: scrollable tab row */}
+      <nav className="hidden snap-x gap-1 overflow-x-auto border-b border-edge pb-px sm:flex">
         {tabs.map(({ key, label }) => (
           <button
             key={key}
             onClick={() => setTab(key)}
-            className={`whitespace-nowrap rounded-t-md px-3.5 py-2 text-sm transition-colors ${
+            className={`snap-start whitespace-nowrap rounded-t-md px-3.5 py-2 text-sm transition-colors ${
               tab === key
                 ? "border border-b-0 border-edge bg-surface font-medium text-accent"
                 : "text-muted hover:text-foreground"

@@ -20,7 +20,12 @@ export type ClientConnection = {
   clientId: string;
   platform: ConnectorPlatform;
   accountId: string; // property id / ad account id / loja id
-  accessToken: string; // token (nunca volta ao cliente)
+  accessToken: string; // token de acesso (nunca volta ao cliente)
+  // OAuth: com refreshToken + clientId/secret, o sync renova o accessToken
+  // automaticamente (resolve o token do GA4/Google que expira em ~1h).
+  refreshToken: string;
+  oauthClientId: string;
+  oauthClientSecret: string;
   status: ConnectionStatus;
   lastSyncAt: string | null;
   lastError: string;
@@ -64,6 +69,9 @@ db.exec(`
     platform TEXT NOT NULL,
     accountId TEXT NOT NULL DEFAULT '',
     accessToken TEXT NOT NULL DEFAULT '',
+    refreshToken TEXT NOT NULL DEFAULT '',
+    oauthClientId TEXT NOT NULL DEFAULT '',
+    oauthClientSecret TEXT NOT NULL DEFAULT '',
     status TEXT NOT NULL DEFAULT 'disconnected',
     lastSyncAt TEXT,
     lastError TEXT NOT NULL DEFAULT '',
@@ -99,6 +107,18 @@ db.exec(`
   CREATE INDEX IF NOT EXISTS idx_sales_client ON sales_entries(clientId, periodStart);
 `);
 
+// Migração leve para bancos criados antes dos campos OAuth
+{
+  const cols = (
+    db.prepare("PRAGMA table_info(client_connections)").all() as { name: string }[]
+  ).map((c) => c.name);
+  for (const col of ["refreshToken", "oauthClientId", "oauthClientSecret"]) {
+    if (!cols.includes(col)) {
+      db.exec(`ALTER TABLE client_connections ADD COLUMN ${col} TEXT NOT NULL DEFAULT ''`);
+    }
+  }
+}
+
 const now = () => new Date().toISOString();
 
 // ---------- Conexões ----------
@@ -122,15 +142,32 @@ export function upsertConnection(input: {
   platform: ConnectorPlatform;
   accountId: string;
   accessToken: string;
+  refreshToken?: string;
+  oauthClientId?: string;
+  oauthClientSecret?: string;
 }): ClientConnection {
   const existing = getConnection(input.clientId, input.platform);
   const token = input.accessToken || existing?.accessToken || "";
-  const status: ConnectionStatus = token ? "connected" : "disconnected";
+  // Campos OAuth: em branco = mantém o valor anterior
+  const refreshToken = input.refreshToken || existing?.refreshToken || "";
+  const oauthClientId = input.oauthClientId || existing?.oauthClientId || "";
+  const oauthClientSecret = input.oauthClientSecret || existing?.oauthClientSecret || "";
+  const status: ConnectionStatus = token || refreshToken ? "connected" : "disconnected";
   if (existing) {
     db.prepare(
-      "UPDATE client_connections SET accountId = ?, accessToken = ?, status = ?, lastError = '' WHERE id = ?"
-    ).run(input.accountId, token, status, existing.id);
-    return { ...existing, accountId: input.accountId, accessToken: token, status, lastError: "" };
+      `UPDATE client_connections SET accountId = ?, accessToken = ?, refreshToken = ?,
+       oauthClientId = ?, oauthClientSecret = ?, status = ?, lastError = '' WHERE id = ?`
+    ).run(input.accountId, token, refreshToken, oauthClientId, oauthClientSecret, status, existing.id);
+    return {
+      ...existing,
+      accountId: input.accountId,
+      accessToken: token,
+      refreshToken,
+      oauthClientId,
+      oauthClientSecret,
+      status,
+      lastError: "",
+    };
   }
   const conn: ClientConnection = {
     id: randomUUID(),
@@ -138,16 +175,24 @@ export function upsertConnection(input: {
     platform: input.platform,
     accountId: input.accountId,
     accessToken: token,
+    refreshToken,
+    oauthClientId,
+    oauthClientSecret,
     status,
     lastSyncAt: null,
     lastError: "",
     createdAt: now(),
   };
   db.prepare(
-    `INSERT INTO client_connections (id, clientId, platform, accountId, accessToken, status, lastSyncAt, lastError, createdAt)
-     VALUES (@id, @clientId, @platform, @accountId, @accessToken, @status, @lastSyncAt, @lastError, @createdAt)`
+    `INSERT INTO client_connections (id, clientId, platform, accountId, accessToken, refreshToken, oauthClientId, oauthClientSecret, status, lastSyncAt, lastError, createdAt)
+     VALUES (@id, @clientId, @platform, @accountId, @accessToken, @refreshToken, @oauthClientId, @oauthClientSecret, @status, @lastSyncAt, @lastError, @createdAt)`
   ).run(conn);
   return conn;
+}
+
+// Atualiza só o access token (usado pelo refresh de OAuth no sync).
+export function updateAccessToken(id: string, accessToken: string): void {
+  db.prepare("UPDATE client_connections SET accessToken = ? WHERE id = ?").run(accessToken, id);
 }
 
 export function markSync(
