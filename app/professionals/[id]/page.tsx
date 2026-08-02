@@ -34,6 +34,9 @@ export default function ProfessionalPage({
   const [profile, setProfile] = useState<Profile | null>(null);
   const [editing, setEditing] = useState(false);
   const [notFound, setNotFound] = useState(false);
+  const [applyingTo, setApplyingTo] = useState<string | null>(null);
+  const [pitch, setPitch] = useState("");
+  const [sendingApplication, setSendingApplication] = useState(false);
 
   const load = useCallback(() => {
     api<Profile>(`/api/professionals/${id}`)
@@ -202,18 +205,17 @@ export default function ProfessionalPage({
                         {application ? (
                           <Tag>Candidatura: {APPLICATION_STATUS_LABELS[application.status]}</Tag>
                         ) : (
-                          <Button
-                            className="!px-2.5 !py-1 text-xs"
-                            onClick={async () => {
-                              await api(`/api/projects/${project.id}/applications`, {
-                                method: "POST",
-                                body: JSON.stringify({ professionalId: profile.id, message: "" }),
-                              });
-                              load();
-                            }}
-                          >
-                            ✋ Candidatar-se
-                          </Button>
+                          applyingTo !== project.id && (
+                            <Button
+                              className="!px-2.5 !py-1 text-xs"
+                              onClick={() => {
+                                setApplyingTo(project.id);
+                                setPitch("");
+                              }}
+                            >
+                              ✋ Candidatar-se
+                            </Button>
+                          )
                         )}
                       </div>
                       <p className="mt-1 text-xs text-muted">
@@ -222,6 +224,52 @@ export default function ProfessionalPage({
                       </p>
                       {project.brief && (
                         <p className="mt-1 text-xs text-muted">{project.brief.slice(0, 200)}</p>
+                      )}
+                      {applyingTo === project.id && !application && (
+                        <div className="mt-3 space-y-2 rounded-md border border-accent/40 bg-background p-3">
+                          <p className="text-xs font-semibold uppercase tracking-wide text-muted">
+                            Mensagem de apresentação
+                          </p>
+                          <textarea
+                            autoFocus
+                            value={pitch}
+                            onChange={(e) => setPitch(e.target.value)}
+                            placeholder="Por que você é a pessoa certa para este job? Cite experiência no segmento, trabalhos parecidos do portfolio, disponibilidade..."
+                            className="min-h-24 w-full rounded-md border border-edge bg-surface-2 p-2 text-sm outline-none focus:border-accent"
+                          />
+                          <div className="flex gap-2">
+                            <Button
+                              className="!px-3 !py-1.5 text-xs"
+                              disabled={sendingApplication}
+                              onClick={async () => {
+                                setSendingApplication(true);
+                                try {
+                                  await api(`/api/projects/${project.id}/applications`, {
+                                    method: "POST",
+                                    body: JSON.stringify({
+                                      professionalId: profile.id,
+                                      message: pitch.trim(),
+                                    }),
+                                  });
+                                  setApplyingTo(null);
+                                  setPitch("");
+                                  load();
+                                } finally {
+                                  setSendingApplication(false);
+                                }
+                              }}
+                            >
+                              {sendingApplication ? "Enviando..." : "Enviar candidatura"}
+                            </Button>
+                            <Button
+                              variant="ghost"
+                              className="!px-3 !py-1.5 text-xs"
+                              onClick={() => setApplyingTo(null)}
+                            >
+                              Cancelar
+                            </Button>
+                          </div>
+                        </div>
                       )}
                     </div>
                   );
