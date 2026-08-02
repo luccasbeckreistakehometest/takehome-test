@@ -83,7 +83,7 @@ export default function AgencyHome() {
               <p className="mt-1.5 text-xs text-muted">{data.agency.tier.reason}</p>
             </div>
             <div className="w-full max-w-xl flex-1">
-              <TierProgress info={data.agency.tier} />
+              <TierProgress info={data.agency.tier} celebrate celebrateKey="levelup_agency" />
             </div>
           </div>
         </Card>

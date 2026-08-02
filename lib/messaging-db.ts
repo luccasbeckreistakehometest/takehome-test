@@ -96,6 +96,16 @@ db.exec(`
     updatedAt TEXT NOT NULL,
     PRIMARY KEY (channel)
   );
+  CREATE TABLE IF NOT EXISTS inbound_messages (
+    id TEXT PRIMARY KEY,
+    channel TEXT NOT NULL,
+    fromAddress TEXT NOT NULL DEFAULT '',
+    fromName TEXT NOT NULL DEFAULT '',
+    body TEXT NOT NULL DEFAULT '',
+    receivedAt TEXT NOT NULL,
+    readAt TEXT
+  );
+  CREATE INDEX IF NOT EXISTS idx_inbound_received ON inbound_messages(receivedAt DESC);
 `);
 
 const now = () => new Date().toISOString();
@@ -287,6 +297,49 @@ export function getConnection(channel: MessageChannel): ChannelConnection | unde
     | (Omit<ChannelConnection, "sessionReady"> & { sessionReady: number })
     | undefined;
   return row ? { ...row, sessionReady: row.sessionReady === 1 } : undefined;
+}
+
+// ---------- Mensagens recebidas (inbound via webhook) ----------
+export type InboundMessage = {
+  id: string;
+  channel: MessageChannel;
+  fromAddress: string;
+  fromName: string;
+  body: string;
+  receivedAt: string;
+  readAt: string | null;
+};
+
+export function saveInbound(input: {
+  channel: MessageChannel;
+  fromAddress: string;
+  fromName?: string;
+  body: string;
+}): InboundMessage {
+  const msg: InboundMessage = {
+    id: randomUUID(),
+    channel: input.channel,
+    fromAddress: input.fromAddress,
+    fromName: input.fromName ?? "",
+    body: input.body,
+    receivedAt: now(),
+    readAt: null,
+  };
+  db.prepare(
+    `INSERT INTO inbound_messages (id, channel, fromAddress, fromName, body, receivedAt, readAt)
+     VALUES (@id, @channel, @fromAddress, @fromName, @body, @receivedAt, @readAt)`
+  ).run(msg);
+  return msg;
+}
+
+export function listInbound(limit = 100): InboundMessage[] {
+  return db
+    .prepare("SELECT * FROM inbound_messages ORDER BY receivedAt DESC LIMIT ?")
+    .all(limit) as InboundMessage[];
+}
+
+export function markInboundRead(): void {
+  db.prepare("UPDATE inbound_messages SET readAt = ? WHERE readAt IS NULL").run(now());
 }
 
 export function saveConnection(input: {

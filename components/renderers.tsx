@@ -7,12 +7,14 @@ import type {
   CampaignPlan,
   MarketPulse,
   PostBatch,
+  ProductRecs,
   RoiProjection,
   SocialCalendar,
   StrategyAnalysis,
   VisualIdentity,
 } from "@/lib/schemas";
 import type { ClientReport } from "@/lib/marketplace-schemas";
+import type { Generation } from "@/lib/types";
 import { Card, CopyButton, SectionTitle, Tag } from "./ui";
 import { Icon } from "@/components/icons";
 
@@ -1281,4 +1283,83 @@ export function ProductRecsView({
       </Card>
     </div>
   );
+}
+
+// Fallback legível quando o conteúdo não casa com nenhum renderer conhecido
+// (JSON corrompido de uma versão antiga, por exemplo).
+function RawContent({ content }: { content: string }) {
+  let pretty = content;
+  try {
+    pretty = JSON.stringify(JSON.parse(content), null, 2);
+  } catch {
+    // mantém o conteúdo original se não for JSON
+  }
+  return (
+    <Card>
+      <p className="mb-2 text-sm text-muted">Conteúdo bruto desta versão:</p>
+      <pre className="max-h-[60vh] overflow-auto whitespace-pre-wrap rounded-md bg-surface-2 p-3 text-xs text-muted">
+        {pretty}
+      </pre>
+    </Card>
+  );
+}
+
+// Dispatcher read-only: dado um `Generation`, renderiza o entregável no mesmo
+// formato das abas, porém SEM ações/edição (não passa clientId/generationId/
+// actions), para uso em contextos de leitura como a comparação de versões.
+export function GenerationContent({ generation }: { generation: Generation }) {
+  const { type, content } = generation;
+
+  // Landing page é HTML, não JSON: mostra o preview em iframe isolado.
+  if (type === "landing_page") {
+    return (
+      <div className="overflow-hidden rounded-xl border border-edge bg-white">
+        <iframe
+          src={`/api/generations/${generation.id}/html`}
+          sandbox="allow-scripts"
+          title={generation.title}
+          className="h-[60vh] w-full"
+        />
+      </div>
+    );
+  }
+
+  let parsed: unknown;
+  try {
+    parsed = JSON.parse(content);
+  } catch {
+    return <RawContent content={content} />;
+  }
+
+  try {
+    switch (type) {
+      case "strategy_analysis":
+        return <StrategyAnalysisView data={parsed as StrategyAnalysis} />;
+      case "market_pulse":
+        return <MarketPulseView data={parsed as MarketPulse} />;
+      case "campaign_plan":
+        return <CampaignPlanView data={parsed as CampaignPlan} />;
+      case "roi_projection":
+        return (
+          <RoiProjectionView
+            data={parsed as RoiProjection}
+            initialActuals={generation.actuals}
+          />
+        );
+      case "social_calendar":
+        return <SocialCalendarView data={parsed as SocialCalendar} />;
+      case "post_batch":
+        return <PostBatchView data={parsed as PostBatch} />;
+      case "visual_identity":
+        return <VisualIdentityView data={parsed as VisualIdentity} />;
+      case "product_recs":
+        return <ProductRecsView data={parsed as ProductRecs} />;
+      case "client_report":
+        return <ClientReportView data={parsed as ClientReport} />;
+      default:
+        return <RawContent content={content} />;
+    }
+  } catch {
+    return <RawContent content={content} />;
+  }
 }

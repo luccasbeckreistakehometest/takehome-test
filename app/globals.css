@@ -162,6 +162,47 @@ button:disabled {
   animation: fade-in-up 0.35s cubic-bezier(0.16, 1, 0.3, 1) both;
 }
 
+/* ---------- Celebração de subida de elo (level-up) ---------- */
+/* O confete cai de cima da tela; cada partícula recebe --dx/--dy/--rot via
+   inline style para dispersão randômica sem libs externas. */
+@keyframes confetti-fall {
+  0% {
+    opacity: 0;
+    transform: translate3d(0, -12px, 0) rotate(0deg);
+  }
+  8% {
+    opacity: 1;
+  }
+  100% {
+    opacity: 0;
+    transform: translate3d(var(--dx, 0), var(--dy, 320px), 0)
+      rotate(var(--rot, 360deg));
+  }
+}
+@keyframes levelup-pop {
+  0% {
+    opacity: 0;
+    transform: translateY(-14px) scale(0.9);
+  }
+  60% {
+    transform: translateY(0) scale(1.02);
+  }
+  100% {
+    opacity: 1;
+    transform: none;
+  }
+}
+.levelup-confetti {
+  position: absolute;
+  top: -12px;
+  border-radius: 2px;
+  will-change: transform, opacity;
+  animation: confetti-fall linear forwards;
+}
+.animate-levelup {
+  animation: levelup-pop 0.4s cubic-bezier(0.16, 1, 0.3, 1) both;
+}
+
 /* Skeleton de carregamento */
 .skeleton {
   background: linear-gradient(

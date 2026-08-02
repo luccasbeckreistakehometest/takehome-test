@@ -72,7 +72,7 @@ export default function ProfessionalPage({
           </p>
           <div className="mt-3 max-w-md space-y-2">
             <TierBadge info={profile.tier} />
-            <TierProgress info={profile.tier} />
+            <TierProgress info={profile.tier} celebrate celebrateKey={`levelup_pro_${id}`} />
           </div>
         </div>
         <div className="flex gap-2">

@@ -1,18 +1,29 @@
 "use client";
 
 import { TIER_COLORS, type TierInfo } from "@/lib/ranking";
+import LevelUpCelebration from "./LevelUpCelebration";
 
 
 export default function TierBadge({
   info,
   detailed = false,
+  celebrate = false,
+  celebrateKey,
 }: {
   info: TierInfo;
   detailed?: boolean;
+  // Liga a celebração de subida de elo. Requer também `celebrateKey`.
+  celebrate?: boolean;
+  // Chave única por entidade no localStorage (ex.: `levelup_client_<id>`).
+  celebrateKey?: string;
 }) {
   const color = TIER_COLORS[info.tier];
   return (
-    <span className="inline-flex flex-col gap-0.5">
+    <>
+      {celebrate && celebrateKey && (
+        <LevelUpCelebration tier={info.tier} storageKey={celebrateKey} />
+      )}
+      <span className="inline-flex flex-col gap-0.5">
       <span
         className="inline-flex w-fit items-center gap-1.5 rounded-full border px-2.5 py-0.5 text-xs font-semibold"
         style={{ borderColor: color, color }}
@@ -26,7 +37,8 @@ export default function TierBadge({
           {info.reason} · <span className="text-foreground/70">{info.nextStep}</span>
         </span>
       )}
-    </span>
+      </span>
+    </>
   );
 }
 
@@ -35,13 +47,22 @@ export default function TierBadge({
 export function TierProgress({
   info,
   compact = false,
+  celebrate = false,
+  celebrateKey,
 }: {
   info: TierInfo;
   compact?: boolean;
+  // Liga a celebração de subida de elo. Requer também `celebrateKey`.
+  celebrate?: boolean;
+  // Chave única por entidade no localStorage (ex.: `levelup_agency`).
+  celebrateKey?: string;
 }) {
   const color = TIER_COLORS[info.tier];
   return (
     <div className="space-y-1.5">
+      {celebrate && celebrateKey && (
+        <LevelUpCelebration tier={info.tier} storageKey={celebrateKey} />
+      )}
       <div className="flex items-center justify-between text-xs text-muted">
         <span>Progresso para o próximo elo</span>
         <span className="font-semibold text-foreground">{info.progress}%</span>

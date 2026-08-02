@@ -138,7 +138,7 @@ export default function ClientPortalPage({
         </p>
         {tier && (
           <div className="mt-3 max-w-md">
-            <TierProgress info={tier} />
+            <TierProgress info={tier} celebrate celebrateKey={`levelup_client_${id}`} />
           </div>
         )}
         {client.selfServe && (

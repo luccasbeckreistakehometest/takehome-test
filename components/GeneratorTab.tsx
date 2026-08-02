@@ -3,6 +3,7 @@
 import { useCallback, useEffect, useState } from "react";
 import { api } from "@/lib/api";
 import type { Generation, GenerationType } from "@/lib/types";
+import VersionCompare from "./VersionCompare";
 import { Button, Card, ErrorBox, Input, Label, Select, Spinner, Textarea } from "./ui";
 
 export type FieldConfig = {
@@ -218,6 +219,16 @@ export default function GeneratorTab({
               </h2>
               <SafeRender generation={selected} render={render} />
             </div>
+          )}
+          {history.length >= 2 && (
+            <details className="rounded-lg border border-edge bg-surface-2">
+              <summary className="cursor-pointer px-4 py-2.5 text-sm font-medium text-muted transition-colors hover:text-foreground">
+                Comparar versões lado a lado
+              </summary>
+              <div className="border-t border-edge p-4">
+                <VersionCompare clientId={clientId} type={type} />
+              </div>
+            </details>
           )}
         </>
       )}

@@ -37,6 +37,7 @@ type Connection = {
 
 const TABS: { key: string; label: string; icon: IconName }[] = [
   { key: "compose", label: "Compor", icon: "send" },
+  { key: "inbox", label: "Recebidas", icon: "mail" },
   { key: "contacts", label: "Contatos", icon: "users" },
   { key: "lists", label: "Listas de transmissão", icon: "megaphone" },
   { key: "outbox", label: "Fila & agendados", icon: "clock" },
@@ -111,6 +112,7 @@ export default function MessagesPage() {
         {tab === "compose" && (
           <Compose contacts={contacts} lists={lists} onSent={loadOutbox} />
         )}
+        {tab === "inbox" && <Inbox />}
         {tab === "contacts" && (
           <Contacts contacts={contacts} onChange={loadContacts} />
         )}
@@ -123,6 +125,62 @@ export default function MessagesPage() {
         )}
       </div>
     </div>
+  );
+}
+
+type InboundMessage = {
+  id: string;
+  channel: Channel;
+  fromAddress: string;
+  fromName: string;
+  body: string;
+  receivedAt: string;
+  readAt: string | null;
+};
+
+// Caixa de entrada: mensagens que os contatos ENVIAM de volta, capturadas pelo
+// webhook da Meta (/api/webhooks/meta). Requer o webhook configurado na Meta.
+function Inbox() {
+  const [items, setItems] = useState<InboundMessage[]>([]);
+
+  const load = useCallback(() => {
+    api<{ inbound: InboundMessage[] }>("/api/messaging/inbound").then((r) => setItems(r.inbound)).catch(() => {});
+  }, []);
+  useEffect(() => {
+    load();
+    api("/api/messaging/inbound", { method: "PATCH" }).catch(() => {}); // marca lidas
+    const interval = setInterval(load, 10000);
+    return () => clearInterval(interval);
+  }, [load]);
+
+  return (
+    <Card>
+      <SectionTitle>Recebidas ({items.length})</SectionTitle>
+      {items.length === 0 ? (
+        <p className="text-sm text-muted">
+          Nenhuma mensagem recebida ainda. Respostas chegam aqui quando o webhook da Meta estiver
+          configurado (Conexões → API oficial): Callback URL <code className="text-accent">/api/webhooks/meta</code>,
+          verify token <code className="text-accent">agencyhub-verify</code>.
+        </p>
+      ) : (
+        <div className="space-y-1.5">
+          {items.map((m) => (
+            <div key={m.id} className="rounded-md border border-edge bg-surface-2 px-3 py-2 text-sm">
+              <div className="flex items-center justify-between gap-2">
+                <span className="flex items-center gap-1.5 font-medium">
+                  <Icon name={m.channel === "whatsapp" ? "whatsapp" : "instagram"} size={14} />
+                  {m.fromName || m.fromAddress}
+                </span>
+                <span className="text-xs text-muted">
+                  {new Date(m.receivedAt).toLocaleString("pt-BR")}
+                </span>
+              </div>
+              <p className="mt-1 text-foreground/80">{m.body}</p>
+            </div>
+          ))}
+        </div>
+      )}
+    </Card>
   );
 }
 

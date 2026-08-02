@@ -10,12 +10,33 @@ import {
   type ReviewRole,
 } from "@/lib/marketplace-types";
 import type { ArtReviewContent } from "@/lib/marketplace-schemas";
-import { Button, Card, ErrorBox, SectionTitle, Spinner } from "./ui";
+import { Button, Card, ErrorBox, SectionTitle, Spinner, Textarea } from "./ui";
+import { Icon } from "./icons";
+
+// Comentários genéricos (thread) — funcionam para qualquer entregável, texto
+// ou imagem. Tipo local para não importar comments-db (server-only) no client.
+type DeliverableComment = {
+  id: string;
+  deliverableId: string;
+  author: ReviewRole;
+  authorName: string;
+  body: string;
+  createdAt: string;
+};
 
 function scoreColor(score: number): string {
   if (score >= 80) return "#7de2d1";
   if (score >= 60) return "#e6c229";
   return "#f87171";
+}
+
+function formatDate(iso: string): string {
+  return new Date(iso).toLocaleString("pt-BR", {
+    day: "2-digit",
+    month: "short",
+    hour: "2-digit",
+    minute: "2-digit",
+  });
 }
 
 export default function DeliverableViewer({ deliverable }: { deliverable: Deliverable }) {
@@ -27,11 +48,16 @@ export default function DeliverableViewer({ deliverable }: { deliverable: Delive
   const [audience, setAudience] = useState<ReviewRole | "all">("all");
   const [reviewing, setReviewing] = useState(false);
   const [error, setError] = useState("");
+  const [comments, setComments] = useState<DeliverableComment[]>([]);
+  const [commentBody, setCommentBody] = useState("");
+  const [commentAuthor, setCommentAuthor] = useState<ReviewRole>("agency");
+  const [posting, setPosting] = useState(false);
   const imageRef = useRef<HTMLDivElement>(null);
 
   const load = useCallback(() => {
     api<Annotation[]>(`/api/deliverables/${deliverable.id}/annotations`).then(setAnnotations);
     api<ArtReview[]>(`/api/deliverables/${deliverable.id}/review`).then(setReviews);
+    api<DeliverableComment[]>(`/api/deliverables/${deliverable.id}/comments`).then(setComments);
   }, [deliverable.id]);
 
   useEffect(load, [load]);
@@ -67,6 +93,35 @@ export default function DeliverableViewer({ deliverable }: { deliverable: Delive
     } finally {
       setReviewing(false);
     }
+  }
+
+  async function postComment() {
+    if (!commentBody.trim()) return;
+    setPosting(true);
+    setError("");
+    try {
+      await api(`/api/deliverables/${deliverable.id}/comments`, {
+        method: "POST",
+        body: JSON.stringify({
+          author: commentAuthor,
+          authorName: REVIEW_ROLE_LABELS[commentAuthor],
+          body: commentBody.trim(),
+        }),
+      });
+      setCommentBody("");
+      load();
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "Erro ao comentar");
+    } finally {
+      setPosting(false);
+    }
+  }
+
+  async function removeComment(commentId: string) {
+    await api(`/api/deliverables/${deliverable.id}/comments?commentId=${commentId}`, {
+      method: "DELETE",
+    });
+    load();
   }
 
   const latestReview = reviews[0];
@@ -302,6 +357,81 @@ export default function DeliverableViewer({ deliverable }: { deliverable: Delive
           )}
         </div>
       )}
+
+      {/* Comentários — thread genérica para qualquer entregável (texto ou imagem) */}
+      <div className="space-y-3 border-t border-edge pt-4">
+        <h3 className="flex items-center gap-1.5 font-[family-name:var(--font-display)] text-sm font-semibold uppercase tracking-wider text-accent">
+          <Icon name="message" size={15} />
+          Comentários
+          {comments.length > 0 && (
+            <span className="normal-case text-muted">({comments.length})</span>
+          )}
+        </h3>
+
+        {comments.length === 0 ? (
+          <p className="text-xs text-muted">
+            Nenhum comentário ainda. Inicie a conversa sobre esta entrega.
+          </p>
+        ) : (
+          <div className="space-y-2">
+            {comments.map((c) => (
+              <div
+                key={c.id}
+                className="rounded-md border border-edge bg-surface-2 px-3 py-2"
+              >
+                <div className="flex items-center justify-between gap-3">
+                  <span className="inline-flex items-center gap-1.5 text-xs font-semibold text-foreground">
+                    <Icon name="user" size={13} className="text-muted" />
+                    {c.authorName || REVIEW_ROLE_LABELS[c.author] || c.author}
+                  </span>
+                  <div className="flex items-center gap-2">
+                    <span className="text-[10px] uppercase tracking-wide text-muted">
+                      {formatDate(c.createdAt)}
+                    </span>
+                    <button
+                      type="button"
+                      title="Excluir comentário"
+                      className="text-muted transition-colors hover:text-red-400"
+                      onClick={() => removeComment(c.id)}
+                    >
+                      <Icon name="trash" size={14} />
+                    </button>
+                  </div>
+                </div>
+                <p className="mt-1 whitespace-pre-wrap text-sm text-foreground/90">
+                  {c.body}
+                </p>
+              </div>
+            ))}
+          </div>
+        )}
+
+        <div className="space-y-2">
+          <select
+            value={commentAuthor}
+            onChange={(e) => setCommentAuthor(e.target.value as ReviewRole)}
+            className="rounded-md border border-edge bg-surface-2 px-2 py-2 text-xs text-muted outline-none"
+            title="Quem está comentando"
+          >
+            {Object.entries(REVIEW_ROLE_LABELS).map(([value, label]) => (
+              <option key={value} value={value}>
+                Como: {label}
+              </option>
+            ))}
+          </select>
+          <Textarea
+            value={commentBody}
+            onChange={(e) => setCommentBody(e.target.value)}
+            placeholder="Escreva um comentário sobre esta entrega..."
+          />
+          <div className="flex justify-end">
+            <Button onClick={postComment} disabled={posting || !commentBody.trim()}>
+              <Icon name="send" size={14} />
+              {posting ? "Enviando..." : "Comentar"}
+            </Button>
+          </div>
+        </div>
+      </div>
     </Card>
   );
 }
