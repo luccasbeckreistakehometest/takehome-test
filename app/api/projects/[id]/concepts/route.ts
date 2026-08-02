@@ -84,6 +84,7 @@ export async function POST(request: Request, { params }: Context) {
       count,
       provider: settings.imageProvider,
       togetherApiKey: settings.togetherApiKey,
+      hfApiKey: settings.hfApiKey,
     });
     const saved = images.map((image, i) => {
       const deliverable = createDeliverable({

@@ -15,7 +15,8 @@ const settingsSchema = z.object({
   anthropicApiKey: z.string().trim().default(""),
   googleAiApiKey: z.string().trim().default(""),
   togetherApiKey: z.string().trim().default(""),
-  imageProvider: z.enum(["pollinations", "together"]).default("pollinations"),
+  hfApiKey: z.string().trim().default(""),
+  imageProvider: z.enum(["huggingface", "together", "pollinations"]).default("pollinations"),
   houseStyle: z.string().trim().default(""),
 });
 
@@ -34,9 +35,11 @@ function publicView() {
     anthropicApiKey: "",
     googleAiApiKey: "",
     togetherApiKey: "",
+    hfApiKey: "",
     hasAnthropicKey: Boolean(settings.anthropicApiKey || process.env.ANTHROPIC_API_KEY),
     hasGoogleAiKey: Boolean(settings.googleAiApiKey),
     hasTogetherKey: Boolean(settings.togetherApiKey),
+    hasHfKey: Boolean(settings.hfApiKey),
   };
 }
 
@@ -70,6 +73,7 @@ export async function PUT(request: Request) {
     anthropicApiKey: resolveKey(parsed.data.anthropicApiKey, current.anthropicApiKey),
     googleAiApiKey: resolveKey(parsed.data.googleAiApiKey, current.googleAiApiKey),
     togetherApiKey: resolveKey(parsed.data.togetherApiKey, current.togetherApiKey),
+    hfApiKey: resolveKey(parsed.data.hfApiKey, current.hfApiKey),
   });
   return NextResponse.json(publicView());
 }

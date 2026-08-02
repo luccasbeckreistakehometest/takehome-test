@@ -15,8 +15,9 @@ export type AgencySettings = {
   // Chaves de API gerenciadas pela UI (armazenadas no banco local)
   anthropicApiKey: string; // vazia = usa ANTHROPIC_API_KEY do .env.local
   googleAiApiKey: string; // Google AI Studio (mockup fiel imagem+imagem)
-  togetherApiKey: string; // Together AI (FLUX.1-schnell-Free, conceitos grátis)
-  imageProvider: "pollinations" | "together"; // provedor de conceitos free
+  togetherApiKey: string; // Together AI (FLUX.1-schnell-Free)
+  hfApiKey: string; // Hugging Face (FLUX.1-dev, melhor qualidade free)
+  imageProvider: "huggingface" | "together" | "pollinations"; // provedor de conceitos free
   logoMime: string; // mime do logo whitelabel (vazio = sem logo, usa inicial)
   houseStyle: string; // "estilo da casa": diretrizes injetadas em todos os prompts
 };
@@ -30,6 +31,7 @@ const DEFAULTS: AgencySettings = {
   anthropicApiKey: "",
   googleAiApiKey: "",
   togetherApiKey: "",
+  hfApiKey: "",
   imageProvider: "pollinations",
   logoMime: "",
   houseStyle: "",
@@ -47,6 +49,7 @@ db.exec(`
     anthropicApiKey TEXT NOT NULL DEFAULT '',
     googleAiApiKey TEXT NOT NULL DEFAULT '',
     togetherApiKey TEXT NOT NULL DEFAULT '',
+    hfApiKey TEXT NOT NULL DEFAULT '',
     imageProvider TEXT NOT NULL DEFAULT 'pollinations',
     logoMime TEXT NOT NULL DEFAULT '',
     houseStyle TEXT NOT NULL DEFAULT ''
@@ -79,6 +82,9 @@ if (!settingsColumns.includes("togetherApiKey")) {
   db.exec("ALTER TABLE settings ADD COLUMN togetherApiKey TEXT NOT NULL DEFAULT ''");
   db.exec("ALTER TABLE settings ADD COLUMN imageProvider TEXT NOT NULL DEFAULT 'pollinations'");
 }
+if (!settingsColumns.includes("hfApiKey")) {
+  db.exec("ALTER TABLE settings ADD COLUMN hfApiKey TEXT NOT NULL DEFAULT ''");
+}
 if (!settingsColumns.includes("logoMime")) {
   db.exec("ALTER TABLE settings ADD COLUMN logoMime TEXT NOT NULL DEFAULT ''");
 }
@@ -92,6 +98,7 @@ type SettingsRow = {
   anthropicApiKey: string;
   googleAiApiKey: string;
   togetherApiKey: string;
+  hfApiKey: string;
   imageProvider: string;
   logoMime: string;
   houseStyle: string;
@@ -113,7 +120,12 @@ export function getSettings(): AgencySettings {
     anthropicApiKey: row.anthropicApiKey ?? "",
     googleAiApiKey: row.googleAiApiKey ?? "",
     togetherApiKey: row.togetherApiKey ?? "",
-    imageProvider: row.imageProvider === "together" ? "together" : "pollinations",
+    hfApiKey: row.hfApiKey ?? "",
+    imageProvider: (["huggingface", "together", "pollinations"] as const).includes(
+      row.imageProvider as "huggingface" | "together" | "pollinations"
+    )
+      ? (row.imageProvider as "huggingface" | "together" | "pollinations")
+      : "pollinations",
     logoMime: row.logoMime ?? "",
     houseStyle: row.houseStyle ?? "",
   };
@@ -121,10 +133,10 @@ export function getSettings(): AgencySettings {
 
 export function saveSettings(settings: AgencySettings): AgencySettings {
   db.prepare(
-    `INSERT INTO settings (id, agencyName, tagline, accentColor, landingPagesEnabled, aiMode, anthropicApiKey, googleAiApiKey, togetherApiKey, imageProvider, logoMime, houseStyle)
-     VALUES (1, @agencyName, @tagline, @accentColor, @landingPagesEnabled, @aiMode, @anthropicApiKey, @googleAiApiKey, @togetherApiKey, @imageProvider, @logoMime, @houseStyle)
+    `INSERT INTO settings (id, agencyName, tagline, accentColor, landingPagesEnabled, aiMode, anthropicApiKey, googleAiApiKey, togetherApiKey, hfApiKey, imageProvider, logoMime, houseStyle)
+     VALUES (1, @agencyName, @tagline, @accentColor, @landingPagesEnabled, @aiMode, @anthropicApiKey, @googleAiApiKey, @togetherApiKey, @hfApiKey, @imageProvider, @logoMime, @houseStyle)
      ON CONFLICT(id) DO UPDATE SET agencyName=@agencyName, tagline=@tagline, accentColor=@accentColor,
-       landingPagesEnabled=@landingPagesEnabled, aiMode=@aiMode, anthropicApiKey=@anthropicApiKey, googleAiApiKey=@googleAiApiKey, togetherApiKey=@togetherApiKey, imageProvider=@imageProvider, logoMime=@logoMime, houseStyle=@houseStyle`
+       landingPagesEnabled=@landingPagesEnabled, aiMode=@aiMode, anthropicApiKey=@anthropicApiKey, googleAiApiKey=@googleAiApiKey, togetherApiKey=@togetherApiKey, hfApiKey=@hfApiKey, imageProvider=@imageProvider, logoMime=@logoMime, houseStyle=@houseStyle`
   ).run({
     ...settings,
     landingPagesEnabled: settings.landingPagesEnabled ? 1 : 0,

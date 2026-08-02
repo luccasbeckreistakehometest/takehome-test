@@ -8,21 +8,36 @@ type SettingsView = AgencySettings & {
   hasAnthropicKey?: boolean;
   hasGoogleAiKey?: boolean;
   hasTogetherKey?: boolean;
+  hasHfKey?: boolean;
 };
 import { Button, Card, CopyButton, ErrorBox, Input, Label, SectionTitle } from "@/components/ui";
 
-const INTEGRATIONS = [
-  { name: "Meta Ads (Facebook/Instagram)", area: "Mídia paga" },
-  { name: "Google Ads", area: "Mídia paga" },
-  { name: "Google Analytics 4", area: "Dados & métricas" },
-  { name: "TikTok Business", area: "Mídia paga" },
-  { name: "Instagram Publishing", area: "Publicação social" },
-  { name: "Canva", area: "Design" },
-  { name: "Figma", area: "Design" },
-  { name: "Google Calendar / Meet", area: "Reuniões" },
-  { name: "Stripe / Mercado Pago", area: "Pagamentos & escrow" },
-  { name: "RD Station / HubSpot", area: "CRM & leads" },
+type IntegrationStatus = "live" | "beta" | "soon";
+const INTEGRATIONS: {
+  name: string;
+  area: string;
+  status: IntegrationStatus;
+  where?: string;
+}[] = [
+  { name: "WhatsApp (API + sessão)", area: "Mensageria", status: "live", where: "Mensagens → Conexões" },
+  { name: "Instagram DM (API)", area: "Mensageria", status: "live", where: "Mensagens → Conexões" },
+  { name: "Google Analytics 4", area: "Dados & métricas", status: "live", where: "Cliente → Vendas & Dados" },
+  { name: "Meta Ads (Facebook/Instagram)", area: "Mídia paga", status: "live", where: "Cliente → Vendas & Dados" },
+  { name: "Vendas / marketplace (genérico)", area: "Receita", status: "live", where: "Cliente → Vendas & Dados" },
+  { name: "Google Ads", area: "Mídia paga", status: "beta", where: "gancho pronto — falta credencial" },
+  { name: "TikTok Business", area: "Mídia paga", status: "beta", where: "gancho pronto — falta credencial" },
+  { name: "Instagram Publishing", area: "Publicação social", status: "beta", where: "posts agendados na Agenda" },
+  { name: "Google Calendar / Meet", area: "Reuniões", status: "beta", where: "links de calendário na Agenda" },
+  { name: "Canva / Figma", area: "Design", status: "soon" },
+  { name: "Stripe / Mercado Pago", area: "Pagamentos & escrow", status: "soon" },
+  { name: "RD Station / HubSpot", area: "CRM & leads", status: "soon" },
 ];
+
+const STATUS_BADGE: Record<IntegrationStatus, { label: string; cls: string }> = {
+  live: { label: "Ativo", cls: "border-emerald-500/40 bg-emerald-500/10 text-emerald-500" },
+  beta: { label: "Beta", cls: "border-amber-500/40 bg-amber-500/10 text-amber-500" },
+  soon: { label: "Em breve", cls: "border-edge text-muted" },
+};
 
 export default function SettingsPage() {
   const [settings, setSettings] = useState<SettingsView | null>(null);
@@ -274,22 +289,43 @@ export default function SettingsPage() {
               “Gerar 4 conceitos” em cada demanda usa este provedor. (Para mockup
               <em> fiel</em> compondo foto real de produto/modelo, use o Google AI acima.)
             </p>
-            <div className="grid gap-4 sm:grid-cols-2">
+            <div>
+              <Label>Provedor</Label>
+              <select
+                value={settings.imageProvider}
+                onChange={(e) =>
+                  setSettings({
+                    ...settings,
+                    imageProvider: e.target.value as "huggingface" | "together" | "pollinations",
+                  })
+                }
+                className="w-full rounded-md border border-edge bg-surface px-3 py-2 text-sm text-foreground outline-none focus:border-accent"
+              >
+                <option value="huggingface">Hugging Face — FLUX.1-dev · melhor qualidade (chave grátis)</option>
+                <option value="together">Together AI — FLUX.1-schnell-Free · rápido (chave grátis)</option>
+                <option value="pollinations">Pollinations — sem chave, qualidade menor</option>
+              </select>
+              <p className="mt-1 text-xs text-muted">
+                Recomendado: <strong>Hugging Face FLUX.1-dev</strong> — a melhor qualidade grátis.
+                Crie um token em huggingface.co → Settings → Access Tokens (não pede cartão).
+              </p>
+            </div>
+            <div className="mt-3 grid gap-4 sm:grid-cols-2">
               <div>
-                <Label>Provedor</Label>
-                <select
-                  value={settings.imageProvider}
-                  onChange={(e) =>
-                    setSettings({
-                      ...settings,
-                      imageProvider: e.target.value as "pollinations" | "together",
-                    })
-                  }
-                  className="w-full rounded-md border border-edge bg-surface px-3 py-2 text-sm text-foreground outline-none focus:border-accent"
-                >
-                  <option value="pollinations">Pollinations — grátis, sem chave (FLUX)</option>
-                  <option value="together">Together AI — FLUX.1-schnell-Free (chave)</option>
-                </select>
+                <Label>
+                  Hugging Face API Key{" "}
+                  {settings.hasHfKey ? (
+                    <span className="normal-case text-accent">configurada ✓</span>
+                  ) : (
+                    <span className="normal-case text-muted">para FLUX.1-dev</span>
+                  )}
+                </Label>
+                <Input
+                  type="password"
+                  value={settings.hfApiKey}
+                  onChange={(e) => setSettings({ ...settings, hfApiKey: e.target.value })}
+                  placeholder="hf_... (em branco = manter)"
+                />
               </div>
               <div>
                 <Label>
@@ -297,7 +333,7 @@ export default function SettingsPage() {
                   {settings.hasTogetherKey ? (
                     <span className="normal-case text-accent">configurada ✓</span>
                   ) : (
-                    <span className="normal-case text-muted">opcional — api.together.ai</span>
+                    <span className="normal-case text-muted">para FLUX-schnell</span>
                   )}
                 </Label>
                 <Input
@@ -306,7 +342,7 @@ export default function SettingsPage() {
                   onChange={(e) =>
                     setSettings({ ...settings, togetherApiKey: e.target.value })
                   }
-                  placeholder="together key (só se usar Together)"
+                  placeholder="together key (em branco = manter)"
                 />
               </div>
             </div>
@@ -354,25 +390,34 @@ export default function SettingsPage() {
       <Card className="space-y-3">
         <SectionTitle>Integrações</SectionTitle>
         <p className="text-sm text-muted">
-          O hub de integrações conecta a plataforma às principais ferramentas do
-          ecossistema. Cada conexão exige um app/credencial na plataforma de
-          origem — em breve, com OAuth guiado.
+          <span className="text-emerald-500">Ativo</span> = já funciona com sua credencial.{" "}
+          <span className="text-amber-500">Beta</span> = gancho pronto, falta plugar o token.{" "}
+          Mensagens ficam em <strong>Mensagens → Conexões</strong>; dados e vendas de cada
+          conta em <strong>Cliente → Vendas & Dados</strong>.
         </p>
         <div className="grid gap-2 sm:grid-cols-2">
-          {INTEGRATIONS.map((integration) => (
-            <div
-              key={integration.name}
-              className="flex items-center justify-between rounded-md border border-edge bg-surface-2 px-3 py-2 text-sm"
-            >
-              <div>
-                <p className="font-medium">{integration.name}</p>
-                <p className="text-xs text-muted">{integration.area}</p>
+          {INTEGRATIONS.map((integration) => {
+            const badge = STATUS_BADGE[integration.status];
+            return (
+              <div
+                key={integration.name}
+                className="flex items-center justify-between gap-2 rounded-md border border-edge bg-surface-2 px-3 py-2 text-sm"
+              >
+                <div className="min-w-0">
+                  <p className="truncate font-medium">{integration.name}</p>
+                  <p className="truncate text-xs text-muted">
+                    {integration.area}
+                    {integration.where && ` · ${integration.where}`}
+                  </p>
+                </div>
+                <span
+                  className={`shrink-0 rounded-full border px-2 py-0.5 text-[10px] uppercase tracking-wide ${badge.cls}`}
+                >
+                  {badge.label}
+                </span>
               </div>
-              <span className="rounded-full border border-edge px-2 py-0.5 text-[10px] uppercase tracking-wide text-muted">
-                Em breve
-              </span>
-            </div>
-          ))}
+            );
+          })}
         </div>
       </Card>
     </div>
