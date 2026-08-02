@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import { Geist, Geist_Mono, Space_Grotesk } from "next/font/google";
+import { getSettings } from "@/lib/settings";
 import "./globals.css";
 
 const geistSans = Geist({
@@ -18,42 +19,62 @@ const spaceGrotesk = Space_Grotesk({
   subsets: ["latin"],
 });
 
+// Whitelabel: a marca vem do banco a cada request
+export const dynamic = "force-dynamic";
+
 export const metadata: Metadata = {
-  title: "AgencyHub — Central de Marketing com IA",
+  title: "Central de Marketing com IA",
   description:
-    "Centralize briefings de clientes e gere planos de campanha, social media, identidade visual e landing pages com IA.",
+    "Centralize briefings, conecte clientes, agência e profissionais, e gere estratégia, campanhas, identidade e landing pages com IA.",
 };
+
+const NAV = [
+  { href: "/", label: "Clientes" },
+  { href: "/prospecting", label: "Prospecção" },
+  { href: "/professionals", label: "Profissionais" },
+  { href: "/ideas", label: "Ideias" },
+  { href: "/treinamento", label: "Treinamento" },
+  { href: "/settings", label: "Configurações" },
+];
 
 export default function RootLayout({
   children,
 }: Readonly<{
   children: React.ReactNode;
 }>) {
+  const settings = getSettings();
   return (
     <html
       lang="pt-BR"
       className={`${geistSans.variable} ${geistMono.variable} ${spaceGrotesk.variable} h-full antialiased`}
+      style={{ ["--accent" as string]: settings.accentColor }}
     >
       <body className="min-h-full flex flex-col">
         <header className="sticky top-0 z-40 border-b border-edge bg-background/80 backdrop-blur">
-          <div className="mx-auto flex h-14 w-full max-w-6xl items-center justify-between px-4">
-            <Link href="/" className="flex items-center gap-2">
+          <div className="mx-auto flex h-14 w-full max-w-6xl items-center justify-between gap-4 px-4">
+            <Link href="/" className="flex shrink-0 items-center gap-2">
               <span className="grid size-7 place-items-center rounded-md bg-accent font-[family-name:var(--font-display)] text-sm font-bold text-accent-ink">
-                A
+                {settings.agencyName.charAt(0).toUpperCase()}
               </span>
               <span className="font-[family-name:var(--font-display)] text-lg font-semibold tracking-tight">
-                Agency<span className="text-accent">Hub</span>
+                {settings.agencyName}
               </span>
             </Link>
-            <nav className="flex items-center gap-4 text-sm text-muted">
-              <Link href="/" className="transition-colors hover:text-foreground">
-                Clientes
-              </Link>
+            <nav className="flex items-center gap-4 overflow-x-auto text-sm text-muted">
+              {NAV.map((item) => (
+                <Link
+                  key={item.href}
+                  href={item.href}
+                  className="whitespace-nowrap transition-colors hover:text-foreground"
+                >
+                  {item.label}
+                </Link>
+              ))}
               <Link
-                href="/clients/new"
-                className="rounded-md bg-accent px-3 py-1.5 font-medium text-accent-ink transition-opacity hover:opacity-90"
+                href="/portal"
+                className="whitespace-nowrap rounded-md bg-accent px-3 py-1.5 font-medium text-accent-ink transition-opacity hover:opacity-90"
               >
-                Novo cliente
+                Portal
               </Link>
             </nav>
           </div>
@@ -62,7 +83,7 @@ export default function RootLayout({
           {children}
         </main>
         <footer className="border-t border-edge py-4 text-center text-xs text-muted">
-          AgencyHub — sua agência, centralizada e acelerada por IA
+          {settings.agencyName} — {settings.tagline}
         </footer>
       </body>
     </html>

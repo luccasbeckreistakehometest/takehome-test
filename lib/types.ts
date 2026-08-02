@@ -17,6 +17,7 @@ export type Client = {
   instagram: string;
   notes: string;
   language: ClientLanguage;
+  source: "agency" | "self";
   createdAt: string;
 };
 
@@ -31,6 +32,7 @@ export const GENERATION_TYPES = [
   "post_batch",
   "visual_identity",
   "landing_page",
+  "client_report",
 ] as const;
 
 export type GenerationType = (typeof GENERATION_TYPES)[number];
@@ -54,6 +56,7 @@ export const GENERATION_LABELS: Record<GenerationType, string> = {
   post_batch: "Posts",
   visual_identity: "Identidade visual",
   landing_page: "Landing page",
+  client_report: "Relatório executivo",
 };
 
 // Ordem usada pelo "kit completo": estratégia primeiro, o resto se apoia nela

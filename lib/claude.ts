@@ -63,13 +63,29 @@ type RequestOptions = {
   maxTokens: number;
   useWebSearch?: boolean;
   outputSchema?: Record<string, unknown>;
+  image?: { base64: string; mediaType: "image/jpeg" | "image/png" | "image/gif" | "image/webp" };
 };
 
 // Roda a request com streaming (respostas longas) e retoma automaticamente
 // quando o loop de web search do servidor pausa com stop_reason "pause_turn".
 async function runMessage(options: RequestOptions): Promise<Anthropic.Message> {
   let messages: Anthropic.MessageParam[] = [
-    { role: "user", content: options.prompt },
+    {
+      role: "user",
+      content: options.image
+        ? [
+            {
+              type: "image",
+              source: {
+                type: "base64",
+                media_type: options.image.mediaType,
+                data: options.image.base64,
+              },
+            },
+            { type: "text", text: options.prompt },
+          ]
+        : options.prompt,
+    },
   ];
 
   for (let attempt = 0; attempt < 6; attempt++) {
@@ -103,6 +119,7 @@ export async function generateStructured<T>(options: {
   schema: Record<string, unknown>;
   maxTokens?: number;
   useWebSearch?: boolean;
+  image?: RequestOptions["image"];
 }): Promise<T> {
   try {
     const message = await runMessage({
@@ -111,6 +128,7 @@ export async function generateStructured<T>(options: {
       maxTokens: options.maxTokens ?? 32000,
       useWebSearch: options.useWebSearch,
       outputSchema: options.schema,
+      image: options.image,
     });
     return JSON.parse(extractText(message)) as T;
   } catch (error) {

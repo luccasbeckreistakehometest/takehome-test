@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { GenerationError, generateHtml, generateStructured } from "@/lib/claude";
 import { createGeneration, getClient, listGenerations } from "@/lib/db";
+import { getPlatformSnapshot } from "@/lib/marketplace-db";
 import { buildGenerationSpec } from "@/lib/prompts";
 import { generateSchema } from "@/lib/validation";
 
@@ -22,6 +23,11 @@ export async function POST(request: Request) {
   // A análise estratégica mais recente alimenta os demais entregáveis,
   // então as recomendações evoluem junto com o mercado.
   const latestStrategy = listGenerations(clientId, "strategy_analysis")[0];
+  // O relatório executivo é automatizado: recebe o snapshot real da conta
+  // (entregáveis, demandas, notas de qualidade, reuniões) como fonte de dados.
+  if (type === "client_report") {
+    params.platformData = getPlatformSnapshot(clientId);
+  }
   const spec = buildGenerationSpec(type, client, params, {
     strategy: latestStrategy?.content.slice(0, 8000),
   });

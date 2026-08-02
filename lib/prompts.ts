@@ -8,6 +8,7 @@ import {
   strategyAnalysisSchema,
   visualIdentitySchema,
 } from "./schemas";
+import { clientReportSchema } from "./marketplace-schemas";
 
 function agencySystem(client: Client): string {
   const language =
@@ -233,6 +234,37 @@ Requisitos:
 - Tipografia: papel (título/corpo/destaque), fonte principal (Google Fonts) e alternativa de sistema, com observações de uso.
 - Tom de voz: descrição, 4 a 6 "faça" e 4 a 6 "não faça".
 - Aplicações prioritárias (onde a identidade deve aparecer primeiro).`,
+        };
+      }
+
+      case "client_report": {
+        const period = p("period", "o último mês");
+        const platformData = p("platformData", "Sem dados adicionais da plataforma.");
+        const audienceLabel =
+          p("audienceRole") === "professional"
+            ? "para os profissionais terceirizados envolvidos (foco no que produzir e nos padrões de qualidade)"
+            : p("audienceRole") === "client"
+              ? "para o cliente final (linguagem de negócio, sem jargão de agência)"
+              : "para o time interno da agência (visão completa e crítica)";
+        return {
+          title: `Relatório executivo — ${period}`,
+          system,
+          schema: clientReportSchema,
+          prompt: `${briefing}
+
+<dados_da_plataforma>
+${platformData}
+</dados_da_plataforma>
+
+Escreva o relatório executivo desta conta referente a ${period}, ${audienceLabel}.
+
+Requisitos:
+- Sumário executivo honesto: o que foi feito, o que avançou e o que travou.
+- Destaques (conquistas concretas, com números quando os dados permitirem).
+- Workstreams: uma linha por frente (estratégia, campanhas, social, demandas com profissionais, landing pages...), com status e detalhe.
+- Visão de qualidade: use as notas das análises de arte e o andamento das demandas nos dados da plataforma.
+- Próximos passos priorizados e riscos/pendências.
+- Baseie-se APENAS nos dados fornecidos — não invente resultados que não estão lá.`,
         };
       }
 

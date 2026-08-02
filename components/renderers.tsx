@@ -9,6 +9,7 @@ import type {
   StrategyAnalysis,
   VisualIdentity,
 } from "@/lib/schemas";
+import type { ClientReport } from "@/lib/marketplace-schemas";
 import { Card, CopyButton, SectionTitle, Tag } from "./ui";
 
 function Item({ title, children }: { title: string; children: React.ReactNode }) {
@@ -538,6 +539,61 @@ export function VisualIdentityView({ data }: { data: VisualIdentity }) {
           <List items={data.applications} />
         </div>
       </Card>
+    </div>
+  );
+}
+
+export function ClientReportView({ data }: { data: ClientReport }) {
+  return (
+    <div className="space-y-6">
+      <Card>
+        <div className="flex flex-wrap items-center justify-between gap-2">
+          <SectionTitle>Sumário executivo — {data.period}</SectionTitle>
+          <CopyButton
+            text={`${data.title}\n\n${data.executiveSummary}\n\nDestaques:\n${data.highlights.map((h) => `- ${h}`).join("\n")}\n\nPróximos passos:\n${data.nextSteps.map((s) => `- ${s}`).join("\n")}`}
+            label="Copiar resumo"
+          />
+        </div>
+        <p className="text-sm leading-relaxed text-muted">{data.executiveSummary}</p>
+      </Card>
+      <Card>
+        <SectionTitle>Destaques</SectionTitle>
+        <div className="text-sm text-muted">
+          <List items={data.highlights} />
+        </div>
+      </Card>
+      <Card>
+        <SectionTitle>Frentes de trabalho</SectionTitle>
+        <div className="space-y-2">
+          {data.workstreams.map((w, i) => (
+            <div key={i} className="flex items-start gap-3 rounded-lg border border-edge bg-surface-2 p-3 text-sm">
+              <Tag>{w.status}</Tag>
+              <div>
+                <p className="font-medium">{w.area}</p>
+                <p className="text-muted">{w.detail}</p>
+              </div>
+            </div>
+          ))}
+        </div>
+      </Card>
+      <Card>
+        <SectionTitle>Qualidade das entregas</SectionTitle>
+        <p className="text-sm text-muted">{data.qualityOverview}</p>
+      </Card>
+      <div className="grid gap-6 lg:grid-cols-2">
+        <Card>
+          <SectionTitle>Próximos passos</SectionTitle>
+          <div className="text-sm text-muted">
+            <List items={data.nextSteps} />
+          </div>
+        </Card>
+        <Card>
+          <SectionTitle>Riscos & pendências</SectionTitle>
+          <div className="text-sm text-muted">
+            <List items={data.risks} />
+          </div>
+        </Card>
+      </div>
     </div>
   );
 }

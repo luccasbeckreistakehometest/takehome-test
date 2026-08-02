@@ -1,0 +1,573 @@
+"use client";
+
+import { useCallback, useEffect, useState } from "react";
+import Link from "next/link";
+import { api } from "@/lib/api";
+import type { Client } from "@/lib/types";
+import {
+  ESCROW_LABELS,
+  PROJECT_STATUS_LABELS,
+  SKILL_OPTIONS,
+  type Professional,
+  type Project,
+  type ProjectMessage,
+  type Deliverable,
+} from "@/lib/marketplace-types";
+import type { Meeting } from "@/lib/marketplace-db";
+import type { MatchResult } from "@/lib/marketplace-schemas";
+import DeliverableViewer from "./DeliverableViewer";
+import { Button, Card, ErrorBox, Input, Label, SectionTitle, Spinner, Tag, Textarea } from "./ui";
+
+type ProjectDetailData = Project & {
+  professional: Professional | null;
+  messages: ProjectMessage[];
+  deliverables: Deliverable[];
+  meetings: Meeting[];
+};
+
+export default function ProjectsTab({
+  client,
+  initialProjectId,
+}: {
+  client: Client;
+  initialProjectId?: string;
+}) {
+  const [projects, setProjects] = useState<Project[] | null>(null);
+  const [selectedId, setSelectedId] = useState<string | null>(initialProjectId ?? null);
+  const [creating, setCreating] = useState(false);
+  const [form, setForm] = useState({
+    title: "",
+    brief: "",
+    skillsNeeded: [] as string[],
+    location: "",
+    budget: "",
+    deadline: "",
+  });
+  const [error, setError] = useState("");
+
+  const load = useCallback(() => {
+    api<Project[]>(`/api/projects?clientId=${client.id}`).then(setProjects);
+  }, [client.id]);
+
+  useEffect(load, [load]);
+
+  async function createProject() {
+    setError("");
+    try {
+      const project = await api<Project>("/api/projects", {
+        method: "POST",
+        body: JSON.stringify({ clientId: client.id, ...form }),
+      });
+      setCreating(false);
+      setForm({ title: "", brief: "", skillsNeeded: [], location: "", budget: "", deadline: "" });
+      load();
+      setSelectedId(project.id);
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "Erro ao criar demanda");
+    }
+  }
+
+  if (!projects) return <Spinner label="Carregando demandas..." />;
+
+  if (selectedId) {
+    return (
+      <ProjectDetail
+        projectId={selectedId}
+        onBack={() => {
+          setSelectedId(null);
+          load();
+        }}
+      />
+    );
+  }
+
+  return (
+    <div className="space-y-6">
+      <Card className="space-y-3">
+        <p className="text-sm text-muted">
+          Demandas conectam esta conta a fotógrafos e designers da plataforma:
+          brief → match por IA → produção → revisão com anotações e nota de
+          qualidade → aprovação → pagamento garantido.
+        </p>
+        {!creating ? (
+          <Button onClick={() => setCreating(true)}>+ Nova demanda</Button>
+        ) : (
+          <div className="space-y-4">
+            <div className="grid gap-4 sm:grid-cols-3">
+              <div className="sm:col-span-2">
+                <Label>Título *</Label>
+                <Input
+                  value={form.title}
+                  onChange={(e) => setForm((f) => ({ ...f, title: e.target.value }))}
+                  placeholder="Ex.: Ensaio de produto para campanha de agosto"
+                />
+              </div>
+              <div>
+                <Label>Local da produção</Label>
+                <Input
+                  value={form.location}
+                  onChange={(e) => setForm((f) => ({ ...f, location: e.target.value }))}
+                  placeholder="Ex.: Curitiba/PR ou remoto"
+                />
+              </div>
+            </div>
+            <div>
+              <Label>Brief</Label>
+              <Textarea
+                value={form.brief}
+                onChange={(e) => setForm((f) => ({ ...f, brief: e.target.value }))}
+                placeholder="O que precisa ser produzido, referências, entregáveis esperados..."
+              />
+            </div>
+            <div>
+              <Label>Skills necessárias</Label>
+              <div className="flex flex-wrap gap-2">
+                {SKILL_OPTIONS.map((skill) => {
+                  const active = form.skillsNeeded.includes(skill);
+                  return (
+                    <button
+                      key={skill}
+                      type="button"
+                      onClick={() =>
+                        setForm((f) => ({
+                          ...f,
+                          skillsNeeded: active
+                            ? f.skillsNeeded.filter((s) => s !== skill)
+                            : [...f.skillsNeeded, skill],
+                        }))
+                      }
+                      className={`rounded-full border px-3 py-1 text-xs transition-colors ${
+                        active
+                          ? "border-accent bg-accent text-accent-ink"
+                          : "border-edge bg-surface-2 text-muted hover:border-muted"
+                      }`}
+                    >
+                      {skill}
+                    </button>
+                  );
+                })}
+              </div>
+            </div>
+            <div className="grid gap-4 sm:grid-cols-2">
+              <div>
+                <Label>Verba</Label>
+                <Input
+                  value={form.budget}
+                  onChange={(e) => setForm((f) => ({ ...f, budget: e.target.value }))}
+                  placeholder="Ex.: R$ 1.200"
+                />
+              </div>
+              <div>
+                <Label>Prazo</Label>
+                <Input
+                  value={form.deadline}
+                  onChange={(e) => setForm((f) => ({ ...f, deadline: e.target.value }))}
+                  placeholder="Ex.: 15/09/2026"
+                />
+              </div>
+            </div>
+            {error && <ErrorBox message={error} />}
+            <div className="flex gap-2">
+              <Button onClick={createProject}>Criar demanda</Button>
+              <Button variant="ghost" onClick={() => setCreating(false)}>
+                Cancelar
+              </Button>
+            </div>
+          </div>
+        )}
+      </Card>
+
+      {projects.length === 0 ? (
+        <p className="py-8 text-center text-sm text-muted">Nenhuma demanda ainda.</p>
+      ) : (
+        <div className="grid gap-3 sm:grid-cols-2">
+          {projects.map((project) => (
+            <button
+              key={project.id}
+              onClick={() => setSelectedId(project.id)}
+              className="rounded-xl border border-edge bg-surface p-4 text-left transition-colors hover:border-accent/60"
+            >
+              <div className="flex items-start justify-between gap-2">
+                <p className="font-semibold">{project.title}</p>
+                <Tag>{PROJECT_STATUS_LABELS[project.status]}</Tag>
+              </div>
+              <p className="mt-1 text-xs text-muted">
+                {project.skillsNeeded.join(", ") || "skills n/d"} · {project.budget || "verba n/d"}
+              </p>
+              <p className="mt-1 text-xs text-muted">{ESCROW_LABELS[project.escrow]}</p>
+            </button>
+          ))}
+        </div>
+      )}
+    </div>
+  );
+}
+
+function ProjectDetail({ projectId, onBack }: { projectId: string; onBack: () => void }) {
+  const [project, setProject] = useState<ProjectDetailData | null>(null);
+  const [match, setMatch] = useState<MatchResult | null>(null);
+  const [matching, setMatching] = useState(false);
+  const [error, setError] = useState("");
+  const [messageText, setMessageText] = useState("");
+  const [sender, setSender] = useState<"agency" | "professional">("agency");
+  const [uploadTitle, setUploadTitle] = useState("");
+  const [uploading, setUploading] = useState(false);
+  const [meetingForm, setMeetingForm] = useState({ title: "", scheduledAt: "", link: "" });
+
+  const load = useCallback(() => {
+    api<ProjectDetailData>(`/api/projects/${projectId}`).then((data) => {
+      setProject(data);
+      if (data.matchResult) setMatch(JSON.parse(data.matchResult) as MatchResult);
+    });
+  }, [projectId]);
+
+  useEffect(load, [load]);
+
+  async function patch(body: Record<string, unknown>) {
+    setError("");
+    try {
+      await api(`/api/projects/${projectId}`, { method: "PATCH", body: JSON.stringify(body) });
+      load();
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "Erro ao atualizar");
+    }
+  }
+
+  async function runMatch() {
+    setMatching(true);
+    setError("");
+    try {
+      setMatch(await api<MatchResult>(`/api/projects/${projectId}/match`, { method: "POST" }));
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "Erro no match");
+    } finally {
+      setMatching(false);
+    }
+  }
+
+  async function sendMessage() {
+    if (!messageText.trim()) return;
+    await api(`/api/projects/${projectId}/messages`, {
+      method: "POST",
+      body: JSON.stringify({ sender, text: messageText.trim() }),
+    });
+    setMessageText("");
+    load();
+  }
+
+  async function upload(event: React.ChangeEvent<HTMLInputElement>) {
+    const file = event.target.files?.[0];
+    if (!file) return;
+    setUploading(true);
+    setError("");
+    try {
+      const body = new FormData();
+      body.append("file", file);
+      body.append("title", uploadTitle || file.name);
+      const response = await fetch(`/api/projects/${projectId}/deliverables`, {
+        method: "POST",
+        body,
+      });
+      if (!response.ok) throw new Error((await response.json()).error ?? "Erro no upload");
+      setUploadTitle("");
+      if (project && ["open", "matched", "in_progress"].includes(project.status)) {
+        await patch({ status: "in_review" });
+      } else {
+        load();
+      }
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "Erro no upload");
+    } finally {
+      setUploading(false);
+      event.target.value = "";
+    }
+  }
+
+  if (!project) return <Spinner label="Carregando demanda..." />;
+
+  const nextActions: { label: string; body: Record<string, unknown> }[] = [];
+  if (project.status === "matched" && project.escrow === "none") {
+    nextActions.push({
+      label: "💰 Reservar pagamento (escrow) e iniciar produção",
+      body: { escrow: "held", status: "in_progress" },
+    });
+  }
+  if (project.status === "in_review") {
+    nextActions.push({ label: "✅ Aprovar entrega", body: { status: "approved" } });
+    nextActions.push({ label: "↩ Voltar para produção (ajustes)", body: { status: "in_progress" } });
+  }
+  if (project.status === "approved" && project.escrow === "held") {
+    nextActions.push({
+      label: "🏦 Liberar pagamento ao profissional",
+      body: { escrow: "released", status: "paid" },
+    });
+  }
+
+  return (
+    <div className="space-y-6">
+      <button onClick={onBack} className="text-sm text-accent hover:underline">
+        ← Todas as demandas
+      </button>
+      <div className="flex flex-wrap items-start justify-between gap-3">
+        <div>
+          <h2 className="font-[family-name:var(--font-display)] text-2xl font-bold">
+            {project.title}
+          </h2>
+          <div className="mt-2 flex flex-wrap gap-2">
+            <Tag>{PROJECT_STATUS_LABELS[project.status]}</Tag>
+            <Tag>{ESCROW_LABELS[project.escrow]}</Tag>
+            {project.budget && <Tag>{project.budget}</Tag>}
+            {project.deadline && <Tag>até {project.deadline}</Tag>}
+          </div>
+        </div>
+        <div className="flex flex-wrap gap-2">
+          {nextActions.map((action) => (
+            <Button key={action.label} onClick={() => patch(action.body)}>
+              {action.label}
+            </Button>
+          ))}
+        </div>
+      </div>
+      {project.brief && <p className="text-sm text-muted">{project.brief}</p>}
+      {error && <ErrorBox message={error} />}
+
+      <Card className="space-y-3">
+        <SectionTitle>Profissional</SectionTitle>
+        {project.professional ? (
+          <div className="flex flex-wrap items-center justify-between gap-2 text-sm">
+            <p>
+              Vinculado:{" "}
+              <Link
+                href={`/professionals/${project.professional.id}`}
+                className="font-semibold text-accent hover:underline"
+              >
+                {project.professional.name}
+              </Link>{" "}
+              <span className="text-muted">({project.professional.location})</span>
+            </p>
+            {project.status === "matched" && (
+              <Button variant="ghost" onClick={() => patch({ professionalId: null, status: "open" })}>
+                Desvincular
+              </Button>
+            )}
+          </div>
+        ) : (
+          <>
+            <div className="flex items-center gap-3">
+              <Button onClick={runMatch} disabled={matching}>
+                {matching ? "Analisando fit..." : "✦ Match por IA"}
+              </Button>
+              {matching && (
+                <Spinner label="Cruzando briefing, estratégia e track record dos profissionais..." />
+              )}
+            </div>
+            {match && (
+              <div className="space-y-2">
+                <p className="text-sm text-muted">{match.summary}</p>
+                {match.matches.map((candidate) => (
+                  <div
+                    key={candidate.professionalId}
+                    className="rounded-lg border border-edge bg-surface-2 p-3 text-sm"
+                  >
+                    <div className="flex flex-wrap items-center justify-between gap-2">
+                      <p className="font-semibold">
+                        {candidate.name}{" "}
+                        <span
+                          className="ml-1 font-[family-name:var(--font-display)]"
+                          style={{ color: candidate.fit >= 75 ? "#7de2d1" : candidate.fit >= 50 ? "#e6c229" : "#f87171" }}
+                        >
+                          {candidate.fit}% fit
+                        </span>
+                      </p>
+                      <div className="flex gap-2">
+                        <Link
+                          href={`/professionals/${candidate.professionalId}`}
+                          className="text-xs text-accent hover:underline"
+                        >
+                          Ver portfolio →
+                        </Link>
+                        <Button
+                          className="!px-2.5 !py-1 text-xs"
+                          onClick={() =>
+                            patch({ professionalId: candidate.professionalId, status: "matched" })
+                          }
+                        >
+                          Vincular ao projeto
+                        </Button>
+                      </div>
+                    </div>
+                    <ul className="mt-1 list-disc pl-5 text-xs text-muted">
+                      {candidate.reasons.map((reason, i) => (
+                        <li key={i}>{reason}</li>
+                      ))}
+                      {candidate.gaps.map((gap, i) => (
+                        <li key={`g${i}`} className="text-amber-400/80">
+                          {gap}
+                        </li>
+                      ))}
+                    </ul>
+                    {candidate.suggestedBrief && (
+                      <p className="mt-1 text-xs text-muted">
+                        <span className="text-accent">Mini-brief: </span>
+                        {candidate.suggestedBrief}
+                      </p>
+                    )}
+                  </div>
+                ))}
+              </div>
+            )}
+          </>
+        )}
+      </Card>
+
+      <Card className="space-y-3">
+        <SectionTitle>Reuniões</SectionTitle>
+        {project.meetings.length > 0 && (
+          <div className="space-y-1.5">
+            {project.meetings.map((meeting) => (
+              <div
+                key={meeting.id}
+                className="flex flex-wrap items-center justify-between gap-2 rounded-md border border-edge bg-surface-2 px-3 py-2 text-sm"
+              >
+                <p>
+                  <span className="font-medium">{meeting.title}</span>{" "}
+                  <span className="text-muted">
+                    · {new Date(meeting.scheduledAt).toLocaleString("pt-BR")}
+                  </span>
+                  {meeting.link && (
+                    <a
+                      href={meeting.link}
+                      target="_blank"
+                      rel="noreferrer"
+                      className="ml-2 text-accent hover:underline"
+                    >
+                      entrar ↗
+                    </a>
+                  )}
+                </p>
+                <button
+                  className="text-xs text-muted hover:text-red-400"
+                  onClick={async () => {
+                    await api(`/api/meetings/${meeting.id}`, { method: "DELETE" });
+                    load();
+                  }}
+                >
+                  Cancelar
+                </button>
+              </div>
+            ))}
+          </div>
+        )}
+        <div className="grid gap-2 sm:grid-cols-4">
+          <Input
+            placeholder="Título (ex.: alinhamento de brief)"
+            value={meetingForm.title}
+            onChange={(e) => setMeetingForm((f) => ({ ...f, title: e.target.value }))}
+          />
+          <Input
+            type="datetime-local"
+            value={meetingForm.scheduledAt}
+            onChange={(e) => setMeetingForm((f) => ({ ...f, scheduledAt: e.target.value }))}
+          />
+          <Input
+            placeholder="Link (Meet/Zoom)"
+            value={meetingForm.link}
+            onChange={(e) => setMeetingForm((f) => ({ ...f, link: e.target.value }))}
+          />
+          <Button
+            variant="ghost"
+            onClick={async () => {
+              if (!meetingForm.title || !meetingForm.scheduledAt) return;
+              await api(`/api/projects/${projectId}/meetings`, {
+                method: "POST",
+                body: JSON.stringify({ ...meetingForm, notes: "" }),
+              });
+              setMeetingForm({ title: "", scheduledAt: "", link: "" });
+              load();
+            }}
+          >
+            Agendar
+          </Button>
+        </div>
+      </Card>
+
+      <Card className="space-y-3">
+        <SectionTitle>Chat do projeto</SectionTitle>
+        <div className="max-h-64 space-y-2 overflow-y-auto">
+          {project.messages.length === 0 && (
+            <p className="text-sm text-muted">Nenhuma mensagem ainda.</p>
+          )}
+          {project.messages.map((message) => (
+            <div
+              key={message.id}
+              className={`max-w-[80%] rounded-lg px-3 py-2 text-sm ${
+                message.sender === "agency"
+                  ? "ml-auto bg-accent/15 text-foreground"
+                  : "bg-surface-2 text-foreground"
+              }`}
+            >
+              <p className="text-[10px] uppercase tracking-wide text-muted">
+                {message.sender === "agency" ? "Agência" : "Profissional"} ·{" "}
+                {new Date(message.createdAt).toLocaleString("pt-BR", {
+                  day: "2-digit",
+                  month: "2-digit",
+                  hour: "2-digit",
+                  minute: "2-digit",
+                })}
+              </p>
+              {message.text}
+            </div>
+          ))}
+        </div>
+        <div className="flex gap-2">
+          <select
+            value={sender}
+            onChange={(e) => setSender(e.target.value as "agency" | "professional")}
+            className="rounded-md border border-edge bg-surface-2 px-2 py-2 text-xs text-muted outline-none"
+          >
+            <option value="agency">Agência</option>
+            <option value="professional">Profissional</option>
+          </select>
+          <Input
+            value={messageText}
+            onChange={(e) => setMessageText(e.target.value)}
+            onKeyDown={(e) => e.key === "Enter" && sendMessage()}
+            placeholder="Escreva uma mensagem..."
+          />
+          <Button onClick={sendMessage}>Enviar</Button>
+        </div>
+      </Card>
+
+      <div className="space-y-4">
+        <Card className="space-y-2">
+          <SectionTitle>Entregas</SectionTitle>
+          <p className="text-sm text-muted">
+            Envie a arte/foto para revisão: clique na imagem para marcar ajustes e
+            rode a análise de qualidade da IA (nota 0-100 no contexto da campanha).
+          </p>
+          <div className="flex flex-wrap items-center gap-2">
+            <Input
+              value={uploadTitle}
+              onChange={(e) => setUploadTitle(e.target.value)}
+              placeholder="Título da entrega (opcional)"
+              className="max-w-xs"
+            />
+            <label className="cursor-pointer rounded-md bg-accent px-3.5 py-2 text-sm font-medium text-accent-ink transition-opacity hover:opacity-90">
+              {uploading ? "Enviando..." : "⬆ Enviar imagem"}
+              <input
+                type="file"
+                accept="image/jpeg,image/png,image/webp,image/gif"
+                className="hidden"
+                onChange={upload}
+                disabled={uploading}
+              />
+            </label>
+          </div>
+        </Card>
+        {project.deliverables.map((deliverable) => (
+          <DeliverableViewer key={deliverable.id} deliverable={deliverable} />
+        ))}
+      </div>
+    </div>
+  );
+}

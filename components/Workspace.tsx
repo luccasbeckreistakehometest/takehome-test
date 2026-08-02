@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { api } from "@/lib/api";
 import {
@@ -19,11 +19,14 @@ import type {
   StrategyAnalysis,
   VisualIdentity,
 } from "@/lib/schemas";
+import type { ClientReport } from "@/lib/marketplace-schemas";
 import ClientForm from "./ClientForm";
 import GeneratorTab from "./GeneratorTab";
 import LandingPreview from "./LandingPreview";
+import ProjectsTab from "./ProjectsTab";
 import {
   CampaignPlanView,
+  ClientReportView,
   MarketPulseView,
   PostBatchView,
   RoiProjectionView,
@@ -33,7 +36,7 @@ import {
 } from "./renderers";
 import { Button, Card, ErrorBox, Spinner, Tag } from "./ui";
 
-type TabKey = "briefing" | GenerationType;
+type TabKey = "briefing" | "projects" | GenerationType;
 
 function nextMonthLabel(): string {
   const date = new Date();
@@ -52,6 +55,16 @@ export default function Workspace({
 }) {
   const router = useRouter();
   const [tab, setTab] = useState<TabKey>("briefing");
+  const [initialProjectId, setInitialProjectId] = useState<string | undefined>();
+
+  // Deep-link vindo do portal do profissional: /clients/[id]?project=...
+  useEffect(() => {
+    const projectId = new URLSearchParams(window.location.search).get("project");
+    if (projectId) {
+      setInitialProjectId(projectId);
+      setTab("projects");
+    }
+  }, []);
   // Remonta as abas de geração após o kit completo, para recarregar o histórico
   const [kitVersion, setKitVersion] = useState(0);
   const [kitSteps, setKitSteps] = useState<KitStep[] | null>(null);
@@ -106,6 +119,8 @@ export default function Workspace({
     { key: "post_batch", label: "Posts" },
     { key: "visual_identity", label: "Identidade" },
     { key: "landing_page", label: "Landing pages" },
+    { key: "projects", label: "Demandas" },
+    { key: "client_report", label: "Relatório" },
   ];
 
   const monthDefault = nextMonthLabel();
@@ -362,6 +377,36 @@ export default function Workspace({
           ]}
           generateLabel="Gerar identidade"
           render={(g) => <VisualIdentityView data={JSON.parse(g.content) as VisualIdentity} />}
+        />
+      )}
+
+      {tab === "projects" && (
+        <ProjectsTab client={client} initialProjectId={initialProjectId} />
+      )}
+
+      {tab === "client_report" && (
+        <GeneratorTab
+          key={`report-${kitVersion}`}
+          clientId={client.id}
+          type="client_report"
+          description="Relatório executivo automatizado: a IA consolida os dados reais da conta (entregáveis gerados, demandas com profissionais, notas de qualidade, reuniões) em um relatório pronto para enviar — na visão certa para cada público."
+          fields={[
+            {
+              name: "period",
+              label: "Período",
+              kind: "text",
+              defaultValue: "o último mês",
+            },
+            {
+              name: "audienceRole",
+              label: "Público do relatório",
+              kind: "select",
+              options: ["agency", "client", "professional"],
+              defaultValue: "client",
+            },
+          ]}
+          generateLabel="Gerar relatório"
+          render={(g) => <ClientReportView data={JSON.parse(g.content) as ClientReport} />}
         />
       )}
 

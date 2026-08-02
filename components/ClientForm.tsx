@@ -21,14 +21,17 @@ const EMPTY: ClientInput = {
   instagram: "",
   notes: "",
   language: "pt-BR",
+  source: "agency",
 };
 
 export default function ClientForm({
   initial,
   onSaved,
+  selfService = false,
 }: {
   initial?: Client;
   onSaved: (client: Client) => void;
+  selfService?: boolean;
 }) {
   const [form, setForm] = useState<ClientInput>(
     initial ? { ...EMPTY, ...initial } : EMPTY
@@ -55,11 +58,11 @@ export default function ClientForm({
       const saved = initial
         ? await api<Client>(`/api/clients/${initial.id}`, {
             method: "PUT",
-            body: JSON.stringify(form),
+            body: JSON.stringify({ ...form, source: initial.source }),
           })
         : await api<Client>("/api/clients", {
             method: "POST",
-            body: JSON.stringify(form),
+            body: JSON.stringify({ ...form, source: selfService ? "self" : "agency" }),
           });
       onSaved(saved);
     } catch (err) {

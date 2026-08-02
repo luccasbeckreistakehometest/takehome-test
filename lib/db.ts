@@ -27,6 +27,7 @@ function createDb() {
       instagram TEXT NOT NULL DEFAULT '',
       notes TEXT NOT NULL DEFAULT '',
       language TEXT NOT NULL DEFAULT 'pt-BR',
+      source TEXT NOT NULL DEFAULT 'agency',
       createdAt TEXT NOT NULL
     );
     CREATE TABLE IF NOT EXISTS generations (
@@ -41,12 +42,24 @@ function createDb() {
     CREATE INDEX IF NOT EXISTS idx_generations_client ON generations(clientId, type, createdAt);
   `);
   db.pragma("foreign_keys = ON");
+
+  // Migrações leves para bancos criados em versões anteriores
+  const clientColumns = (
+    db.prepare("PRAGMA table_info(clients)").all() as { name: string }[]
+  ).map((column) => column.name);
+  if (!clientColumns.includes("language")) {
+    db.exec("ALTER TABLE clients ADD COLUMN language TEXT NOT NULL DEFAULT 'pt-BR'");
+  }
+  if (!clientColumns.includes("source")) {
+    db.exec("ALTER TABLE clients ADD COLUMN source TEXT NOT NULL DEFAULT 'agency'");
+  }
+
   return db;
 }
 
 // Reuse the connection across Next.js hot reloads in dev
 const globalForDb = globalThis as unknown as { __agencyhubDb?: Database.Database };
-const db = globalForDb.__agencyhubDb ?? createDb();
+export const db = globalForDb.__agencyhubDb ?? createDb();
 globalForDb.__agencyhubDb = db;
 
 type ClientRow = Omit<Client, "channels"> & { channels: string };
@@ -57,6 +70,7 @@ function toClient(row: ClientRow): Client {
     ...row,
     channels: JSON.parse(row.channels),
     language: row.language === "en" ? "en" : "pt-BR",
+    source: row.source === "self" ? "self" : "agency",
   };
 }
 
@@ -85,8 +99,8 @@ export function createClient(input: ClientInput): Client {
     createdAt: new Date().toISOString(),
   };
   db.prepare(
-    `INSERT INTO clients (id, name, industry, description, audience, tone, goals, budget, channels, differentials, competitors, brandColors, website, instagram, notes, language, createdAt)
-     VALUES (@id, @name, @industry, @description, @audience, @tone, @goals, @budget, @channels, @differentials, @competitors, @brandColors, @website, @instagram, @notes, @language, @createdAt)`
+    `INSERT INTO clients (id, name, industry, description, audience, tone, goals, budget, channels, differentials, competitors, brandColors, website, instagram, notes, language, source, createdAt)
+     VALUES (@id, @name, @industry, @description, @audience, @tone, @goals, @budget, @channels, @differentials, @competitors, @brandColors, @website, @instagram, @notes, @language, @source, @createdAt)`
   ).run({ ...client, channels: JSON.stringify(client.channels) });
   return client;
 }
