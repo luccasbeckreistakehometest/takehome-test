@@ -47,18 +47,32 @@ export default function ActivityBell({
             load();
           }
         }}
-        className="relative rounded-md border border-edge bg-surface-2 px-2.5 py-1 text-sm transition-colors hover:border-accent"
+        className="relative grid size-8 place-items-center rounded-md text-muted transition-colors hover:bg-surface-2 hover:text-foreground"
         title="Atividade"
       >
-        🔔
+        <svg
+          width="18"
+          height="18"
+          viewBox="0 0 24 24"
+          fill="none"
+          stroke="currentColor"
+          strokeWidth="1.8"
+          strokeLinecap="round"
+          strokeLinejoin="round"
+        >
+          <path d="M18 8a6 6 0 0 0-12 0c0 7-3 9-3 9h18s-3-2-3-9" />
+          <path d="M13.7 21a2 2 0 0 1-3.4 0" />
+        </svg>
         {unread > 0 && (
-          <span className="absolute -right-1.5 -top-1.5 grid size-4 place-items-center rounded-full bg-accent text-[10px] font-bold text-accent-ink">
+          <span className="absolute -right-1 -top-1 grid size-4 place-items-center rounded-full bg-accent text-[10px] font-bold text-accent-ink">
             {unread > 9 ? "9+" : unread}
           </span>
         )}
       </button>
       {open && (
-        <div className="absolute right-0 top-10 z-50 max-h-96 w-80 overflow-y-auto rounded-xl border border-edge bg-surface p-2 shadow-2xl">
+        <>
+          <div className="fixed inset-0 z-[60]" onClick={() => setOpen(false)} />
+          <div className="fixed right-4 top-16 z-[70] max-h-96 w-80 overflow-y-auto rounded-xl border border-edge bg-surface p-2 shadow-2xl animate-pop-in [transform-origin:top_right]">
           {items.length === 0 ? (
             <p className="p-3 text-sm text-muted">Nada por aqui ainda.</p>
           ) : (
@@ -81,7 +95,8 @@ export default function ActivityBell({
               </Link>
             ))
           )}
-        </div>
+          </div>
+        </>
       )}
     </div>
   );
