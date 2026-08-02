@@ -3,6 +3,7 @@ import Link from "next/link";
 import { cookies } from "next/headers";
 import { Geist, Geist_Mono, Space_Grotesk } from "next/font/google";
 import { getSettings } from "@/lib/settings";
+import { resolveBrand } from "@/lib/branding";
 import { SESSION_COOKIE, verifySession } from "@/lib/auth-shared";
 import Translator, { LangToggle } from "@/components/Translator";
 import ActivityBell, { LogoutButton } from "@/components/ActivityBell";
@@ -36,7 +37,6 @@ const AGENCY_NAV: { href: string; label: string; icon: IconName }[] = [
   { href: "/professionals", label: "Profissionais", icon: "users" },
   { href: "/agenda", label: "Agenda", icon: "calendar" },
   { href: "/ideas", label: "Ideias", icon: "lightbulb" },
-  { href: "/settings", label: "Configurações", icon: "settings" },
 ];
 
 export default async function RootLayout({
@@ -46,12 +46,15 @@ export default async function RootLayout({
 }>) {
   const settings = getSettings();
   const session = await verifySession((await cookies()).get(SESSION_COOKIE)?.value);
+  // Marca exibida no chrome: agência (whitelabel) para a agência e convidados;
+  // plataforma para anônimos e auto-cadastrados.
+  const brand = resolveBrand(session, settings);
 
   return (
     <html
       lang="pt-BR"
       className={`${geistSans.variable} ${geistMono.variable} ${spaceGrotesk.variable} h-full antialiased`}
-      style={{ ["--accent" as string]: settings.accentColor }}
+      style={{ ["--accent" as string]: brand.accentColor }}
       suppressHydrationWarning
     >
       <head>
@@ -78,20 +81,20 @@ export default async function RootLayout({
               }
               className="flex shrink-0 items-center gap-2"
             >
-              {settings.logoMime ? (
+              {brand.logoMime ? (
                 // eslint-disable-next-line @next/next/no-img-element
                 <img
                   src="/api/settings/logo"
-                  alt={settings.agencyName}
+                  alt={brand.name}
                   className="size-7 rounded-md object-contain"
                 />
               ) : (
                 <span className="grid size-7 place-items-center rounded-md bg-accent font-[family-name:var(--font-display)] text-sm font-bold text-accent-ink">
-                  {settings.agencyName.charAt(0).toUpperCase()}
+                  {brand.name.charAt(0).toUpperCase()}
                 </span>
               )}
-              <span className="font-[family-name:var(--font-display)] text-lg font-semibold tracking-tight">
-                {settings.agencyName}
+              <span className="hidden font-[family-name:var(--font-display)] text-lg font-semibold tracking-tight sm:inline">
+                {brand.name}
               </span>
             </Link>
             <nav className="flex items-center gap-1 text-sm text-muted">
@@ -139,6 +142,15 @@ export default async function RootLayout({
                   }
                 />
               )}
+              {session?.role === "agency" && (
+                <Link
+                  href="/settings"
+                  title="Configurações"
+                  className="grid size-8 place-items-center rounded-md text-muted transition-colors hover:bg-surface-2 hover:text-foreground"
+                >
+                  <Icon name="settings" size={17} />
+                </Link>
+              )}
               <LangToggle />
               {session ? (
                 <>
@@ -161,7 +173,7 @@ export default async function RootLayout({
         <main className="mx-auto w-full max-w-6xl flex-1 px-4 py-8">{children}</main>
         {session?.role === "agency" && <AssistantWidget />}
         <footer className="border-t border-edge py-4 text-center text-xs text-muted">
-          {settings.agencyName} — {settings.tagline}
+          {brand.name} — {brand.tagline}
         </footer>
       </body>
     </html>

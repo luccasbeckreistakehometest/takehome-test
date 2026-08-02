@@ -9,6 +9,9 @@ export type SessionPayload = {
   role: "agency" | "client" | "professional";
   refId: string | null; // clientId ou professionalId
   name: string;
+  // Whitelabel: "agency" = vê a marca da agência que o convidou; "platform" =
+  // auto-cadastrado, vê a marca da plataforma. Ausente = agência (legado).
+  brandSource?: "agency" | "platform";
 };
 
 function toBase64Url(bytes: Uint8Array): string {

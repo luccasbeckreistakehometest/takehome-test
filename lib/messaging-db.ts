@@ -227,6 +227,26 @@ export function enqueueMessages(input: {
   return created;
 }
 
+// Enfileira UMA mensagem por endereço cru (sem exigir contato cadastrado).
+// Usado pelo teste de conexão da UI.
+export function enqueueDirect(input: {
+  channel: MessageChannel;
+  mode: SendMode;
+  toAddress: string;
+  body: string;
+}): OutboxMessage {
+  return insertOutbox({
+    channel: input.channel,
+    mode: input.mode,
+    contactId: null,
+    listId: null,
+    toAddress: input.toAddress,
+    body: input.body,
+    status: "queued",
+    scheduledFor: null,
+  });
+}
+
 export function updateOutboxStatus(
   id: string,
   status: OutboxStatus,

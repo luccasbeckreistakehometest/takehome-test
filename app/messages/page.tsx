@@ -630,6 +630,7 @@ function ConnectionCard({
   }
 
   const isWa = channel === "whatsapp";
+  const showSessionControls = isWa && mode === "session";
   return (
     <Card>
       <SectionTitle>
@@ -665,16 +666,127 @@ function ConnectionCard({
               Requer conta comercial verificada na Meta. Estável e sem risco de bloqueio.
             </p>
           </>
+        ) : isWa ? (
+          <p className="rounded-md border border-edge bg-surface-2 p-3 text-xs text-muted">
+            Sem conta comercial? Clique em <strong className="text-foreground">Conectar</strong> abaixo:
+            abrimos o WhatsApp Web com a <strong className="text-foreground">sua sessão logada</strong>,
+            você escaneia o QR uma vez e as mensagens da fila são enviadas automaticamente
+            (com pausas para não tomar rate-limit). Sem terminal.
+          </p>
         ) : (
           <p className="rounded-md border border-edge bg-surface-2 p-3 text-xs text-muted">
-            Sem conta comercial? O worker local abre o {isWa ? "WhatsApp Web" : "Instagram"} com a
-            <strong className="text-foreground"> sua sessão logada</strong> e envia as mensagens da fila,
-            com pausas para não tomar rate-limit. Você loga manualmente uma vez.
-            Rode: <code className="text-accent">npm run messaging-worker</code>
+            Instagram por sessão não é suportado — use a <strong className="text-foreground">API oficial</strong>.
           </p>
         )}
         <Button onClick={save}>{saved ? "Salvo ✓" : "Salvar conexão"}</Button>
+        {showSessionControls && <SessionWorker onSavedConnection={save} />}
       </div>
     </Card>
+  );
+}
+
+// Controla o worker de sessão do WhatsApp por botão (sem terminal): conectar
+// (abre login/QR), status ao vivo e enviar teste.
+function SessionWorker({ onSavedConnection }: { onSavedConnection: () => void }) {
+  const [status, setStatus] = useState<{ state: string; message: string; running: boolean }>({
+    state: "idle",
+    message: "",
+    running: false,
+  });
+  const [testPhone, setTestPhone] = useState("");
+  const [busy, setBusy] = useState(false);
+  const [note, setNote] = useState("");
+
+  const poll = useCallback(() => {
+    api<{ state: string; message: string; running: boolean }>("/api/messaging/worker")
+      .then(setStatus)
+      .catch(() => {});
+  }, []);
+
+  useEffect(() => {
+    poll();
+    const interval = setInterval(poll, 3000);
+    return () => clearInterval(interval);
+  }, [poll]);
+
+  const STATE_LABEL: Record<string, { text: string; cls: string }> = {
+    idle: { text: "Desconectado", cls: "text-muted" },
+    starting: { text: "Iniciando…", cls: "text-sky-500" },
+    installing: { text: "Instalando motor (1ª vez)…", cls: "text-sky-500" },
+    awaiting_login: { text: "Aguardando login (escaneie o QR)", cls: "text-amber-500" },
+    connected: { text: "Conectado ✓", cls: "text-emerald-500" },
+    draining: { text: "Enviando…", cls: "text-emerald-500" },
+    stopped: { text: "Parado", cls: "text-muted" },
+    error: { text: "Erro", cls: "text-red-500" },
+  };
+  const label = STATE_LABEL[status.state] ?? STATE_LABEL.idle;
+
+  async function act(action: "start" | "stop") {
+    setBusy(true);
+    setNote("");
+    try {
+      // garante a conexão salva em modo sessão antes de conectar
+      if (action === "start") onSavedConnection();
+      await api("/api/messaging/worker", {
+        method: "POST",
+        body: JSON.stringify({ action, channel: "whatsapp" }),
+      });
+      poll();
+    } finally {
+      setBusy(false);
+    }
+  }
+
+  async function sendTest() {
+    if (!testPhone.trim()) return;
+    setBusy(true);
+    setNote("");
+    try {
+      await api("/api/messaging/worker", {
+        method: "POST",
+        body: JSON.stringify({ action: "test", channel: "whatsapp", testPhone }),
+      });
+      setNote(`Teste enfileirado para ${testPhone}. Se estiver conectado, envia em instantes.`);
+      poll();
+    } catch (e) {
+      setNote(e instanceof Error ? e.message : "Erro ao enviar teste");
+    } finally {
+      setBusy(false);
+    }
+  }
+
+  return (
+    <div className="mt-1 space-y-2 rounded-md border border-edge bg-surface-2 p-3">
+      <div className="flex items-center justify-between">
+        <span className="text-xs uppercase tracking-wide text-muted">Assistente de envio</span>
+        <span className={`text-xs font-semibold ${label.cls}`}>{label.text}</span>
+      </div>
+      {status.message && <p className="text-xs text-muted">{status.message}</p>}
+      <div className="flex flex-wrap gap-2">
+        {status.running ? (
+          <Button variant="ghost" onClick={() => act("stop")} disabled={busy}>
+            Parar
+          </Button>
+        ) : (
+          <Button onClick={() => act("start")} disabled={busy}>
+            <Icon name="whatsapp" size={15} /> Conectar (abrir login)
+          </Button>
+        )}
+      </div>
+      <div className="flex items-end gap-2 pt-1">
+        <div className="flex-1">
+          <Label>Enviar teste para (com DDI)</Label>
+          <Input
+            value={testPhone}
+            onChange={(e) => setTestPhone(e.target.value)}
+            placeholder="5522999999999"
+          />
+        </div>
+        <Button variant="ghost" onClick={sendTest} disabled={busy || !testPhone.trim()}>
+          <Icon name="send" size={15} /> Testar
+        </Button>
+      </div>
+      {note && <p className="text-xs text-accent">{note}</p>}
+    </div>
   );
 }

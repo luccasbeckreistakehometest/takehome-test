@@ -48,6 +48,8 @@ body {
   font-family: var(--font-geist-sans), system-ui, sans-serif;
   /* Transição suave ao alternar tema */
   transition: background-color 0.3s ease, color 0.3s ease;
+  /* Nunca rolar horizontal por causa de nav/tabelas largas */
+  overflow-x: hidden;
 }
 
 ::selection {
