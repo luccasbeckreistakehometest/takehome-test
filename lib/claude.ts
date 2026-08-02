@@ -76,31 +76,38 @@ type RequestOptions = {
   maxTokens: number;
   useWebSearch?: boolean;
   outputSchema?: Record<string, unknown>;
-  image?: { base64: string; mediaType: "image/jpeg" | "image/png" | "image/gif" | "image/webp" };
+  images?: {
+    base64: string;
+    mediaType: "image/jpeg" | "image/png" | "image/gif" | "image/webp";
+    label?: string;
+  }[];
   tier?: ModelTier;
 };
 
 // Roda a request com streaming (respostas longas) e retoma automaticamente
 // quando o loop de web search do servidor pausa com stop_reason "pause_turn".
 async function runMessage(options: RequestOptions): Promise<Anthropic.Message> {
-  let messages: Anthropic.MessageParam[] = [
-    {
-      role: "user",
-      content: options.image
-        ? [
-            {
-              type: "image",
-              source: {
-                type: "base64",
-                media_type: options.image.mediaType,
-                data: options.image.base64,
-              },
-            },
-            { type: "text", text: options.prompt },
-          ]
-        : options.prompt,
-    },
-  ];
+  let content: Anthropic.MessageParam["content"] = options.prompt;
+  if (options.images?.length) {
+    const blocks: Anthropic.ContentBlockParam[] = [];
+    options.images.forEach((image, index) => {
+      blocks.push({
+        type: "text",
+        text: `Imagem ${index + 1}${image.label ? ` — ${image.label}` : ""}:`,
+      });
+      blocks.push({
+        type: "image",
+        source: {
+          type: "base64",
+          media_type: image.mediaType,
+          data: image.base64,
+        },
+      });
+    });
+    blocks.push({ type: "text", text: options.prompt });
+    content = blocks;
+  }
+  let messages: Anthropic.MessageParam[] = [{ role: "user", content }];
 
   for (let attempt = 0; attempt < 6; attempt++) {
     const stream = client.messages.stream({
@@ -133,7 +140,7 @@ export async function generateStructured<T>(options: {
   schema: Record<string, unknown>;
   maxTokens?: number;
   useWebSearch?: boolean;
-  image?: RequestOptions["image"];
+  images?: RequestOptions["images"];
   tier?: ModelTier;
 }): Promise<T> {
   try {
@@ -143,7 +150,7 @@ export async function generateStructured<T>(options: {
       maxTokens: options.maxTokens ?? 32000,
       useWebSearch: options.useWebSearch,
       outputSchema: options.schema,
-      image: options.image,
+      images: options.images,
       tier: options.tier,
     });
     return JSON.parse(extractText(message)) as T;

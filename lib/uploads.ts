@@ -31,3 +31,10 @@ export function readUpload(id: string, mime: string): Buffer | null {
   if (!fs.existsSync(filePath)) return null;
   return fs.readFileSync(filePath);
 }
+
+export function deleteUpload(id: string, mime: string): void {
+  const ext = EXTENSIONS[mime as AllowedImageMime];
+  if (!ext) return;
+  const filePath = path.join(uploadsDir, `${id}.${ext}`);
+  if (fs.existsSync(filePath)) fs.unlinkSync(filePath);
+}

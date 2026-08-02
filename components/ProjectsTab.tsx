@@ -7,6 +7,7 @@ import type { Client } from "@/lib/types";
 import {
   ESCROW_LABELS,
   PROJECT_STATUS_LABELS,
+  REFERENCE_MEANINGS,
   SKILL_OPTIONS,
   type Professional,
   type Project,
@@ -303,6 +304,8 @@ function ProjectDetail({ projectId, onBack }: { projectId: string; onBack: () =>
   const [editing, setEditing] = useState(false);
   const [editForm, setEditForm] = useState({ title: "", brief: "", budget: "", deadline: "" });
   const [sketching, setSketching] = useState(false);
+  const [refMeaning, setRefMeaning] = useState<string>(REFERENCE_MEANINGS[0]);
+  const [refUploading, setRefUploading] = useState(false);
 
   const load = useCallback(() => {
     api<ProjectDetailData>(`/api/projects/${projectId}`).then((data) => {
@@ -374,6 +377,9 @@ function ProjectDetail({ projectId, onBack }: { projectId: string; onBack: () =>
   }
 
   if (!project) return <Spinner label="Carregando demanda..." />;
+
+  const references = project.deliverables.filter((d) => d.kind === "reference");
+  const deliveries = project.deliverables.filter((d) => d.kind !== "reference");
 
   const nextActions: { label: string; body: Record<string, unknown> }[] = [];
   if (project.status === "matched" && project.escrow === "none") {
@@ -569,6 +575,96 @@ function ProjectDetail({ projectId, onBack }: { projectId: string; onBack: () =>
       </Card>
 
       <Card className="space-y-3">
+        <SectionTitle>Referências (fotos base)</SectionTitle>
+        <p className="text-sm text-muted">
+          Suba as fotos que a produção deve seguir — a peça, a modelo, a equipe, o
+          local — marcando o significado de cada uma. O sketch da IA e o
+          profissional usam essas referências como base.
+        </p>
+        <div className="flex flex-wrap items-center gap-2">
+          <select
+            value={refMeaning}
+            onChange={(e) => setRefMeaning(e.target.value)}
+            className="rounded-md border border-edge bg-surface-2 px-2 py-2 text-sm text-foreground outline-none"
+          >
+            {REFERENCE_MEANINGS.map((meaning) => (
+              <option key={meaning} value={meaning}>
+                {meaning}
+              </option>
+            ))}
+          </select>
+          <label className="cursor-pointer rounded-md border border-edge bg-surface-2 px-3.5 py-2 text-sm text-foreground transition-colors hover:border-accent">
+            {refUploading ? "Enviando..." : "⬆ Enviar referência"}
+            <input
+              type="file"
+              accept="image/jpeg,image/png,image/webp,image/gif"
+              className="hidden"
+              disabled={refUploading}
+              onChange={async (event) => {
+                const file = event.target.files?.[0];
+                if (!file) return;
+                setRefUploading(true);
+                try {
+                  const body = new FormData();
+                  body.append("file", file);
+                  body.append("title", `${refMeaning} — ${file.name}`);
+                  body.append("kind", "reference");
+                  body.append("meaning", refMeaning);
+                  await fetch(`/api/projects/${projectId}/deliverables`, {
+                    method: "POST",
+                    body,
+                  });
+                  load();
+                } finally {
+                  setRefUploading(false);
+                  event.target.value = "";
+                }
+              }}
+            />
+          </label>
+        </div>
+        {references.length > 0 && (
+          <div className="flex flex-wrap gap-3">
+            {references.map((reference) => (
+              <div
+                key={reference.id}
+                className="w-36 rounded-lg border border-edge bg-surface-2 p-2"
+              >
+                {/* eslint-disable-next-line @next/next/no-img-element */}
+                <img
+                  src={`/api/files/${reference.id}`}
+                  alt={reference.meaning}
+                  className="h-24 w-full rounded object-cover"
+                />
+                <div className="mt-1.5 flex items-center justify-between gap-1">
+                  <Tag>{reference.meaning || "referência"}</Tag>
+                  <span className="flex gap-1 text-xs">
+                    <a
+                      href={`/api/files/${reference.id}?download=1`}
+                      className="text-muted hover:text-accent"
+                      title="Baixar"
+                    >
+                      ⬇
+                    </a>
+                    <button
+                      className="text-muted hover:text-red-400"
+                      title="Excluir"
+                      onClick={async () => {
+                        await api(`/api/deliverables/${reference.id}`, { method: "DELETE" });
+                        load();
+                      }}
+                    >
+                      ✕
+                    </button>
+                  </span>
+                </div>
+              </div>
+            ))}
+          </div>
+        )}
+      </Card>
+
+      <Card className="space-y-3">
         <div className="flex flex-wrap items-center justify-between gap-2">
           <SectionTitle>Sketch de referência (IA)</SectionTitle>
           <Button
@@ -615,6 +711,18 @@ function ProjectDetail({ projectId, onBack }: { projectId: string; onBack: () =>
                     </span>
                     {sketch.rationale}
                   </p>
+                  {(sketch.neededReferences?.length ?? 0) > 0 && (
+                    <div className="rounded-md border border-amber-900/50 bg-amber-950/30 p-3 text-xs">
+                      <p className="mb-1 font-semibold uppercase text-amber-400">
+                        Para um sketch mais fiel, envie nas Referências:
+                      </p>
+                      <ul className="list-disc space-y-0.5 pl-4">
+                        {sketch.neededReferences.map((need, i) => (
+                          <li key={i}>{need}</li>
+                        ))}
+                      </ul>
+                    </div>
+                  )}
                   <a
                     href={`data:image/svg+xml;utf8,${encodeURIComponent(sketch.svg)}`}
                     download="sketch-referencia.svg"
@@ -790,7 +898,7 @@ function ProjectDetail({ projectId, onBack }: { projectId: string; onBack: () =>
             </label>
           </div>
         </Card>
-        {project.deliverables.map((deliverable) => (
+        {deliveries.map((deliverable) => (
           <DeliverableViewer key={deliverable.id} deliverable={deliverable} />
         ))}
       </div>

@@ -70,10 +70,12 @@ Requisitos:
 - Veredito em uma frase.`,
       schema: artReviewSchema,
       maxTokens: 16000,
-      image: {
-        base64: image.toString("base64"),
-        mediaType: deliverable.mime as AllowedImageMime,
-      },
+      images: [
+        {
+          base64: image.toString("base64"),
+          mediaType: deliverable.mime as AllowedImageMime,
+        },
+      ],
     });
 
     const review = createArtReview({

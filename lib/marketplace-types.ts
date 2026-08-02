@@ -96,8 +96,21 @@ export type Deliverable = {
   projectId: string;
   title: string;
   mime: string;
+  // delivery = entrega do profissional; reference = foto base enviada pela
+  // agência (modelo, produto, equipe...) usada no sketch e no brief
+  kind: "delivery" | "reference";
+  meaning: string; // significado da referência (ex.: "modelo", "produto")
   createdAt: string;
 };
+
+export const REFERENCE_MEANINGS = [
+  "Modelo",
+  "Produto/Peça",
+  "Equipe/Pessoas",
+  "Local/Cenário",
+  "Referência de estilo",
+  "Outro",
+] as const;
 
 export type Annotation = {
   id: string;

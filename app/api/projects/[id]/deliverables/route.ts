@@ -19,6 +19,9 @@ export async function POST(request: Request, { params }: Context) {
   const form = await request.formData().catch(() => null);
   const file = form?.get("file");
   const title = String(form?.get("title") ?? "").trim();
+  const kindRaw = String(form?.get("kind") ?? "delivery");
+  const kind = kindRaw === "reference" ? "reference" : "delivery";
+  const meaning = String(form?.get("meaning") ?? "").trim();
   if (!(file instanceof File)) {
     return NextResponse.json({ error: "Arquivo é obrigatório" }, { status: 400 });
   }
@@ -35,6 +38,8 @@ export async function POST(request: Request, { params }: Context) {
     projectId: id,
     title: title || file.name,
     mime: file.type,
+    kind,
+    meaning,
   });
   saveUpload(
     deliverable.id,

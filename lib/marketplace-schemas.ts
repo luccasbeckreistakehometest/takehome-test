@@ -122,9 +122,10 @@ export type IdeasResult = {
 export const sketchSchema = obj({
   rationale: str, // explicação das escolhas de composição para o profissional
   svg: str, // sketch vetorial completo da composição
+  neededReferences: strArray, // fotos base que melhorariam o sketch (vazio se completo)
 });
 
-export type SketchResult = { rationale: string; svg: string };
+export type SketchResult = { rationale: string; svg: string; neededReferences: string[] };
 
 export const demandSuggestionsSchema = obj({
   summary: str,

@@ -58,6 +58,8 @@ db.exec(`
     projectId TEXT NOT NULL REFERENCES projects(id) ON DELETE CASCADE,
     title TEXT NOT NULL,
     mime TEXT NOT NULL,
+    kind TEXT NOT NULL DEFAULT 'delivery',
+    meaning TEXT NOT NULL DEFAULT '',
     createdAt TEXT NOT NULL
   );
   CREATE TABLE IF NOT EXISTS annotations (
@@ -112,6 +114,15 @@ const projectColumns = (
 ).map((column) => column.name);
 if (projectColumns.length > 0 && !projectColumns.includes("sketch")) {
   db.exec("ALTER TABLE projects ADD COLUMN sketch TEXT NOT NULL DEFAULT ''");
+}
+const deliverableColumns = (
+  db.prepare("PRAGMA table_info(deliverables)").all() as { name: string }[]
+).map((column) => column.name);
+if (deliverableColumns.length > 0 && !deliverableColumns.includes("kind")) {
+  db.exec(`
+    ALTER TABLE deliverables ADD COLUMN kind TEXT NOT NULL DEFAULT 'delivery';
+    ALTER TABLE deliverables ADD COLUMN meaning TEXT NOT NULL DEFAULT '';
+  `);
 }
 
 // ---------- Profissionais ----------
@@ -347,12 +358,24 @@ export function createDeliverable(input: {
   projectId: string;
   title: string;
   mime: string;
+  kind?: "delivery" | "reference";
+  meaning?: string;
 }): Deliverable {
-  const deliverable: Deliverable = { ...input, id: randomUUID(), createdAt: now() };
+  const deliverable: Deliverable = {
+    ...input,
+    kind: input.kind ?? "delivery",
+    meaning: input.meaning ?? "",
+    id: randomUUID(),
+    createdAt: now(),
+  };
   db.prepare(
-    "INSERT INTO deliverables (id, projectId, title, mime, createdAt) VALUES (@id, @projectId, @title, @mime, @createdAt)"
+    "INSERT INTO deliverables (id, projectId, title, mime, kind, meaning, createdAt) VALUES (@id, @projectId, @title, @mime, @kind, @meaning, @createdAt)"
   ).run(deliverable);
   return deliverable;
+}
+
+export function deleteDeliverable(id: string): boolean {
+  return db.prepare("DELETE FROM deliverables WHERE id = ?").run(id).changes > 0;
 }
 
 type AnnotationRow = Omit<Annotation, "resolved"> & { resolved: number };
