@@ -14,7 +14,8 @@ import {
   type Deliverable,
 } from "@/lib/marketplace-types";
 import type { Meeting } from "@/lib/marketplace-db";
-import type { MatchResult } from "@/lib/marketplace-schemas";
+import type { DemandSuggestions, MatchResult } from "@/lib/marketplace-schemas";
+import { googleCalendarUrl } from "@/lib/gcal";
 import DeliverableViewer from "./DeliverableViewer";
 import { Button, Card, ErrorBox, Input, Label, SectionTitle, Spinner, Tag, Textarea } from "./ui";
 
@@ -44,6 +45,10 @@ export default function ProjectsTab({
     deadline: "",
   });
   const [error, setError] = useState("");
+  const [suggestions, setSuggestions] = useState<DemandSuggestions | null>(null);
+  const [suggesting, setSuggesting] = useState(false);
+  const [idea, setIdea] = useState("");
+  const [createdFromSuggestion, setCreatedFromSuggestion] = useState<Set<number>>(new Set());
 
   const load = useCallback(() => {
     api<Project[]>(`/api/projects?clientId=${client.id}`).then(setProjects);
@@ -65,6 +70,43 @@ export default function ProjectsTab({
     } catch (err) {
       setError(err instanceof Error ? err.message : "Erro ao criar demanda");
     }
+  }
+
+  async function suggest(withIdea: boolean) {
+    setSuggesting(true);
+    setError("");
+    try {
+      const result = await api<DemandSuggestions>("/api/projects/suggest", {
+        method: "POST",
+        body: JSON.stringify({ clientId: client.id, idea: withIdea ? idea : "" }),
+      });
+      setSuggestions(result);
+      setCreatedFromSuggestion(new Set());
+      if (withIdea) setIdea("");
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "Erro ao sugerir demandas");
+    } finally {
+      setSuggesting(false);
+    }
+  }
+
+  async function createFromSuggestion(index: number) {
+    const demand = suggestions?.demands[index];
+    if (!demand) return;
+    await api<Project>("/api/projects", {
+      method: "POST",
+      body: JSON.stringify({
+        clientId: client.id,
+        title: demand.title,
+        brief: `${demand.brief}${demand.source ? `\n\nOrigem no plano: ${demand.source}` : ""}`,
+        skillsNeeded: demand.skillsNeeded,
+        location: demand.location,
+        budget: demand.budget,
+        deadline: demand.deadline,
+      }),
+    });
+    setCreatedFromSuggestion((prev) => new Set(prev).add(index));
+    load();
   }
 
   if (!projects) return <Spinner label="Carregando demandas..." />;
@@ -90,7 +132,52 @@ export default function ProjectsTab({
           qualidade → aprovação → pagamento garantido.
         </p>
         {!creating ? (
-          <Button onClick={() => setCreating(true)}>+ Nova demanda</Button>
+          <div className="space-y-3">
+            <div className="flex flex-wrap items-center gap-2">
+              <Button onClick={() => setCreating(true)}>+ Nova demanda</Button>
+              <Button variant="ghost" onClick={() => suggest(false)} disabled={suggesting}>
+                {suggesting ? "Analisando o plano..." : "✦ Gerar demandas do plano (IA)"}
+              </Button>
+              {suggesting && <Spinner label="Lendo estratégia, campanha e calendário..." />}
+            </div>
+            <div className="flex flex-wrap gap-2">
+              <Input
+                value={idea}
+                onChange={(e) => setIdea(e.target.value)}
+                placeholder='Ou descreva uma ideia (ex.: "ensaio de inverno com os pratos novos")...'
+                className="max-w-md"
+              />
+              <Button variant="ghost" onClick={() => suggest(true)} disabled={suggesting || !idea.trim()}>
+                ✦ Escrever brief com IA
+              </Button>
+            </div>
+            {error && <ErrorBox message={error} />}
+            {suggestions && (
+              <div className="space-y-2 border-t border-edge pt-3">
+                <p className="text-sm text-muted">{suggestions.summary}</p>
+                {suggestions.demands.map((demand, index) => (
+                  <div key={index} className="rounded-lg border border-edge bg-surface-2 p-3 text-sm">
+                    <div className="flex flex-wrap items-center justify-between gap-2">
+                      <p className="font-semibold">{demand.title}</p>
+                      {createdFromSuggestion.has(index) ? (
+                        <span className="text-xs text-accent">✓ Criada</span>
+                      ) : (
+                        <Button className="!px-2.5 !py-1 text-xs" onClick={() => createFromSuggestion(index)}>
+                          Criar demanda
+                        </Button>
+                      )}
+                    </div>
+                    <p className="mt-1 whitespace-pre-wrap text-xs text-muted">{demand.brief}</p>
+                    <p className="mt-1.5 text-xs text-muted">
+                      <span className="text-accent">{demand.skillsNeeded.join(", ") || "skills livres"}</span>
+                      {" · "}{demand.location || "local livre"} · {demand.budget || "verba a definir"} · {demand.deadline || "prazo a definir"}
+                      {demand.source && ` · origem: ${demand.source}`}
+                    </p>
+                  </div>
+                ))}
+              </div>
+            )}
+          </div>
         ) : (
           <div className="space-y-4">
             <div className="grid gap-4 sm:grid-cols-3">
@@ -213,6 +300,8 @@ function ProjectDetail({ projectId, onBack }: { projectId: string; onBack: () =>
   const [uploadTitle, setUploadTitle] = useState("");
   const [uploading, setUploading] = useState(false);
   const [meetingForm, setMeetingForm] = useState({ title: "", scheduledAt: "", link: "" });
+  const [editing, setEditing] = useState(false);
+  const [editForm, setEditForm] = useState({ title: "", brief: "", budget: "", deadline: "" });
 
   const load = useCallback(() => {
     api<ProjectDetailData>(`/api/projects/${projectId}`).then((data) => {
@@ -326,9 +415,67 @@ function ProjectDetail({ projectId, onBack }: { projectId: string; onBack: () =>
               {action.label}
             </Button>
           ))}
+          <Button
+            variant="ghost"
+            onClick={() => {
+              setEditForm({
+                title: project.title,
+                brief: project.brief,
+                budget: project.budget,
+                deadline: project.deadline,
+              });
+              setEditing((e) => !e);
+            }}
+          >
+            {editing ? "Fechar edição" : "Editar demanda"}
+          </Button>
         </div>
       </div>
-      {project.brief && <p className="text-sm text-muted">{project.brief}</p>}
+      {editing ? (
+        <Card className="space-y-3">
+          <div className="grid gap-3 sm:grid-cols-3">
+            <div className="sm:col-span-1">
+              <Label>Título</Label>
+              <Input
+                value={editForm.title}
+                onChange={(e) => setEditForm((f) => ({ ...f, title: e.target.value }))}
+              />
+            </div>
+            <div>
+              <Label>Verba</Label>
+              <Input
+                value={editForm.budget}
+                onChange={(e) => setEditForm((f) => ({ ...f, budget: e.target.value }))}
+              />
+            </div>
+            <div>
+              <Label>Prazo</Label>
+              <Input
+                value={editForm.deadline}
+                onChange={(e) => setEditForm((f) => ({ ...f, deadline: e.target.value }))}
+              />
+            </div>
+          </div>
+          <div>
+            <Label>Brief</Label>
+            <Textarea
+              value={editForm.brief}
+              className="min-h-32"
+              onChange={(e) => setEditForm((f) => ({ ...f, brief: e.target.value }))}
+            />
+          </div>
+          <Button
+            onClick={async () => {
+              await patch(editForm);
+              setEditing(false);
+            }}
+          >
+            Salvar demanda
+          </Button>
+        </Card>
+      ) : (
+        project.brief && <p className="whitespace-pre-wrap text-sm text-muted">{project.brief}</p>
+      )}
       {error && <ErrorBox message={error} />}
 
       <Card className="space-y-3">
@@ -444,6 +591,15 @@ function ProjectDetail({ projectId, onBack }: { projectId: string; onBack: () =>
                       entrar ↗
                     </a>
                   )}
+                  <a
+                    href={googleCalendarUrl(meeting)}
+                    target="_blank"
+                    rel="noreferrer"
+                    className="ml-2 text-muted hover:text-accent"
+                    title="Adicionar ao Google Calendar (e anexar o Meet por lá)"
+                  >
+                    📅 Calendar
+                  </a>
                 </p>
                 <button
                   className="text-xs text-muted hover:text-red-400"

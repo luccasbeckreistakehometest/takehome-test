@@ -15,7 +15,9 @@ function agencySystem(client: Client): string {
     client.language === "en"
       ? "Write every deliverable in English (US)."
       : "Escreva todos os entregáveis em português do Brasil.";
-  return `Você é o estrategista-chefe de uma agência de marketing full-service, com 15 anos de experiência em branding, performance, growth e social media. Você produz entregáveis prontos para apresentar ao cliente: específicos, acionáveis e fundamentados no briefing — nunca genéricos. ${language} Quando o briefing não cobrir algum ponto, tome decisões plausíveis para o segmento em vez de deixar lacunas.`;
+  return `Você é o estrategista-chefe de uma agência de marketing full-service, com 15 anos de experiência em branding, performance, growth e social media. Você produz entregáveis prontos para apresentar ao cliente: específicos, acionáveis e fundamentados no briefing — nunca genéricos. ${language} Quando o briefing não cobrir algum ponto, tome decisões plausíveis para o segmento em vez de deixar lacunas.
+
+Escreva como um profissional humano sênior escreveria — direto, específico e com opinião — nunca com cara de texto de IA. Evite: clichês de assistente ("Claro!", "Com certeza", "Vale ressaltar", "É importante notar", "No cenário atual", "game-changer"), excesso de exclamações, adjetivos vazios ("incrível", "poderoso") e recomendações que serviriam para qualquer empresa. Nunca mencione que você é uma IA, nem faça referência a prompts, briefings "fornecidos" ou dados "disponibilizados" — escreva como quem conhece o cliente e vai apresentar o material pessoalmente na reunião.`;
 }
 
 export function clientContext(client: Client): string {
@@ -54,6 +56,8 @@ export type GenerationSpec = {
   schema?: Record<string, unknown>;
   maxTokens?: number;
   useWebSearch?: boolean;
+  // premium = Opus sempre; standard = Sonnet quando o modo econômico está ativo
+  tier?: "premium" | "standard";
 };
 
 export function buildGenerationSpec(
@@ -99,7 +103,8 @@ export function buildGenerationSpec(
           system,
           schema: strategyAnalysisSchema,
           useWebSearch: true,
-          maxTokens: 48000,
+          tier: "premium",
+          maxTokens: 36000,
           prompt: `${briefing}
 
 Faça um deep dive estratégico completo deste cliente, fundamentado em pesquisa real na web (use a busca para dados atuais do segmento, tendências e concorrentes — cite as fontes no campo "source").${focus ? ` Foco especial solicitado pela agência: ${focus}.` : ""}
@@ -120,7 +125,8 @@ Requisitos:
           system,
           schema: marketPulseSchema,
           useWebSearch: true,
-          maxTokens: 32000,
+          tier: "standard",
+          maxTokens: 24000,
           prompt: `${briefing}
 
 Você é o radar diário desta conta. Pesquise na web o que mudou RECENTEMENTE (últimos dias/semanas) no mercado deste cliente: notícias do segmento, movimentos de concorrentes, mudanças de plataforma/algoritmo, trends de conteúdo e comportamento do consumidor.
@@ -141,6 +147,8 @@ Requisitos:
           title: `Plano de campanha — ${month}`,
           system,
           schema: campaignPlanSchema,
+          useWebSearch: true,
+          tier: "standard",
           prompt: `${briefing}
 
 Monte o plano de campanha mensal deste cliente para ${month}.${focus ? ` Foco especial solicitado pela agência: ${focus}.` : ""}
@@ -151,7 +159,8 @@ Requisitos:
 - Plano semana a semana (4 a 5 semanas) com ações concretas e executáveis.
 - Estratégia por canal (use os canais ativos do briefing; sugira no máximo 1 canal novo se fizer sentido).
 - Distribuição de verba em percentuais que somem 100%, com justificativa.
-- Riscos/pontos de atenção do mês.`,
+- Riscos/pontos de atenção do mês.
+- Influenciadores: SE (e somente se) parceria com influenciadores/creators fizer sentido neste plano, use a busca na web (com moderação, no máximo 4 buscas) para encontrar 2 a 4 influenciadores REAIS do nicho/região do cliente na rede recomendada — com @handle, URL do perfil, faixa de seguidores, por que tem fit com a marca e e-mail de contato público se encontrar (senão deixe vazio). Se não fizer sentido para o mês, retorne a lista vazia e não faça nenhuma busca.`,
         };
       }
 
@@ -162,6 +171,7 @@ Requisitos:
           title: `ROI & Roadmap — ${timeframe}`,
           system,
           schema: roiProjectionSchema,
+          tier: "standard",
           prompt: `${briefing}
 
 Monte a projeção de ROI e o roadmap de marketing deste cliente para os próximos ${timeframe}.${baseline ? `\nMétricas atuais informadas pela equipe (use como "antes"): ${baseline}` : "\nO briefing não traz métricas atuais: estime um baseline realista para o porte/segmento do cliente e deixe isso claro nas premissas."}
@@ -183,7 +193,8 @@ Requisitos:
           title: `Calendário social — ${month}`,
           system,
           schema: socialCalendarSchema,
-          maxTokens: 48000,
+          tier: "standard",
+          maxTokens: 32000,
           prompt: `${briefing}
 
 Crie o calendário de conteúdo de redes sociais deste cliente para ${month}, com ${perWeek} posts por semana (aprox. ${perWeek * 4} posts no total).
@@ -204,6 +215,8 @@ Requisitos:
           title: `Posts — ${topic}`,
           system,
           schema: postBatchSchema,
+          tier: "standard",
+          maxTokens: 16000,
           prompt: `${briefing}
 
 Crie ${quantity} variações de post para ${channel} sobre: ${topic}.
@@ -221,7 +234,8 @@ Requisitos:
           title: "Identidade visual",
           system,
           schema: visualIdentitySchema,
-          maxTokens: 48000,
+          tier: "premium",
+          maxTokens: 40000,
           prompt: `${briefing}
 
 Desenvolva a proposta de identidade visual e verbal deste cliente.${direction ? ` Direcionamento da agência: ${direction}.` : ""}
@@ -250,6 +264,8 @@ Requisitos:
           title: `Relatório executivo — ${period}`,
           system,
           schema: clientReportSchema,
+          tier: "standard",
+          maxTokens: 16000,
           prompt: `${briefing}
 
 <dados_da_plataforma>

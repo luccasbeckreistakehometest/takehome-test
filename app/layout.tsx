@@ -32,6 +32,7 @@ const NAV = [
   { href: "/", label: "Clientes" },
   { href: "/prospecting", label: "Prospecção" },
   { href: "/professionals", label: "Profissionais" },
+  { href: "/agenda", label: "Agenda" },
   { href: "/ideas", label: "Ideias" },
   { href: "/treinamento", label: "Treinamento" },
   { href: "/settings", label: "Configurações" },

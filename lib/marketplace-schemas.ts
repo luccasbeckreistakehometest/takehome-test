@@ -119,6 +119,62 @@ export type IdeasResult = {
   }[];
 };
 
+export const demandSuggestionsSchema = obj({
+  summary: str,
+  demands: {
+    type: "array",
+    items: obj({
+      title: str,
+      brief: str,
+      skillsNeeded: strArray,
+      location: str,
+      budget: str,
+      deadline: str,
+      source: str, // de onde no plano essa demanda vem (ex.: "semana 2 da campanha")
+    }),
+  },
+});
+
+export type DemandSuggestions = {
+  summary: string;
+  demands: {
+    title: string;
+    brief: string;
+    skillsNeeded: string[];
+    location: string;
+    budget: string;
+    deadline: string;
+    source: string;
+  }[];
+};
+
+export const meetingRecsSchema = obj({
+  summary: str,
+  meetings: {
+    type: "array",
+    items: obj({
+      clientId: str,
+      projectId: str, // "" quando é reunião de conta, sem demanda específica
+      title: str,
+      suggestedAt: str, // formato YYYY-MM-DDTHH:mm
+      participants: str,
+      reasoning: str,
+    }),
+  },
+});
+
+export type MeetingRecs = {
+  summary: string;
+  meetings: {
+    clientId: string;
+    projectId: string;
+    title: string;
+    suggestedAt: string;
+    participants: string;
+    reasoning: string;
+  }[];
+};
+
 export const clientReportSchema = obj({
   title: str,
   period: str,

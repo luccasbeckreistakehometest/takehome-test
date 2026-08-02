@@ -189,9 +189,19 @@ export default function GeneratorTab({
               </button>
             ))}
             {selected && (
-              <Button variant="danger" className="ml-auto !px-2.5 !py-1 text-xs" onClick={removeSelected}>
-                Excluir versão
-              </Button>
+              <span className="ml-auto flex items-center gap-2">
+                <a
+                  href={`/print/${selected.id}`}
+                  target="_blank"
+                  rel="noreferrer"
+                  className="rounded-md border border-edge bg-surface px-2.5 py-1 text-xs text-muted transition-colors hover:border-accent hover:text-accent"
+                >
+                  📄 PDF
+                </a>
+                <Button variant="danger" className="!px-2.5 !py-1 text-xs" onClick={removeSelected}>
+                  Excluir versão
+                </Button>
+              </span>
             )}
           </div>
           {selected && (

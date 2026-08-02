@@ -44,7 +44,8 @@ Para cada empresa encontrada:
 Priorize empresas com maior probabilidade de fechar: dor visível + capacidade de investir.`,
       schema: prospectingSchema,
       useWebSearch: true,
-      maxTokens: 32000,
+      tier: "standard",
+      maxTokens: 24000,
     });
 
     const searchQuery = `${niche} — ${region}`;

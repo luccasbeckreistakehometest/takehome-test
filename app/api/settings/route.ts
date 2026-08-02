@@ -9,6 +9,8 @@ const settingsSchema = z.object({
     .string()
     .trim()
     .regex(/^#[0-9a-fA-F]{6}$/, "Cor em formato #rrggbb"),
+  landingPagesEnabled: z.boolean().default(false),
+  economyMode: z.boolean().default(true),
 });
 
 export async function GET() {

@@ -35,3 +35,19 @@ body {
   background: var(--accent);
   color: var(--accent-ink);
 }
+
+/* Impressão/PDF: esconde a moldura do app e força fundo claro */
+@media print {
+  header,
+  footer,
+  nav {
+    display: none !important;
+  }
+  body {
+    background: #ffffff !important;
+  }
+  main {
+    padding: 0 !important;
+    max-width: none !important;
+  }
+}

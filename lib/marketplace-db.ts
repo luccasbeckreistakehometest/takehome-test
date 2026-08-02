@@ -77,11 +77,13 @@ db.exec(`
   );
   CREATE TABLE IF NOT EXISTS meetings (
     id TEXT PRIMARY KEY,
-    projectId TEXT NOT NULL REFERENCES projects(id) ON DELETE CASCADE,
+    clientId TEXT,
+    projectId TEXT,
     title TEXT NOT NULL,
     scheduledAt TEXT NOT NULL,
     link TEXT NOT NULL DEFAULT '',
     notes TEXT NOT NULL DEFAULT '',
+    reasoning TEXT NOT NULL DEFAULT '',
     createdAt TEXT NOT NULL
   );
   CREATE TABLE IF NOT EXISTS prospects (
@@ -397,14 +399,47 @@ export function createArtReview(input: {
 
 // ---------- Reuniões ----------
 
+// Migração: reuniões passam a poder ser de conta (clientId) além de demanda
+// (projectId), e ganham "reasoning" (motivo, quando recomendadas pela IA).
+const meetingColumns = (
+  db.prepare("PRAGMA table_info(meetings)").all() as { name: string }[]
+).map((column) => column.name);
+if (meetingColumns.length > 0 && !meetingColumns.includes("clientId")) {
+  db.exec(`
+    CREATE TABLE meetings_new (
+      id TEXT PRIMARY KEY,
+      clientId TEXT,
+      projectId TEXT,
+      title TEXT NOT NULL,
+      scheduledAt TEXT NOT NULL,
+      link TEXT NOT NULL DEFAULT '',
+      notes TEXT NOT NULL DEFAULT '',
+      reasoning TEXT NOT NULL DEFAULT '',
+      createdAt TEXT NOT NULL
+    );
+    INSERT INTO meetings_new (id, clientId, projectId, title, scheduledAt, link, notes, reasoning, createdAt)
+      SELECT m.id, p.clientId, m.projectId, m.title, m.scheduledAt, m.link, m.notes, '', m.createdAt
+      FROM meetings m LEFT JOIN projects p ON p.id = m.projectId;
+    DROP TABLE meetings;
+    ALTER TABLE meetings_new RENAME TO meetings;
+  `);
+}
+
 export type Meeting = {
   id: string;
-  projectId: string;
+  clientId: string | null;
+  projectId: string | null;
   title: string;
   scheduledAt: string;
   link: string;
   notes: string;
+  reasoning: string;
   createdAt: string;
+};
+
+export type MeetingWithNames = Meeting & {
+  clientName: string | null;
+  projectTitle: string | null;
 };
 
 export function listMeetings(projectId: string): Meeting[] {
@@ -413,16 +448,46 @@ export function listMeetings(projectId: string): Meeting[] {
     .all(projectId) as Meeting[];
 }
 
+export function listClientMeetings(clientId: string): Meeting[] {
+  return db
+    .prepare("SELECT * FROM meetings WHERE clientId = ? ORDER BY scheduledAt ASC")
+    .all(clientId) as Meeting[];
+}
+
+export function listAllMeetings(): MeetingWithNames[] {
+  return db
+    .prepare(
+      `SELECT m.*, c.name AS clientName, p.title AS projectTitle
+       FROM meetings m
+       LEFT JOIN clients c ON c.id = m.clientId
+       LEFT JOIN projects p ON p.id = m.projectId
+       ORDER BY m.scheduledAt ASC`
+    )
+    .all() as MeetingWithNames[];
+}
+
 export function createMeeting(input: {
-  projectId: string;
+  clientId?: string | null;
+  projectId?: string | null;
   title: string;
   scheduledAt: string;
   link: string;
   notes: string;
+  reasoning?: string;
 }): Meeting {
-  const meeting: Meeting = { ...input, id: randomUUID(), createdAt: now() };
+  const meeting: Meeting = {
+    id: randomUUID(),
+    clientId: input.clientId ?? null,
+    projectId: input.projectId ?? null,
+    title: input.title,
+    scheduledAt: input.scheduledAt,
+    link: input.link,
+    notes: input.notes,
+    reasoning: input.reasoning ?? "",
+    createdAt: now(),
+  };
   db.prepare(
-    "INSERT INTO meetings (id, projectId, title, scheduledAt, link, notes, createdAt) VALUES (@id, @projectId, @title, @scheduledAt, @link, @notes, @createdAt)"
+    "INSERT INTO meetings (id, clientId, projectId, title, scheduledAt, link, notes, reasoning, createdAt) VALUES (@id, @clientId, @projectId, @title, @scheduledAt, @link, @notes, @reasoning, @createdAt)"
   ).run(meeting);
   return meeting;
 }

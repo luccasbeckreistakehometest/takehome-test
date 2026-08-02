@@ -72,6 +72,18 @@ export const campaignPlanSchema = obj({
   month: str,
   theme: str,
   summary: str,
+  influencers: {
+    type: "array",
+    items: obj({
+      name: str,
+      platform: str,
+      handle: str,
+      profileUrl: str,
+      followers: str,
+      whyFit: str,
+      contactEmail: str,
+    }),
+  },
   objectives: {
     type: "array",
     items: obj({ objective: str, kpi: str, target: str }),
@@ -208,6 +220,15 @@ export type CampaignPlan = {
   month: string;
   theme: string;
   summary: string;
+  influencers: {
+    name: string;
+    platform: string;
+    handle: string;
+    profileUrl: string;
+    followers: string;
+    whyFit: string;
+    contactEmail: string;
+  }[];
   objectives: { objective: string; kpi: string; target: string }[];
   weeks: { week: number; focus: string; actions: string[] }[];
   channels: { channel: string; strategy: string; frequency: string }[];

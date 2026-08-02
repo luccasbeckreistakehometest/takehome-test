@@ -119,7 +119,8 @@ Pesquise as tendências mais recentes de marketing digital e proponha 4 a 6 idei
       prompt,
       schema: ideasSchema,
       useWebSearch: true,
-      maxTokens: 24000,
+      tier: "standard",
+      maxTokens: 20000,
     });
     const batch = createIdeaBatch({
       audience,

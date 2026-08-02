@@ -20,6 +20,8 @@ import type {
   VisualIdentity,
 } from "@/lib/schemas";
 import type { ClientReport } from "@/lib/marketplace-schemas";
+import type { AgencySettings } from "@/lib/settings";
+import ClientDashboard from "./ClientDashboard";
 import ClientForm from "./ClientForm";
 import GeneratorTab from "./GeneratorTab";
 import LandingPreview from "./LandingPreview";
@@ -36,7 +38,7 @@ import {
 } from "./renderers";
 import { Button, Card, ErrorBox, Spinner, Tag } from "./ui";
 
-type TabKey = "briefing" | "projects" | GenerationType;
+type TabKey = "dashboard" | "briefing" | "projects" | GenerationType;
 
 function nextMonthLabel(): string {
   const date = new Date();
@@ -54,8 +56,9 @@ export default function Workspace({
   onClientUpdated: (client: Client) => void;
 }) {
   const router = useRouter();
-  const [tab, setTab] = useState<TabKey>("briefing");
+  const [tab, setTab] = useState<TabKey>("dashboard");
   const [initialProjectId, setInitialProjectId] = useState<string | undefined>();
+  const [landingEnabled, setLandingEnabled] = useState(false);
 
   // Deep-link vindo do portal do profissional: /clients/[id]?project=...
   useEffect(() => {
@@ -64,6 +67,9 @@ export default function Workspace({
       setInitialProjectId(projectId);
       setTab("projects");
     }
+    api<AgencySettings>("/api/settings").then((settings) =>
+      setLandingEnabled(settings.landingPagesEnabled)
+    );
   }, []);
   // Remonta as abas de geração após o kit completo, para recarregar o histórico
   const [kitVersion, setKitVersion] = useState(0);
@@ -74,7 +80,11 @@ export default function Workspace({
 
   async function runFullKit() {
     setKitError("");
-    const steps: KitStep[] = FULL_KIT_SEQUENCE.map((type) => ({
+    // Landing page fica fora do kit quando a flag está desligada (custo)
+    const sequence = FULL_KIT_SEQUENCE.filter(
+      (type) => landingEnabled || type !== "landing_page"
+    );
+    const steps: KitStep[] = sequence.map((type) => ({
       type,
       status: "pending",
     }));
@@ -110,6 +120,7 @@ export default function Workspace({
   }
 
   const tabs: { key: TabKey; label: string }[] = [
+    { key: "dashboard", label: "Dashboard" },
     { key: "briefing", label: "Briefing" },
     { key: "strategy_analysis", label: "Estratégia" },
     { key: "market_pulse", label: "Radar" },
@@ -118,7 +129,9 @@ export default function Workspace({
     { key: "social_calendar", label: "Social" },
     { key: "post_batch", label: "Posts" },
     { key: "visual_identity", label: "Identidade" },
-    { key: "landing_page", label: "Landing pages" },
+    ...(landingEnabled
+      ? [{ key: "landing_page" as TabKey, label: "Landing pages" }]
+      : []),
     { key: "projects", label: "Demandas" },
     { key: "client_report", label: "Relatório" },
   ];
@@ -203,6 +216,16 @@ export default function Workspace({
           </button>
         ))}
       </nav>
+
+      {tab === "dashboard" && (
+        <ClientDashboard
+          key={`dash-${kitVersion}`}
+          client={client}
+          landingEnabled={landingEnabled}
+          onNavigate={(next) => setTab(next as TabKey)}
+          onRunKit={runFullKit}
+        />
+      )}
 
       {tab === "briefing" && (
         <div className="space-y-6">
@@ -324,7 +347,12 @@ export default function Workspace({
             },
           ]}
           generateLabel="Gerar calendário"
-          render={(g) => <SocialCalendarView data={JSON.parse(g.content) as SocialCalendar} />}
+          render={(g) => (
+            <SocialCalendarView
+              data={JSON.parse(g.content) as SocialCalendar}
+              clientId={client.id}
+            />
+          )}
         />
       )}
 
@@ -357,7 +385,9 @@ export default function Workspace({
             },
           ]}
           generateLabel="Gerar posts"
-          render={(g) => <PostBatchView data={JSON.parse(g.content) as PostBatch} />}
+          render={(g) => (
+            <PostBatchView data={JSON.parse(g.content) as PostBatch} clientId={client.id} />
+          )}
         />
       )}
 

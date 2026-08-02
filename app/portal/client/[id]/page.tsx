@@ -11,7 +11,9 @@ import {
   type Project,
 } from "@/lib/marketplace-types";
 import type { ClientReport } from "@/lib/marketplace-schemas";
+import type { TierInfo } from "@/lib/ranking";
 import { ClientReportView } from "@/components/renderers";
+import TierBadge from "@/components/TierBadge";
 import { Card, SectionTitle, Spinner, Tag } from "@/components/ui";
 
 type ProjectDetail = Project & {
@@ -28,12 +30,14 @@ export default function ClientPortalPage({
 }) {
   const { id } = use(params);
   const [client, setClient] = useState<Client | null>(null);
+  const [tier, setTier] = useState<TierInfo | null>(null);
   const [report, setReport] = useState<Generation | null>(null);
   const [landings, setLandings] = useState<Generation[]>([]);
   const [projects, setProjects] = useState<ProjectDetail[]>([]);
 
   useEffect(() => {
     api<Client>(`/api/clients/${id}`).then(setClient);
+    api<{ tier: TierInfo }>(`/api/clients/${id}/dashboard`).then((d) => setTier(d.tier));
     api<Generation[]>(`/api/generations?clientId=${id}&type=client_report`).then((g) =>
       setReport(g[0] ?? null)
     );
@@ -58,9 +62,12 @@ export default function ClientPortalPage({
     <div className="space-y-6">
       <div>
         <p className="text-xs uppercase tracking-widest text-accent">Portal do cliente</p>
-        <h1 className="font-[family-name:var(--font-display)] text-3xl font-bold tracking-tight">
-          {client.name}
-        </h1>
+        <div className="flex flex-wrap items-center gap-3">
+          <h1 className="font-[family-name:var(--font-display)] text-3xl font-bold tracking-tight">
+            {client.name}
+          </h1>
+          {tier && <TierBadge info={tier} />}
+        </div>
         <p className="mt-1 text-sm text-muted">
           Acompanhe aqui o que a agência está construindo para a sua marca.
         </p>
@@ -134,9 +141,19 @@ export default function ClientPortalPage({
 
       {report ? (
         <div>
-          <h2 className="mb-3 font-[family-name:var(--font-display)] text-xl font-semibold">
-            {report.title}
-          </h2>
+          <div className="mb-3 flex flex-wrap items-center justify-between gap-2">
+            <h2 className="font-[family-name:var(--font-display)] text-xl font-semibold">
+              {report.title}
+            </h2>
+            <a
+              href={`/print/${report.id}`}
+              target="_blank"
+              rel="noreferrer"
+              className="rounded-md border border-edge bg-surface-2 px-3 py-1.5 text-sm text-muted transition-colors hover:border-accent hover:text-accent"
+            >
+              📄 Salvar em PDF
+            </a>
+          </div>
           <ClientReportView data={JSON.parse(report.content) as ClientReport} />
         </div>
       ) : (

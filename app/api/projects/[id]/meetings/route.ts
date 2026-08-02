@@ -18,7 +18,8 @@ export async function GET(_request: Request, { params }: Context) {
 
 export async function POST(request: Request, { params }: Context) {
   const { id } = await params;
-  if (!getProject(id)) {
+  const project = getProject(id);
+  if (!project) {
     return NextResponse.json({ error: "Demanda não encontrada" }, { status: 404 });
   }
   const parsed = meetingSchema.safeParse(await request.json().catch(() => null));
@@ -29,7 +30,7 @@ export async function POST(request: Request, { params }: Context) {
     );
   }
   return NextResponse.json(
-    createMeeting({ projectId: id, ...parsed.data }),
+    createMeeting({ projectId: id, clientId: project.clientId, ...parsed.data }),
     { status: 201 }
   );
 }

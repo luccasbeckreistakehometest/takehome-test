@@ -58,4 +58,8 @@ export const projectPatchSchema = z.object({
     .enum(["open", "matched", "in_progress", "in_review", "approved", "paid"])
     .optional(),
   escrow: z.enum(["none", "held", "released"]).optional(),
+  title: z.string().trim().min(1).optional(),
+  brief: z.string().trim().optional(),
+  budget: z.string().trim().optional(),
+  deadline: z.string().trim().optional(),
 });

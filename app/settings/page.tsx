@@ -88,10 +88,49 @@ export default function SettingsPage() {
             </div>
           </div>
         </div>
+        <div className="space-y-2 border-t border-edge pt-4">
+          <p className="text-xs font-semibold uppercase tracking-wider text-muted">
+            Custo & features de IA
+          </p>
+          <label className="flex items-start gap-3 rounded-md border border-edge bg-surface-2 p-3 text-sm">
+            <input
+              type="checkbox"
+              checked={settings.economyMode}
+              onChange={(e) => setSettings({ ...settings, economyMode: e.target.checked })}
+              className="mt-0.5 accent-[var(--accent)]"
+            />
+            <span>
+              <span className="font-medium">Modo econômico</span>
+              <span className="block text-xs text-muted">
+                Usa um modelo ~3x mais barato (Sonnet) nos entregáveis táticos
+                (campanha, social, posts, ROI, radar, relatório, ideias, prospecção).
+                Estratégia, identidade, match e análise de arte continuam no modelo
+                premium (Opus).
+              </span>
+            </span>
+          </label>
+          <label className="flex items-start gap-3 rounded-md border border-edge bg-surface-2 p-3 text-sm">
+            <input
+              type="checkbox"
+              checked={settings.landingPagesEnabled}
+              onChange={(e) =>
+                setSettings({ ...settings, landingPagesEnabled: e.target.checked })
+              }
+              className="mt-0.5 accent-[var(--accent)]"
+            />
+            <span>
+              <span className="font-medium">Gerador de landing pages</span>
+              <span className="block text-xs text-muted">
+                É o entregável que mais consome tokens (HTML completo). Desligado, a
+                aba some do workspace e o kit completo pula essa etapa.
+              </span>
+            </span>
+          </label>
+        </div>
         {error && <ErrorBox message={error} />}
         <div className="flex items-center gap-3">
           <Button onClick={save} disabled={saving}>
-            {saving ? "Salvando..." : "Salvar marca"}
+            {saving ? "Salvando..." : "Salvar configurações"}
           </Button>
           {saved && <span className="text-sm text-accent">Aplicado ✓</span>}
         </div>

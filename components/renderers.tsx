@@ -1,5 +1,8 @@
 "use client";
 
+import { useState } from "react";
+import { api } from "@/lib/api";
+import type { Project } from "@/lib/marketplace-types";
 import type {
   CampaignPlan,
   MarketPulse,
@@ -29,6 +32,59 @@ function List({ items }: { items: string[] }) {
       ))}
     </ul>
   );
+}
+
+// Converte um post gerado por IA em demanda de produção para um profissional
+function CreateDemandButton({
+  clientId,
+  title,
+  brief,
+  skillsNeeded,
+}: {
+  clientId: string;
+  title: string;
+  brief: string;
+  skillsNeeded: string[];
+}) {
+  const [state, setState] = useState<"idle" | "creating" | "done">("idle");
+  if (state === "done") {
+    return <span className="text-xs text-accent">✓ Demanda criada (aba Demandas)</span>;
+  }
+  return (
+    <button
+      disabled={state === "creating"}
+      onClick={async () => {
+        setState("creating");
+        try {
+          await api<Project>("/api/projects", {
+            method: "POST",
+            body: JSON.stringify({
+              clientId,
+              title,
+              brief,
+              skillsNeeded,
+              location: "",
+              budget: "",
+              deadline: "",
+            }),
+          });
+          setState("done");
+        } catch {
+          setState("idle");
+        }
+      }}
+      className="rounded border border-edge bg-surface-2 px-2 py-0.5 text-xs text-muted transition-colors hover:border-accent hover:text-accent disabled:opacity-50"
+    >
+      {state === "creating" ? "Criando..." : "→ Criar demanda de produção"}
+    </button>
+  );
+}
+
+function postSkills(format: string, channel: string): string[] {
+  const text = `${format} ${channel}`.toLowerCase();
+  if (/foto|photo/.test(text)) return ["Fotografia de produto"];
+  if (/reel|v[íi]deo|video|stories|tiktok/.test(text)) return ["Vídeo/Reels", "Edição/Retoque"];
+  return ["Social media design"];
 }
 
 export function StrategyAnalysisView({ data }: { data: StrategyAnalysis }) {
@@ -271,6 +327,43 @@ export function CampaignPlanView({ data }: { data: CampaignPlan }) {
           </div>
         </Card>
       </div>
+      {(data.influencers?.length ?? 0) > 0 && (
+        <Card>
+          <SectionTitle>Influenciadores recomendados (perfis reais)</SectionTitle>
+          <div className="grid gap-3 lg:grid-cols-2">
+            {data.influencers.map((influencer, i) => (
+              <div key={i} className="rounded-lg border border-edge bg-surface-2 p-4 text-sm">
+                <div className="flex flex-wrap items-center justify-between gap-2">
+                  <p className="font-semibold">
+                    {influencer.name}{" "}
+                    <span className="text-muted">· {influencer.platform}</span>
+                  </p>
+                  <Tag>{influencer.followers}</Tag>
+                </div>
+                <p className="mt-1 text-muted">{influencer.whyFit}</p>
+                <div className="mt-2 flex flex-wrap items-center gap-3 text-xs">
+                  {influencer.profileUrl && (
+                    <a
+                      href={influencer.profileUrl}
+                      target="_blank"
+                      rel="noreferrer"
+                      className="text-accent hover:underline"
+                    >
+                      {influencer.handle || "ver perfil"} ↗
+                    </a>
+                  )}
+                  {influencer.contactEmail && (
+                    <span className="flex items-center gap-1 text-muted">
+                      ✉ {influencer.contactEmail}
+                      <CopyButton text={influencer.contactEmail} label="Copiar" />
+                    </span>
+                  )}
+                </div>
+              </div>
+            ))}
+          </div>
+        </Card>
+      )}
       <Card>
         <SectionTitle>Riscos & pontos de atenção</SectionTitle>
         <div className="text-sm text-muted">
@@ -376,7 +469,13 @@ export function RoiProjectionView({ data }: { data: RoiProjection }) {
   );
 }
 
-export function SocialCalendarView({ data }: { data: SocialCalendar }) {
+export function SocialCalendarView({
+  data,
+  clientId,
+}: {
+  data: SocialCalendar;
+  clientId?: string;
+}) {
   return (
     <div className="space-y-6">
       <Card>
@@ -411,6 +510,16 @@ export function SocialCalendarView({ data }: { data: SocialCalendar }) {
                   {post.cta}
                 </p>
               </div>
+              {clientId && (
+                <div className="mt-2">
+                  <CreateDemandButton
+                    clientId={clientId}
+                    title={`Produção — ${post.title}`}
+                    brief={`Produzir a arte do post "${post.title}" (${post.format}, ${post.channel}, dia ${post.day}).\n\nDireção de arte: ${post.artDirection}\n\nLegenda aprovada: ${post.caption}\n\nCTA: ${post.cta}`}
+                    skillsNeeded={postSkills(post.format, post.channel)}
+                  />
+                </div>
+              )}
             </Card>
           ))}
       </div>
@@ -418,7 +527,13 @@ export function SocialCalendarView({ data }: { data: SocialCalendar }) {
   );
 }
 
-export function PostBatchView({ data }: { data: PostBatch }) {
+export function PostBatchView({
+  data,
+  clientId,
+}: {
+  data: PostBatch;
+  clientId?: string;
+}) {
   return (
     <div className="grid gap-4 lg:grid-cols-2">
       {data.posts.map((post, i) => (
@@ -443,6 +558,16 @@ export function PostBatchView({ data }: { data: PostBatch }) {
               {post.cta}
             </p>
           </div>
+          {clientId && (
+            <div className="mt-2">
+              <CreateDemandButton
+                clientId={clientId}
+                title={`Produção — ${post.hook.slice(0, 60)}`}
+                brief={`Produzir a arte do post (${post.channel}, ângulo: ${post.variation}).\n\nDireção de arte: ${post.artDirection}\n\nLegenda aprovada: ${post.caption}\n\nCTA: ${post.cta}`}
+                skillsNeeded={postSkills(post.variation, post.channel)}
+              />
+            </div>
+          )}
         </Card>
       ))}
     </div>

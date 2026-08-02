@@ -1,6 +1,17 @@
 import Anthropic from "@anthropic-ai/sdk";
+import { getSettings } from "./settings";
 
-export const MODEL = "claude-opus-4-8";
+// Dois níveis de modelo para controle de custo:
+// - premium: decisões críticas (estratégia, match, análise de arte, landing)
+// - standard: entregáveis táticos — no modo econômico usa Sonnet (~3x mais barato)
+export const PREMIUM_MODEL = "claude-opus-4-8";
+export const STANDARD_MODEL = "claude-sonnet-5";
+export type ModelTier = "premium" | "standard";
+
+export function pickModel(tier: ModelTier): string {
+  if (tier === "standard" && getSettings().economyMode) return STANDARD_MODEL;
+  return PREMIUM_MODEL;
+}
 
 const client = new Anthropic();
 
@@ -15,7 +26,7 @@ export class GenerationError extends Error {
 export const WEB_SEARCH_TOOL = {
   type: "web_search_20260209" as const,
   name: "web_search" as const,
-  max_uses: 8,
+  max_uses: 5,
 };
 
 function extractText(message: Anthropic.Message): string {
@@ -64,6 +75,7 @@ type RequestOptions = {
   useWebSearch?: boolean;
   outputSchema?: Record<string, unknown>;
   image?: { base64: string; mediaType: "image/jpeg" | "image/png" | "image/gif" | "image/webp" };
+  tier?: ModelTier;
 };
 
 // Roda a request com streaming (respostas longas) e retoma automaticamente
@@ -90,7 +102,7 @@ async function runMessage(options: RequestOptions): Promise<Anthropic.Message> {
 
   for (let attempt = 0; attempt < 6; attempt++) {
     const stream = client.messages.stream({
-      model: MODEL,
+      model: pickModel(options.tier ?? "premium"),
       max_tokens: options.maxTokens,
       thinking: { type: "adaptive" },
       system: options.system,
@@ -120,6 +132,7 @@ export async function generateStructured<T>(options: {
   maxTokens?: number;
   useWebSearch?: boolean;
   image?: RequestOptions["image"];
+  tier?: ModelTier;
 }): Promise<T> {
   try {
     const message = await runMessage({
@@ -129,6 +142,7 @@ export async function generateStructured<T>(options: {
       useWebSearch: options.useWebSearch,
       outputSchema: options.schema,
       image: options.image,
+      tier: options.tier,
     });
     return JSON.parse(extractText(message)) as T;
   } catch (error) {
@@ -140,12 +154,14 @@ export async function generateHtml(options: {
   system: string;
   prompt: string;
   maxTokens?: number;
+  tier?: ModelTier;
 }): Promise<string> {
   try {
     const message = await runMessage({
       system: options.system,
       prompt: options.prompt,
       maxTokens: options.maxTokens ?? 64000,
+      tier: options.tier,
     });
     let html = extractText(message).trim();
     // Defensivo: remove cercas de markdown caso o modelo envolva o documento
