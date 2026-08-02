@@ -309,7 +309,15 @@ export default function ProjectsTab({
               <p className="mt-1 text-xs text-muted">
                 {project.skillsNeeded.join(", ") || "skills n/d"} · {project.budget || "verba n/d"}
               </p>
-              <p className="mt-1 text-xs text-muted">{ESCROW_LABELS[project.escrow]}</p>
+              <p className="mt-1 text-xs text-muted">
+                {ESCROW_LABELS[project.escrow]} · criada em{" "}
+                {new Date(project.createdAt).toLocaleString("pt-BR", {
+                  day: "2-digit",
+                  month: "2-digit",
+                  hour: "2-digit",
+                  minute: "2-digit",
+                })}
+              </p>
             </button>
           ))}
         </div>

@@ -1,4 +1,5 @@
 import { NextResponse } from "next/server";
+import { generateStructured } from "@/lib/claude";
 import { getClient } from "@/lib/db";
 import { createDeliverable, getProject, listDeliverables } from "@/lib/marketplace-db";
 import { getSettings } from "@/lib/settings";
@@ -38,18 +39,53 @@ export async function POST(_request: Request, { params }: Context) {
     );
   }
 
-  const parts: Record<string, unknown>[] = [];
-  for (const reference of references) {
+  const images = references.flatMap((reference) => {
     const data = readUpload(reference.id, reference.mime);
-    if (!data) continue;
-    parts.push({ text: `Referência (${reference.meaning || reference.title}):` });
-    parts.push({
-      inline_data: { mime_type: reference.mime, data: data.toString("base64") },
-    });
-  }
-  parts.push({
-    text: `Crie um mockup fotorrealista para esta produção de marketing, compondo fielmente as referências enviadas (ex.: a modelo da referência vestindo exatamente a peça da referência de produto, no cenário indicado). Brief da produção: ${project.brief || project.title}. Marca: ${client.name} (${client.industry || "n/d"}). Mantenha rostos, corpos e produtos fiéis às fotos de referência. Imagem única, alta qualidade, enquadramento de campanha.`,
+    if (!data) return [];
+    return [
+      {
+        base64: data.toString("base64"),
+        mediaType: reference.mime as "image/jpeg" | "image/png" | "image/gif" | "image/webp",
+        label: reference.meaning || reference.title,
+        mime: reference.mime,
+      },
+    ];
   });
+
+  // Etapa 1 — a Claude ANALISA as imagens de referência (o que é a peça,
+  // como é a modelo, cores, caimento, cenário) e escreve o prompt exato de
+  // geração; a imagem final sai fiel ao que foi enviado.
+  let imagePrompt = `Photorealistic marketing mockup faithfully composing the reference photos (the model from the reference wearing exactly the product piece from the reference). Production brief: ${project.brief || project.title}. Brand: ${client.name}. Keep faces, bodies and products faithful to the reference photos. Single high-quality campaign-framing image.`;
+  try {
+    const analysis = await generateStructured<{ imagePrompt: string }>({
+      system:
+        "Você é diretor(a) de arte. Analise as imagens de referência e escreva, em inglês, um prompt de geração de imagem extremamente específico e fiel a elas.",
+      prompt: `Analise as imagens de referência (cada uma rotulada com seu papel) e o brief abaixo, e escreva UM prompt de geração de imagem (em inglês, campo "imagePrompt") para compor o mockup fotorrealista final. Descreva com precisão o que você VÊ nas referências: a peça (tipo, cor exata, tecido, recortes, detalhes), a modelo (aparência, cabelo, tom de pele, pose desejada), o cenário e a luz — e como devem ser combinados conforme o brief. Instrua a manter a peça e a modelo fiéis às fotos.
+
+Brief da produção: ${project.brief || project.title}
+Marca: ${client.name} (${client.industry || "n/d"})`,
+      schema: {
+        type: "object",
+        properties: { imagePrompt: { type: "string" } },
+        required: ["imagePrompt"],
+        additionalProperties: false,
+      },
+      tier: "standard",
+      maxTokens: 4000,
+      images: images.map(({ base64, mediaType, label }) => ({ base64, mediaType, label })),
+    });
+    if (analysis.imagePrompt?.trim()) imagePrompt = analysis.imagePrompt.trim();
+  } catch {
+    // análise falhou: segue com o prompt padrão
+  }
+
+  // Etapa 2 — Gemini compõe a imagem com as referências + prompt analisado
+  const parts: Record<string, unknown>[] = [];
+  for (const image of images) {
+    parts.push({ text: `Reference (${image.label}):` });
+    parts.push({ inline_data: { mime_type: image.mime, data: image.base64 } });
+  }
+  parts.push({ text: imagePrompt });
 
   try {
     const response = await fetch(
