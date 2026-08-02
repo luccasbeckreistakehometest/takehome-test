@@ -163,6 +163,42 @@ export const postBatchSchema = obj({
   },
 });
 
+export const productRecsSchema = obj({
+  title: str,
+  summary: str,
+  opportunities: {
+    type: "array",
+    items: obj({
+      name: str,
+      whatItIs: str,
+      trendBasis: str, // tendência real (com fonte) que sustenta
+      fitWithCapabilities: str, // por que dá para fazer com o que o cliente TEM
+      howToStart: str,
+      effort: str, // baixo/médio/alto
+      potential: str,
+    }),
+  },
+  repositioning: {
+    type: "array",
+    items: obj({ area: str, recommendation: str, why: str }),
+  },
+});
+
+export type ProductRecs = {
+  title: string;
+  summary: string;
+  opportunities: {
+    name: string;
+    whatItIs: string;
+    trendBasis: string;
+    fitWithCapabilities: string;
+    howToStart: string;
+    effort: string;
+    potential: string;
+  }[];
+  repositioning: { area: string; recommendation: string; why: string }[];
+};
+
 export const visualIdentitySchema = obj({
   title: str,
   essence: str,

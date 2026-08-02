@@ -4,8 +4,12 @@ import { use, useCallback, useEffect, useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { api } from "@/lib/api";
-import type { Professional, Project } from "@/lib/marketplace-types";
-import { PROJECT_STATUS_LABELS, ROLE_LABELS } from "@/lib/marketplace-types";
+import type { Application, Professional, Project } from "@/lib/marketplace-types";
+import {
+  APPLICATION_STATUS_LABELS,
+  PROJECT_STATUS_LABELS,
+  ROLE_LABELS,
+} from "@/lib/marketplace-types";
 import type { ProfessionalStats } from "@/lib/marketplace-db";
 import type { TierInfo } from "@/lib/ranking";
 import ProfessionalForm from "@/components/ProfessionalForm";
@@ -17,6 +21,7 @@ type Profile = Professional & {
   tier: TierInfo;
   projects: Project[];
   opportunities: Project[];
+  applications: Application[];
 };
 
 export default function ProfessionalPage({
@@ -183,21 +188,44 @@ export default function ProfessionalPage({
               <p className="text-sm text-muted">Nenhuma demanda aberta no momento.</p>
             ) : (
               <div className="space-y-2">
-                {profile.opportunities.map((project) => (
-                  <div
-                    key={project.id}
-                    className="rounded-lg border border-edge bg-surface-2 p-3 text-sm"
-                  >
-                    <p className="font-medium">{project.title}</p>
-                    <p className="mt-1 text-xs text-muted">
-                      Skills: {project.skillsNeeded.join(", ") || "n/d"} · Local:{" "}
-                      {project.location || "remoto"} · Verba: {project.budget || "n/d"}
-                    </p>
-                    {project.brief && (
-                      <p className="mt-1 text-xs text-muted">{project.brief.slice(0, 200)}</p>
-                    )}
-                  </div>
-                ))}
+                {profile.opportunities.map((project) => {
+                  const application = profile.applications.find(
+                    (a) => a.projectId === project.id
+                  );
+                  return (
+                    <div
+                      key={project.id}
+                      className="rounded-lg border border-edge bg-surface-2 p-3 text-sm"
+                    >
+                      <div className="flex flex-wrap items-center justify-between gap-2">
+                        <p className="font-medium">{project.title}</p>
+                        {application ? (
+                          <Tag>Candidatura: {APPLICATION_STATUS_LABELS[application.status]}</Tag>
+                        ) : (
+                          <Button
+                            className="!px-2.5 !py-1 text-xs"
+                            onClick={async () => {
+                              await api(`/api/projects/${project.id}/applications`, {
+                                method: "POST",
+                                body: JSON.stringify({ professionalId: profile.id, message: "" }),
+                              });
+                              load();
+                            }}
+                          >
+                            ✋ Candidatar-se
+                          </Button>
+                        )}
+                      </div>
+                      <p className="mt-1 text-xs text-muted">
+                        Skills: {project.skillsNeeded.join(", ") || "n/d"} · Local:{" "}
+                        {project.location || "remoto"} · Verba: {project.budget || "n/d"}
+                      </p>
+                      {project.brief && (
+                        <p className="mt-1 text-xs text-muted">{project.brief.slice(0, 200)}</p>
+                      )}
+                    </div>
+                  );
+                })}
               </div>
             )}
           </Card>

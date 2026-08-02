@@ -20,19 +20,23 @@ const EMPTY: ClientInput = {
   website: "",
   instagram: "",
   notes: "",
+  capabilities: "",
   language: "pt-BR",
   source: "agency",
   country: "Brasil",
+  selfServe: false,
 };
 
 export default function ClientForm({
   initial,
   onSaved,
   selfService = false,
+  showSelfServeChoice = false,
 }: {
   initial?: Client;
   onSaved: (client: Client) => void;
   selfService?: boolean;
+  showSelfServeChoice?: boolean;
 }) {
   const [form, setForm] = useState<ClientInput>(
     initial ? { ...EMPTY, ...initial } : EMPTY
@@ -228,6 +232,14 @@ export default function ClientForm({
           </div>
         </div>
         <div>
+          <Label>Recursos & capacidade produtiva</Label>
+          <Textarea
+            value={form.capabilities}
+            onChange={(e) => set("capabilities", e.target.value)}
+            placeholder="O que o cliente TEM disponível: máquinas, tecidos/materiais, cores, equipe, equipamentos, serviços que consegue oferecer... A IA usa isso para recomendar o que produzir/ofertar."
+          />
+        </div>
+        <div>
           <Label>Observações extras</Label>
           <Textarea
             value={form.notes}
@@ -237,6 +249,25 @@ export default function ClientForm({
         </div>
       </Card>
 
+      {showSelfServeChoice && (
+        <Card>
+          <label className="flex items-start gap-3 text-sm">
+            <input
+              type="checkbox"
+              checked={form.selfServe}
+              onChange={(e) => set("selfServe", e.target.checked)}
+              className="mt-0.5 accent-[var(--accent)]"
+            />
+            <span>
+              <span className="font-medium">Quero gerenciar minha conta eu mesmo(a)</span>
+              <span className="block text-xs text-muted">
+                Modo autônomo: você usa a plataforma diretamente (estratégia, campanhas,
+                identidade, demandas com freelancers) sem uma agência intermediando.
+              </span>
+            </span>
+          </label>
+        </Card>
+      )}
       <div className="flex items-center gap-3">
         <Button type="submit" disabled={saving}>
           {initial ? "Salvar alterações" : "Criar cliente"}

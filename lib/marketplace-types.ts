@@ -80,6 +80,28 @@ export type Project = {
   escrow: EscrowStatus;
   matchResult: string; // JSON do último match da IA (ou "")
   sketch: string; // JSON {svg, rationale} do sketch de referência da IA (ou "")
+  // marketplace = com freelas da plataforma; internal = executada pelo
+  // time interno da agência (sem match/escrow)
+  mode: "marketplace" | "internal";
+  createdAt: string;
+};
+
+export type ApplicationStatus = "pending" | "accepted" | "rejected";
+
+export const APPLICATION_STATUS_LABELS: Record<ApplicationStatus, string> = {
+  pending: "Aguardando análise",
+  accepted: "Aceita",
+  rejected: "Recusada",
+};
+
+// Candidatura de um profissional a uma demanda aberta. A agência pode aceitar
+// mais de uma (pagando ambas) e depois definir o preferido no projeto.
+export type Application = {
+  id: string;
+  projectId: string;
+  professionalId: string;
+  message: string;
+  status: ApplicationStatus;
   createdAt: string;
 };
 
@@ -112,6 +134,14 @@ export const REFERENCE_MEANINGS = [
   "Outro",
 ] as const;
 
+export type ReviewRole = "agency" | "client" | "professional";
+
+export const REVIEW_ROLE_LABELS: Record<ReviewRole, string> = {
+  agency: "Agência",
+  client: "Cliente",
+  professional: "Profissional",
+};
+
 export type Annotation = {
   id: string;
   deliverableId: string;
@@ -119,7 +149,27 @@ export type Annotation = {
   y: number; // % da altura
   comment: string;
   resolved: boolean;
+  author: ReviewRole; // quem fez o comentário de revisão
+  audience: ReviewRole | "all"; // para quem o comentário é dirigido
   createdAt: string;
+};
+
+// Arquivos da conta do cliente: identidade visual importada, projetos
+// Photoshop/Illustrator, materiais da marca
+export type ClientAsset = {
+  id: string;
+  clientId: string;
+  title: string;
+  ext: string;
+  mime: string;
+  kind: "brand" | "project" | "other";
+  createdAt: string;
+};
+
+export const ASSET_KIND_LABELS: Record<ClientAsset["kind"], string> = {
+  brand: "Identidade visual",
+  project: "Projeto (PSD/AI)",
+  other: "Outro",
 };
 
 export type ArtReview = {

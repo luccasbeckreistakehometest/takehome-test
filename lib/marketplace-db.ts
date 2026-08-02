@@ -69,6 +69,8 @@ db.exec(`
     y REAL NOT NULL,
     comment TEXT NOT NULL,
     resolved INTEGER NOT NULL DEFAULT 0,
+    author TEXT NOT NULL DEFAULT 'agency',
+    audience TEXT NOT NULL DEFAULT 'all',
     createdAt TEXT NOT NULL
   );
   CREATE TABLE IF NOT EXISTS art_reviews (
@@ -122,6 +124,37 @@ if (deliverableColumns.length > 0 && !deliverableColumns.includes("kind")) {
   db.exec(`
     ALTER TABLE deliverables ADD COLUMN kind TEXT NOT NULL DEFAULT 'delivery';
     ALTER TABLE deliverables ADD COLUMN meaning TEXT NOT NULL DEFAULT '';
+  `);
+}
+if (projectColumns.length > 0 && !projectColumns.includes("mode")) {
+  db.exec("ALTER TABLE projects ADD COLUMN mode TEXT NOT NULL DEFAULT 'marketplace'");
+}
+db.exec(`
+  CREATE TABLE IF NOT EXISTS applications (
+    id TEXT PRIMARY KEY,
+    projectId TEXT NOT NULL REFERENCES projects(id) ON DELETE CASCADE,
+    professionalId TEXT NOT NULL REFERENCES professionals(id) ON DELETE CASCADE,
+    message TEXT NOT NULL DEFAULT '',
+    status TEXT NOT NULL DEFAULT 'pending',
+    createdAt TEXT NOT NULL
+  );
+  CREATE TABLE IF NOT EXISTS client_assets (
+    id TEXT PRIMARY KEY,
+    clientId TEXT NOT NULL REFERENCES clients(id) ON DELETE CASCADE,
+    title TEXT NOT NULL,
+    ext TEXT NOT NULL,
+    mime TEXT NOT NULL,
+    kind TEXT NOT NULL DEFAULT 'brand',
+    createdAt TEXT NOT NULL
+  );
+`);
+const annotationColumns = (
+  db.prepare("PRAGMA table_info(annotations)").all() as { name: string }[]
+).map((column) => column.name);
+if (annotationColumns.length > 0 && !annotationColumns.includes("author")) {
+  db.exec(`
+    ALTER TABLE annotations ADD COLUMN author TEXT NOT NULL DEFAULT 'agency';
+    ALTER TABLE annotations ADD COLUMN audience TEXT NOT NULL DEFAULT 'all';
   `);
 }
 
@@ -230,6 +263,7 @@ function toProject(row: ProjectRow): Project {
     skillsNeeded: JSON.parse(row.skillsNeeded),
     status: row.status as ProjectStatus,
     escrow: row.escrow as EscrowStatus,
+    mode: row.mode === "internal" ? "internal" : "marketplace",
   };
 }
 
@@ -272,9 +306,11 @@ export function createProject(input: {
   location: string;
   budget: string;
   deadline: string;
+  mode?: "marketplace" | "internal";
 }): Project {
   const project: Project = {
     ...input,
+    mode: input.mode ?? "marketplace",
     id: randomUUID(),
     professionalId: null,
     status: "open",
@@ -284,8 +320,8 @@ export function createProject(input: {
     createdAt: now(),
   };
   db.prepare(
-    `INSERT INTO projects (id, clientId, professionalId, title, brief, skillsNeeded, location, budget, deadline, status, escrow, matchResult, sketch, createdAt)
-     VALUES (@id, @clientId, @professionalId, @title, @brief, @skillsNeeded, @location, @budget, @deadline, @status, @escrow, @matchResult, @sketch, @createdAt)`
+    `INSERT INTO projects (id, clientId, professionalId, title, brief, skillsNeeded, location, budget, deadline, status, escrow, matchResult, sketch, mode, createdAt)
+     VALUES (@id, @clientId, @professionalId, @title, @brief, @skillsNeeded, @location, @budget, @deadline, @status, @escrow, @matchResult, @sketch, @mode, @createdAt)`
   ).run({ ...project, skillsNeeded: JSON.stringify(project.skillsNeeded) });
   return project;
 }
@@ -318,6 +354,63 @@ export function updateProject(
 
 export function deleteProject(id: string): boolean {
   return db.prepare("DELETE FROM projects WHERE id = ?").run(id).changes > 0;
+}
+
+// ---------- Candidaturas ----------
+
+import type { Application, ApplicationStatus } from "./marketplace-types";
+
+export type ApplicationWithProfessional = Application & {
+  professionalName: string;
+  professionalRole: string;
+  professionalLocation: string;
+};
+
+export function listApplications(projectId: string): ApplicationWithProfessional[] {
+  return db
+    .prepare(
+      `SELECT a.*, p.name AS professionalName, p.role AS professionalRole, p.location AS professionalLocation
+       FROM applications a JOIN professionals p ON p.id = a.professionalId
+       WHERE a.projectId = ? ORDER BY a.createdAt ASC`
+    )
+    .all(projectId) as ApplicationWithProfessional[];
+}
+
+export function listApplicationsByProfessional(professionalId: string): Application[] {
+  return db
+    .prepare("SELECT * FROM applications WHERE professionalId = ? ORDER BY createdAt DESC")
+    .all(professionalId) as Application[];
+}
+
+export function createApplication(input: {
+  projectId: string;
+  professionalId: string;
+  message: string;
+}): Application | null {
+  const existing = db
+    .prepare("SELECT id FROM applications WHERE projectId = ? AND professionalId = ?")
+    .get(input.projectId, input.professionalId);
+  if (existing) return null; // uma candidatura por profissional/demanda
+  const application: Application = {
+    ...input,
+    id: randomUUID(),
+    status: "pending",
+    createdAt: now(),
+  };
+  db.prepare(
+    "INSERT INTO applications (id, projectId, professionalId, message, status, createdAt) VALUES (@id, @projectId, @professionalId, @message, @status, @createdAt)"
+  ).run(application);
+  return application;
+}
+
+export function getApplication(id: string): Application | null {
+  return (
+    (db.prepare("SELECT * FROM applications WHERE id = ?").get(id) as Application) ?? null
+  );
+}
+
+export function setApplicationStatus(id: string, status: ApplicationStatus): boolean {
+  return db.prepare("UPDATE applications SET status = ? WHERE id = ?").run(status, id).changes > 0;
 }
 
 // ---------- Mensagens ----------
@@ -393,10 +486,12 @@ export function createAnnotation(input: {
   x: number;
   y: number;
   comment: string;
+  author: Annotation["author"];
+  audience: Annotation["audience"];
 }): Annotation {
   const annotation = { ...input, id: randomUUID(), resolved: 0, createdAt: now() };
   db.prepare(
-    "INSERT INTO annotations (id, deliverableId, x, y, comment, resolved, createdAt) VALUES (@id, @deliverableId, @x, @y, @comment, @resolved, @createdAt)"
+    "INSERT INTO annotations (id, deliverableId, x, y, comment, resolved, author, audience, createdAt) VALUES (@id, @deliverableId, @x, @y, @comment, @resolved, @author, @audience, @createdAt)"
   ).run(annotation);
   return { ...annotation, resolved: false };
 }
@@ -526,8 +621,57 @@ export function createMeeting(input: {
   return meeting;
 }
 
+export function updateMeeting(
+  id: string,
+  patch: Partial<Pick<Meeting, "title" | "scheduledAt" | "link" | "notes">>
+): Meeting | null {
+  const existing = db.prepare("SELECT * FROM meetings WHERE id = ?").get(id) as
+    | Meeting
+    | undefined;
+  if (!existing) return null;
+  const merged = { ...existing, ...patch };
+  db.prepare(
+    "UPDATE meetings SET title = ?, scheduledAt = ?, link = ?, notes = ? WHERE id = ?"
+  ).run(merged.title, merged.scheduledAt, merged.link, merged.notes, id);
+  return merged;
+}
+
 export function deleteMeeting(id: string): boolean {
   return db.prepare("DELETE FROM meetings WHERE id = ?").run(id).changes > 0;
+}
+
+// ---------- Arquivos da conta (identidade visual, PSD/AI) ----------
+
+import type { ClientAsset } from "./marketplace-types";
+
+export function listClientAssets(clientId: string): ClientAsset[] {
+  return db
+    .prepare("SELECT * FROM client_assets WHERE clientId = ? ORDER BY createdAt DESC")
+    .all(clientId) as ClientAsset[];
+}
+
+export function getClientAsset(id: string): ClientAsset | null {
+  return (
+    (db.prepare("SELECT * FROM client_assets WHERE id = ?").get(id) as ClientAsset) ?? null
+  );
+}
+
+export function createClientAsset(input: {
+  clientId: string;
+  title: string;
+  ext: string;
+  mime: string;
+  kind: ClientAsset["kind"];
+}): ClientAsset {
+  const asset: ClientAsset = { ...input, id: randomUUID(), createdAt: now() };
+  db.prepare(
+    "INSERT INTO client_assets (id, clientId, title, ext, mime, kind, createdAt) VALUES (@id, @clientId, @title, @ext, @mime, @kind, @createdAt)"
+  ).run(asset);
+  return asset;
+}
+
+export function deleteClientAsset(id: string): boolean {
+  return db.prepare("DELETE FROM client_assets WHERE id = ?").run(id).changes > 0;
 }
 
 // ---------- Prospecção ----------

@@ -16,9 +16,12 @@ export type Client = {
   website: string;
   instagram: string;
   notes: string;
+  capabilities: string;
   language: ClientLanguage;
   country: string;
   source: "agency" | "self";
+  // true = cliente autônomo: gerencia a própria conta sem agência
+  selfServe: boolean;
   createdAt: string;
 };
 
@@ -34,6 +37,7 @@ export const GENERATION_TYPES = [
   "visual_identity",
   "landing_page",
   "client_report",
+  "product_recs",
 ] as const;
 
 export type GenerationType = (typeof GENERATION_TYPES)[number];
@@ -45,6 +49,9 @@ export type Generation = {
   title: string;
   params: Record<string, unknown>;
   content: string;
+  // valores reais informados pela equipe (ex.: métricas reais do ROI),
+  // por nome da métrica — para comparar projeção × realidade
+  actuals: Record<string, string>;
   createdAt: string;
 };
 
@@ -58,6 +65,7 @@ export const GENERATION_LABELS: Record<GenerationType, string> = {
   visual_identity: "Identidade visual",
   landing_page: "Landing page",
   client_report: "Relatório executivo",
+  product_recs: "Oportunidades de oferta",
 };
 
 // Ordem usada pelo "kit completo": estratégia primeiro, o resto se apoia nela

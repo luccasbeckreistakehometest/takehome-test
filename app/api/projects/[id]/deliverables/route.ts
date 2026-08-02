@@ -25,9 +25,19 @@ export async function POST(request: Request, { params }: Context) {
   if (!(file instanceof File)) {
     return NextResponse.json({ error: "Arquivo é obrigatório" }, { status: 400 });
   }
-  if (!ALLOWED_IMAGE_MIMES.includes(file.type as AllowedImageMime)) {
+  const VIDEO_MIMES = ["video/mp4", "video/quicktime", "video/webm"];
+  const isImage = ALLOWED_IMAGE_MIMES.includes(file.type as AllowedImageMime);
+  const isVideo = VIDEO_MIMES.includes(file.type);
+  // Referências base podem ser foto, arte ou vídeo; entregas para revisão
+  // visual (pins + análise de IA) precisam ser imagem
+  if (kind === "reference" ? !isImage && !isVideo : !isImage) {
     return NextResponse.json(
-      { error: "Envie uma imagem (JPEG, PNG, GIF ou WebP)" },
+      {
+        error:
+          kind === "reference"
+            ? "Envie imagem (JPEG/PNG/WebP/GIF) ou vídeo (MP4/MOV/WebM)"
+            : "Entregas para revisão devem ser imagem (JPEG, PNG, GIF ou WebP)",
+      },
       { status: 400 }
     );
   }
@@ -41,10 +51,6 @@ export async function POST(request: Request, { params }: Context) {
     kind,
     meaning,
   });
-  saveUpload(
-    deliverable.id,
-    file.type as AllowedImageMime,
-    Buffer.from(await file.arrayBuffer())
-  );
+  saveUpload(deliverable.id, file.type, Buffer.from(await file.arrayBuffer()));
   return NextResponse.json(deliverable, { status: 201 });
 }

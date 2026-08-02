@@ -37,9 +37,11 @@ export async function PATCH(request: Request, { params }: Context) {
       website: prospect.website,
       instagram: prospect.instagram,
       notes: `Origem: prospecção (${prospect.searchQuery}). Maturidade: ${prospect.marketingMaturity}. Abordagem usada: ${prospect.suggestedApproach}`,
+      capabilities: "",
       language: "pt-BR",
       source: "agency",
       country: "Brasil",
+      selfServe: false,
     });
     const updated = updateProspect(id, { status: "converted", clientId: client.id });
     return NextResponse.json({ prospect: updated, clientId: client.id });

@@ -208,6 +208,58 @@ function MeetingRow({
   meeting: MeetingWithNames;
   onChanged: () => void;
 }) {
+  const [editing, setEditing] = useState(false);
+  const [form, setForm] = useState({
+    title: meeting.title,
+    scheduledAt: meeting.scheduledAt.slice(0, 16),
+    link: meeting.link,
+  });
+
+  if (editing) {
+    return (
+      <div className="rounded-md border border-accent/40 bg-surface-2 px-3 py-2">
+        <div className="grid gap-2 sm:grid-cols-4">
+          <Input
+            value={form.title}
+            onChange={(e) => setForm((f) => ({ ...f, title: e.target.value }))}
+          />
+          <Input
+            type="datetime-local"
+            value={form.scheduledAt}
+            onChange={(e) => setForm((f) => ({ ...f, scheduledAt: e.target.value }))}
+          />
+          <Input
+            placeholder="Link Meet/Zoom"
+            value={form.link}
+            onChange={(e) => setForm((f) => ({ ...f, link: e.target.value }))}
+          />
+          <div className="flex gap-2">
+            <Button
+              className="!px-2.5 !py-1.5 text-xs"
+              onClick={async () => {
+                await api(`/api/meetings/${meeting.id}`, {
+                  method: "PATCH",
+                  body: JSON.stringify(form),
+                });
+                setEditing(false);
+                onChanged();
+              }}
+            >
+              Salvar
+            </Button>
+            <Button
+              variant="ghost"
+              className="!px-2.5 !py-1.5 text-xs"
+              onClick={() => setEditing(false)}
+            >
+              Cancelar
+            </Button>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div className="rounded-md border border-edge bg-surface-2 px-3 py-2 text-sm">
       <div className="flex flex-wrap items-center justify-between gap-2">
@@ -234,6 +286,9 @@ function MeetingRow({
           >
             📅 Calendar
           </a>
+          <button className="text-muted hover:text-accent" onClick={() => setEditing(true)}>
+            Editar
+          </button>
           <button
             className="text-muted hover:text-red-400"
             onClick={async () => {

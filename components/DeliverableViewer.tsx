@@ -2,7 +2,13 @@
 
 import { useCallback, useEffect, useRef, useState } from "react";
 import { api } from "@/lib/api";
-import type { Annotation, ArtReview, Deliverable } from "@/lib/marketplace-types";
+import {
+  REVIEW_ROLE_LABELS,
+  type Annotation,
+  type ArtReview,
+  type Deliverable,
+  type ReviewRole,
+} from "@/lib/marketplace-types";
 import type { ArtReviewContent } from "@/lib/marketplace-schemas";
 import { Button, Card, ErrorBox, SectionTitle, Spinner } from "./ui";
 
@@ -17,6 +23,8 @@ export default function DeliverableViewer({ deliverable }: { deliverable: Delive
   const [reviews, setReviews] = useState<ArtReview[]>([]);
   const [pending, setPending] = useState<{ x: number; y: number } | null>(null);
   const [comment, setComment] = useState("");
+  const [author, setAuthor] = useState<ReviewRole>("agency");
+  const [audience, setAudience] = useState<ReviewRole | "all">("all");
   const [reviewing, setReviewing] = useState(false);
   const [error, setError] = useState("");
   const imageRef = useRef<HTMLDivElement>(null);
@@ -41,7 +49,7 @@ export default function DeliverableViewer({ deliverable }: { deliverable: Delive
     if (!pending || !comment.trim()) return;
     await api(`/api/deliverables/${deliverable.id}/annotations`, {
       method: "POST",
-      body: JSON.stringify({ ...pending, comment: comment.trim() }),
+      body: JSON.stringify({ ...pending, comment: comment.trim(), author, audience }),
     });
     setPending(null);
     setComment("");
@@ -140,14 +148,39 @@ export default function DeliverableViewer({ deliverable }: { deliverable: Delive
       </div>
 
       {pending && (
-        <div className="flex gap-2">
+        <div className="flex flex-wrap gap-2">
+          <select
+            value={author}
+            onChange={(e) => setAuthor(e.target.value as ReviewRole)}
+            className="rounded-md border border-edge bg-surface-2 px-2 py-2 text-xs text-muted outline-none"
+            title="Quem está comentando"
+          >
+            {Object.entries(REVIEW_ROLE_LABELS).map(([value, label]) => (
+              <option key={value} value={value}>
+                De: {label}
+              </option>
+            ))}
+          </select>
+          <select
+            value={audience}
+            onChange={(e) => setAudience(e.target.value as ReviewRole | "all")}
+            className="rounded-md border border-edge bg-surface-2 px-2 py-2 text-xs text-muted outline-none"
+            title="Para quem é a revisão"
+          >
+            <option value="all">Para: Todos</option>
+            {Object.entries(REVIEW_ROLE_LABELS).map(([value, label]) => (
+              <option key={value} value={value}>
+                Para: {label}
+              </option>
+            ))}
+          </select>
           <input
             autoFocus
             value={comment}
             onChange={(e) => setComment(e.target.value)}
             onKeyDown={(e) => e.key === "Enter" && saveAnnotation()}
             placeholder="Descreva o ajuste neste ponto..."
-            className="w-full rounded-md border border-edge bg-surface-2 px-3 py-2 text-sm outline-none focus:border-accent"
+            className="min-w-48 flex-1 rounded-md border border-edge bg-surface-2 px-3 py-2 text-sm outline-none focus:border-accent"
           />
           <Button onClick={saveAnnotation}>Salvar</Button>
           <Button variant="ghost" onClick={() => setPending(null)}>
@@ -166,6 +199,12 @@ export default function DeliverableViewer({ deliverable }: { deliverable: Delive
               <p className={annotation.resolved ? "text-muted line-through" : ""}>
                 <span className="mr-2 font-bold text-accent">#{index + 1}</span>
                 {annotation.comment}
+                <span className="ml-2 text-[10px] uppercase tracking-wide text-muted">
+                  {REVIEW_ROLE_LABELS[annotation.author] ?? annotation.author} →{" "}
+                  {annotation.audience === "all"
+                    ? "todos"
+                    : (REVIEW_ROLE_LABELS[annotation.audience as ReviewRole] ?? annotation.audience)}
+                </span>
               </p>
               <div className="flex shrink-0 gap-2 text-xs">
                 <button

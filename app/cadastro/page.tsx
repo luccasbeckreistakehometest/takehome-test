@@ -44,5 +44,5 @@ export default function SelfRegisterPage() {
 }
 
 function SelfClientForm({ onDone }: { onDone: () => void }) {
-  return <ClientForm onSaved={onDone} selfService />;
+  return <ClientForm onSaved={onDone} selfService showSelfServeChoice />;
 }

@@ -5,6 +5,7 @@ import Link from "next/link";
 import { api } from "@/lib/api";
 import type { Client } from "@/lib/types";
 import {
+  APPLICATION_STATUS_LABELS,
   ESCROW_LABELS,
   PROJECT_STATUS_LABELS,
   REFERENCE_MEANINGS,
@@ -14,7 +15,7 @@ import {
   type ProjectMessage,
   type Deliverable,
 } from "@/lib/marketplace-types";
-import type { Meeting } from "@/lib/marketplace-db";
+import type { ApplicationWithProfessional, Meeting } from "@/lib/marketplace-db";
 import type { DemandSuggestions, MatchResult, SketchResult } from "@/lib/marketplace-schemas";
 import { googleCalendarUrl } from "@/lib/gcal";
 import DeliverableViewer from "./DeliverableViewer";
@@ -25,6 +26,7 @@ type ProjectDetailData = Project & {
   messages: ProjectMessage[];
   deliverables: Deliverable[];
   meetings: Meeting[];
+  applications: ApplicationWithProfessional[];
 };
 
 export default function ProjectsTab({
@@ -44,6 +46,7 @@ export default function ProjectsTab({
     location: "",
     budget: "",
     deadline: "",
+    mode: "marketplace" as "marketplace" | "internal",
   });
   const [error, setError] = useState("");
   const [suggestions, setSuggestions] = useState<DemandSuggestions | null>(null);
@@ -65,7 +68,7 @@ export default function ProjectsTab({
         body: JSON.stringify({ clientId: client.id, ...form }),
       });
       setCreating(false);
-      setForm({ title: "", brief: "", skillsNeeded: [], location: "", budget: "", deadline: "" });
+      setForm({ title: "", brief: "", skillsNeeded: [], location: "", budget: "", deadline: "", mode: "marketplace" });
       load();
       setSelectedId(project.id);
     } catch (err) {
@@ -181,6 +184,30 @@ export default function ProjectsTab({
           </div>
         ) : (
           <div className="space-y-4">
+            <div>
+              <Label>Execução</Label>
+              <div className="flex gap-2">
+                {(
+                  [
+                    { value: "marketplace", label: "🌐 Com freelas da plataforma" },
+                    { value: "internal", label: "🏠 Interna (meu time)" },
+                  ] as const
+                ).map((option) => (
+                  <button
+                    key={option.value}
+                    type="button"
+                    onClick={() => setForm((f) => ({ ...f, mode: option.value }))}
+                    className={`rounded-md border px-3 py-1.5 text-sm transition-colors ${
+                      form.mode === option.value
+                        ? "border-accent bg-accent/10 text-accent"
+                        : "border-edge bg-surface-2 text-muted hover:border-muted"
+                    }`}
+                  >
+                    {option.label}
+                  </button>
+                ))}
+              </div>
+            </div>
             <div className="grid gap-4 sm:grid-cols-3">
               <div className="sm:col-span-2">
                 <Label>Título *</Label>
@@ -316,6 +343,13 @@ function ProjectDetail({ projectId, onBack }: { projectId: string; onBack: () =>
 
   useEffect(load, [load]);
 
+  // Co-working leve: atualiza a cada 8s para refletir edições/mensagens de
+  // outros usuários trabalhando na mesma demanda em paralelo
+  useEffect(() => {
+    const interval = setInterval(load, 8000);
+    return () => clearInterval(interval);
+  }, [load]);
+
   async function patch(body: Record<string, unknown>) {
     setError("");
     try {
@@ -381,22 +415,36 @@ function ProjectDetail({ projectId, onBack }: { projectId: string; onBack: () =>
   const references = project.deliverables.filter((d) => d.kind === "reference");
   const deliveries = project.deliverables.filter((d) => d.kind !== "reference");
 
+  const internal = project.mode === "internal";
   const nextActions: { label: string; body: Record<string, unknown> }[] = [];
-  if (project.status === "matched" && project.escrow === "none") {
-    nextActions.push({
-      label: "💰 Reservar pagamento (escrow) e iniciar produção",
-      body: { escrow: "held", status: "in_progress" },
-    });
-  }
-  if (project.status === "in_review") {
-    nextActions.push({ label: "✅ Aprovar entrega", body: { status: "approved" } });
-    nextActions.push({ label: "↩ Voltar para produção (ajustes)", body: { status: "in_progress" } });
-  }
-  if (project.status === "approved" && project.escrow === "held") {
-    nextActions.push({
-      label: "🏦 Liberar pagamento ao profissional",
-      body: { escrow: "released", status: "paid" },
-    });
+  if (internal) {
+    if (project.status === "open") {
+      nextActions.push({ label: "🚀 Iniciar produção", body: { status: "in_progress" } });
+    }
+    if (project.status === "in_review") {
+      nextActions.push({ label: "✅ Aprovar entrega", body: { status: "approved" } });
+      nextActions.push({ label: "↩ Voltar para produção", body: { status: "in_progress" } });
+    }
+    if (project.status === "approved") {
+      nextActions.push({ label: "✔ Concluir demanda", body: { status: "paid" } });
+    }
+  } else {
+    if (project.status === "matched" && project.escrow === "none") {
+      nextActions.push({
+        label: "💰 Reservar pagamento (escrow) e iniciar produção",
+        body: { escrow: "held", status: "in_progress" },
+      });
+    }
+    if (project.status === "in_review") {
+      nextActions.push({ label: "✅ Aprovar entrega", body: { status: "approved" } });
+      nextActions.push({ label: "↩ Voltar para produção (ajustes)", body: { status: "in_progress" } });
+    }
+    if (project.status === "approved" && project.escrow === "held") {
+      nextActions.push({
+        label: "🏦 Liberar pagamento ao profissional",
+        body: { escrow: "released", status: "paid" },
+      });
+    }
   }
 
   return (
@@ -485,8 +533,94 @@ function ProjectDetail({ projectId, onBack }: { projectId: string; onBack: () =>
       )}
       {error && <ErrorBox message={error} />}
 
+      {internal ? (
+        <Card>
+          <SectionTitle>Execução interna</SectionTitle>
+          <p className="text-sm text-muted">
+            Demanda gerenciada pelo time interno da agência — sem match de freelas
+            nem escrow. Use o sketch, as referências, o chat e as entregas com
+            revisão normalmente.
+          </p>
+        </Card>
+      ) : (
       <Card className="space-y-3">
         <SectionTitle>Profissional</SectionTitle>
+        {project.applications.length > 0 && (
+          <div className="space-y-2">
+            <p className="text-xs font-semibold uppercase tracking-wider text-muted">
+              Candidaturas ({project.applications.length})
+            </p>
+            {project.applications.map((application) => (
+              <div
+                key={application.id}
+                className="flex flex-wrap items-center justify-between gap-2 rounded-lg border border-edge bg-surface-2 p-3 text-sm"
+              >
+                <div>
+                  <Link
+                    href={`/professionals/${application.professionalId}`}
+                    className="font-semibold text-accent hover:underline"
+                  >
+                    {application.professionalName}
+                  </Link>{" "}
+                  <span className="text-xs text-muted">
+                    ({application.professionalRole}, {application.professionalLocation})
+                  </span>
+                  {application.message && (
+                    <p className="text-xs text-muted">“{application.message}”</p>
+                  )}
+                </div>
+                <div className="flex items-center gap-2">
+                  <Tag>{APPLICATION_STATUS_LABELS[application.status]}</Tag>
+                  {application.status === "pending" && (
+                    <>
+                      <Button
+                        className="!px-2.5 !py-1 text-xs"
+                        onClick={async () => {
+                          await api(`/api/applications/${application.id}`, {
+                            method: "PATCH",
+                            body: JSON.stringify({ status: "accepted" }),
+                          });
+                          load();
+                        }}
+                      >
+                        Aceitar
+                      </Button>
+                      <Button
+                        variant="danger"
+                        className="!px-2.5 !py-1 text-xs"
+                        onClick={async () => {
+                          await api(`/api/applications/${application.id}`, {
+                            method: "PATCH",
+                            body: JSON.stringify({ status: "rejected" }),
+                          });
+                          load();
+                        }}
+                      >
+                        Recusar
+                      </Button>
+                    </>
+                  )}
+                  {application.status === "accepted" &&
+                    project.professionalId !== application.professionalId && (
+                      <Button
+                        variant="ghost"
+                        className="!px-2.5 !py-1 text-xs"
+                        onClick={() =>
+                          patch({ professionalId: application.professionalId, status: "matched" })
+                        }
+                      >
+                        ⭐ Definir como preferido
+                      </Button>
+                    )}
+                </div>
+              </div>
+            ))}
+            <p className="text-xs text-muted">
+              Você pode aceitar mais de uma candidatura para comparar entregas
+              (pagando ambas) e depois definir o preferido.
+            </p>
+          </div>
+        )}
         {project.professional ? (
           <div className="flex flex-wrap items-center justify-between gap-2 text-sm">
             <p>
@@ -573,6 +707,7 @@ function ProjectDetail({ projectId, onBack }: { projectId: string; onBack: () =>
           </>
         )}
       </Card>
+      )}
 
       <Card className="space-y-3">
         <SectionTitle>Referências (fotos base)</SectionTitle>
@@ -597,7 +732,7 @@ function ProjectDetail({ projectId, onBack }: { projectId: string; onBack: () =>
             {refUploading ? "Enviando..." : "⬆ Enviar referência"}
             <input
               type="file"
-              accept="image/jpeg,image/png,image/webp,image/gif"
+              accept="image/jpeg,image/png,image/webp,image/gif,video/mp4,video/quicktime,video/webm"
               className="hidden"
               disabled={refUploading}
               onChange={async (event) => {
@@ -630,12 +765,21 @@ function ProjectDetail({ projectId, onBack }: { projectId: string; onBack: () =>
                 key={reference.id}
                 className="w-36 rounded-lg border border-edge bg-surface-2 p-2"
               >
-                {/* eslint-disable-next-line @next/next/no-img-element */}
-                <img
-                  src={`/api/files/${reference.id}`}
-                  alt={reference.meaning}
-                  className="h-24 w-full rounded object-cover"
-                />
+                {reference.mime.startsWith("video/") ? (
+                  <video
+                    src={`/api/files/${reference.id}`}
+                    className="h-24 w-full rounded object-cover"
+                    controls
+                    muted
+                  />
+                ) : (
+                  /* eslint-disable-next-line @next/next/no-img-element */
+                  <img
+                    src={`/api/files/${reference.id}`}
+                    alt={reference.meaning}
+                    className="h-24 w-full rounded object-cover"
+                  />
+                )}
                 <div className="mt-1.5 flex items-center justify-between gap-1">
                   <Tag>{reference.meaning || "referência"}</Tag>
                   <span className="flex gap-1 text-xs">

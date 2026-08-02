@@ -12,6 +12,8 @@ const annotationSchema = z.object({
   x: z.number().min(0).max(100),
   y: z.number().min(0).max(100),
   comment: z.string().trim().min(1),
+  author: z.enum(["agency", "client", "professional"]).default("agency"),
+  audience: z.enum(["agency", "client", "professional", "all"]).default("all"),
 });
 
 export async function GET(_request: Request, { params }: Context) {

@@ -26,9 +26,11 @@ function createDb() {
       website TEXT NOT NULL DEFAULT '',
       instagram TEXT NOT NULL DEFAULT '',
       notes TEXT NOT NULL DEFAULT '',
+      capabilities TEXT NOT NULL DEFAULT '',
       language TEXT NOT NULL DEFAULT 'pt-BR',
       source TEXT NOT NULL DEFAULT 'agency',
       country TEXT NOT NULL DEFAULT 'Brasil',
+      selfServe INTEGER NOT NULL DEFAULT 0,
       createdAt TEXT NOT NULL
     );
     CREATE TABLE IF NOT EXISTS generations (
@@ -38,6 +40,7 @@ function createDb() {
       title TEXT NOT NULL,
       params TEXT NOT NULL DEFAULT '{}',
       content TEXT NOT NULL,
+      actuals TEXT NOT NULL DEFAULT '{}',
       createdAt TEXT NOT NULL
     );
     CREATE INDEX IF NOT EXISTS idx_generations_client ON generations(clientId, type, createdAt);
@@ -57,6 +60,18 @@ function createDb() {
   if (!clientColumns.includes("country")) {
     db.exec("ALTER TABLE clients ADD COLUMN country TEXT NOT NULL DEFAULT 'Brasil'");
   }
+  if (!clientColumns.includes("capabilities")) {
+    db.exec("ALTER TABLE clients ADD COLUMN capabilities TEXT NOT NULL DEFAULT ''");
+  }
+  if (!clientColumns.includes("selfServe")) {
+    db.exec("ALTER TABLE clients ADD COLUMN selfServe INTEGER NOT NULL DEFAULT 0");
+  }
+  const generationColumns = (
+    db.prepare("PRAGMA table_info(generations)").all() as { name: string }[]
+  ).map((column) => column.name);
+  if (generationColumns.length > 0 && !generationColumns.includes("actuals")) {
+    db.exec("ALTER TABLE generations ADD COLUMN actuals TEXT NOT NULL DEFAULT '{}'");
+  }
 
   return db;
 }
@@ -66,8 +81,14 @@ const globalForDb = globalThis as unknown as { __agencyhubDb?: Database.Database
 export const db = globalForDb.__agencyhubDb ?? createDb();
 globalForDb.__agencyhubDb = db;
 
-type ClientRow = Omit<Client, "channels"> & { channels: string };
-type GenerationRow = Omit<Generation, "params"> & { params: string };
+type ClientRow = Omit<Client, "channels" | "selfServe"> & {
+  channels: string;
+  selfServe: number;
+};
+type GenerationRow = Omit<Generation, "params" | "actuals"> & {
+  params: string;
+  actuals: string;
+};
 
 function toClient(row: ClientRow): Client {
   return {
@@ -75,11 +96,40 @@ function toClient(row: ClientRow): Client {
     channels: JSON.parse(row.channels),
     language: row.language === "en" ? "en" : "pt-BR",
     source: row.source === "self" ? "self" : "agency",
+    selfServe: Number(row.selfServe) === 1,
   };
 }
 
 function toGeneration(row: GenerationRow): Generation {
-  return { ...row, type: row.type as GenerationType, params: JSON.parse(row.params) };
+  let actuals: Record<string, string> = {};
+  try {
+    actuals = JSON.parse(row.actuals || "{}");
+  } catch {
+    actuals = {};
+  }
+  return {
+    ...row,
+    type: row.type as GenerationType,
+    params: JSON.parse(row.params),
+    actuals,
+  };
+}
+
+export function updateGenerationContent(id: string, content: string): Generation | null {
+  const result = db
+    .prepare("UPDATE generations SET content = ? WHERE id = ?")
+    .run(content, id);
+  return result.changes > 0 ? getGeneration(id) : null;
+}
+
+export function updateGenerationActuals(
+  id: string,
+  actuals: Record<string, string>
+): Generation | null {
+  const result = db
+    .prepare("UPDATE generations SET actuals = ? WHERE id = ?")
+    .run(JSON.stringify(actuals), id);
+  return result.changes > 0 ? getGeneration(id) : null;
 }
 
 export function listClients(): Client[] {
@@ -103,9 +153,13 @@ export function createClient(input: ClientInput): Client {
     createdAt: new Date().toISOString(),
   };
   db.prepare(
-    `INSERT INTO clients (id, name, industry, description, audience, tone, goals, budget, channels, differentials, competitors, brandColors, website, instagram, notes, language, source, country, createdAt)
-     VALUES (@id, @name, @industry, @description, @audience, @tone, @goals, @budget, @channels, @differentials, @competitors, @brandColors, @website, @instagram, @notes, @language, @source, @country, @createdAt)`
-  ).run({ ...client, channels: JSON.stringify(client.channels) });
+    `INSERT INTO clients (id, name, industry, description, audience, tone, goals, budget, channels, differentials, competitors, brandColors, website, instagram, notes, capabilities, language, source, country, selfServe, createdAt)
+     VALUES (@id, @name, @industry, @description, @audience, @tone, @goals, @budget, @channels, @differentials, @competitors, @brandColors, @website, @instagram, @notes, @capabilities, @language, @source, @country, @selfServe, @createdAt)`
+  ).run({
+    ...client,
+    channels: JSON.stringify(client.channels),
+    selfServe: client.selfServe ? 1 : 0,
+  });
   return client;
 }
 
@@ -113,9 +167,14 @@ export function updateClient(id: string, input: ClientInput): Client | null {
   const existing = getClient(id);
   if (!existing) return null;
   db.prepare(
-    `UPDATE clients SET name=@name, industry=@industry, description=@description, audience=@audience, tone=@tone, goals=@goals, budget=@budget, channels=@channels, differentials=@differentials, competitors=@competitors, brandColors=@brandColors, website=@website, instagram=@instagram, notes=@notes, language=@language, country=@country
+    `UPDATE clients SET name=@name, industry=@industry, description=@description, audience=@audience, tone=@tone, goals=@goals, budget=@budget, channels=@channels, differentials=@differentials, competitors=@competitors, brandColors=@brandColors, website=@website, instagram=@instagram, notes=@notes, capabilities=@capabilities, language=@language, country=@country, selfServe=@selfServe
      WHERE id=@id`
-  ).run({ ...input, id, channels: JSON.stringify(input.channels) });
+  ).run({
+    ...input,
+    id,
+    channels: JSON.stringify(input.channels),
+    selfServe: input.selfServe ? 1 : 0,
+  });
   return getClient(id);
 }
 
@@ -155,13 +214,14 @@ export function createGeneration(input: {
 }): Generation {
   const generation: Generation = {
     ...input,
+    actuals: {},
     id: randomUUID(),
     createdAt: new Date().toISOString(),
   };
   db.prepare(
-    `INSERT INTO generations (id, clientId, type, title, params, content, createdAt)
-     VALUES (@id, @clientId, @type, @title, @params, @content, @createdAt)`
-  ).run({ ...generation, params: JSON.stringify(generation.params) });
+    `INSERT INTO generations (id, clientId, type, title, params, content, actuals, createdAt)
+     VALUES (@id, @clientId, @type, @title, @params, @content, @actuals, @createdAt)`
+  ).run({ ...generation, params: JSON.stringify(generation.params), actuals: "{}" });
   return generation;
 }
 

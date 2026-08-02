@@ -16,9 +16,11 @@ export const clientSchema = z.object({
   website: z.string().trim().default(""),
   instagram: z.string().trim().default(""),
   notes: z.string().trim().default(""),
+  capabilities: z.string().trim().default(""),
   language: z.enum(["pt-BR", "en"]).default("pt-BR"),
   source: z.enum(["agency", "self"]).default("agency"),
   country: z.string().trim().min(1).default("Brasil"),
+  selfServe: z.boolean().default(false),
 });
 
 export const generateSchema = z.object({
@@ -51,6 +53,7 @@ export const projectSchema = z.object({
   location: z.string().trim().default(""),
   budget: z.string().trim().default(""),
   deadline: z.string().trim().default(""),
+  mode: z.enum(["marketplace", "internal"]).default("marketplace"),
 });
 
 export const projectPatchSchema = z.object({

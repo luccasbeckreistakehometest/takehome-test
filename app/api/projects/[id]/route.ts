@@ -3,6 +3,7 @@ import {
   deleteProject,
   getProfessional,
   getProject,
+  listApplications,
   listDeliverables,
   listMeetings,
   listMessages,
@@ -26,6 +27,7 @@ export async function GET(_request: Request, { params }: Context) {
     messages: listMessages(id),
     deliverables: listDeliverables(id),
     meetings: listMeetings(id),
+    applications: listApplications(id),
   });
 }
 

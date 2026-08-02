@@ -69,8 +69,18 @@ export default function ClientPortalPage({
           {tier && <TierBadge info={tier} />}
         </div>
         <p className="mt-1 text-sm text-muted">
-          Acompanhe aqui o que a agência está construindo para a sua marca.
+          {client.selfServe
+            ? "Sua conta em modo autônomo — você no controle, com a IA de copiloto."
+            : "Acompanhe aqui o que a agência está construindo para a sua marca."}
         </p>
+        {client.selfServe && (
+          <a
+            href={`/clients/${client.id}`}
+            className="mt-3 inline-block rounded-md bg-accent px-4 py-2 text-sm font-medium text-accent-ink transition-opacity hover:opacity-90"
+          >
+            ⚙ Gerenciar minha conta (workspace completo) →
+          </a>
+        )}
       </div>
 
       <Card>

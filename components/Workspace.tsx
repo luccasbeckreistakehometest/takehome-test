@@ -13,14 +13,18 @@ import {
 import type {
   CampaignPlan,
   MarketPulse,
+  ProductRecs,
   PostBatch,
   RoiProjection,
   SocialCalendar,
   StrategyAnalysis,
   VisualIdentity,
 } from "@/lib/schemas";
-import type { ClientReport } from "@/lib/marketplace-schemas";
+import type { ClientReport, DemandSuggestions } from "@/lib/marketplace-schemas";
+import type { StrategyActions } from "./renderers";
+import type { Project } from "@/lib/marketplace-types";
 import type { AgencySettings } from "@/lib/settings";
+import BrandAssets from "./BrandAssets";
 import ClientDashboard from "./ClientDashboard";
 import ClientForm from "./ClientForm";
 import GeneratorTab from "./GeneratorTab";
@@ -29,6 +33,7 @@ import ProjectsTab from "./ProjectsTab";
 import {
   CampaignPlanView,
   ClientReportView,
+  ProductRecsView,
   MarketPulseView,
   PostBatchView,
   RoiProjectionView,
@@ -59,14 +64,49 @@ export default function Workspace({
   const [tab, setTab] = useState<TabKey>("dashboard");
   const [initialProjectId, setInitialProjectId] = useState<string | undefined>();
   const [landingEnabled, setLandingEnabled] = useState(false);
+  const [campaignFocus, setCampaignFocus] = useState("");
+  const [postTopic, setPostTopic] = useState("");
 
-  // Deep-link vindo do portal do profissional: /clients/[id]?project=...
+  // Encadeia entregáveis: qualquer análise vira campanha, posts ou demanda
+  const flowActions: StrategyActions = {
+    onCampaign: (focus) => {
+      setCampaignFocus(focus.slice(0, 500));
+      setTab("campaign_plan");
+    },
+    onPosts: (topic) => {
+      setPostTopic(topic.slice(0, 300));
+      setTab("post_batch");
+    },
+    onSocial: () => setTab("social_calendar"),
+    onDemand: async (ideaText) => {
+      const suggestion = await api<DemandSuggestions>("/api/projects/suggest", {
+        method: "POST",
+        body: JSON.stringify({ clientId: client.id, idea: ideaText.slice(0, 800) }),
+      });
+      const demand = suggestion.demands[0];
+      if (!demand) return;
+      const project = await api<Project>("/api/projects", {
+        method: "POST",
+        body: JSON.stringify({ clientId: client.id, ...demand }),
+      });
+      setInitialProjectId(project.id);
+      setTab("projects");
+    },
+  };
+
+  // Deep-links: ?project=... (portal do profissional), ?tab=... e
+  // ?focus=... (fluxo ideias → campanha)
   useEffect(() => {
-    const projectId = new URLSearchParams(window.location.search).get("project");
+    const params = new URLSearchParams(window.location.search);
+    const projectId = params.get("project");
     if (projectId) {
       setInitialProjectId(projectId);
       setTab("projects");
     }
+    const tabParam = params.get("tab");
+    if (tabParam) setTab(tabParam as TabKey);
+    const focusParam = params.get("focus");
+    if (focusParam) setCampaignFocus(focusParam);
     api<AgencySettings>("/api/settings").then((settings) =>
       setLandingEnabled(settings.landingPagesEnabled)
     );
@@ -129,6 +169,7 @@ export default function Workspace({
     { key: "social_calendar", label: "Social" },
     { key: "post_batch", label: "Posts" },
     { key: "visual_identity", label: "Identidade" },
+    { key: "product_recs", label: "Ofertas" },
     ...(landingEnabled
       ? [{ key: "landing_page" as TabKey, label: "Landing pages" }]
       : []),
@@ -230,6 +271,7 @@ export default function Workspace({
       {tab === "briefing" && (
         <div className="space-y-6">
           <ClientForm initial={client} onSaved={onClientUpdated} />
+          <BrandAssets clientId={client.id} />
           <Card className="flex items-center justify-between">
             <p className="text-sm text-muted">
               Excluir este cliente remove também todo o histórico de gerações.
@@ -257,7 +299,12 @@ export default function Workspace({
           ]}
           generateLabel="Gerar análise estratégica"
           loadingHint="Pesquisando o mercado na web e montando a análise (2-4 min)..."
-          render={(g) => <StrategyAnalysisView data={JSON.parse(g.content) as StrategyAnalysis} />}
+          render={(g) => (
+            <StrategyAnalysisView
+              data={JSON.parse(g.content) as StrategyAnalysis}
+              actions={flowActions}
+            />
+          )}
         />
       )}
 
@@ -270,13 +317,15 @@ export default function Workspace({
           fields={[]}
           generateLabel="Rodar radar agora"
           loadingHint="Varrendo notícias e tendências recentes (2-3 min)..."
-          render={(g) => <MarketPulseView data={JSON.parse(g.content) as MarketPulse} />}
+          render={(g) => (
+            <MarketPulseView data={JSON.parse(g.content) as MarketPulse} actions={flowActions} />
+          )}
         />
       )}
 
       {tab === "campaign_plan" && (
         <GeneratorTab
-          key={`campaign-${kitVersion}`}
+          key={`campaign-${kitVersion}-${campaignFocus}`}
           clientId={client.id}
           type="campaign_plan"
           description="Plano de campanha mensal completo: tema criativo, objetivos com KPIs, cronograma semana a semana, estratégia por canal e distribuição de verba."
@@ -292,10 +341,13 @@ export default function Workspace({
               label: "Foco especial (opcional)",
               kind: "text",
               placeholder: "Ex.: Black Friday, lançamento de produto...",
+              defaultValue: campaignFocus,
             },
           ]}
           generateLabel="Gerar plano de campanha"
-          render={(g) => <CampaignPlanView data={JSON.parse(g.content) as CampaignPlan} />}
+          render={(g) => (
+            <CampaignPlanView data={JSON.parse(g.content) as CampaignPlan} actions={flowActions} />
+          )}
         />
       )}
 
@@ -321,7 +373,14 @@ export default function Workspace({
             },
           ]}
           generateLabel="Gerar ROI & roadmap"
-          render={(g) => <RoiProjectionView data={JSON.parse(g.content) as RoiProjection} />}
+          render={(g) => (
+            <RoiProjectionView
+              data={JSON.parse(g.content) as RoiProjection}
+              generationId={g.id}
+              initialActuals={g.actuals}
+              actions={flowActions}
+            />
+          )}
         />
       )}
 
@@ -351,6 +410,7 @@ export default function Workspace({
             <SocialCalendarView
               data={JSON.parse(g.content) as SocialCalendar}
               clientId={client.id}
+              generationId={g.id}
             />
           )}
         />
@@ -358,7 +418,7 @@ export default function Workspace({
 
       {tab === "post_batch" && (
         <GeneratorTab
-          key={`posts-${kitVersion}`}
+          key={`posts-${kitVersion}-${postTopic}`}
           clientId={client.id}
           type="post_batch"
           description="Variações de post sobre um tema específico, cada uma com um ângulo criativo diferente — pronto para escolher, ajustar e publicar."
@@ -368,6 +428,7 @@ export default function Workspace({
               label: "Tema do post",
               kind: "text",
               placeholder: "Ex.: promoção de inverno, novo serviço...",
+              defaultValue: postTopic,
             },
             {
               name: "channel",
@@ -375,6 +436,13 @@ export default function Workspace({
               kind: "select",
               options: ["Instagram", "Facebook", "TikTok", "LinkedIn", "YouTube"],
               defaultValue: "Instagram",
+            },
+            {
+              name: "format",
+              label: "Formato",
+              kind: "select",
+              options: ["Feed", "Stories", "Reels", "Carrossel"],
+              defaultValue: "Feed",
             },
             {
               name: "quantity",
@@ -386,7 +454,11 @@ export default function Workspace({
           ]}
           generateLabel="Gerar posts"
           render={(g) => (
-            <PostBatchView data={JSON.parse(g.content) as PostBatch} clientId={client.id} />
+            <PostBatchView
+              data={JSON.parse(g.content) as PostBatch}
+              clientId={client.id}
+              generationId={g.id}
+            />
           )}
         />
       )}
@@ -407,6 +479,21 @@ export default function Workspace({
           ]}
           generateLabel="Gerar identidade"
           render={(g) => <VisualIdentityView data={JSON.parse(g.content) as VisualIdentity} />}
+        />
+      )}
+
+      {tab === "product_recs" && (
+        <GeneratorTab
+          key={`offers-${kitVersion}`}
+          clientId={client.id}
+          type="product_recs"
+          description="A IA cruza o que o cliente TEM (recursos e capacidade produtiva do briefing) com as tendências do mercado do país dele e recomenda o que produzir/ofertar — adaptado ao tipo de negócio: produtos fabricáveis para indústria, áreas a enfatizar para serviços, mix para varejo."
+          fields={[]}
+          generateLabel="Gerar oportunidades"
+          loadingHint="Pesquisando tendências e cruzando com a capacidade do cliente (2-3 min)..."
+          render={(g) => (
+            <ProductRecsView data={JSON.parse(g.content) as ProductRecs} actions={flowActions} />
+          )}
         />
       )}
 
@@ -436,7 +523,9 @@ export default function Workspace({
             },
           ]}
           generateLabel="Gerar relatório"
-          render={(g) => <ClientReportView data={JSON.parse(g.content) as ClientReport} />}
+          render={(g) => (
+            <ClientReportView data={JSON.parse(g.content) as ClientReport} actions={flowActions} />
+          )}
         />
       )}
 

@@ -4,6 +4,7 @@ import {
   deleteProfessional,
   getProfessional,
   getProfessionalStats,
+  listApplicationsByProfessional,
   listProjects,
   updateProfessional,
 } from "@/lib/marketplace-db";
@@ -23,7 +24,10 @@ export async function GET(_request: Request, { params }: Context) {
     stats,
     tier: professionalTier(stats),
     projects: listProjects({ professionalId: id }),
-    opportunities: listProjects({ openOnly: true }),
+    opportunities: listProjects({ openOnly: true }).filter(
+      (project) => project.mode !== "internal"
+    ),
+    applications: listApplicationsByProfessional(id),
   });
 }
 

@@ -1,12 +1,16 @@
 "use client";
 
 import { Suspense, useCallback, useEffect, useState } from "react";
+import { useRouter } from "next/navigation";
 import { api } from "@/lib/api";
+import type { Project } from "@/lib/marketplace-types";
+import type { DemandSuggestions } from "@/lib/marketplace-schemas";
 import type { Client } from "@/lib/types";
 import type { Professional } from "@/lib/marketplace-types";
 import type { IdeaBatch } from "@/lib/marketplace-db";
 import type { IdeasResult } from "@/lib/marketplace-schemas";
 import { Button, Card, ErrorBox, Label, SectionTitle, Select, Spinner, Tag } from "@/components/ui";
+// (ações por ideia: campanha, demanda com brief da IA, estudo de mercado)
 
 type Audience = "agency" | "client" | "professional";
 
@@ -17,6 +21,8 @@ const AUDIENCE_LABELS: Record<Audience, string> = {
 };
 
 function IdeasContent() {
+  const router = useRouter();
+  const [creatingDemand, setCreatingDemand] = useState<number | null>(null);
   const [audience, setAudience] = useState<Audience>("agency");
   const [targetId, setTargetId] = useState("");
   const [clients, setClients] = useState<Client[]>([]);
@@ -132,26 +138,98 @@ function IdeasContent() {
             </SectionTitle>
             <p className="text-sm text-muted">{ideas.summary}</p>
           </Card>
-          {ideas.ideas.map((idea, i) => (
-            <Card key={i} className="space-y-2">
-              <div className="flex items-start justify-between gap-2">
-                <p className="font-semibold">{idea.title}</p>
-                <div className="flex gap-1.5">
-                  {idea.linkedTo && <Tag>↔ {idea.linkedTo}</Tag>}
-                  <Tag>{idea.priority}</Tag>
+          {ideas.ideas.map((idea, i) => {
+            // Resolve o cliente-alvo da ideia para dar ação (ideia → campanha/demanda)
+            const targetClient =
+              audience === "client"
+                ? clients.find((c) => c.id === targetId)
+                : clients.find((c) => c.name === idea.linkedTo);
+            const focusText = `${idea.title} — ${idea.description}`;
+            return (
+              <Card key={i} className="space-y-2">
+                <div className="flex items-start justify-between gap-2">
+                  <p className="font-semibold">{idea.title}</p>
+                  <div className="flex gap-1.5">
+                    {idea.linkedTo && <Tag>↔ {idea.linkedTo}</Tag>}
+                    <Tag>{idea.priority}</Tag>
+                  </div>
                 </div>
-              </div>
-              <p className="text-sm text-muted">{idea.description}</p>
-              <p className="text-sm text-muted">
-                <span className="font-semibold text-foreground/80">Tendência que sustenta: </span>
-                {idea.trendBasis}
-              </p>
-              <p className="text-sm">
-                <span className="font-semibold text-accent">Próximo passo: </span>
-                <span className="text-muted">{idea.action}</span>
-              </p>
-            </Card>
-          ))}
+                <p className="text-sm text-muted">{idea.description}</p>
+                <p className="text-sm text-muted">
+                  <span className="font-semibold text-foreground/80">Tendência que sustenta: </span>
+                  {idea.trendBasis}
+                </p>
+                <p className="text-sm">
+                  <span className="font-semibold text-accent">Próximo passo: </span>
+                  <span className="text-muted">{idea.action}</span>
+                </p>
+                {targetClient && (
+                  <div className="flex flex-wrap gap-2 border-t border-edge pt-2">
+                    <Button
+                      variant="ghost"
+                      className="!px-2.5 !py-1 text-xs"
+                      onClick={() =>
+                        router.push(
+                          `/clients/${targetClient.id}?tab=campaign_plan&focus=${encodeURIComponent(focusText)}`
+                        )
+                      }
+                    >
+                      🎯 Gerar campanha com esta ideia
+                    </Button>
+                    <Button
+                      variant="ghost"
+                      className="!px-2.5 !py-1 text-xs"
+                      disabled={creatingDemand === i}
+                      onClick={async () => {
+                        setCreatingDemand(i);
+                        try {
+                          const suggestion = await api<DemandSuggestions>(
+                            "/api/projects/suggest",
+                            {
+                              method: "POST",
+                              body: JSON.stringify({
+                                clientId: targetClient.id,
+                                idea: focusText,
+                              }),
+                            }
+                          );
+                          const demand = suggestion.demands[0];
+                          if (!demand) return;
+                          const project = await api<Project>("/api/projects", {
+                            method: "POST",
+                            body: JSON.stringify({
+                              clientId: targetClient.id,
+                              ...demand,
+                            }),
+                          });
+                          router.push(
+                            `/clients/${targetClient.id}?project=${project.id}`
+                          );
+                        } finally {
+                          setCreatingDemand(null);
+                        }
+                      }}
+                    >
+                      {creatingDemand === i
+                        ? "IA escrevendo o brief..."
+                        : "📋 Criar demanda desta ideia (IA escreve o brief)"}
+                    </Button>
+                    <Button
+                      variant="ghost"
+                      className="!px-2.5 !py-1 text-xs"
+                      onClick={() =>
+                        router.push(
+                          `/clients/${targetClient.id}?tab=strategy_analysis`
+                        )
+                      }
+                    >
+                      🔬 Estudo de mercado da conta
+                    </Button>
+                  </div>
+                )}
+              </Card>
+            );
+          })}
         </div>
       )}
     </div>

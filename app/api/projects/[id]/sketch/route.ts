@@ -28,7 +28,10 @@ export async function POST(_request: Request, { params }: Context) {
 
   // Fotos de referência anexadas à demanda (máx. 4, mais recentes primeiro)
   const references = listDeliverables(id)
-    .filter((deliverable) => deliverable.kind === "reference")
+    .filter(
+      (deliverable) =>
+        deliverable.kind === "reference" && deliverable.mime.startsWith("image/")
+    )
     .slice(0, 4);
   const images = references.flatMap((reference) => {
     const data = readUpload(reference.id, reference.mime);

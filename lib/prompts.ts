@@ -3,6 +3,7 @@ import {
   campaignPlanSchema,
   marketPulseSchema,
   postBatchSchema,
+  productRecsSchema,
   roiProjectionSchema,
   socialCalendarSchema,
   strategyAnalysisSchema,
@@ -33,6 +34,7 @@ export function clientContext(client: Client): string {
     field("Verba mensal", client.budget),
     client.channels.length ? `Canais ativos: ${client.channels.join(", ")}` : null,
     field("Diferenciais", client.differentials),
+    field("Recursos e capacidade produtiva", client.capabilities),
     field("Concorrentes", client.competitors),
     field("Cores/identidade atual", client.brandColors),
     field("Site", client.website),
@@ -213,16 +215,25 @@ Requisitos:
       case "post_batch": {
         const topic = p("topic", "um tema relevante para o negócio");
         const channel = p("channel", "Instagram");
+        const format = p("format", "Feed");
         const quantity = Math.min(num("quantity", 3), 10);
+        const formatNote =
+          format === "Stories"
+            ? `\n- Formato STORIES: cada variação é uma sequência de 3 a 5 telas — descreva tela a tela (texto na tela, visual, sticker interativo como enquete/quiz/caixa de perguntas quando fizer sentido) e o CTA final (link/arrasta pra cima).`
+            : format === "Reels"
+              ? `\n- Formato REELS: roteiro com gancho nos 2 primeiros segundos, cenas descritas, texto em tela, áudio/trend sugerido e CTA.`
+              : format === "Carrossel"
+                ? `\n- Formato CARROSSEL: descreva card a card (5 a 8 cards), com o texto de cada um e a direção de arte da sequência.`
+                : "";
         return {
-          title: `Posts — ${topic}`,
+          title: `Posts — ${topic} (${format})`,
           system,
           schema: postBatchSchema,
           tier: "standard",
           maxTokens: 16000,
           prompt: `${briefing}
 
-Crie ${quantity} variações de post para ${channel} sobre: ${topic}.
+Crie ${quantity} variações de post em formato ${format} para ${channel} sobre: ${topic}.${formatNote}
 
 Requisitos:
 - Cada variação com um ângulo criativo diferente (nomeie o ângulo no campo "variation": ex. dor do cliente, prova social, bastidores, dado surpreendente...).
@@ -251,6 +262,30 @@ Requisitos:
 - Tipografia: papel (título/corpo/destaque), fonte principal (Google Fonts) e alternativa de sistema, com observações de uso.
 - Tom de voz: descrição, 4 a 6 "faça" e 4 a 6 "não faça".
 - Aplicações prioritárias (onde a identidade deve aparecer primeiro).`,
+        };
+      }
+
+      case "product_recs": {
+        return {
+          title: "Oportunidades de oferta",
+          system,
+          schema: productRecsSchema,
+          useWebSearch: true,
+          tier: "standard",
+          maxTokens: 24000,
+          prompt: `${briefing}
+
+Cruze o que este cliente TEM (recursos, capacidade produtiva, equipe, equipamentos, serviços possíveis — veja "Recursos e capacidade produtiva" no briefing) com as tendências atuais do mercado de ${client.country || "Brasil"} (pesquise na web; complemente com movimentos do exterior que tendem a chegar lá) e recomende o que ele deveria passar a produzir/ofertar.
+
+Adapte o tipo de recomendação ao negócio — isso é obrigatório:
+- Indústria/confecção/fabricação: produtos em tendência que a capacidade instalada declarada permite produzir (ex.: com os tecidos, máquinas e cores disponíveis).
+- Serviços e profissionais liberais (médicos, advogados, consultores...): NÃO recomende "produtos para investir" — recomende serviços/áreas da própria atuação a enfatizar, reposicionar ou lançar.
+- Varejo/food: mix de produtos ou itens de cardápio em alta que fazem sentido para a operação atual.
+
+Requisitos:
+- 3 a 6 oportunidades, cada uma com: o que é, a tendência real que a sustenta (com fonte da pesquisa), por que é viável com a capacidade declarada (cite os recursos do briefing), como começar, esforço (baixo/médio/alto) e potencial.
+- NUNCA recomende algo fora da capacidade declarada — se o briefing não declara capacidade, derive do segmento e sinalize a suposição.
+- "repositioning": 2 a 4 recomendações de ênfase/reposicionamento do que o cliente JÁ faz (áreas subaproveitadas que o mercado está valorizando).`,
         };
       }
 
