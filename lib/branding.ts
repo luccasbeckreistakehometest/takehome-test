@@ -6,7 +6,7 @@ import { getSettings, type AgencySettings } from "./settings";
 export const PLATFORM_BRAND = {
   name: "Marqa",
   tagline: "sua marca, acelerada por IA",
-  accentColor: "#c6f24e",
+  accentColor: "#f4614c",
   logoMime: "", // sem logo custom = mostra a inicial
   isPlatform: true as const,
 };

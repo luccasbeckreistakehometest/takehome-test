@@ -12,6 +12,7 @@ import GlobalSearch from "@/components/GlobalSearch";
 import AssistantWidget from "@/components/AssistantWidget";
 import ThemeToggle from "@/components/ThemeToggle";
 import { Icon, type IconName } from "@/components/icons";
+import { MarqaMark } from "@/components/MarqaLogo";
 import "./globals.css";
 
 const geistSans = Geist({ variable: "--font-geist-sans", subsets: ["latin"] });
@@ -89,6 +90,8 @@ export default async function RootLayout({
                   alt={brand.name}
                   className="size-7 rounded-md object-contain"
                 />
+              ) : brand.isPlatform ? (
+                <MarqaMark size={28} />
               ) : (
                 <span className="grid size-7 place-items-center rounded-md bg-accent font-[family-name:var(--font-display)] text-sm font-bold text-accent-ink">
                   {brand.name.charAt(0).toUpperCase()}

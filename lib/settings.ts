@@ -25,7 +25,7 @@ export type AgencySettings = {
 const DEFAULTS: AgencySettings = {
   agencyName: "Marqa",
   tagline: "sua marca, acelerada por IA",
-  accentColor: "#c6f24e",
+  accentColor: "#f4614c",
   landingPagesEnabled: false,
   aiMode: "balanced",
   anthropicApiKey: "",

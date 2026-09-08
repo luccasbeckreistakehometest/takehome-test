@@ -3,6 +3,7 @@
 import { useEffect, useRef, useState } from "react";
 import Link from "next/link";
 import { Icon, type IconName } from "./icons";
+import { MarqaWordmark } from "./MarqaLogo";
 
 type Lang = "pt" | "en";
 
@@ -396,10 +397,10 @@ export default function Landing() {
         </div>
 
         <div className="relative mx-auto mt-24 max-w-6xl border-t border-edge pt-8 text-center">
-          <p className="font-[family-name:var(--font-display)] text-2xl font-bold">
-            Marqa<span className="text-accent">.</span>
-          </p>
-          <p className="mt-1 text-sm text-muted">{t.footer}</p>
+          <div className="flex justify-center">
+            <MarqaWordmark size={30} />
+          </div>
+          <p className="mt-2 text-sm text-muted">{t.footer}</p>
         </div>
       </section>
     </div>
