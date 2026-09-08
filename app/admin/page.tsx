@@ -5,6 +5,7 @@ import Link from "next/link";
 import { api } from "@/lib/api";
 import { Card, SectionTitle, Skeleton, Tag } from "@/components/ui";
 import { Icon, type IconName } from "@/components/icons";
+import { fmtMoney, useUiLang } from "@/lib/i18n";
 
 type Overview = {
   totals: {
@@ -21,10 +22,9 @@ type Overview = {
   invites: { token: string; role: string; status: string; note: string; createdAt: string }[];
 };
 
-const brl = (n: number) =>
-  n.toLocaleString("pt-BR", { style: "currency", currency: "BRL", maximumFractionDigits: 0 });
-
 export default function AdminPage() {
+  const lang = useUiLang();
+  const brl = (n: number) => fmtMoney(n, lang);
   const [data, setData] = useState<Overview | null>(null);
 
   useEffect(() => {

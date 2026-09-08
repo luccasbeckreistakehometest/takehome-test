@@ -4,6 +4,7 @@ import { useCallback, useEffect, useState } from "react";
 import { api } from "@/lib/api";
 import { Button, Card, ErrorBox, Input, Label, SectionTitle, Select, Tag } from "./ui";
 import { Icon } from "./icons";
+import { fmtCurrency, fmtNum, useUiLang } from "@/lib/i18n";
 
 type Sale = {
   id: string;
@@ -49,12 +50,12 @@ const PLATFORMS = [
   { key: "sales_api", label: "API de vendas / marketplace", account: "Loja / Seller ID" },
 ];
 
-const brl = (n: number, currency = "BRL") =>
-  n.toLocaleString("pt-BR", { style: "currency", currency, maximumFractionDigits: 0 });
-
 // Painel genérico de vendas + integrações de dados. Funciona para produto
 // (unidades) e serviço (negócios). Vendas por entrada manual ou CSV.
 export default function SalesIntegrations({ clientId }: { clientId: string }) {
+  const lang = useUiLang();
+  // Vendas importadas mantêm a moeda de origem (não converte); só o locale.
+  const brl = (n: number, currency = "BRL") => fmtCurrency(n, currency, lang);
   const [sales, setSales] = useState<Sale[]>([]);
   const [totals, setTotals] = useState<Totals | null>(null);
   const [connections, setConnections] = useState<Connection[]>([]);
@@ -164,7 +165,7 @@ export default function SalesIntegrations({ clientId }: { clientId: string }) {
           <Card>
             <p className="text-xs uppercase tracking-wide text-muted">Unidades / negócios</p>
             <p className="mt-1 font-[family-name:var(--font-display)] text-3xl font-bold">
-              {totals.units.toLocaleString("pt-BR")}
+              {fmtNum(totals.units, lang)}
             </p>
           </Card>
           <Card>
@@ -267,7 +268,7 @@ export default function SalesIntegrations({ clientId }: { clientId: string }) {
                   <span className="font-medium">{s.platform}</span>
                   <span className="text-muted">
                     {s.spend > 0 && `${brl(s.spend)} invest · `}
-                    {s.clicks > 0 && `${s.clicks.toLocaleString("pt-BR")} cliques · `}
+                    {s.clicks > 0 && `${fmtNum(s.clicks, lang)} cliques · `}
                     {s.revenue > 0 && `${brl(s.revenue)} receita`}
                   </span>
                 </div>

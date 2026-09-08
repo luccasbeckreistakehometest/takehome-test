@@ -11,6 +11,7 @@ import {
   type AccountType,
   type BillingPeriod,
 } from "@/lib/plans";
+import { fmtMoney } from "@/lib/i18n";
 
 type Lang = "pt" | "en";
 
@@ -51,9 +52,6 @@ const L = {
   },
 };
 
-const brl = (n: number) =>
-  n.toLocaleString("pt-BR", { style: "currency", currency: "BRL", maximumFractionDigits: 0 });
-
 export default function Pricing({
   accountType,
   lang,
@@ -63,6 +61,7 @@ export default function Pricing({
 }) {
   const [period, setPeriod] = useState<BillingPeriod>("monthly");
   const t = L[lang];
+  const brl = (n: number) => fmtMoney(n, lang);
   const plans = plansFor(accountType);
 
   return (

@@ -4,6 +4,7 @@ import { useEffect, useState } from "react";
 import { api } from "@/lib/api";
 import { Button, Card, SectionTitle, Skeleton, Tag } from "@/components/ui";
 import { Icon } from "@/components/icons";
+import { fmtMoney, useUiLang } from "@/lib/i18n";
 
 type Plan = {
   id: string;
@@ -32,10 +33,11 @@ type Summary = {
   revenue?: { total: number; mrr: number; byKind: Record<string, number> };
 };
 
-const brl = (n: number) => n.toLocaleString("pt-BR", { style: "currency", currency: "BRL", maximumFractionDigits: 0 });
 const QUALITY_LABEL: Record<string, string> = { economy: "Econômica", balanced: "Balanceada", premium: "Premium (Opus)" };
 
 export default function PlansPage() {
+  const lang = useUiLang();
+  const brl = (n: number) => fmtMoney(n, lang);
   const [data, setData] = useState<Summary | null>(null);
   const [period, setPeriod] = useState("monthly");
   const [busy, setBusy] = useState(false);

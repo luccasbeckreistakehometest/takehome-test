@@ -8,6 +8,7 @@ import TierBadge, { TierProgress } from "@/components/TierBadge";
 import { Icon, type IconName } from "@/components/icons";
 import { PROJECT_STATUS_LABELS, type ProjectStatus } from "@/lib/marketplace-types";
 import { TIER_COLORS, type TierInfo } from "@/lib/ranking";
+import { fmtMoney, useUiLang } from "@/lib/i18n";
 
 type Insights = {
   agency: { tier: TierInfo; stats: Record<string, number | null> };
@@ -54,6 +55,7 @@ const TYPE_LABELS: Record<string, string> = {
 };
 
 export default function InsightsPage() {
+  const lang = useUiLang();
   const [data, setData] = useState<Insights | null>(null);
 
   useEffect(() => {
@@ -80,7 +82,7 @@ export default function InsightsPage() {
   const kpis: { label: string; value: string; icon: IconName; href: string }[] = [
     {
       label: "Receita rastreada",
-      value: data.sales.revenue.toLocaleString("pt-BR", { style: "currency", currency: "BRL", maximumFractionDigits: 0 }),
+      value: fmtMoney(data.sales.revenue, lang),
       icon: "money",
       href: "/clients",
     },
