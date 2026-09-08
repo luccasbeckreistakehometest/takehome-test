@@ -139,7 +139,9 @@ export function userExistsForRef(refId: string): boolean {
 
 // Seed: cria logins (senha luccas123) para a agência e para todos os
 // clientes/profissionais já cadastrados — idempotente
-const DEFAULT_PASSWORD = "luccas123";
+// Em produção defina SEED_PASSWORD com uma senha forte; troque as senhas das
+// contas seed (admin/agencia) após o primeiro acesso.
+const DEFAULT_PASSWORD = process.env.SEED_PASSWORD || "luccas123";
 // Admin geral da plataforma: controla agências, clientes, profissionais,
 // planos e receita. Login: admin / luccas123
 if (!db.prepare("SELECT 1 FROM users WHERE role = 'admin'").get()) {

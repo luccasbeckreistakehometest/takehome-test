@@ -70,6 +70,9 @@ const addMonths = (months: number) => {
 };
 
 export function isEnforced(): boolean {
+  // Em produção, BILLING_ENFORCED=true liga o bloqueio por saldo sem depender
+  // da flag do banco (o admin ainda pode alternar a flag em /plans).
+  if (process.env.BILLING_ENFORCED === "true") return true;
   const row = db.prepare("SELECT enforced FROM billing_flags WHERE id = 1").get() as
     | { enforced: number }
     | undefined;

@@ -1,12 +1,9 @@
 import { NextResponse, type NextRequest } from "next/server";
 import { SESSION_COOKIE, verifySession } from "@/lib/auth-shared";
 
-// Painéis separados por login: agência vê tudo; cliente só o próprio portal;
-// profissional só o próprio perfil. APIs ficam abertas localmente (a proteção
-// fina por rota entra com o deploy).
-const PUBLIC_PREFIXES = [
+// Páginas públicas (sem login).
+const PUBLIC_PAGES = [
   "/login",
-  "/api",
   "/_next",
   "/favicon",
   "/cadastro",
@@ -15,11 +12,53 @@ const PUBLIC_PREFIXES = [
   "/print",
 ];
 
+// Rotas de API públicas (chamadas antes do login ou por sistemas externos).
+// Tudo o que NÃO estiver aqui exige sessão válida.
+function isPublicApi(pathname: string, method: string): boolean {
+  // Webhooks externos (Meta, vendas) — chamados por terceiros, sem sessão.
+  if (pathname.startsWith("/api/webhooks/")) return true;
+  // Login / cadastro / logout / checagem de sessão.
+  if (pathname === "/api/auth/login" && method === "POST") return true;
+  if (pathname === "/api/auth/register" && method === "POST") return true;
+  if (pathname === "/api/auth/logout" && method === "POST") return true;
+  if (pathname === "/api/auth/me" && method === "GET") return true;
+  // Logo whitelabel exibido em telas públicas (só leitura).
+  if (pathname === "/api/settings/logo" && method === "GET") return true;
+  // Lista de contas do login = conveniência só de desenvolvimento (em produção
+  // fica protegida para não expor usernames).
+  if (
+    pathname === "/api/auth/users" &&
+    method === "GET" &&
+    process.env.NODE_ENV !== "production"
+  )
+    return true;
+  // Consulta pública de um convite pelo token (página /convite). O caminho tem
+  // um segmento de token depois de /api/invites/ ; criar/listar/revogar (sem
+  // token, em /api/invites) continua protegido.
+  if (method === "GET" && /^\/api\/invites\/[^/]+$/.test(pathname)) return true;
+  return false;
+}
+
 export async function middleware(request: NextRequest) {
   const { pathname } = request.nextUrl;
-  if (PUBLIC_PREFIXES.some((prefix) => pathname.startsWith(prefix))) {
+  const method = request.method;
+
+  // ---------- Rotas de API ----------
+  if (pathname.startsWith("/api")) {
+    if (isPublicApi(pathname, method)) return NextResponse.next();
+    const session = await verifySession(request.cookies.get(SESSION_COOKIE)?.value);
+    if (!session) {
+      return NextResponse.json({ error: "Não autenticado" }, { status: 401 });
+    }
     return NextResponse.next();
   }
+
+  // ---------- Páginas públicas ----------
+  if (PUBLIC_PAGES.some((prefix) => pathname.startsWith(prefix))) {
+    return NextResponse.next();
+  }
+
+  // ---------- Páginas protegidas ----------
   const session = await verifySession(request.cookies.get(SESSION_COOKIE)?.value);
   if (!session) {
     const url = request.nextUrl.clone();

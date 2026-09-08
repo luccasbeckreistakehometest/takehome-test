@@ -1,7 +1,10 @@
 // Assinatura de sessão compartilhada entre o middleware (edge) e o servidor.
 // Usa Web Crypto (disponível nos dois runtimes). Segredo local — em produção
 // vira variável de ambiente.
-export const AUTH_SECRET = "agencyhub-local-secret-v1";
+// Em produção, defina AUTH_SECRET (string longa e aleatória) nas variáveis de
+// ambiente. O fallback só serve para desenvolvimento local.
+export const AUTH_SECRET =
+  process.env.AUTH_SECRET || "agencyhub-local-secret-v1";
 export const SESSION_COOKIE = "agencyhub_session";
 
 export type SessionPayload = {

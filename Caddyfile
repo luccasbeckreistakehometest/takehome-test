@@ -1,0 +1,5 @@
+# Troque "seu-dominio.com" pelo SEU domínio (com o DNS apontando para o IP do
+# VPS). O Caddy cuida do HTTPS/certificado automaticamente.
+seu-dominio.com {
+    reverse_proxy app:3000
+}

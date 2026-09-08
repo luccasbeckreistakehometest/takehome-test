@@ -1,0 +1,37 @@
+# AgencyHub em produção: app (Next.js) + Caddy (HTTPS automático).
+# Uso: preencha .env (copie de .env.example), edite o Caddyfile com seu domínio
+# e rode:  docker compose up -d --build
+
+services:
+  app:
+    build:
+      context: .
+      args:
+        # mesmo valor do runtime (o Compose lê do arquivo .env)
+        AUTH_SECRET: ${AUTH_SECRET}
+    env_file: .env
+    environment:
+      - PORT=3000
+    volumes:
+      - data:/app/data # dados persistentes (SQLite + uploads) — NÃO apagar
+    expose:
+      - "3000"
+    restart: unless-stopped
+
+  caddy:
+    image: caddy:2
+    depends_on:
+      - app
+    ports:
+      - "80:80"
+      - "443:443"
+    volumes:
+      - ./Caddyfile:/etc/caddy/Caddyfile:ro
+      - caddy-data:/data
+      - caddy-config:/config
+    restart: unless-stopped
+
+volumes:
+  data:
+  caddy-data:
+  caddy-config:
