@@ -48,6 +48,8 @@ export async function POST(request: Request) {
   }
 
   let refId: string | null = null;
+  // Marca autônoma quando se cadastra sozinha (sem agência convidando).
+  const selfServe = role === "client" && brandSource === "platform";
   if (role === "client") {
     const client = createClient({
       name: data.name,
@@ -68,7 +70,7 @@ export async function POST(request: Request) {
       language: "pt-BR",
       source: "self",
       country: data.country || "Brasil",
-      selfServe: brandSource === "platform", // self-serve quando não tem agência
+      selfServe, // autônoma quando não tem agência convidando
     });
     refId = client.id;
   } else if (role === "professional") {
@@ -107,8 +109,14 @@ export async function POST(request: Request) {
     refId,
     name: data.name,
     brandSource,
+    selfServe,
   });
-  const home = homeForUser({ role, refId });
+  // Marca que se cadastrou sozinha decide primeiro como quer trabalhar
+  // (autônoma x com agência). Os demais vão direto pra sua home.
+  const home =
+    selfServe && refId
+      ? `/portal/client/${refId}?welcome=1&choose=1`
+      : homeForUser({ role, refId }, { selfServe });
   const response = NextResponse.json({ ok: true, home, username: created.username, role });
   response.cookies.set(SESSION_COOKIE, token, {
     httpOnly: true,

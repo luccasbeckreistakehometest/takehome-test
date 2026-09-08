@@ -76,7 +76,9 @@ export default async function RootLayout({
             <Link
               href={
                 session?.role === "client"
-                  ? `/portal/client/${session.refId}`
+                  ? session.selfServe
+                    ? `/clients/${session.refId}`
+                    : `/portal/client/${session.refId}`
                   : session?.role === "professional"
                     ? `/professionals/${session.refId}`
                     : "/"
@@ -153,6 +155,16 @@ export default async function RootLayout({
                   className="grid size-8 place-items-center rounded-md text-muted transition-colors hover:bg-surface-2 hover:text-foreground"
                 >
                   <Icon name="settings" size={17} />
+                </Link>
+              )}
+              {(session?.role === "client" || session?.role === "professional") && (
+                <Link
+                  href="/plans"
+                  title="Planos & coins"
+                  className="flex items-center gap-1.5 whitespace-nowrap rounded-md px-2.5 py-1.5 transition-colors hover:bg-surface-2 hover:text-foreground"
+                >
+                  <Icon name="sparkle" size={16} className="opacity-70" />
+                  <span className="hidden sm:inline">Planos</span>
                 </Link>
               )}
               <LangToggle />

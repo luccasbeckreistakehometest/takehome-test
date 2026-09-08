@@ -15,6 +15,10 @@ export type SessionPayload = {
   // Whitelabel: "agency" = vê a marca da agência que o convidou; "platform" =
   // auto-cadastrado, vê a marca da plataforma. Ausente = agência (legado).
   brandSource?: "agency" | "platform";
+  // Só para marca (role client): true = modo autônomo (workspace próprio);
+  // false = gerenciada por uma agência (portal read-only). Fica na sessão para
+  // o middleware (edge, sem banco) rotear sem consultar o SQLite.
+  selfServe?: boolean;
 };
 
 function toBase64Url(bytes: Uint8Array): string {

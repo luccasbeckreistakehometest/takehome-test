@@ -51,6 +51,14 @@ export async function middleware(request: NextRequest) {
     if (!session) {
       return NextResponse.json({ error: "Não autenticado" }, { status: 401 });
     }
+    // Isolamento básico: uma marca só acessa a API do próprio cliente. Bloqueia
+    // /api/clients/<outroId>...; a rota do seu próprio id continua liberada.
+    if (session.role === "client") {
+      const m = pathname.match(/^\/api\/clients\/([^/]+)/);
+      if (m && m[1] !== session.refId) {
+        return NextResponse.json({ error: "Acesso negado" }, { status: 403 });
+      }
+    }
     return NextResponse.next();
   }
 
@@ -87,10 +95,16 @@ export async function middleware(request: NextRequest) {
     return NextResponse.next();
   }
   if (session.role === "client") {
-    const allowed = `/portal/client/${session.refId}`;
-    if (!pathname.startsWith(allowed)) {
+    // A marca circula no próprio portal e — se autônoma — no próprio workspace
+    // (/clients/<seuId>). Qualquer outra rota volta pra home dela.
+    const portal = `/portal/client/${session.refId}`;
+    const workspace = `/clients/${session.refId}`;
+    const canWorkspace =
+      pathname === workspace || pathname.startsWith(`${workspace}/`);
+    if (!pathname.startsWith(portal) && !canWorkspace) {
       const url = request.nextUrl.clone();
-      url.pathname = allowed;
+      url.pathname = session.selfServe ? workspace : portal;
+      url.search = "";
       return NextResponse.redirect(url);
     }
   }

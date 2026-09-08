@@ -119,10 +119,16 @@ export function verifyLogin(username: string, password: string): User | null {
   };
 }
 
-// Home de destino por papel após o login.
-export function homeForUser(user: Pick<User, "role" | "refId">): string {
+// Home de destino por papel após o login. Marca em modo autônomo (selfServe)
+// cai direto no workspace próprio; marca gerenciada por agência, no portal.
+export function homeForUser(
+  user: Pick<User, "role" | "refId">,
+  opts?: { selfServe?: boolean }
+): string {
   if (user.role === "admin") return "/admin";
-  if (user.role === "client") return `/portal/client/${user.refId}`;
+  if (user.role === "client") {
+    return opts?.selfServe ? `/clients/${user.refId}` : `/portal/client/${user.refId}`;
+  }
   if (user.role === "professional") return `/professionals/${user.refId}`;
   return "/";
 }

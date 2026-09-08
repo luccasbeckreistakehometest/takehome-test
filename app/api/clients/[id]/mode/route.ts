@@ -1,0 +1,62 @@
+import { NextResponse } from "next/server";
+import { z } from "zod";
+import { getClient, setClientSelfServe } from "@/lib/db";
+import { getSession } from "@/lib/session";
+import { homeForUser } from "@/lib/auth";
+import { SESSION_COOKIE, signSession } from "@/lib/auth-shared";
+
+type Context = { params: Promise<{ id: string }> };
+
+// Define como a marca quer trabalhar:
+//  - selfServe: true  → autônoma (workspace próprio)
+//  - selfServe: false → gerenciada por uma agência (portal read-only)
+// A própria marca decide; agência/admin também podem alternar por ela.
+// Quando é a própria marca, reemite a sessão para o middleware/rotas passarem a
+// enxergar o novo modo sem precisar relogar.
+export async function POST(request: Request, { params }: Context) {
+  const { id } = await params;
+  const session = await getSession();
+  if (!session) {
+    return NextResponse.json({ error: "Não autenticado" }, { status: 401 });
+  }
+  const isOwner = session.role === "client" && session.refId === id;
+  const isManager = session.role === "agency" || session.role === "admin";
+  if (!isOwner && !isManager) {
+    return NextResponse.json({ error: "Acesso negado" }, { status: 403 });
+  }
+  const parsed = z
+    .object({ selfServe: z.boolean() })
+    .safeParse(await request.json().catch(() => null));
+  if (!parsed.success) {
+    return NextResponse.json({ error: "Modo inválido" }, { status: 400 });
+  }
+  const client = setClientSelfServe(id, parsed.data.selfServe);
+  if (!client) {
+    return NextResponse.json({ error: "Marca não encontrada" }, { status: 404 });
+  }
+
+  const home = homeForUser(
+    { role: "client", refId: id },
+    { selfServe: parsed.data.selfServe }
+  );
+  const response = NextResponse.json({ ok: true, selfServe: parsed.data.selfServe, home });
+
+  // Só reemite a sessão quando quem troca é a própria marca.
+  if (isOwner) {
+    const token = await signSession({
+      userId: session.userId,
+      role: session.role,
+      refId: session.refId,
+      name: session.name,
+      brandSource: session.brandSource,
+      selfServe: parsed.data.selfServe,
+    });
+    response.cookies.set(SESSION_COOKIE, token, {
+      httpOnly: true,
+      sameSite: "lax",
+      path: "/",
+      maxAge: 60 * 60 * 24 * 30,
+    });
+  }
+  return response;
+}

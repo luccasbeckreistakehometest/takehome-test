@@ -146,6 +146,15 @@ export function getClient(id: string): Client | null {
   return row ? toClient(row) : null;
 }
 
+// Alterna só o modo da marca (autônoma x gerenciada por agência) sem tocar no
+// resto do briefing. Usado pelo seletor de modo do onboarding.
+export function setClientSelfServe(id: string, selfServe: boolean): Client | null {
+  const existing = getClient(id);
+  if (!existing) return null;
+  db.prepare("UPDATE clients SET selfServe=? WHERE id=?").run(selfServe ? 1 : 0, id);
+  return getClient(id);
+}
+
 export function createClient(input: ClientInput): Client {
   const client: Client = {
     ...input,

@@ -15,6 +15,7 @@ import type { TierInfo } from "@/lib/ranking";
 import { ClientReportView } from "@/components/renderers";
 import TierBadge, { TierProgress } from "@/components/TierBadge";
 import { Button, Card, Input, SectionTitle, Spinner, Tag, Textarea } from "@/components/ui";
+import MarcaModeChoice from "@/components/MarcaModeChoice";
 import type { AccountMessage } from "@/lib/marketplace-db";
 
 type ProjectDetail = Project & {
@@ -39,6 +40,14 @@ export default function ClientPortalPage({
   const [chatText, setChatText] = useState("");
   const [requestText, setRequestText] = useState("");
   const [requestSent, setRequestSent] = useState(false);
+  const [chooserOpen, setChooserOpen] = useState(false);
+
+  useEffect(() => {
+    // Abre o seletor de modo logo após o cadastro (?choose=1)
+    if (new URLSearchParams(window.location.search).get("choose") === "1") {
+      setChooserOpen(true);
+    }
+  }, []);
 
   useEffect(() => {
     api<Client>(`/api/clients/${id}`).then(setClient);
@@ -141,15 +150,34 @@ export default function ClientPortalPage({
             <TierProgress info={tier} celebrate celebrateKey={`levelup_client_${id}`} />
           </div>
         )}
-        {client.selfServe && (
-          <a
-            href={`/clients/${client.id}`}
-            className="mt-3 inline-block rounded-md bg-accent px-4 py-2 text-sm font-medium text-accent-ink transition-opacity hover:opacity-90"
-          >
-            ⚙ Gerenciar minha conta (workspace completo) →
-          </a>
-        )}
+        <div className="mt-3 flex flex-wrap items-center gap-3">
+          {client.selfServe ? (
+            <>
+              <a
+                href={`/clients/${client.id}`}
+                className="inline-flex items-center gap-1.5 rounded-md bg-accent px-4 py-2 text-sm font-medium text-accent-ink transition-opacity hover:opacity-90"
+              >
+                ⚙ Abrir meu workspace →
+              </a>
+              <button
+                onClick={() => setChooserOpen(true)}
+                className="text-sm text-muted underline-offset-2 transition-colors hover:text-foreground hover:underline"
+              >
+                Prefiro ter uma agência cuidando
+              </button>
+            </>
+          ) : (
+            <button
+              onClick={() => setChooserOpen(true)}
+              className="text-sm text-muted underline-offset-2 transition-colors hover:text-foreground hover:underline"
+            >
+              Quero fazer eu mesmo (modo autônomo) →
+            </button>
+          )}
+        </div>
       </div>
+
+      <MarcaModeChoice id={client.id} open={chooserOpen} onClose={() => setChooserOpen(false)} />
 
       <Card>
         <SectionTitle>Produções em andamento</SectionTitle>
@@ -212,6 +240,7 @@ export default function ClientPortalPage({
         )}
       </Card>
 
+      {!client.selfServe && (
       <div className="grid gap-6 lg:grid-cols-2">
         <Card className="space-y-3">
           <SectionTitle>Fale com a agência</SectionTitle>
@@ -270,6 +299,7 @@ export default function ClientPortalPage({
           )}
         </Card>
       </div>
+      )}
 
       {landings.length > 0 && (
         <Card>
@@ -318,8 +348,9 @@ export default function ClientPortalPage({
       ) : (
         <Card>
           <p className="text-sm text-muted">
-            O primeiro relatório executivo da sua conta aparecerá aqui assim que a
-            agência gerá-lo.
+            {client.selfServe
+              ? "Gere o relatório executivo da sua marca no workspace — ele aparece aqui quando pronto."
+              : "O primeiro relatório executivo da sua conta aparecerá aqui assim que a agência gerá-lo."}
           </p>
         </Card>
       )}

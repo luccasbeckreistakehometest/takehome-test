@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import { z } from "zod";
 import { homeForUser, verifyLogin } from "@/lib/auth";
 import { SESSION_COOKIE, signSession } from "@/lib/auth-shared";
+import { getClient } from "@/lib/db";
 
 export async function POST(request: Request) {
   const parsed = z
@@ -14,14 +15,20 @@ export async function POST(request: Request) {
   if (!user) {
     return NextResponse.json({ error: "Usuário ou senha inválidos" }, { status: 401 });
   }
+  // Modo da marca (autônoma x agência) para rotear e liberar o workspace.
+  const selfServe =
+    user.role === "client" && user.refId
+      ? (getClient(user.refId)?.selfServe ?? false)
+      : undefined;
   const token = await signSession({
     userId: user.id,
     role: user.role,
     refId: user.refId,
     name: user.name,
     brandSource: user.brandSource,
+    selfServe,
   });
-  const home = homeForUser(user);
+  const home = homeForUser(user, { selfServe });
   const response = NextResponse.json({ ok: true, home, role: user.role });
   response.cookies.set(SESSION_COOKIE, token, {
     httpOnly: true,
