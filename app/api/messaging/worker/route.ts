@@ -11,7 +11,7 @@ const schema = z.object({
   action: z.enum(["start", "stop", "test"]),
   channel: z.enum(["whatsapp", "instagram"]).default("whatsapp"),
   testPhone: z.string().trim().default(""),
-  testMessage: z.string().trim().default("Mensagem de teste do AgencyHub ✅"),
+  testMessage: z.string().trim().default("Mensagem de teste do Marqa ✅"),
 });
 
 // Controla o worker de sessão por botão (sem terminal):

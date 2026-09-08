@@ -4,8 +4,8 @@ import { getSettings, type AgencySettings } from "./settings";
 // agência. É o que visitantes anônimos e usuários auto-cadastrados veem.
 // A agência e os usuários que ela convidou veem a marca whitelabel dela.
 export const PLATFORM_BRAND = {
-  name: "AgencyHub",
-  tagline: "sua central de marketing com IA",
+  name: "Marqa",
+  tagline: "sua marca, acelerada por IA",
   accentColor: "#c6f24e",
   logoMime: "", // sem logo custom = mostra a inicial
   isPlatform: true as const,

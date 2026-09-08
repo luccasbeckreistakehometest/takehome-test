@@ -22,7 +22,7 @@ const spaceGrotesk = Space_Grotesk({ variable: "--font-display", subsets: ["lati
 export const dynamic = "force-dynamic";
 
 export const metadata: Metadata = {
-  title: "Central de Marketing com IA",
+  title: "Marqa — Marketing com IA",
   description:
     "Centralize briefings, conecte clientes, agência e profissionais, e gere estratégia, campanhas, identidade e landing pages com IA.",
 };

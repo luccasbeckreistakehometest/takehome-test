@@ -23,8 +23,8 @@ export type AgencySettings = {
 };
 
 const DEFAULTS: AgencySettings = {
-  agencyName: "AgencyHub",
-  tagline: "sua agência, centralizada e acelerada por IA",
+  agencyName: "Marqa",
+  tagline: "sua marca, acelerada por IA",
   accentColor: "#c6f24e",
   landingPagesEnabled: false,
   aiMode: "balanced",
