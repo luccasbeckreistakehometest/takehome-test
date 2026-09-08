@@ -18,18 +18,22 @@ Tudo roda em Docker. O guia abaixo leva do zero ao ar.
 
 ---
 
-## Passo 1 — Criar e acessar o VPS
-1. Na Hostinger, contrate um plano **VPS**, sistema **Ubuntu** (de preferência com
-   o template que já vem com Docker; se não, o passo 2 instala).
-2. Pegue o **IP** e a **senha root** no hPanel. Acesse por SSH:
-   ```bash
-   ssh root@SEU_IP_DO_VPS
-   ```
+## Passo 1 — Criar o VPS na Hostinger
+1. No hPanel da Hostinger, vá em **VPS → Comprar/Configurar**. Plano mínimo
+   recomendado: **KVM 1** (1 vCPU, 4 GB RAM — já basta pro build).
+2. Em **Sistema operacional**, escolha o **template com Docker** (ex.: “Ubuntu
+   24.04 com Docker” / “Docker” nas aplicações). Assim o Docker já vem instalado
+   e você **pula o Passo 2**. (Se escolher Ubuntu puro, faça o Passo 2.)
+3. Defina a senha root, finalize e anote o **IP** do servidor.
 
-## Passo 2 — Instalar Docker (se não vier pronto)
-```bash
-curl -fsSL https://get.docker.com | sh
-```
+## Passo 2 — Acessar o servidor
+- Jeito fácil (sem instalar nada): no hPanel do VPS, abra o **Terminal do
+  navegador** (botão “Terminal” / “Browser terminal”).
+- Ou por SSH do seu computador: `ssh root@SEU_IP_DO_VPS`
+- Se escolheu Ubuntu puro (sem template Docker), instale o Docker agora:
+  ```bash
+  curl -fsSL https://get.docker.com | sh
+  ```
 
 ## Passo 3 — Colocar o código no servidor
 Opção A (recomendada) — via Git (repo privado seu):
@@ -59,12 +63,15 @@ Preencha (mínimo):
 - `BILLING_ENFORCED=true` — liga o bloqueio de IA por saldo (evita estouro de custo).
 
 ## Passo 5 — Apontar o domínio e configurar HTTPS
-1. No painel do seu domínio, crie um registro **A** apontando para o **IP do VPS**.
+1. No DNS do seu domínio (se for da Hostinger: hPanel → **Domínios → Zona DNS**),
+   crie/edite um registro **A** com o nome `@` apontando para o **IP do VPS**.
+   (Um `www` como CNAME para o domínio é opcional.)
 2. Edite o `Caddyfile` e troque `seu-dominio.com` pelo seu domínio:
    ```bash
    nano Caddyfile
    ```
-3. Libere as portas 80 e 443 no firewall do VPS (se houver).
+3. Libere as portas **80** e **443** no firewall do VPS (hPanel do VPS →
+   **Firewall**; normalmente já ficam abertas).
 
 > Sem domínio? Pule este passo e troque, no `docker-compose.yml`, a seção do Caddy
 > por `ports: ["80:3000"]` no serviço `app` — você acessa por `http://SEU_IP`
