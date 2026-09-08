@@ -53,6 +53,12 @@ export async function middleware(request: NextRequest) {
     return NextResponse.next();
   }
 
+  // Landing pública na raiz (a própria página decide: landing p/ anônimo,
+  // painel p/ logado). Match exato — não usar startsWith com "/".
+  if (pathname === "/") {
+    return NextResponse.next();
+  }
+
   // ---------- Páginas públicas ----------
   if (PUBLIC_PAGES.some((prefix) => pathname.startsWith(prefix))) {
     return NextResponse.next();

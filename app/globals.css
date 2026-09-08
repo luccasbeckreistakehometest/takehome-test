@@ -225,6 +225,45 @@ button:disabled {
   box-shadow: var(--shadow);
 }
 
+/* ---------- Landing (marketing) ---------- */
+@keyframes float {
+  0%, 100% { transform: translateY(0); }
+  50% { transform: translateY(-12px); }
+}
+@keyframes gradient-pan {
+  0% { background-position: 0% 50%; }
+  100% { background-position: 100% 50%; }
+}
+@keyframes glow-pulse {
+  0%, 100% { opacity: 0.55; }
+  50% { opacity: 0.9; }
+}
+@keyframes marquee {
+  from { transform: translateX(0); }
+  to { transform: translateX(-50%); }
+}
+.reveal {
+  opacity: 0;
+  transform: translateY(26px);
+  transition: opacity 0.7s ease, transform 0.7s cubic-bezier(0.16, 1, 0.3, 1);
+}
+.reveal.is-visible {
+  opacity: 1;
+  transform: none;
+}
+.float-slow { animation: float 7s ease-in-out infinite; }
+.float-slow.delay { animation-delay: 1.4s; }
+.glow-pulse { animation: glow-pulse 5s ease-in-out infinite; }
+.hero-gradient-text {
+  background: linear-gradient(100deg, var(--accent), #8fd0ff 60%, var(--accent));
+  background-size: 220% auto;
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+  animation: gradient-pan 6s linear infinite alternate;
+}
+.marquee-track { animation: marquee 26s linear infinite; }
+
 @media (prefers-reduced-motion: reduce) {
   *,
   *::before,
@@ -232,4 +271,5 @@ button:disabled {
     animation-duration: 0.01ms !important;
     transition-duration: 0.01ms !important;
   }
+  .reveal { opacity: 1; transform: none; }
 }
