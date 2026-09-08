@@ -10,6 +10,7 @@ const PUBLIC_PAGES = [
   "/criar-conta",
   "/convite",
   "/print",
+  "/para-", // landings de funil públicas (/para-agencias, /para-marcas, ...)
 ];
 
 // Rotas de API públicas (chamadas antes do login ou por sistemas externos).

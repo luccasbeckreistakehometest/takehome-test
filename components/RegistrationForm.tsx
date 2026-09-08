@@ -29,12 +29,14 @@ const ROLE_INFO: Record<Role, { label: string; icon: IconName; blurb: string }> 
 // de tipo) e pelo convite (/convite/[token], com papel travado).
 export default function RegistrationForm({
   fixedRole,
+  initialRole,
   token,
 }: {
   fixedRole?: Role;
+  initialRole?: Role; // pré-seleciona (mas deixa trocar); vindo do funil (?type=)
   token?: string;
 }) {
-  const [role, setRole] = useState<Role | null>(fixedRole ?? null);
+  const [role, setRole] = useState<Role | null>(fixedRole ?? initialRole ?? null);
   const [form, setForm] = useState({
     name: "",
     email: "",

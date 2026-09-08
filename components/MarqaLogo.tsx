@@ -15,7 +15,7 @@ export function MarqaMark({ size = 28 }: { size?: number }) {
       <defs>
         <linearGradient id="marqa-grad" x1="0" y1="0" x2="1" y2="1">
           <stop offset="0" stopColor="var(--accent)" />
-          <stop offset="1" stopColor="#ff9e7a" />
+          <stop offset="1" stopColor="var(--accent-2)" />
         </linearGradient>
       </defs>
       <rect x="1.5" y="1.5" width="29" height="29" rx="8.5" fill="url(#marqa-grad)" />
