@@ -60,6 +60,10 @@ db.exec(`
     enforced INTEGER NOT NULL DEFAULT 0
   );
   INSERT OR IGNORE INTO billing_flags (id, enforced) VALUES (1, 0);
+  CREATE TABLE IF NOT EXISTS mp_payments (
+    id TEXT PRIMARY KEY,
+    createdAt TEXT NOT NULL
+  );
 `);
 
 const now = () => new Date().toISOString();
@@ -68,6 +72,15 @@ const addMonths = (months: number) => {
   d.setMonth(d.getMonth() + months);
   return d.toISOString();
 };
+
+// Idempotência de webhook: reserva um pagamento do Mercado Pago. Retorna true
+// só na PRIMEIRA vez (o MP pode reenviar o mesmo evento várias vezes).
+export function claimPayment(id: string): boolean {
+  const r = db
+    .prepare("INSERT OR IGNORE INTO mp_payments (id, createdAt) VALUES (?, ?)")
+    .run(id, now());
+  return r.changes > 0;
+}
 
 export function isEnforced(): boolean {
   // Em produção, BILLING_ENFORCED=true liga o bloqueio por saldo sem depender

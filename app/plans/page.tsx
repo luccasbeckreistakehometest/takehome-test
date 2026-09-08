@@ -42,7 +42,18 @@ export default function PlansPage() {
   const [msg, setMsg] = useState("");
 
   const load = () => api<Summary>("/api/billing").then(setData).catch(() => {});
-  useEffect(() => { load(); }, []);
+  useEffect(() => {
+    load();
+    // Mensagens de retorno do checkout do Mercado Pago
+    const q = new URLSearchParams(window.location.search);
+    if (q.get("pago")) setMsg("✅ Pagamento recebido! A liberação acontece em instantes (confirmação automática).");
+    else if (q.get("pendente")) setMsg("⏳ Pagamento pendente. Assim que for confirmado, liberamos automaticamente.");
+    else if (q.get("falhou")) setMsg("❌ O pagamento não foi concluído. Você pode tentar de novo.");
+    // recarrega o saldo alguns segundos depois (dá tempo do webhook chegar)
+    const t = setInterval(load, 6000);
+    setTimeout(() => clearInterval(t), 30000);
+    return () => clearInterval(t);
+  }, []);
 
   if (!data) {
     return (
@@ -61,22 +72,32 @@ export default function PlansPage() {
   }
 
   async function subscribe(planId: string) {
+    const plan = data?.plans?.find((p) => p.id === planId);
     setBusy(true); setMsg("");
     try {
-      await api("/api/billing/subscribe", { method: "POST", body: JSON.stringify({ planId, period }) });
-      setMsg("Plano ativado! Coins do plano creditados.");
-      load();
-    } catch (e) { setMsg(e instanceof Error ? e.message : "erro"); }
-    finally { setBusy(false); }
+      // Plano grátis ativa direto; plano pago vai pro checkout do Mercado Pago.
+      if (plan && plan.monthlyPrice === 0) {
+        await api("/api/billing/subscribe", { method: "POST", body: JSON.stringify({ planId, period }) });
+        setMsg("Plano ativado!");
+        load();
+      } else {
+        const r = await api<{ url: string }>("/api/billing/checkout", {
+          method: "POST",
+          body: JSON.stringify({ kind: "plan", planId, period }),
+        });
+        window.location.href = r.url; // redireciona pro pagamento (Pix/cartão/boleto)
+      }
+    } catch (e) { setMsg(e instanceof Error ? e.message : "erro"); setBusy(false); }
   }
   async function buyCoins(packId: string) {
     setBusy(true); setMsg("");
     try {
-      await api("/api/billing/coins", { method: "POST", body: JSON.stringify({ packId }) });
-      setMsg("Coins adicionados à sua carteira!");
-      load();
-    } catch (e) { setMsg(e instanceof Error ? e.message : "erro"); }
-    finally { setBusy(false); }
+      const r = await api<{ url: string }>("/api/billing/checkout", {
+        method: "POST",
+        body: JSON.stringify({ kind: "coins", packId }),
+      });
+      window.location.href = r.url; // redireciona pro pagamento
+    } catch (e) { setMsg(e instanceof Error ? e.message : "erro"); setBusy(false); }
   }
   async function toggleEnforce() {
     await api("/api/billing/enforce", { method: "POST", body: JSON.stringify({ on: !data!.enforced }) });
