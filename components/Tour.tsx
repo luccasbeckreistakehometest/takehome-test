@@ -1,0 +1,83 @@
+"use client";
+
+import { useCallback, useEffect, useLayoutEffect, useState } from "react";
+import { usePathname, useRouter } from "next/navigation";
+
+// Tour guiado da agência no primeiro acesso: destaca a navegação real e leva
+// até o cadastro de cliente para mostrar o briefing falado. Progresso e
+// conclusão vivem no servidor (/api/onboarding) — não repete em outra máquina.
+type Step = { anchor: string; path: string; t: string; b: string };
+const STEPS: Step[] = [
+  { anchor: "nav-home", path: "/", t: "Hoje", b: "Sua central: o que precisa de decisão agora — candidaturas, entregas para revisar, clientes sem resposta, posts na hora." },
+  { anchor: "nav-clients", path: "/", t: "Clientes", b: "Cada cliente tem briefing, kit de IA (estratégia, campanhas, identidade, social), demandas e portal próprio." },
+  { anchor: "briefing-mode", path: "/clients/new", t: "Briefing falado", b: "Aqui você pode falar em vez de digitar: a IA escuta, pergunta o que faltar e preenche o cadastro para você revisar." },
+  { anchor: "nav-production", path: "/clients/new", t: "Produção", b: "Demandas em kanban: da abertura ao pagamento, com freelancers ou equipe interna." },
+  { anchor: "nav-insights", path: "/clients/new", t: "Insights", b: "Receita, campanhas, elo da agência e o que a IA recomenda fazer a seguir." },
+];
+type Rect = { top: number; left: number; width: number; height: number };
+
+export default function Tour({ role }: { role?: string | null }) {
+  const pathname = usePathname();
+  const router = useRouter();
+  const [state, setState] = useState<"idle" | "running" | "done">("idle");
+  const [step, setStep] = useState(0);
+  const [rect, setRect] = useState<Rect | null>(null);
+
+  const save = useCallback((s: number, completed = false, event?: string) => {
+    fetch("/api/onboarding", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ step: s, completed, event }) }).catch(() => {});
+  }, []);
+
+  useEffect(() => {
+    if (role !== "agency") return;
+    const onStart = () => { setStep(0); setState("running"); save(0, false, "tour_start"); };
+    window.addEventListener("ah:tour-start", onStart);
+    // retoma um tour deixado no meio
+    fetch("/api/onboarding", { cache: "no-store" }).then((r) => r.json()).then((j) => {
+      if (j.tourCompleted) return setState("done");
+      if (j.tourStep > 0 && j.tourStep < STEPS.length) { setStep(j.tourStep); setState("running"); }
+    }).catch(() => {});
+    return () => window.removeEventListener("ah:tour-start", onStart);
+  }, [role, save]);
+
+  const measure = useCallback(() => {
+    const el = document.querySelector<HTMLElement>(`[data-tour="${STEPS[step].anchor}"]`);
+    if (!el) return setRect(null);
+    const r = el.getBoundingClientRect();
+    setRect({ top: r.top - 8, left: r.left - 8, width: r.width + 16, height: r.height + 16 });
+  }, [step]);
+
+  useLayoutEffect(() => {
+    if (state !== "running") return;
+    const wanted = STEPS[step].path;
+    if (pathname !== wanted) { router.push(wanted as never); return; }
+    const id = window.setTimeout(measure, 150);
+    window.addEventListener("resize", measure); window.addEventListener("scroll", measure, true);
+    return () => { window.clearTimeout(id); window.removeEventListener("resize", measure); window.removeEventListener("scroll", measure, true); };
+  }, [state, step, pathname, measure, router]);
+
+  if (state !== "running") return null;
+  const s = STEPS[step];
+  const last = step === STEPS.length - 1;
+  const cardStyle = rect
+    ? { top: Math.min(window.innerHeight - 220, rect.top + rect.height + 12), left: Math.max(12, Math.min(rect.left, window.innerWidth - 372)) }
+    : { bottom: 20, left: 20 };
+  return (
+    <>
+      <div className="pointer-events-none fixed inset-0 z-[90]">
+        <div className="absolute rounded-xl shadow-[0_0_0_9999px_rgba(0,0,0,.6)] transition-all duration-200" style={rect ? rect : { top: -9999, left: -9999, width: 0, height: 0 }} />
+      </div>
+      <div className="fixed z-[91] w-[min(92vw,360px)] rounded-2xl border border-edge bg-surface p-5 shadow-2xl" style={cardStyle} data-testid="tour-step" data-step={step}>
+        <p className="text-xs font-semibold uppercase tracking-widest text-accent">{step + 1} / {STEPS.length}</p>
+        <h3 className="mt-1 text-lg font-semibold">{s.t}</h3>
+        <p className="mt-1 text-sm text-muted">{s.b}</p>
+        <div className="mt-4 flex items-center justify-between">
+          <button onClick={() => { setState("done"); save(step, true, "tour_skip"); }} className="text-sm text-muted hover:text-foreground">Pular</button>
+          <div className="flex gap-2">
+            {step > 0 && <button onClick={() => { setStep(step - 1); save(step - 1); }} className="rounded-md border border-edge px-3 py-1.5 text-sm">Voltar</button>}
+            <button data-testid="tour-next" onClick={() => { if (last) { setState("done"); save(step, true, "tour_done"); } else { setStep(step + 1); save(step + 1); } }} className="rounded-md bg-accent px-4 py-1.5 text-sm font-medium text-accent-ink">{last ? "Entendi" : "Próximo"}</button>
+          </div>
+        </div>
+      </div>
+    </>
+  );
+}

@@ -7,7 +7,9 @@
     "build": "next build",
     "start": "next start",
     "lint": "eslint",
-    "messaging-worker": "node scripts/messaging-worker.mjs"
+    "messaging-worker": "node scripts/messaging-worker.mjs",
+    "e2e": "playwright test",
+    "browsers:install": "playwright install chromium"
   },
   "dependencies": {
     "@anthropic-ai/sdk": "^0.115.0",
@@ -25,8 +27,9 @@
     "@types/react-dom": "^19",
     "eslint": "^9",
     "eslint-config-next": "16.2.12",
-    "playwright": "^1.62.1",
+    "playwright": "1.55.0",
     "tailwindcss": "^4",
-    "typescript": "^5"
+    "typescript": "^5",
+    "@playwright/test": "1.55.0"
   }
 }

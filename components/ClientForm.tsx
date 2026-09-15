@@ -4,6 +4,8 @@ import { useState } from "react";
 import { api } from "@/lib/api";
 import { CHANNEL_OPTIONS, type Client, type ClientInput } from "@/lib/types";
 import { Button, Card, ErrorBox, Input, Label, Select, Spinner, Textarea } from "./ui";
+import VoiceBriefing from "./VoiceBriefing";
+import type { VoiceBriefing as Briefing } from "@/lib/voice-briefing";
 
 const EMPTY: ClientInput = {
   name: "",
@@ -43,6 +45,15 @@ export default function ClientForm({
   );
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState("");
+  // Só no cadastro novo: quem prefere falar preenche o briefing pelo microfone
+  // e revisa os campos antes de salvar. Edição continua digitada.
+  const [mode, setMode] = useState<"text" | "voice">("text");
+  const [voiceBriefingId, setVoiceBriefingId] = useState<string | undefined>();
+  function applyBriefing(b: Briefing, id: string) {
+    setForm((prev) => ({ ...prev, ...b.fields, name: b.fields.name || prev.name, country: b.fields.country || prev.country }));
+    setVoiceBriefingId(id);
+    setMode("text");
+  }
 
   const set = <K extends keyof ClientInput>(key: K, value: ClientInput[K]) =>
     setForm((prev) => ({ ...prev, [key]: value }));
@@ -79,6 +90,15 @@ export default function ClientForm({
 
   return (
     <form onSubmit={submit} className="space-y-5">
+      {!initial && (
+        <div className="flex flex-wrap items-center gap-2" data-tour="briefing-mode">
+          <button type="button" onClick={() => setMode("text")} className={`rounded-full border px-3 py-1.5 text-sm transition-colors ${mode === "text" ? "border-accent bg-accent/10 text-accent" : "border-edge text-muted hover:text-foreground"}`} data-testid="mode-text">Digitar o briefing</button>
+          <button type="button" onClick={() => setMode("voice")} className={`rounded-full border px-3 py-1.5 text-sm transition-colors ${mode === "voice" ? "border-accent bg-accent/10 text-accent" : "border-edge text-muted hover:text-foreground"}`} data-testid="mode-voice">🎙 Falar o briefing</button>
+          {voiceBriefingId && <span className="text-xs text-emerald-400">Preenchido por voz — revise e salve</span>}
+        </div>
+      )}
+      {mode === "voice" && !initial && <VoiceBriefing onConfirm={applyBriefing} onTypeInstead={() => setMode("text")} />}
+      <div className={mode === "voice" && !initial ? "hidden" : "space-y-5"}>
       {error && <ErrorBox message={error} />}
       <Card className="space-y-4">
         <div className="grid gap-4 sm:grid-cols-4">
@@ -269,10 +289,11 @@ export default function ClientForm({
         </Card>
       )}
       <div className="flex items-center gap-3">
-        <Button type="submit" disabled={saving}>
+        <Button type="submit" disabled={saving} data-testid="save-client">
           {initial ? "Salvar alterações" : "Criar cliente"}
         </Button>
         {saving && <Spinner label="Salvando..." />}
+      </div>
       </div>
     </form>
   );

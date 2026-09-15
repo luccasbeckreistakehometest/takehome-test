@@ -1,7 +1,7 @@
 import fs from "fs";
 import path from "path";
 
-const uploadsDir = path.join(process.cwd(), "data", "uploads");
+const uploadsDir = path.join(process.env.DATA_DIR ?? path.join(process.cwd(), "data"), "uploads");
 
 export const ALLOWED_IMAGE_MIMES = [
   "image/jpeg",

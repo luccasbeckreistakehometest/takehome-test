@@ -4,14 +4,22 @@ import { getAgencyStats, listProfessionals } from "@/lib/marketplace-db";
 import { agencySalesTotal } from "@/lib/integrations-db";
 import { listUsers } from "@/lib/auth";
 import { listInvites } from "@/lib/invites-db";
+import { onboardingStats } from "@/lib/onboarding-db";
+import { getSession } from "@/lib/session";
 
 // Visão do admin da plataforma: controla agências, clientes, profissionais.
 export async function GET() {
+  // Dados da plataforma inteira (usuários, convites, clientes de todas as
+  // agências): só o admin da plataforma pode ler.
+  const session = await getSession();
+  if (session?.role !== "admin") return NextResponse.json({ error: "Acesso restrito" }, { status: 403 });
   const count = (sql: string) => (db.prepare(sql).get() as { c: number }).c;
   const agencyStats = getAgencyStats();
   const sales = agencySalesTotal();
   const invites = listInvites();
+  const onboarding = onboardingStats();
   return NextResponse.json({
+    onboarding,
     totals: {
       users: count("SELECT COUNT(*) as c FROM users"),
       clients: count("SELECT COUNT(*) as c FROM clients"),

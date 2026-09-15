@@ -52,16 +52,33 @@ export default function OnboardingModal({
     const welcome = new URLSearchParams(window.location.search).get("welcome");
     // welcomeOnly: só abre logo após o cadastro (evita disparar para quem só
     // está visitando o painel, ex.: agência vendo um profissional).
-    if (welcome === "1" || (!welcomeOnly && !localStorage.getItem(key))) setOpen(true);
+    // O servidor manda: quem já concluiu em outra máquina não vê de novo.
+    let cancelled = false;
+    fetch("/api/onboarding", { cache: "no-store" }).then((r) => r.json()).then((j) => {
+      if (cancelled || j.tourCompleted) return;
+      if (welcome === "1" || (!welcomeOnly && !localStorage.getItem(key))) {
+        setOpen(true);
+        fetch("/api/onboarding", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ event: "welcome_open", meta: { role } }) }).catch(() => {});
+      }
+    }).catch(() => {});
+    return () => { cancelled = true; };
   }, [role, welcomeOnly]);
 
-  function close() {
+  function close(reason: "skip" | "done" = "skip") {
     try {
       localStorage.setItem(`onboarded_${role}`, new Date().toISOString());
     } catch {
       /* ignore */
     }
     setOpen(false);
+    // Agência: o modal apresenta, o tour mostra na tela. Demais papéis: o modal
+    // já é o tour, então fica concluído aqui.
+    if (role === "agency" && reason === "done") {
+      fetch("/api/onboarding", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ event: "welcome_done" }) }).catch(() => {});
+      window.dispatchEvent(new Event("ah:tour-start"));
+    } else {
+      fetch("/api/onboarding", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ completed: true, event: reason === "done" ? "welcome_done" : "welcome_skip" }) }).catch(() => {});
+    }
   }
 
   if (!open) return null;
@@ -70,11 +87,11 @@ export default function OnboardingModal({
   const isLast = step === flow.steps.length - 1;
 
   return (
-    <div className="fixed inset-0 z-[80] grid place-items-center bg-black/50 p-4 backdrop-blur-sm">
+    <div className="fixed inset-0 z-[80] grid place-items-center bg-black/50 p-4 backdrop-blur-sm" data-testid="welcome">
       <div className="w-full max-w-lg animate-pop-in rounded-2xl border border-edge bg-surface p-6 shadow-2xl [transform-origin:center]">
         <div className="mb-4 flex items-center justify-between">
           <p className="text-xs font-semibold uppercase tracking-widest text-accent">{flow.title}</p>
-          <button onClick={close} className="text-muted transition-colors hover:text-foreground">
+          <button onClick={() => close("skip")} className="text-muted transition-colors hover:text-foreground">
             <Icon name="x" size={18} />
           </button>
         </div>
@@ -110,11 +127,12 @@ export default function OnboardingModal({
             ))}
           </div>
           <div className="flex gap-2">
-            <button onClick={close} className="rounded-md px-3 py-1.5 text-sm text-muted hover:text-foreground">
+            <button onClick={() => close("skip")} className="rounded-md px-3 py-1.5 text-sm text-muted hover:text-foreground" data-testid="welcome-skip">
               Pular
             </button>
             <button
-              onClick={() => (isLast ? close() : setStep((s) => s + 1))}
+              data-testid="welcome-next"
+              onClick={() => (isLast ? close("done") : setStep((s) => s + 1))}
               className="rounded-md bg-accent px-4 py-1.5 text-sm font-medium text-accent-ink transition-opacity hover:opacity-90"
             >
               {isLast ? "Começar" : "Próximo"}

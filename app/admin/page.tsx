@@ -20,6 +20,7 @@ type Overview = {
   professionals: { id: string; name: string; role: string; employmentType: string }[];
   users: { username: string; role: string; name: string }[];
   invites: { token: string; role: string; status: string; note: string; createdAt: string }[];
+  onboarding: { toursStarted: number; toursCompleted: number; voiceBriefings: number; recent: { userId: string; username: string | null; role: string | null; tourCompleted: number; tourStep: number; firstSeenAt: string; events: string }[] };
 };
 
 export default function AdminPage() {
@@ -51,6 +52,8 @@ export default function AdminPage() {
     { label: "Entregáveis", value: String(data.totals.generations), icon: "sparkle" },
     { label: "Demandas pagas", value: String(data.totals.paidProjects), icon: "check" },
     { label: "Receita rastreada", value: brl(data.totals.trackedRevenue), icon: "money" },
+    { label: "Tours concluídos", value: `${data.onboarding.toursCompleted}/${data.onboarding.toursStarted}`, icon: "target" },
+    { label: "Briefings por voz", value: String(data.onboarding.voiceBriefings), icon: "message" },
   ];
 
   return (
@@ -118,6 +121,19 @@ export default function AdminPage() {
             ))}
             {data.professionals.length === 0 && <p className="text-sm text-muted">Nenhum profissional.</p>}
           </div>
+        </Card>
+
+        <Card>
+          <SectionTitle>Primeiros acessos ({data.onboarding.recent.length})</SectionTitle>
+          <ul className="mt-3 divide-y divide-edge text-sm" data-testid="admin-onboarding">
+            {data.onboarding.recent.map((o) => (
+              <li key={o.userId} className="flex flex-wrap items-center justify-between gap-2 py-2">
+                <span><span className="font-medium">{o.username ?? o.userId.slice(0, 8)}</span> <span className="text-muted">· {o.role}</span></span>
+                <span className="text-xs text-muted">{o.tourCompleted ? "tour concluído" : `passo ${o.tourStep}`} · {(JSON.parse(o.events) as { type: string }[]).map((e) => e.type).join(" → ") || "—"}</span>
+              </li>
+            ))}
+            {data.onboarding.recent.length === 0 && <li className="py-2 text-muted">Ninguém ainda.</li>}
+          </ul>
         </Card>
 
         <Card>

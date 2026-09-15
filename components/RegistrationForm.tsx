@@ -106,14 +106,14 @@ export default function RegistrationForm({
 
       <div>
         <Label>{role === "agency" ? "Nome da agência" : "Nome"}</Label>
-        <Input value={form.name} onChange={(e) => setForm({ ...form, name: e.target.value })} autoFocus />
+        <Input value={form.name} onChange={(e) => setForm({ ...form, name: e.target.value })} autoFocus data-testid="reg-name" />
       </div>
 
       {role === "client" && (
         <div className="grid grid-cols-2 gap-3">
           <div>
             <Label>Segmento</Label>
-            <Input value={form.industry} onChange={(e) => setForm({ ...form, industry: e.target.value })} placeholder="Ex.: moda, café..." />
+            <Input value={form.industry} onChange={(e) => setForm({ ...form, industry: e.target.value })} placeholder="Ex.: moda, café..." data-testid="reg-industry" />
           </div>
           <div>
             <Label>País</Label>
@@ -156,11 +156,12 @@ export default function RegistrationForm({
           onChange={(e) => setForm({ ...form, password: e.target.value })}
           onKeyDown={(e) => e.key === "Enter" && submit()}
           placeholder="mínimo 4 caracteres"
+          data-testid="reg-password"
         />
       </div>
 
       {error && <ErrorBox message={error} />}
-      <Button className="w-full" onClick={submit} disabled={loading || !form.name.trim() || !form.password}>
+      <Button className="w-full" onClick={submit} disabled={loading || !form.name.trim() || !form.password} data-testid="reg-submit">
         {loading ? "Criando conta..." : "Criar conta e entrar"}
       </Button>
     </div>

@@ -5,7 +5,7 @@ import { randomUUID } from "crypto";
 import type { Client, ClientInput, Generation, GenerationType } from "./types";
 
 function createDb() {
-  const dataDir = path.join(process.cwd(), "data");
+  const dataDir = process.env.DATA_DIR ?? path.join(process.cwd(), "data");
   fs.mkdirSync(dataDir, { recursive: true });
   const db = new Database(path.join(dataDir, "agencyhub.db"));
   db.pragma("journal_mode = WAL");

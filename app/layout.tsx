@@ -11,6 +11,7 @@ import JobsIndicator from "@/components/JobsIndicator";
 import GlobalSearch from "@/components/GlobalSearch";
 import AssistantWidget from "@/components/AssistantWidget";
 import ThemeToggle from "@/components/ThemeToggle";
+import Tour from "@/components/Tour";
 import { Icon, type IconName } from "@/components/icons";
 import { MarqaMark } from "@/components/MarqaLogo";
 import "./globals.css";
@@ -70,6 +71,7 @@ export default async function RootLayout({
       <body className="min-h-full flex flex-col">
         <Translator />
         <JobsIndicator />
+        <Tour role={session?.role ?? null} />
         <GlobalSearch />
         <header className="sticky top-0 z-40 border-b border-edge bg-background/80 backdrop-blur">
           <div className="mx-auto flex h-14 w-full max-w-6xl items-center justify-between gap-4 px-4">
@@ -110,6 +112,7 @@ export default async function RootLayout({
                     <Link
                       key={item.href}
                       href={item.href}
+                      data-tour={item.href === "/" ? "nav-home" : `nav-${item.href.slice(1)}`}
                       className="group flex items-center gap-1.5 whitespace-nowrap rounded-md px-2.5 py-1.5 transition-colors hover:bg-surface-2 hover:text-foreground"
                     >
                       <Icon name={item.icon} size={16} className="opacity-70 transition-opacity group-hover:opacity-100" />
