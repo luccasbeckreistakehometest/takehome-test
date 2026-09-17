@@ -115,7 +115,7 @@ const SHARED_PORTAL_API = [
   /^\/api\/auth\//,
   /^\/api\/account(\/.*)?$/,
   /^\/api\/activities$/,
-  /^\/api\/onboarding$/,
+  /^\/api\/onboarding(\/activation)?$/,
   /^\/api\/jobs$/,
   /^\/api\/settings$/,
   /^\/api\/billing(\/(checkout|subscribe|subscription|subscription\/cancel))?$/,

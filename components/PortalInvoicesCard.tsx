@@ -26,7 +26,15 @@ export default function PortalInvoicesCard({ clientId }: { clientId: string }) {
       .then(setRows)
       .catch(() => setRows([]));
   }, [clientId]);
-  if (!rows || rows.length === 0) return null;
+  if (!rows) return null;
+  if (rows.length === 0) {
+    return (
+      <Card data-testid="portal-invoices-empty">
+        <SectionTitle>Financeiro</SectionTitle>
+        <p className="text-sm text-muted">Nenhuma fatura por aqui ainda. Quando a agência enviar, ela aparece aqui com Pix copia e cola.</p>
+      </Card>
+    );
+  }
   return (
     <Card data-testid="portal-invoices">
       <SectionTitle>Financeiro</SectionTitle>

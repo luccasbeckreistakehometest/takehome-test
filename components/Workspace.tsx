@@ -58,7 +58,7 @@ import {
   VisualIdentityView,
 } from "./renderers";
 import { Button, Card, ErrorBox, Spinner, Tag } from "./ui";
-import { groupOfTab, resolveTab, visibleGroups, type TabKey } from "@/lib/workspace-tabs";
+import { groupOfTab, isTabKey, resolveTab, visibleGroups, type TabKey } from "@/lib/workspace-tabs";
 
 function nextMonthLabel(): string {
   const date = new Date();
@@ -135,6 +135,16 @@ export default function Workspace({
       setTab("projects");
     },
   };
+
+  // O tour guiado abre a aba do passo sem recarregar a página.
+  useEffect(() => {
+    const onTab = (event: Event) => {
+      const next = (event as CustomEvent<string>).detail;
+      if (isTabKey(next)) setTab(next);
+    };
+    window.addEventListener("ah:workspace-tab", onTab);
+    return () => window.removeEventListener("ah:workspace-tab", onTab);
+  });
 
   useEffect(() => {
     api<AgencySettings & { viewerRole?: string }>("/api/settings").then((settings) => {
@@ -311,6 +321,7 @@ export default function Workspace({
               key={g.key}
               type="button"
               data-group={g.key}
+              data-tour={`ws-group-${g.key}`}
               aria-current={g.key === activeGroup ? "true" : undefined}
               onClick={() => setTab(g.tabs[0].key)}
               className={`rounded-full px-3.5 py-1.5 text-sm transition-colors ${
@@ -329,6 +340,7 @@ export default function Workspace({
               key={key}
               type="button"
               data-tab={key}
+              data-tour={`ws-tab-${key}`}
               aria-current={tab === key ? "page" : undefined}
               onClick={() => setTab(key)}
               className={`snap-start whitespace-nowrap rounded-t-md px-3.5 py-2 text-sm transition-colors ${

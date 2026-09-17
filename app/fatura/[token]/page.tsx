@@ -1,7 +1,8 @@
 import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 import QRCode from "qrcode";
-import { invoicePageData } from "@/lib/invoices-db";
+import { invoicePageData, markInvoiceOpened } from "@/lib/invoices-db";
+import { getSession } from "@/lib/session";
 import { agencyLogoUrl } from "@/lib/branding";
 import InvoicePayView from "@/components/InvoicePayView";
 import { recordEvent } from "@/lib/analytics-db";
@@ -26,6 +27,8 @@ export default async function InvoicePage({ params }: Props) {
   if (!data) notFound();
   const { invoice } = data;
   recordEvent({ name: "invoice_opened", path: "/fatura/:token", audience: "geral", meta: { state: data.state } });
+  const viewer = await getSession();
+  if (viewer?.role !== "agency" && viewer?.role !== "admin") markInvoiceOpened(invoice.id);
   const qrSvg = invoice.pixPayload ? await QRCode.toString(invoice.pixPayload, { type: "svg", margin: 1, width: 240, errorCorrectionLevel: "M" }) : "";
   return (
     <InvoicePayView

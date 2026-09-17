@@ -21,6 +21,7 @@ import { googleCalendarUrl } from "@/lib/gcal";
 import DeliverableViewer from "./DeliverableViewer";
 import { Button, Card, ErrorBox, Input, Label, SectionTitle, Skeleton, Spinner, Tag, Textarea } from "./ui";
 import { Icon, type IconName } from "@/components/icons";
+import { notifyActivation } from "@/lib/activation-events";
 
 type ProjectDetailData = Project & {
   professional: Professional | null;
@@ -436,6 +437,7 @@ function ProjectDetail({ projectId, onBack }: { projectId: string; onBack: () =>
         body,
       });
       if (!response.ok) throw new Error((await response.json()).error ?? "Erro no upload");
+      notifyActivation();
       setUploadTitle("");
       if (project && ["open", "matched", "in_progress"].includes(project.status)) {
         await patch({ status: "in_review" });

@@ -1,7 +1,7 @@
 import Link from "next/link";
 import { redirect } from "next/navigation";
 import { getSession } from "@/lib/session";
-import { funnelCounts, recentSignups, topSources, visitorsPerDay } from "@/lib/analytics-db";
+import { activationCounts, funnelCounts, recentSignups, topSources, visitorsPerDay } from "@/lib/analytics-db";
 import { AUDIENCES, funnel, type Audience } from "@/lib/analytics-rules";
 import { appBaseUrl } from "@/lib/legal";
 import UtmBuilder from "./UtmBuilder";
@@ -36,6 +36,7 @@ export default async function AnalyticsPage({ searchParams }: Props) {
   const visitors = visitorsPerDay(filter);
   const sources = topSources(filter);
   const signups = recentSignups(20);
+  const activation = activationCounts(filter);
   const max = Math.max(1, ...visitors.map((v) => v.visitors));
   const top = Math.max(1, rows[0]?.count ?? 1);
   const qs = (patch: Record<string, string | number>) => {
@@ -165,6 +166,33 @@ export default async function AnalyticsPage({ searchParams }: Props) {
             </tbody>
           </table>
         </div>
+      </section>
+
+      <section className="rounded-xl border border-edge bg-surface p-5">
+        <h2 className="mb-1 text-sm font-semibold uppercase tracking-wider text-accent">Primeiros passos concluídos</h2>
+        <p className="mb-3 text-xs text-muted">Contas que concluíram cada passo do checklist no período (papel:passo).</p>
+        {activation.length === 0 ? (
+          <p className="text-sm text-muted">Nenhum passo concluído no período.</p>
+        ) : (
+          <div className="overflow-x-auto">
+            <table className="w-full min-w-[320px] text-left text-sm" data-testid="analytics-activation">
+              <thead className="text-xs uppercase text-muted">
+                <tr>
+                  <th className="py-1.5 pr-2">Passo</th>
+                  <th className="py-1.5 text-right">Contas</th>
+                </tr>
+              </thead>
+              <tbody className="divide-y divide-edge">
+                {activation.map((a) => (
+                  <tr key={a.step}>
+                    <td className="py-1.5 pr-2 font-mono text-xs">{a.step}</td>
+                    <td className="py-1.5 text-right tabular-nums">{a.accounts}</td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        )}
       </section>
 
       <UtmBuilder base={appBaseUrl()} />

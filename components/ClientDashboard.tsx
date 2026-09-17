@@ -13,6 +13,7 @@ import TierBadge, { TierProgress } from "./TierBadge";
 import OnboardingModal from "./OnboardingModal";
 import { ClientPulseCard } from "./PulseOverviewCard";
 import LearningsCard from "./LearningsCard";
+import ActivationChecklist from "./ActivationChecklist";
 import { Button, Card, SectionTitle, Spinner, Tag } from "./ui";
 
 type DashboardData = {
@@ -66,7 +67,8 @@ export default function ClientDashboard({
   return (
     <div className="space-y-6">
       <OnboardingModal role="client" />
-      {isNew && (
+      {client.selfServe && <ActivationChecklist expect="brand" />}
+      {isNew && !client.selfServe && (
         <Card className="border-accent/40 bg-accent/5">
           <SectionTitle>👋 Comece por aqui</SectionTitle>
           <ol className="mt-1 list-decimal space-y-1.5 pl-5 text-sm text-muted">

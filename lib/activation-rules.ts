@@ -42,6 +42,7 @@ export type ActivationFacts = {
   pagePublished?: boolean;
   invites?: number;
   packages?: number;
+  requests?: number; // pedidos de produção feitos pelo cliente
 };
 
 export type ActivationStep = { key: string; label: string; hint: string; href: string; done: boolean };
@@ -63,19 +64,18 @@ export function activationSteps(role: ActivationRole, f: ActivationFacts, ids: {
   }
   if (role === "managed") {
     return [
-      { key: "approve", label: "Aprove uma peça", hint: "Pelo portal ou pelo link que a agência mandar.", href: portal, done: n(f.approvals) > 0 },
-      { key: "package", label: "Confira o seu pacote do mês", hint: "Quanto já foi usado e o que é extra.", href: portal, done: n(f.packages) > 0 },
-      { key: "invoice", label: "Veja suas faturas", hint: "Pix direto para a agência.", href: portal, done: n(f.invoicesSeen) > 0 },
-      { key: "talk", label: "Fale com a agência", hint: "Mensagem ou pulso de como está sendo.", href: portal, done: n(f.messagesSent) + n(f.pulseAnswers) > 0 },
+      { key: "approve", label: "Aprove uma peça", hint: "Pelo portal ou pelo link que a agência mandar.", href: `${portal}#producoes`, done: n(f.approvals) > 0 },
+      { key: "request", label: "Peça uma produção", hint: "O pacote do mês mostra o que já foi usado e o que vira extra.", href: `${portal}#pacote`, done: n(f.requests) > 0 },
+      { key: "invoice", label: "Abra uma fatura", hint: "Pix direto para a agência, com copia e cola.", href: `${portal}#faturas`, done: n(f.invoicesSeen) > 0 },
+      { key: "talk", label: "Fale com a agência", hint: "Uma mensagem ou a nota de como está sendo.", href: `${portal}#conversa`, done: n(f.messagesSent) + n(f.pulseAnswers) > 0 },
     ];
   }
   if (role === "professional") {
     return [
-      { key: "profile", label: "Complete o perfil", hint: "Especialidade, cidade e disponibilidade.", href: pro, done: Boolean(f.profileComplete) },
-      { key: "portfolio", label: "Suba 3 trabalhos", hint: "É isso que o match da IA olha antes de indicar você.", href: pro, done: n(f.portfolioAssets) >= 3 },
-      { key: "opportunities", label: "Veja as oportunidades", hint: "Demandas abertas que combinam com você.", href: pro, done: n(f.applications) > 0 || n(f.deliveries) > 0 },
-      { key: "apply", label: "Candidate-se a uma demanda", hint: "Uma mensagem curta basta.", href: pro, done: n(f.applications) > 0 },
-      { key: "deliver", label: "Faça a primeira entrega", hint: "A agência revisa com marcações na imagem.", href: pro, done: n(f.deliveries) > 0 },
+      { key: "profile", label: "Complete o perfil", hint: "Bio, habilidades e cidade.", href: pro, done: Boolean(f.profileComplete) },
+      { key: "portfolio", label: "Suba 3 trabalhos", hint: "É isso que o match da IA olha antes de indicar você.", href: `${pro}#portfolio`, done: n(f.portfolioAssets) >= 3 },
+      { key: "apply", label: "Candidate-se a uma demanda", hint: "Uma mensagem curta basta.", href: `${pro}#oportunidades`, done: n(f.applications) > 0 },
+      { key: "deliver", label: "Faça a primeira entrega", hint: "A agência revisa com marcações na imagem.", href: `${pro}#demandas`, done: n(f.deliveries) > 0 },
     ];
   }
   return [

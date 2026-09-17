@@ -3,12 +3,13 @@ import { z } from "zod";
 import { getSession } from "@/lib/session";
 import { markOnboarded } from "@/lib/auth";
 import { getOnboarding, peekOnboarding, recordOnboardingEvent, setTourProgress } from "@/lib/onboarding-db";
+import { tourKind } from "@/lib/tour-steps";
 
 export async function GET() {
   const session = await getSession();
   if (!session) return NextResponse.json({ tourCompleted: false, tourStep: 0, anonymous: true });
   const o = peekOnboarding(session.userId);
-  return NextResponse.json({ tourCompleted: o.tourCompleted === 1, tourStep: o.tourStep, firstSeenAt: o.firstSeenAt });
+  return NextResponse.json({ tourCompleted: o.tourCompleted === 1, tourStep: o.tourStep, firstSeenAt: o.firstSeenAt, kind: tourKind(session) });
 }
 
 const schema = z.object({

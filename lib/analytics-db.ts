@@ -224,6 +224,18 @@ export function recentSignups(limit = 30): { username: string; role: string; cre
   });
 }
 
+// Primeiros passos concluídos (evento activation_step, um por conta e passo).
+export function activationCounts(filter: AnalyticsFilter): { step: string; accounts: number }[] {
+  const where = whereFor(filter);
+  return db
+    .prepare(
+      `SELECT json_extract(metaJson, '$.step') AS step, COUNT(DISTINCT userId) AS accounts FROM page_events
+       WHERE name = 'activation_step' AND ${where.sql} GROUP BY step ORDER BY step`
+    )
+    .all(...where.params)
+    .filter((r): r is { step: string; accounts: number } => typeof (r as { step: unknown }).step === "string");
+}
+
 export function dailyRows(days: number): { day: string; audience: string; source: string; step: string; count: number }[] {
   const since = new Date(Date.now() - days * 86_400_000).toISOString().slice(0, 10);
   return db

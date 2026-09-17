@@ -437,9 +437,164 @@ export const UI_DICT_R3: Record<string, string> = {
   "Cliente fiel": "Loyal regular",
   "Rolagem apressada": "Busy scroller",
   "Caçador de preço": "Price hunter",
+  // Rodada 3 — tours por papel, primeiros passos e diferenciais
+  "Aprovar": "Approve",
+  "Digite ou fale o briefing.": "Type or say the briefing.",
+  "Sua central: o que precisa de decisão agora — candidaturas, entregas para revisar, aprovações paradas, posts na hora.":
+    "Your hub: what needs a decision now — applications, deliveries to review, stalled approvals, posts due.",
+  "Cada cliente tem briefing, kit de IA (estratégia, campanhas, identidade, social), pacote do mês, demandas e portal próprio.":
+    "Every client has a briefing, an AI kit (strategy, campaigns, identity, social), a monthly package, jobs and their own portal.",
+  "Aqui você pode falar em vez de digitar: a IA escuta, pergunta o que faltar e preenche o cadastro para você revisar.":
+    "Here you can talk instead of typing: the AI listens, asks what's missing and fills in the form for you to review.",
+  "Demandas em kanban: da abertura ao pagamento, com freelancers ou equipe interna.":
+    "Jobs on a kanban board: from brief to payment, with freelancers or your in-house team.",
+  "Insights, horas e margem por cliente e as cobranças Pix do mês num lugar só.":
+    "Insights, hours and margin per client, and this month's Pix invoices in one place.",
+  "Escopo e fatura": "Scope and invoicing",
+  "Defina o pacote de cada cliente. Extra só entra com valor aprovado — e vai pra fatura Pix do mês.":
+    "Set each client's package. Extras only happen with an approved price — and go on the month's Pix invoice.",
+  "No calendário, selecione os posts e toque em Enviar para aprovação. O cliente abre no celular, sem senha, aprova ou pede ajuste — e o histórico fica guardado.":
+    "In the calendar, pick the posts and tap Send for approval. The client opens it on their phone, no password, approves or asks for changes — and the history is kept.",
+  "Fatura Pix sem taxa": "Pix invoices, no fees",
+  "Em Resultados → Cobranças: a fatura sai com QR Pix da sua chave e lembrete pronto pro WhatsApp. O dinheiro cai direto na sua conta; você só confirma.":
+    "In Results → Invoices: each invoice comes with a Pix QR for your own key and a ready WhatsApp reminder. The money lands straight in your account; you just confirm.",
+  "Carrossel pronto": "Ready-to-post carousels",
+  "Na aba Carrosséis de cada cliente (ou a partir de um post), a IA escreve os slides e eles saem com as cores e o logo da marca. Baixe as imagens ou agende.":
+    "In each client's Carousels tab (or from a post), the AI writes the slides and they come out in the brand's colors and logo. Download the images or schedule them.",
+  "Link na bio e cliques": "Link in bio and clicks",
+  "Cada cliente ganha uma página de links e links curtos por post. Você vê quais posts levam gente pro site — sem cookies.":
+    "Every client gets a links page and short links per post. You see which posts send people to the site — no cookies.",
+  "Quando alguém pergunta pra uma IA pelo melhor negócio do ramo, seu cliente aparece? Uma rodada por semana mostra quem é citado e o que fazer.":
+    "When someone asks an AI for the best business in the field, does your client show up? A weekly run shows who gets cited and what to do.",
+  "Teste com o público": "Test with the audience",
+  "Antes de agendar, compare 2 ou 3 versões do texto com as personas da estratégia. É uma simulação para descartar opções fracas; os cliques reais dizem se acertou.":
+    "Before scheduling, compare 2 or 3 versions of the copy with the strategy's personas. It's a simulation to rule out weak options; real clicks tell you if it was right.",
+  "Em Crescimento → Prospecção, cada prospect ganha uma página com pitch, pacotes e prazo. Ele aceita sem login e já vira cliente com acesso ao portal.":
+    "In Growth → Prospecting, every prospect gets a page with the pitch, packages and deadline. They accept without logging in and become a client with portal access.",
+  "No portal, o cliente responde 😞😐😀 depois de cada aprovação e uma vez por mês, e o NPS a cada trimestre. A Hoje mostra quem está em risco e o relatório mensal traz os números.":
+    "In the portal, the client answers 😞😐😀 after each approval and once a month, plus NPS every quarter. Today shows who's at risk and the monthly report has the numbers.",
+  "Na aba Horas de cada cliente você aponta tempo por demanda. Em Horas & margem, cada cliente aparece com fee, horas, custo, recebido e margem do mês — quem dá prejuízo fica em vermelho.":
+    "In each client's Hours tab you log time per job. In Hours & margin, every client shows fee, hours, cost, received and the month's margin — the ones losing money turn red.",
+  "No calendário e no atendente, o botão Checar voz da marca compara o texto com o briefing e as regras do cliente e dá uma nota de tom. Reescrever no tom corrige em 1 clique.":
+    "In the calendar and the attendant, the Check brand voice button compares the copy with the client's briefing and rules and gives a tone score. Rewrite in tone fixes it in 1 click.",
+  "Na aba 30 dias de cada cliente: objetivo, canais e data de início. A IA planeja as semanas e escreve cada post; tudo entra no calendário como rascunho nos dias livres.":
+    "In each client's 30 days tab: goal, channels and start date. The AI plans the weeks and writes every post; everything goes into the calendar as drafts on free days.",
+  "No Dashboard de cada cliente, os posts publicados são cruzados com vendas, métricas e cliques dos dias seguintes: melhor formato, dia e horário e o que menos rende.":
+    "On each client's Dashboard, published posts are matched against the following days' sales, metrics and clicks: best format, day and time, and what performs worst.",
+  "Conte falando": "Say it out loud",
+  "Toque em Falando e responda como numa conversa. Quando você para, a IA entende que é a vez dela.":
+    "Tap Talking and answer like in a conversation. When you stop, the AI knows it's its turn.",
+  "Gere o seu kit": "Generate your kit",
+  "Estratégia, campanha, identidade e ROI saem do seu briefing. O Kit completo faz tudo de uma vez.":
+    "Strategy, campaign, identity and ROI come from your briefing. The Full kit does it all at once.",
+  "Um mês de posts": "A month of posts",
+  "Escolha o objetivo e a IA escreve 30 dias de posts direto no calendário. Você aceita ou pula um a um.":
+    "Pick the goal and the AI writes 30 days of posts straight into the calendar. You accept or skip them one by one.",
+  "Da ideia ao carrossel com as cores e o logo da marca. É só baixar e postar.":
+    "From idea to carousel in the brand's colors and logo. Just download and post.",
+  "O que funcionou": "What worked",
+  "Todo mês, um relatório com posts, cliques e vendas — e o que funciona pra sua marca.":
+    "Every month, a report with posts, clicks and sales — and what works for your brand.",
+  "Chegou um link? É só abrir, olhar e tocar em Aprovar. Pediu ajuste, a agência recebe na hora. Aqui no portal fica tudo o que está em produção.":
+    "Got a link? Just open it, look and tap Approve. Ask for changes and the agency gets it right away. Everything in production is here in the portal.",
+  "Seu pacote do mês": "Your monthly package",
+  "Veja quanto do pacote já foi usado e peça uma produção. Se passar do combinado, o valor do extra chega para você aprovar antes.":
+    "See how much of the package is used and request new work. If it goes beyond the deal, the extra's price comes to you to approve first.",
+  "Faturas": "Invoices",
+  "As faturas da agência ficam aqui, com Pix copia e cola. Pagou? Toque em Já paguei e a agência confirma.":
+    "The agency's invoices are here, with Pix copy-and-paste. Paid? Tap I've paid and the agency confirms.",
+  "Mande mensagem para a agência e conte como está sendo — sua nota ajuda o time a melhorar.":
+    "Message the agency and tell them how it's going — your rating helps the team improve.",
+  "Portfólio": "Portfolio",
+  "Suba pelo menos 3 trabalhos. É isso que o match da IA olha antes de indicar você.":
+    "Upload at least 3 pieces. That's what the AI match looks at before recommending you.",
+  "As demandas abertas na plataforma aparecem aqui, com verba e prazo.":
+    "Open jobs on the platform show up here, with budget and deadline.",
+  "Candidatura": "Applying",
+  "Toque em Candidatar-se e mande uma mensagem curta. O status da candidatura fica ao lado da demanda.":
+    "Tap Apply and send a short message. The application status sits next to the job.",
+  "Entrega com marcações": "Deliveries with markup",
+  "Aceita, a demanda aparece em Minhas demandas. Suba a entrega; a agência revisa com marcações direto na imagem.":
+    "Once accepted, the job shows up in My jobs. Upload the delivery; the agency reviews it with notes right on the image.",
+  "Ganhos e elo": "Earnings and tier",
+  "Veja o que tem a receber e o que já foi pago. Entregas bem avaliadas sobem o seu elo — e a sua visibilidade.":
+    "See what you're owed and what's been paid. Well-rated deliveries raise your tier — and your visibility.",
+  "Ver todos os diferenciais": "See every differentiator",
+  "Refazer tour": "Replay the tour",
+  "Primeiros passos concluídos": "First steps done",
+  "Tudo pronto — você já usou o essencial.": "All set — you've used the essentials.",
+  "Progresso dos primeiros passos": "First steps progress",
+  "Falando ou escrevendo: é daqui que a IA tira tudo.":
+    "Talking or typing: this is where the AI gets everything.",
+  "Gere a primeira peça com IA": "Generate your first AI piece",
+  "Estratégia, calendário ou posts.": "Strategy, calendar or posts.",
+  "Coloque um post na agenda": "Put a post on the calendar",
+  "Use os 30 dias ou crie à mão.": "Use the 30 days or create one by hand.",
+  "Monte um carrossel": "Build a carousel",
+  "Pronto para baixar e postar.": "Ready to download and post.",
+  "Veja o que funcionou": "See what worked",
+  "Relatório do mês com os números da marca.": "The month's report with the brand's numbers.",
+  "Aprove uma peça": "Approve a piece",
+  "Pelo portal ou pelo link que a agência mandar.": "In the portal or through the link the agency sends.",
+  "Peça uma produção": "Request new work",
+  "O pacote do mês mostra o que já foi usado e o que vira extra.":
+    "The monthly package shows what's used and what becomes an extra.",
+  "Abra uma fatura": "Open an invoice",
+  "Pix direto para a agência, com copia e cola.": "Pix straight to the agency, with copy-and-paste.",
+  "Uma mensagem ou a nota de como está sendo.": "A message or a rating of how it's going.",
+  "Complete o perfil": "Complete your profile",
+  "Bio, habilidades e cidade.": "Bio, skills and city.",
+  "Suba 3 trabalhos": "Upload 3 pieces",
+  "É isso que o match da IA olha antes de indicar você.":
+    "That's what the AI match looks at before recommending you.",
+  "Candidate-se a uma demanda": "Apply for a job",
+  "Uma mensagem curta basta.": "A short message is enough.",
+  "Faça a primeira entrega": "Make your first delivery",
+  "A agência revisa com marcações na imagem.": "The agency reviews it with notes on the image.",
+  "Nome, cor e logo no portal dos clientes.": "Name, color and logo on your clients' portal.",
+  "Defina o pacote de um cliente": "Set a client's package",
+  "Extra só entra com valor aprovado.": "Extras only happen with an approved price.",
+  "Receba pedidos pelo seu endereço.": "Get requests at your own address.",
+  "Cada convite entra direto no seu espaço.": "Every invite goes straight into your workspace.",
+  "Conclua os primeiros passos antes de fechar.": "Finish the first steps before closing.",
+  "Não deu para fechar agora.": "Couldn't close it right now.",
+  "Pacote e escopo sob controle": "Scope that counts itself",
+  "Defina o pacote de cada cliente: cada post é contado, você é avisado quando passa e o extra vira valor aprovado.":
+    "Set each client's package: every post is counted, you're warned when it runs over and extras become an approved price.",
+  "Definir num cliente": "Set it on a client",
+  "O cliente aprova pelo WhatsApp, sem senha. O post aprovado já fica marcado na agenda, com histórico.":
+    "Clients approve from a WhatsApp link — no password. The approved post is marked on the calendar, with history.",
+  "Enviar posts para aprovar": "Send posts for approval",
+  "Fatura do fee com QR Pix da sua chave e lembrete pronto. O dinheiro cai direto na sua conta.":
+    "Fee invoices with a Pix QR for your own key and a ready reminder. The money lands straight in your account.",
+  "Abrir cobranças": "Open invoices",
+  "Da ideia ao carrossel com as cores e o logo do cliente — é só baixar e postar, ou agendar.":
+    "Carousels in the brand's look, ready to post — download, post or schedule.",
+  "Criar num cliente": "Create one on a client",
+  "Página de links por cliente e links curtos por post: você vê o que leva gente pro site, sem cookies.":
+    "A links page per client and short links per post: see what sends people to the site, no cookies.",
+  "Quando alguém pergunta pra uma IA, seu cliente aparece? Quem é citado e o que fazer para aparecer mais.":
+    "When someone asks an AI, does your client show up? Who gets cited and what to do to show up more.",
+  "Abrir radar": "Open radar",
+  "Compare versões do texto com as personas da estratégia antes de agendar. Simulação para descartar o fraco.":
+    "Compare versions of the copy with the strategy's personas before scheduling. A simulation to rule out the weak ones.",
+  "Testar um post": "Test a post",
+  "Mostrar menos": "Show less",
+  "Bem-vindo ao seu portal": "Welcome to your portal",
+  "Aprove sem complicação": "Approve without the hassle",
+  "A agência manda as peças por aqui ou por um link no WhatsApp. Você olha, aprova ou pede ajuste.":
+    "The agency sends pieces here or through a WhatsApp link. You look, approve or ask for changes.",
+  "Veja o que já foi produzido e peça novas produções. Extra só entra com valor aprovado por você.":
+    "See what's been produced and request new work. Extras only happen with a price you approve.",
+  "Mensagens, faturas com Pix e o relatório do mês ficam no mesmo lugar.":
+    "Messages, Pix invoices and the monthly report, all in one place.",
+  "Nenhuma fatura por aqui ainda. Quando a agência enviar, ela aparece aqui com Pix copia e cola.":
+    "No invoices here yet. When the agency sends one, it shows up here with Pix copy-and-paste.",
 };
 
 export const UI_REGEX_R3: [RegExp, string][] = [
+  [/^(\d+) de (\d+)$/, "$1 of $2"],
+  [/^Ver todos os diferenciais \((\d+)\)$/, "See every differentiator ($1)"],
   [/^Versão ([ABC])$/, "Version $1"],
   [/^Vencedora: versão ([ABC])$/, "Winner: version $1"],
   [/^Ajuste sugerido: (.+)$/, "Suggested fix: $1"],
@@ -449,7 +604,7 @@ export const UI_REGEX_R3: [RegExp, string][] = [
   [/^Versão ([ABC]) no calendário ✓$/, "Version $1 in the calendar ✓"],
   [/^Agendar versão ([ABC]) para comparar$/, "Schedule version $1 to compare"],
   [/^Painel de público: acertou (\d+) de (\d+) testes que foram ao ar \((\d+)%\)\.$/, "Audience panel: right in $1 of $2 tests that went live ($3%)."],
-  [/^Quando alguém pergunta para uma IA "qual o melhor (.+) perto de mim\?", (.+) aparece\? A Marqa faz as perguntas com busca na web, anota quem é citado e o que fazer para aparecer mais\.$/, "When someone asks an AI \"what's the best $1 near me?\", does $2 show up? Marqa asks with web search, notes who gets cited and what to do to show up more."],
+  [/^Quando alguém pergunta para uma IA "qual o melhor (.+) perto de mim\?", (.+) aparece\? A IA faz as perguntas com busca na web, anota quem é citado e o que fazer para aparecer mais\.$/, "When someone asks an AI \"what's the best $1 near me?\", does $2 show up? The AI asks with web search, notes who gets cited and what to do to show up more."],
   [/^Perguntas de quem compra \(até (\d+)\)$/, "Buyer questions (up to $1)"],
   [/^Rodar radar · (\d+) coins$/, "Run radar · $1 coins"],
   [/^Próxima rodada a partir de (.+)$/, "Next run from $1"],

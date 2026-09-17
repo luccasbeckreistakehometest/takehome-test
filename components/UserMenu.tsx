@@ -63,6 +63,20 @@ export default function UserMenu({ name, role, showPlans = true }: { name: strin
               <Icon name="sparkle" size={15} /> Planos & coins
             </Link>
           ) : null}
+          {role !== "admin" && (
+            <button
+              role="menuitem"
+              type="button"
+              onClick={() => {
+                setOpen(false);
+                window.dispatchEvent(new Event("ah:tour-start"));
+              }}
+              className="flex w-full items-center gap-2 rounded-md px-3 py-2 text-left hover:bg-surface-2"
+              data-testid="tour-restart"
+            >
+              <Icon name="sparkle" size={15} /> Refazer tour
+            </button>
+          )}
           <Link role="menuitem" href="/contato" onClick={() => setOpen(false)} className="flex items-center gap-2 rounded-md px-3 py-2 hover:bg-surface-2">
             <Icon name="mail" size={15} /> Ajuda e contato
           </Link>

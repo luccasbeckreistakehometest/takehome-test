@@ -1,5 +1,5 @@
 import { randomBytes, randomUUID } from "crypto";
-import { db, getClient, listClients, tenantColumn } from "./db";
+import { addColumnIfMissing, db, getClient, listClients, tenantColumn } from "./db";
 import { getKv, setKv } from "./kv-settings";
 import { kvKeyFor, scopeWhere, type TenantScope, ALL_AGENCIES } from "./tenancy-rules";
 import { getAgency } from "./agencies";
@@ -65,6 +65,8 @@ db.exec(`
   CREATE INDEX IF NOT EXISTS idx_client_invoices_client ON client_invoices(clientId, month);
 `);
 tenantColumn("client_invoices");
+// primeira abertura da fatura pelo cliente (a agência conferindo não conta)
+addColumnIfMissing("client_invoices", "openedAt", "TEXT");
 
 const SETTINGS_KEY = "invoice_settings";
 const nowIso = () => new Date().toISOString();
@@ -263,6 +265,10 @@ export function invoicePageData(token: string) {
     beneficiary: settings.beneficiaryName,
     lateNote: settings.lateNote,
   };
+}
+
+export function markInvoiceOpened(id: string): void {
+  db.prepare("UPDATE client_invoices SET openedAt = ? WHERE id = ? AND openedAt IS NULL").run(new Date().toISOString(), id);
 }
 
 // Dia 1: rascunho para cada cliente com fee (uma vez por dia, idempotente).

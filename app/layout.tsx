@@ -13,6 +13,7 @@ import GlobalSearch from "@/components/GlobalSearch";
 import AssistantWidget from "@/components/AssistantWidget";
 import ThemeToggle from "@/components/ThemeToggle";
 import Tour from "@/components/Tour";
+import { tourKind } from "@/lib/tour-steps";
 import { Icon } from "@/components/icons";
 import AgencyNav from "@/components/AgencyNav";
 import Track from "@/components/Track";
@@ -79,7 +80,7 @@ export default async function RootLayout({
         <Translator />
         <Track />
         <JobsIndicator />
-        <Tour role={session?.role ?? null} />
+        <Tour kind={tourKind(session)} refId={session?.refId ?? null} />
         <GlobalSearch />
         <header className="sticky top-0 z-40 border-b border-edge bg-background/80 backdrop-blur">
           <div className="mx-auto flex h-14 w-full max-w-6xl items-center justify-between gap-4 px-4">

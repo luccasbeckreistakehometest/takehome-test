@@ -80,7 +80,7 @@ export default function AiRadarTab({ client }: { client: Client }) {
         <div>
           <SectionTitle>Radar de IA</SectionTitle>
           <p className="text-sm text-muted">
-            {`Quando alguém pergunta para uma IA "qual o melhor ${client.industry || "negócio"} perto de mim?", ${client.name} aparece? A Marqa faz as perguntas com busca na web, anota quem é citado e o que fazer para aparecer mais.`}
+            {`Quando alguém pergunta para uma IA "qual o melhor ${client.industry || "negócio"} perto de mim?", ${client.name} aparece? A IA faz as perguntas com busca na web, anota quem é citado e o que fazer para aparecer mais.`}
           </p>
         </div>
         {error && <ErrorBox message={error} />}

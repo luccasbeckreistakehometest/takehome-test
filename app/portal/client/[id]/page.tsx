@@ -22,6 +22,8 @@ import MarcaModeChoice from "@/components/MarcaModeChoice";
 import PulsePrompt from "@/components/PulsePrompt";
 import ScopeRequestCard from "@/components/ScopeRequestCard";
 import PortalInvoicesCard from "@/components/PortalInvoicesCard";
+import OnboardingModal from "@/components/OnboardingModal";
+import ActivationChecklist from "@/components/ActivationChecklist";
 import type { AccountMessage } from "@/lib/marketplace-db";
 
 type ProjectDetail = Project & {
@@ -46,16 +48,13 @@ export default function ClientPortalPage({
   const [projects, setProjects] = useState<ProjectDetail[]>([]);
   const [messages, setMessages] = useState<AccountMessage[]>([]);
   const [chatText, setChatText] = useState("");
-  const [chooserOpen, setChooserOpen] = useState(false);
+  // Abre o seletor de modo logo após o cadastro (?choose=1). O portal só
+  // aparece depois do primeiro fetch, então o servidor e o navegador batem.
+  const [chooserOpen, setChooserOpen] = useState(
+    () => typeof window !== "undefined" && new URLSearchParams(window.location.search).get("choose") === "1"
+  );
   // recarrega o pulso depois de cada aprovação (a pergunta "como foi?" aparece na hora)
   const [pulseKey, setPulseKey] = useState(0);
-
-  useEffect(() => {
-    // Abre o seletor de modo logo após o cadastro (?choose=1)
-    if (new URLSearchParams(window.location.search).get("choose") === "1") {
-      setChooserOpen(true);
-    }
-  }, []);
 
   useEffect(() => {
     api<Client>(`/api/clients/${id}`).then(setClient);
@@ -192,7 +191,13 @@ export default function ClientPortalPage({
         <MarcaModeChoice id={client.id} open={chooserOpen} onClose={() => setChooserOpen(false)} />
       )}
 
-      {!client.selfServe && <PulsePrompt clientId={client.id} refreshKey={pulseKey} />}
+      {!client.selfServe && (
+        <>
+          <OnboardingModal role="managed" />
+          <ActivationChecklist expect="managed" />
+          <PulsePrompt clientId={client.id} refreshKey={pulseKey} />
+        </>
+      )}
 
       <Card className="flex flex-wrap items-center justify-between gap-3">
         <div>
@@ -210,7 +215,7 @@ export default function ClientPortalPage({
         </a>
       </Card>
 
-      <Card>
+      <Card id="producoes" className="scroll-mt-20" data-tour="portal-deliverables">
         <SectionTitle>Produções em andamento</SectionTitle>
         {projects.length === 0 ? (
           <p className="text-sm text-muted">Nenhuma produção com profissionais no momento.</p>
@@ -318,7 +323,7 @@ export default function ClientPortalPage({
 
       {!client.selfServe && (
       <div className="grid gap-6 lg:grid-cols-2">
-        <Card className="space-y-3">
+        <Card id="conversa" className="scroll-mt-20 space-y-3" data-tour="portal-chat">
           <SectionTitle>Fale com a agência</SectionTitle>
           <div className="max-h-56 space-y-2 overflow-y-auto">
             {messages.length === 0 && (
@@ -351,8 +356,12 @@ export default function ClientPortalPage({
           </div>
         </Card>
 
-        <ScopeRequestCard clientId={id} />
-        <PortalInvoicesCard clientId={id} />
+        <div id="pacote" className="scroll-mt-20" data-tour="portal-scope">
+          <ScopeRequestCard clientId={id} />
+        </div>
+        <div id="faturas" className="scroll-mt-20" data-tour="portal-invoices">
+          <PortalInvoicesCard clientId={id} />
+        </div>
       </div>
       )}
 

@@ -16,6 +16,8 @@ import type { TierInfo } from "@/lib/ranking";
 import ProfessionalForm from "@/components/ProfessionalForm";
 import TierBadge, { TierProgress } from "@/components/TierBadge";
 import OnboardingModal from "@/components/OnboardingModal";
+import ActivationChecklist from "@/components/ActivationChecklist";
+import { notifyActivation } from "@/lib/activation-events";
 import { Button, Card, SectionTitle, Spinner, Tag } from "@/components/ui";
 
 type Profile = Professional & {
@@ -62,6 +64,7 @@ export default function ProfessionalPage({
   return (
     <div className="space-y-6">
       <OnboardingModal role="professional" welcomeOnly />
+      <ActivationChecklist expect="professional" />
       <div className="flex flex-wrap items-start justify-between gap-4">
         <div>
           <h1 className="font-[family-name:var(--font-display)] text-3xl font-bold tracking-tight">
@@ -111,7 +114,7 @@ export default function ProfessionalPage({
             ))}
           </div>
 
-          <Card>
+          <Card data-tour="pro-profile">
             <SectionTitle>Perfil</SectionTitle>
             <div className="flex flex-wrap gap-1.5">
               {profile.skills.map((skill) => (
@@ -157,7 +160,7 @@ export default function ProfessionalPage({
             </Card>
           )}
 
-          <Card>
+          <Card data-tour="pro-earnings">
             <SectionTitle>Meus ganhos</SectionTitle>
             <div className="grid gap-3 sm:grid-cols-2">
               <div className="rounded-lg border border-edge bg-surface-2 p-3 text-sm">
@@ -193,7 +196,7 @@ export default function ProfessionalPage({
 
           <PortfolioGallery professionalId={profile.id} />
 
-          <Card>
+          <Card id="demandas" className="scroll-mt-20" data-tour="pro-projects">
             <SectionTitle>Minhas demandas</SectionTitle>
             {profile.projects.length === 0 ? (
               <p className="text-sm text-muted">Nenhuma demanda vinculada ainda.</p>
@@ -225,7 +228,7 @@ export default function ProfessionalPage({
             )}
           </Card>
 
-          <Card>
+          <Card id="oportunidades" className="scroll-mt-20" data-tour="pro-opportunities">
             <SectionTitle>Oportunidades abertas na plataforma</SectionTitle>
             {profile.opportunities.length === 0 ? (
               <p className="text-sm text-muted">Nenhuma demanda aberta no momento.</p>
@@ -349,7 +352,7 @@ function PortfolioGallery({ professionalId }: { professionalId: string }) {
   }, [professionalId]);
   useEffect(load, [load]);
   return (
-    <Card>
+    <Card id="portfolio" className="scroll-mt-20" data-tour="pro-portfolio">
       <div className="flex items-center justify-between">
         <SectionTitle>Portfolio na plataforma</SectionTitle>
         <label className="cursor-pointer rounded-md border border-edge bg-surface-2 px-3 py-1.5 text-xs transition-colors hover:border-accent">
@@ -359,6 +362,7 @@ function PortfolioGallery({ professionalId }: { professionalId: string }) {
             accept="image/jpeg,image/png,image/webp,image/gif"
             className="hidden"
             disabled={uploading}
+            data-testid="portfolio-upload"
             onChange={async (event) => {
               const file = event.target.files?.[0];
               if (!file) return;
@@ -370,6 +374,7 @@ function PortfolioGallery({ professionalId }: { professionalId: string }) {
                   method: "POST",
                   body,
                 });
+                notifyActivation();
                 load();
               } finally {
                 setUploading(false);

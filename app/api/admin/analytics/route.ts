@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server";
 import { guard, isDenied } from "@/lib/guard";
-import { dailyRows, funnelCounts, recentSignups, topSources, visitorsPerDay } from "@/lib/analytics-db";
+import { activationCounts, dailyRows, funnelCounts, recentSignups, topSources, visitorsPerDay } from "@/lib/analytics-db";
 import { AUDIENCES, eventsCsv, funnel, type Audience } from "@/lib/analytics-rules";
 
 // Funil e origens (admin). ?days=7|30|90, ?audience=, ?source=, ?format=csv.
@@ -24,5 +24,6 @@ export async function GET(request: Request) {
     visitors: visitorsPerDay(filter),
     sources: topSources(filter),
     signups: recentSignups(30),
+    activation: activationCounts(filter),
   });
 }
