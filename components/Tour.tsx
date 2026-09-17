@@ -19,6 +19,7 @@ const STEPS: Step[] = [
   { anchor: "diff-attendant", path: "/", t: "Atendente de WhatsApp com IA", b: "Na aba Atendente de cada cliente: rascunho ou automático, horário comercial, limite por contato e passagem para humano. Nunca inventa preço." },
   { anchor: "diff-proposal", path: "/", t: "Proposta pública em 5 minutos", b: "Em Prospecção, cada prospect ganha uma página com pitch, pacotes e prazo. Ele aceita sem login e já vira cliente com acesso ao portal." },
   { anchor: "nav-calendar", path: "/", t: "Calendário de conteúdo", b: "Semana ou mês por cliente, status com um clique e aviso dos dias sem conteúdo." },
+  { anchor: "diff-public-page", path: "/", t: "Página pública da agência", b: "Em Configurações → Página pública você liga /a/sua-agencia: serviços, trabalhos que o cliente autorizou, clientes e depoimentos. O formulário vira prospect e avisa você no sino e no WhatsApp." },
 ];
 type Rect = { top: number; left: number; width: number; height: number };
 
@@ -48,7 +49,12 @@ export default function Tour({ role }: { role?: string | null }) {
   const measure = useCallback(() => {
     const el = document.querySelector<HTMLElement>(`[data-tour="${STEPS[step].anchor}"]`);
     if (!el) return setRect(null);
-    const r = el.getBoundingClientRect();
+    let r = el.getBoundingClientRect();
+    // âncoras abaixo da dobra (cards dos diferenciais) entram na tela antes de medir
+    if (r.top < 0 || r.bottom > window.innerHeight) {
+      el.scrollIntoView({ block: "center" });
+      r = el.getBoundingClientRect();
+    }
     setRect({ top: r.top - 8, left: r.left - 8, width: r.width + 16, height: r.height + 16 });
   }, [step]);
 

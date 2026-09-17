@@ -188,7 +188,10 @@ export default function ProspectingPage() {
                     {prospect.segment} · {prospect.location}
                   </p>
                 </div>
-                <Tag>{PROSPECT_STATUS_LABELS[prospect.status]}</Tag>
+                <span className="flex flex-wrap justify-end gap-1">
+                  {prospect.searchQuery === "pagina-publica" && <Tag>Lead da página pública</Tag>}
+                  <Tag>{PROSPECT_STATUS_LABELS[prospect.status]}</Tag>
+                </span>
               </div>
               <p className="text-sm text-muted">
                 <span className="font-semibold text-foreground/80">Por que é fit: </span>

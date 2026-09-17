@@ -12,6 +12,7 @@ const PUBLIC_PAGES = [
   "/print",
   "/proposta", // proposta comercial pública por token
   "/para-", // landings de funil públicas (/para-agencias, /para-marcas, ...)
+  "/a/", // página pública da agência (/a/[slug]) — com a barra: /agenda, /admin continuam protegidos
 ];
 
 // Rotas de API públicas (chamadas antes do login ou por sistemas externos).
@@ -43,6 +44,10 @@ function isPublicApi(pathname: string, method: string): boolean {
   // Proposta pública: leitura pelo token e aceite (o token é o segredo).
   if (method === "GET" && /^\/api\/proposals\/[^/]+$/.test(pathname)) return true;
   if (method === "POST" && /^\/api\/proposals\/[^/]+\/accept$/.test(pathname)) return true;
+  // Página pública da agência: imagens do portfólio/logos (GET) e o formulário
+  // de lead (POST, com limite por IP e honeypot na própria rota).
+  if (method === "GET" && /^\/api\/a\/[^/]+\/(work|logo)\/[^/]+$/.test(pathname)) return true;
+  if (method === "POST" && /^\/api\/a\/[^/]+\/lead$/.test(pathname)) return true;
   return false;
 }
 

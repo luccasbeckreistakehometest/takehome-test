@@ -46,11 +46,19 @@ const ITEMS: { anchor: string; icon: IconName; title: string; body: string; href
     href: "/calendar",
     cta: "Abrir calendário",
   },
+  {
+    anchor: "diff-public-page",
+    icon: "globe",
+    title: "Página pública da agência",
+    body: "Portfólio, clientes e depoimentos em /a/sua-agencia, com formulário que vira prospect e avisa você na hora.",
+    href: "/settings#pagina-publica",
+    cta: "Configurar página",
+  },
 ];
 
 export default function DifferentiatorsStrip() {
   return (
-    <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-5" data-testid="differentiators">
+    <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4" data-testid="differentiators">
       {ITEMS.map((item) => (
         <Link
           key={item.anchor}
