@@ -306,7 +306,7 @@ function PostPanel({
   const [caption, setCaption] = useState(post.caption);
   return (
     <div className="fixed inset-0 z-[70] flex items-end justify-center bg-black/40 p-4 sm:items-center" onClick={onClose}>
-      <div className="w-full max-w-lg animate-pop-in rounded-2xl border border-edge bg-surface p-5 shadow-2xl [transform-origin:center]" onClick={(e) => e.stopPropagation()} data-testid="post-panel">
+      <div className="max-h-[calc(100dvh-2rem)] w-full max-w-lg animate-pop-in overflow-y-auto overscroll-contain rounded-2xl border border-edge bg-surface p-5 shadow-2xl [transform-origin:center]" onClick={(e) => e.stopPropagation()} data-testid="post-panel">
         <div className="flex items-start justify-between gap-3">
           <div>
             <p className="text-xs uppercase tracking-widest text-accent">{post.clientName}</p>
@@ -464,7 +464,7 @@ function QuickAdd({
   }
   return (
     <div className="fixed inset-0 z-[70] flex items-end justify-center bg-black/40 p-4 sm:items-center" onClick={onClose}>
-      <div className="w-full max-w-lg animate-pop-in space-y-3 rounded-2xl border border-edge bg-surface p-5 shadow-2xl [transform-origin:center]" onClick={(e) => e.stopPropagation()} data-testid="quick-add">
+      <div className="max-h-[calc(100dvh-2rem)] w-full max-w-lg animate-pop-in space-y-3 overflow-y-auto overscroll-contain rounded-2xl border border-edge bg-surface p-5 shadow-2xl [transform-origin:center]" onClick={(e) => e.stopPropagation()} data-testid="quick-add">
         <h3 className="font-[family-name:var(--font-display)] text-lg font-semibold">Novo post</h3>
         <div className="grid gap-3 sm:grid-cols-2">
           <div className="sm:col-span-2">
