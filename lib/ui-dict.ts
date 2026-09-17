@@ -2,6 +2,8 @@
 // IA nunca é traduzido: a tradução é por correspondência exata com as strings
 // da UI — textos de entregáveis não batem com o dicionário e passam intocados
 // (eles já são localizados por cliente na geração).
+import { UI_DICT_R3, UI_REGEX_R3 } from "./ui-dict-r3";
+
 export const UI_DICT: Record<string, string> = {
   // Endurecimento do lançamento (modo da marca, uploads, cobrança)
   "Quem muda o modo da sua marca é a sua agência.": "Your agency decides how your brand is managed.",
@@ -1823,11 +1825,13 @@ export const UI_DICT: Record<string, string> = {
   "Não achamos esta página": "We couldn't find this page",
   "O link pode estar errado ou a página foi removida.": "The link may be wrong or the page was removed.",
   "Algo deu errado": "Something went wrong",
+  ...UI_DICT_R3,
 };
 
 // Regras para strings com interpolação (aplicadas com cautela — só padrões
 // inequívocos da UI)
 export const UI_REGEX_RULES: [RegExp, string][] = [
+  ...UI_REGEX_R3,
   // Elo (ranking.ts) — "reason" é montado com números, então traduzimos por
   // padrão. Vêm ANTES das regras genéricas para terem precedência.
   [/^(\d+) demandas concluídas com nota média (.+)$/, "$1 jobs completed, avg score $2"],

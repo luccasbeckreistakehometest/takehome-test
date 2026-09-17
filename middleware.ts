@@ -51,6 +51,7 @@ const PRIVATE_PREFIXES = [
   "/clients",
   "/conta",
   "/finance",
+  "/growth",
   "/ideas",
   "/insights",
   "/messages",
