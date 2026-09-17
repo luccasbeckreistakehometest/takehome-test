@@ -3,24 +3,26 @@
 // (/api/webhooks/mercadopago), que credita/ativa de verdade.
 //
 // Credenciais em env (nunca no código): MP_ACCESS_TOKEN (obrigatório).
-// Recorrência automática (preapproval/Pix Automático) é o próximo passo.
+// Planos são PRÉ-PAGOS por período, sem renovação automática (preapproval /
+// Pix Automático ficam para depois).
 
 import { getCoinPack, getPlan, periodPrice, PERIOD_DISCOUNT, type BillingPeriod } from "./plans";
 import type { AccountType } from "./plans";
+import { appBaseUrl } from "./legal";
 
 const BASE = "https://api.mercadopago.com";
-const TOKEN = process.env.MP_ACCESS_TOKEN || "";
-const APP_URL = process.env.APP_URL || "https://marqa.online";
+const token = () => process.env.MP_ACCESS_TOKEN || "";
 
 export function mpConfigured(): boolean {
-  return TOKEN.length > 0;
+  return token().length > 0;
 }
 
 async function mp(path: string, init?: RequestInit): Promise<Record<string, unknown>> {
   const res = await fetch(BASE + path, {
     ...init,
+    signal: AbortSignal.timeout(15_000),
     headers: {
-      Authorization: `Bearer ${TOKEN}`,
+      Authorization: `Bearer ${token()}`,
       "Content-Type": "application/json",
       ...(init?.headers ?? {}),
     },
@@ -32,11 +34,12 @@ async function mp(path: string, init?: RequestInit): Promise<Record<string, unkn
   return data;
 }
 
-const backUrls = {
-  success: `${APP_URL}/plans?pago=1`,
-  failure: `${APP_URL}/plans?falhou=1`,
-  pending: `${APP_URL}/plans?pendente=1`,
-};
+const backUrls = () => ({
+  success: `${appBaseUrl()}/plans?pago=1`,
+  failure: `${appBaseUrl()}/plans?falhou=1`,
+  pending: `${appBaseUrl()}/plans?pendente=1`,
+});
+const notificationUrl = () => `${appBaseUrl()}/api/webhooks/mercadopago`;
 
 // Cria o checkout de um pacote de coins. external_reference carrega a conta e
 // o pacote para o webhook creditar depois.
@@ -62,9 +65,9 @@ export async function createCoinCheckout(input: {
       ],
       external_reference: `coins|${input.accountType}|${input.accountId}|${pack.id}`,
       ...(input.email ? { payer: { email: input.email } } : {}),
-      back_urls: backUrls,
+      back_urls: backUrls(),
       auto_return: "approved",
-      notification_url: `${APP_URL}/api/webhooks/mercadopago`,
+      notification_url: notificationUrl(),
     }),
   });
   return { url: pref.init_point as string, preferenceId: pref.id as string };
@@ -88,7 +91,7 @@ export async function createPlanCheckout(input: {
     body: JSON.stringify({
       items: [
         {
-          title: `Plano ${plan.name} · ${months}m — Marqa`,
+          title: `Plano ${plan.name} · ${months} ${months === 1 ? "mês" : "meses"} pré-pago (sem renovação automática) — Marqa`,
           quantity: 1,
           unit_price: total,
           currency_id: "BRL",
@@ -96,9 +99,9 @@ export async function createPlanCheckout(input: {
       ],
       external_reference: `plan|${input.accountType}|${input.accountId}|${plan.id}|${input.period}`,
       ...(input.email ? { payer: { email: input.email } } : {}),
-      back_urls: backUrls,
+      back_urls: backUrls(),
       auto_return: "approved",
-      notification_url: `${APP_URL}/api/webhooks/mercadopago`,
+      notification_url: notificationUrl(),
     }),
   });
   return { url: pref.init_point as string, preferenceId: pref.id as string };

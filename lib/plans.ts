@@ -33,6 +33,9 @@ export function periodPrice(monthlyPrice: number, period: BillingPeriod): number
   return Math.round(monthlyPrice * months * (1 - discount));
 }
 
+// Destaques: só o que o produto faz hoje (cota de coins, teto de qualidade da
+// IA, recursos existentes). Nada de limite de clientes ou suporte dedicado
+// enquanto isso não existir de verdade.
 export const PLANS: Plan[] = [
   // ---------- Cliente / marca ----------
   {
@@ -42,7 +45,7 @@ export const PLANS: Plan[] = [
     monthlyPrice: 0,
     aiCoinsPerMonth: 40,
     quality: "economy",
-    highlights: ["40 coins/mês", "Qualidade econômica", "1 kit por mês", "Sem landing pages"],
+    highlights: ["40 coins/mês, renovados todo mês", "IA no modo econômico", "Briefing, calendário e aprovações"],
   },
   {
     id: "client_starter",
@@ -52,7 +55,7 @@ export const PLANS: Plan[] = [
     aiCoinsPerMonth: 400,
     quality: "balanced",
     recommended: true,
-    highlights: ["400 coins/mês", "Qualidade balanceada", "Landing pages", "Agendamento de posts"],
+    highlights: ["400 coins/mês", "IA no modo balanceado", "Kit completo de estratégia e conteúdo", "Relatório mensal com leitura da IA"],
   },
   {
     id: "client_pro",
@@ -61,7 +64,7 @@ export const PLANS: Plan[] = [
     monthlyPrice: 297,
     aiCoinsPerMonth: 1500,
     quality: "premium",
-    highlights: ["1.500 coins/mês", "Qualidade premium (Opus)", "Tudo do Starter", "Prioridade na fila de IA"],
+    highlights: ["1.500 coins/mês", "IA no modo premium (Opus)", "Tudo do Starter"],
   },
   // ---------- Profissional ----------
   {
@@ -71,7 +74,7 @@ export const PLANS: Plan[] = [
     monthlyPrice: 0,
     aiCoinsPerMonth: 20,
     quality: "economy",
-    highlights: ["Perfil e portfólio", "5 candidaturas/mês", "Elo e ranking"],
+    highlights: ["Perfil e portfólio", "Candidaturas às demandas abertas", "Elo e ranking"],
   },
   {
     id: "pro_plus",
@@ -81,9 +84,18 @@ export const PLANS: Plan[] = [
     aiCoinsPerMonth: 200,
     quality: "balanced",
     recommended: true,
-    highlights: ["Candidaturas ilimitadas", "Destaque no match", "IA de portfólio", "200 coins/mês"],
+    highlights: ["200 coins/mês", "IA no modo balanceado", "Tudo do Grátis"],
   },
   // ---------- Agência ----------
+  {
+    id: "agency_free",
+    accountType: "agency",
+    name: "Grátis",
+    monthlyPrice: 0,
+    aiCoinsPerMonth: 60,
+    quality: "economy",
+    highlights: ["60 coins/mês para testar", "IA no modo econômico", "Clientes, produção e calendário"],
+  },
   {
     id: "agency_starter",
     accountType: "agency",
@@ -91,7 +103,7 @@ export const PLANS: Plan[] = [
     monthlyPrice: 497,
     aiCoinsPerMonth: 2000,
     quality: "balanced",
-    highlights: ["Até 10 clientes", "Whitelabel completo", "2.000 coins/mês", "Convites com sua marca"],
+    highlights: ["2.000 coins/mês para todos os clientes", "IA no modo balanceado", "Sua marca: logo, cores e nome", "Convites com a sua marca"],
   },
   {
     id: "agency_growth",
@@ -101,7 +113,7 @@ export const PLANS: Plan[] = [
     aiCoinsPerMonth: 6000,
     quality: "premium",
     recommended: true,
-    highlights: ["Até 30 clientes", "Qualidade premium (Opus)", "6.000 coins/mês", "Pool de coins compartilhado"],
+    highlights: ["6.000 coins/mês para todos os clientes", "IA no modo premium (Opus)", "Tudo do Starter"],
   },
   {
     id: "agency_scale",
@@ -111,7 +123,7 @@ export const PLANS: Plan[] = [
     aiCoinsPerMonth: 0,
     quality: "premium",
     unlimited: true,
-    highlights: ["Clientes ilimitados", "IA premium ilimitada", "Prioridade máxima", "Suporte dedicado"],
+    highlights: ["IA premium sem cota de coins (uso justo)", "Tudo do Growth"],
   },
 ];
 
@@ -121,8 +133,20 @@ export function plansFor(accountType: AccountType): Plan[] {
 export function getPlan(id: string): Plan | undefined {
   return PLANS.find((p) => p.id === id);
 }
+// Plano de entrada (grátis) de cada tipo: quem não pagou, ou cujo plano pago
+// venceu, fica nele. Nunca um plano pago de graça.
 export function defaultPlanId(accountType: AccountType): string {
-  return accountType === "agency" ? "agency_starter" : `${accountType === "professional" ? "pro" : "client"}_free`;
+  if (accountType === "agency") return "agency_free";
+  return accountType === "professional" ? "pro_free" : "client_free";
+}
+export const entryPlanId = defaultPlanId;
+
+export function isPaidPlan(plan: Plan | undefined): boolean {
+  return Boolean(plan && plan.monthlyPrice > 0);
+}
+
+export function isBillingPeriod(value: unknown): value is BillingPeriod {
+  return typeof value === "string" && value in PERIOD_DISCOUNT;
 }
 
 // ---------- Coins on-demand (sem assinatura) ----------
@@ -162,6 +186,13 @@ export const ACTION_COST: Record<string, number> = {
   brand_voice_rewrite: 2,
   campaign_30d: 8, // mês inteiro de posts rascunhados de uma vez
   learnings: 1, // leitura curta dos aprendizados do mês
+  match: 3, // ranking de profissionais com visão do portfólio
+  sketch: 3,
+  art_review: 3, // análise de arte com visão
+  demand_suggestions: 2,
+  meeting_recs: 2,
+  voice_briefing: 1, // uma rodada do briefing falado
+  tts: 0, // voz: limitada por taxa, não por coins
 };
 export function actionCost(action: string): number {
   return ACTION_COST[action] ?? 2;
