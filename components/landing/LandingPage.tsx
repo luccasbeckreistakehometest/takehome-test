@@ -6,6 +6,7 @@ import { Icon, type IconName } from "@/components/icons";
 import { MarqaWordmark } from "@/components/MarqaLogo";
 import type { LandingConfig, Lang } from "@/lib/landing-content";
 import Pricing from "./Pricing";
+import ShowcaseDemo from "./ShowcaseDemo";
 
 const CHANNELS = ["Instagram", "WhatsApp", "TikTok", "Facebook", "YouTube", "E-commerce"];
 
@@ -115,7 +116,7 @@ function HeroVisual({ lang }: { lang: Lang }) {
   );
 }
 
-export default function LandingPage({ config }: { config: LandingConfig }) {
+export default function LandingPage({ config, cardSubscription = false }: { config: LandingConfig; cardSubscription?: boolean }) {
   const [lang, setLang] = useState<Lang>("pt");
 
   useEffect(() => {
@@ -245,6 +246,48 @@ export default function LandingPage({ config }: { config: LandingConfig }) {
         </div>
       </section>
 
+      {/* VITRINE: o que só a Marqa faz */}
+      {t.showcase && (
+        <section className="px-4 py-24" data-testid="landing-showcase">
+          <div className="mx-auto max-w-6xl">
+            <div className="reveal mx-auto max-w-2xl text-center">
+              <h2 className="font-[family-name:var(--font-display)] text-4xl font-extrabold tracking-tight">{t.showcase.title}</h2>
+              <p className="mt-4 text-muted">{t.showcase.sub}</p>
+            </div>
+            <div className="mt-14 grid gap-5 md:grid-cols-2 lg:grid-cols-3">
+              {t.showcase.items.map((item, i) => {
+                // bento: o 1º e o 4º ocupam duas colunas no desktop
+                const wide = t.showcase!.items.length === 4 && (i === 0 || i === 3);
+                return (
+                  <Link
+                    key={item.t}
+                    href={item.href}
+                    data-testid="showcase-card"
+                    data-demo={item.demo}
+                    data-track="cta_click"
+                    data-track-label={`showcase-${item.demo}`}
+                    className={`reveal card-hover group flex flex-col rounded-2xl border border-edge bg-surface p-6 ${wide ? "lg:col-span-2" : ""}`}
+                    style={{ transitionDelay: `${(i % 3) * 80}ms` }}
+                  >
+                    <span className="grid size-11 place-items-center rounded-xl bg-accent/10 text-accent transition-colors group-hover:bg-accent group-hover:text-accent-ink">
+                      <Icon name={item.icon} size={22} />
+                    </span>
+                    <h3 className="mt-4 text-lg font-bold">{item.t}</h3>
+                    <p className="mt-1.5 text-sm leading-relaxed text-muted">{item.d}</p>
+                    <div className="flex-1">
+                      <ShowcaseDemo demo={item.demo} lang={lang} />
+                    </div>
+                    <span className="mt-5 inline-flex items-center gap-1.5 text-sm font-semibold text-accent">
+                      {item.cta} <Icon name="send" size={14} />
+                    </span>
+                  </Link>
+                );
+              })}
+            </div>
+          </div>
+        </section>
+      )}
+
       {/* PROBLEMA -> SOLUÇÃO */}
       <section className="px-4 py-24">
         <div className="mx-auto grid max-w-6xl gap-12 lg:grid-cols-2 lg:items-center">
@@ -297,6 +340,27 @@ export default function LandingPage({ config }: { config: LandingConfig }) {
         </div>
       </section>
 
+      {/* UM MÊS COM A MARQA (agências) */}
+      {t.timeline && (
+        <section className="border-t border-edge px-4 py-24" data-testid="landing-timeline">
+          <div className="mx-auto max-w-4xl">
+            <div className="reveal text-center">
+              <h2 className="font-[family-name:var(--font-display)] text-4xl font-extrabold tracking-tight">{t.timeline.title}</h2>
+              <p className="mt-4 text-muted">{t.timeline.sub}</p>
+            </div>
+            <ol className="relative mt-12 space-y-5 border-l border-edge pl-6 sm:pl-8">
+              {t.timeline.steps.map((step, i) => (
+                <li key={step.when} className="reveal relative" style={{ transitionDelay: `${i * 70}ms` }}>
+                  <span className="absolute -left-[1.95rem] top-1 grid size-4 place-items-center rounded-full border-2 border-accent bg-background sm:-left-[2.45rem]" />
+                  <p className="text-xs font-semibold uppercase tracking-widest text-accent">{step.when}</p>
+                  <p className="mt-1 text-lg font-semibold leading-snug">{step.t}</p>
+                </li>
+              ))}
+            </ol>
+          </div>
+        </section>
+      )}
+
       {/* COMO FUNCIONA */}
       <section className="border-t border-edge px-4 py-24">
         <div className="mx-auto max-w-6xl">
@@ -319,6 +383,45 @@ export default function LandingPage({ config }: { config: LandingConfig }) {
           </div>
         </div>
       </section>
+
+      {/* DO JEITO DE HOJE × COM A MARQA */}
+      {t.compare && (
+        <section className="border-t border-edge px-4 py-24" data-testid="landing-compare">
+          <div className="mx-auto max-w-4xl">
+            <h2 className="reveal text-center font-[family-name:var(--font-display)] text-4xl font-extrabold tracking-tight">{t.compare.title}</h2>
+            <div className="reveal mt-12 overflow-x-auto rounded-2xl border border-edge bg-surface">
+              <table className="w-full min-w-[320px] text-left text-sm">
+                <thead>
+                  <tr className="border-b border-edge text-xs uppercase tracking-wider text-muted">
+                    <th className="px-4 py-3 font-semibold">{t.compare.head[0]}</th>
+                    <th className="px-4 py-3 font-semibold">{t.compare.head[1]}</th>
+                    <th className="px-4 py-3 font-semibold text-accent">{t.compare.head[2]}</th>
+                  </tr>
+                </thead>
+                <tbody className="divide-y divide-edge">
+                  {t.compare.rows.map(([task, today, marqa]) => (
+                    <tr key={task}>
+                      <td className="px-4 py-3 font-semibold">{task}</td>
+                      <td className="px-4 py-3 text-muted">
+                        <span className="inline-flex items-start gap-1.5">
+                          <Icon name="x" size={14} className="mt-0.5 shrink-0 text-red-500" />
+                          {today}
+                        </span>
+                      </td>
+                      <td className="px-4 py-3">
+                        <span className="inline-flex items-start gap-1.5">
+                          <Icon name="check" size={14} className="mt-0.5 shrink-0 text-accent" />
+                          {marqa}
+                        </span>
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </section>
+      )}
 
       {/* PÚBLICOS (só na geral) */}
       {config.showAudienceCards && t.audiences && (
@@ -351,7 +454,7 @@ export default function LandingPage({ config }: { config: LandingConfig }) {
       )}
 
       {/* PREÇOS (nos funis específicos) */}
-      {config.pricingType && <Pricing accountType={config.pricingType} lang={lang} />}
+      {config.pricingType && <Pricing accountType={config.pricingType} lang={lang} cardSubscription={cardSubscription} />}
 
       {/* FAQ */}
       <section className="border-t border-edge px-4 py-24">

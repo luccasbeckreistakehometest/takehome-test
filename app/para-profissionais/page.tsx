@@ -1,6 +1,10 @@
 import type { Metadata } from "next";
 import LandingPage from "@/components/landing/LandingPage";
-import { PRO } from "@/lib/landing-content";
+import { PRO, landingFor } from "@/lib/landing-content";
+import { subscriptionsAvailable } from "@/lib/mercadopago";
+
+// Dinâmica: a assinatura no cartão depende do Mercado Pago deste servidor.
+export const dynamic = "force-dynamic";
 
 export const metadata: Metadata = {
   title: "Marqa para fotógrafos e designers",
@@ -10,5 +14,6 @@ export const metadata: Metadata = {
 };
 
 export default function Page() {
-  return <LandingPage config={PRO} />;
+  const card = subscriptionsAvailable();
+  return <LandingPage config={landingFor(PRO, card)} cardSubscription={card} />;
 }

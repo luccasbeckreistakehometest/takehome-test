@@ -4,6 +4,7 @@ import { useCallback, useEffect, useState } from "react";
 import { api } from "@/lib/api";
 import type { Generation, GenerationType } from "@/lib/types";
 import VersionCompare from "./VersionCompare";
+import { actionCost } from "@/lib/plans";
 import { Button, Card, ErrorBox, Input, Label, Select, Spinner, Textarea } from "./ui";
 
 export type FieldConfig = {
@@ -150,6 +151,7 @@ export default function GeneratorTab({
         <div className="flex flex-wrap items-center gap-4">
           <Button onClick={generate} disabled={generating}>
             {generating ? "Gerando..." : generateLabel}
+            {!generating && <span className="opacity-75">{` · ${actionCost(type)} coins`}</span>}
           </Button>
           {selected && (
             <label className="flex items-center gap-2 text-sm text-muted">

@@ -86,6 +86,11 @@ Gere segredos **no servidor** (`openssl rand -hex 32`), nunca no repositório.
 | `REGISTER_RATE_LIMIT_PER_HOUR`, `CONTACT_RATE_LIMIT_PER_HOUR`, `LEAD_RATE_LIMIT_PER_HOUR` | `5` | cadastro, contato e lead da página pública por IP. |
 | `TTS_USD_PER_1K_CHARS`, `IMAGE_USD_PER_IMAGE`, `CONCEPT_USD_PER_IMAGE` | estimativas | custo usado no teto diário para voz e imagem. |
 | `TTS_CACHE_MAX_FILES` | `2000` | arquivos de voz em cache. |
+| `TTS_DAILY_CHARS_PER_ACCOUNT` | `6000` | caracteres de voz por conta por dia (UTC). Passou → a fala responde 204 com `X-Voice-Limit` e a interface segue só em texto. |
+| `PUBLIC_DECISION_RATE_LIMIT_PER_10MIN` | `30` | decisões no link de aprovação (`/api/approve/<token>`) e "já paguei" da fatura, por IP. |
+| `PUBLIC_READ_RATE_LIMIT_PER_10MIN` | `300` | leituras públicas (`/aprovar`, `/fatura`, `/b/<slug>`, imagens assinadas do carrossel), por IP. |
+| `ANALYTICS_RATE_LIMIT_PER_MIN` | `120` | beacon de analytics sem cookie (`/api/t`), por IP. |
+| `USD_BRL_RATE` | `5.5` | câmbio do admin (**Custos de IA**) para comparar gasto em US$ com receita em R$. |
 
 ### Cadastro, identidade legal e suporte
 
@@ -107,14 +112,33 @@ Gere segredos **no servidor** (`openssl rand -hex 32`), nunca no repositório.
 | `GOOGLE_AI_API_KEY`, `TOGETHER_API_KEY`, `HF_API_KEY` | imagens (também configuráveis pelo admin). |
 | `MESSAGING_SESSION_MODE` | `true` só num servidor preparado com Chrome + worker; a imagem padrão usa apenas a API oficial. |
 
+## Rodada 3 (o que muda no servidor)
+
+- Nenhuma migração manual: as tabelas/colunas novas (`approval_links`, `client_packages`,
+  `scope_requests`, `client_invoices`, `mp_plans`, `mp_preapprovals`, `carousels`, `short_links`,
+  `link_clicks`, `bio_pages`, `page_events(_daily)`, `ai_visibility_*`, `panel_tests`, `ai_cache`,
+  colunas de `onboarding`/`scheduled_posts`/`subscriptions`) nascem no boot com `CREATE TABLE IF NOT
+  EXISTS` / `addColumnIfMissing`. Faça o backup antes do deploy (`bin/backup.sh`).
+- A imagem Docker agora copia `assets/` (fonte Space Grotesk, OFL, usada no PNG do carrossel).
+- Rotas públicas novas: `/aprovar/<token>`, `/fatura/<token>`, `/l/<código>`, `/b/<slug>` e o beacon
+  `/api/t` (sem cookie; o hash do visitante usa um sal diário). `/aprovar` e `/fatura` saem com
+  `noindex`.
+- `MP_TRANSPORT`, `TRACKING_TEST_MODE` e `AI_MOCK` são só do e2e — **nunca** no `.env` de produção.
+
 ## Mercado Pago
 
 - Checkout Pro com `notification_url = ${APP_URL}/api/webhooks/mercadopago` em cada preferência.
   Cadastre a mesma URL em **Suas integrações → Webhooks** (evento *Pagamentos*).
 - O webhook relê o pagamento na API do MP; aprovado → credita/ativa numa transação; estorno ou
   chargeback → desfaz; falha na consulta → responde 502 e o MP tenta de novo.
-- Planos são **pré-pagos por período, sem renovação automática**. No vencimento a conta volta ao
+- Planos à vista são **pré-pagos por período, sem renovação automática**. No vencimento a conta volta ao
   plano grátis; a cota mensal de coins é recarregada a cada mês do período.
+- **Assinatura no cartão** (preapproval sem plano associado, `back_url` em `/plans`): aparece em
+  `/plans` e na landing assim que `MP_ACCESS_TOKEN` existe. No painel do MP, em **Webhooks**, ligue
+  também os tópicos **Planos e assinaturas** (`subscription_preapproval` e
+  `subscription_authorized_payment`) na mesma URL. Cada cobrança aprovada renova o período (idempotente
+  por id); cancelar só desliga a renovação e o plano vale até o fim do período pago (3 dias de
+  carência se a cobrança atrasar). Avisos de renovação/falha saem pelo agendador.
 - **Reprocessar**: **/admin → Pagamentos** relê um pagamento pelo número (idempotente).
 - Teste ponta a ponta com uma compra real de valor baixo depois de configurar o token.
 
