@@ -14,7 +14,7 @@ import type { AccountType } from "./plans";
 // professionalId / userId entra), para nenhuma feature nova ficar de fora.
 
 const BILLING_TABLES = new Set(["billing_transactions", "mp_payments", "wallets", "subscriptions", "ai_usage", "ai_errors"]);
-const SENSITIVE_COLUMNS = new Set(["passwordHash", "accessToken", "refreshToken", "oauthClientSecret", "token"]);
+const SENSITIVE_COLUMNS = new Set(["passwordHash", "accessToken", "refreshToken", "oauthClientSecret", "token", "apiToken", "apiKey", "secret"]);
 
 function tablesWithColumn(column: string): { table: string; notNull: boolean }[] {
   const tables = db.prepare("SELECT name FROM sqlite_master WHERE type = 'table' AND name NOT LIKE 'sqlite_%'").all() as {
@@ -82,8 +82,14 @@ export function exportAccountData(userId: string) {
     data.professional = getProfessional(user.refId);
     data.professionalData = rowsBy("professionalId", user.refId, ["professionals"]);
   }
-  const account = user.role === "agency" ? null : accountFor(user);
+  const account = accountFor(user);
   if (account) data.billing = exportBillingAccount(account.accountType, account.accountId);
+  // Agência: o espaço de trabalho dela (clientes, entregáveis, faturas...),
+  // nunca o de outra agência.
+  if (user.role === "agency" && user.agencyId) {
+    data.agency = getAgency(user.agencyId);
+    data.workspace = rowsBy("agencyId", user.agencyId, ["agencies"]);
+  }
   return data;
 }
 

@@ -51,9 +51,13 @@ test("admin sees real AI cost per action, caps one account, grants coins with a 
   await expect(page.getByTestId("admin-ai-actions")).toContainText("social_calendar");
 
   // LGPD: exporta só esta conta e exclui com confirmação
+  const houseClient = await page.request.post("/api/clients", { data: { name: "Marca Só Da Casa", channels: [] } });
+  expect(houseClient.status()).toBe(201);
   const exported = await (await page.request.get(`/api/admin/users/${id}/export`)).json();
   expect(exported.account.username).toBe(account.username);
-  expect(JSON.stringify(exported)).not.toContain("agencia");
+  expect(JSON.stringify(exported)).not.toContain("Marca Só Da Casa");
+  expect(exported.workspace.clients.map((c: { name: string }) => c.name)).toContain("Cliente do Custo");
+  expect(exported.workspace.generations.length).toBeGreaterThanOrEqual(2);
   expect((await page.request.post(`/api/admin/users/${id}`, { data: { action: "delete_account", confirm: "outro" } })).status()).toBe(400);
   expect((await page.request.post(`/api/admin/users/${id}`, { data: { action: "delete_account", confirm: account.username } })).status()).toBe(200);
   const relogin = await browser.newContext();
