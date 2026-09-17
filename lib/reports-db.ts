@@ -1,4 +1,5 @@
 import { randomBytes, randomUUID } from "crypto";
+import { monthTopLinks } from "./links-db";
 import { db, tenantColumn } from "./db";
 // Os módulos abaixo criam as tabelas que o relatório lê (projects,
 // deliverables, annotations, scheduled_posts, metric_snapshots, sales_entries)
@@ -126,6 +127,7 @@ export function buildMonthData(clientId: string, month: ReportMonth): MonthlyRep
   const pulses = listPulses(clientId, 1000);
   const data = aggregateMonth({ month, projects, deliverables, annotations, posts, snapshots, sales, generations, pulses });
   if (data.learnings) data.learningsReading = getFreshReading(clientId, month, data.learnings);
+  data.topLinks = monthTopLinks(clientId, month);
   return data;
 }
 

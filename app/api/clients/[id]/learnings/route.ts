@@ -6,6 +6,9 @@ import { aiErrorResponse, beginAi } from "@/lib/metering";
 import { currentMonth, isValidMonth } from "@/lib/report-aggregate";
 import { getReading, learningsHash, loadLearnings, saveReading } from "@/lib/learnings-db";
 import { generateLearningsReading } from "@/lib/learnings-ai";
+import { clicksByPost } from "@/lib/links-db";
+import { clickLearnings } from "@/lib/links-rules";
+import { listClientScheduledPosts } from "@/lib/marketplace-db";
 
 type Context = { params: Promise<{ id: string }> };
 export const maxDuration = 60;
@@ -21,7 +24,10 @@ export async function GET(request: Request, { params }: Context) {
   if (!isValidMonth(month)) return NextResponse.json({ error: "Mês inválido (use AAAA-MM)" }, { status: 400 });
   const learnings = loadLearnings(id, month);
   const saved = getReading(id, month, learningsHash(learnings));
-  return NextResponse.json({ learnings, reading: saved?.reading ?? null, readingStale: saved?.stale ?? false });
+  // cliques dos links rastreáveis por formato e horário (sinal direto)
+  const posts = listClientScheduledPosts(id).filter((p) => p.scheduledFor.slice(0, 7) === month);
+  const clicks = clickLearnings(posts, clicksByPost(id));
+  return NextResponse.json({ learnings, reading: saved?.reading ?? null, readingStale: saved?.stale ?? false, clicks });
 }
 
 const schema = z.object({ month: z.string().refine(isValidMonth, "Mês inválido (use AAAA-MM)") });

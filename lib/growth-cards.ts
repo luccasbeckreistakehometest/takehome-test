@@ -7,6 +7,8 @@ export type GrowthStats = {
   acceptedProposals: number;
   leads: number;
   pagePublished: boolean;
+  clicks30: number;
+  bioPages: number;
 };
 
 export type GrowthCard = {
@@ -46,5 +48,14 @@ export const GROWTH_CARDS: GrowthCard[] = [
     href: "/settings#pagina-publica",
     cta: "Configurar página",
     stat: (s) => (s.pagePublished ? `Publicada · ${s.leads} pedidos recebidos` : "Ainda não publicada"),
+  },
+  {
+    key: "links",
+    icon: "link",
+    title: "Links & bio",
+    body: "Link curto com UTM em cada post e uma página de link na bio por cliente. Você vê o que dá clique.",
+    href: "/links",
+    cta: "Ver links",
+    stat: (s) => `${s.clicks30} cliques em 30 dias · ${s.bioPages} bio(s) no ar`,
   },
 ];

@@ -8,7 +8,13 @@ import { groupLabel, type Highlight, type LearningDimension, type Learnings, typ
 import { Button, Card, ErrorBox, SectionTitle, Spinner, Tag } from "./ui";
 import { Icon } from "./icons";
 
-type Payload = { learnings: Learnings; reading: (LearningsReading & { createdAt: string }) | null; readingStale: boolean };
+type ClickRow = { key: string; posts: number; clicks: number; avg: number };
+type Payload = {
+  learnings: Learnings;
+  reading: (LearningsReading & { createdAt: string }) | null;
+  readingStale: boolean;
+  clicks?: { byFormat: ClickRow[]; byHour: ClickRow[]; totalClicks: number; postsWithLinks: number };
+};
 
 const REASON_TEXT: Record<ThinReason, string> = {
   few_posts: "Poucos posts publicados neste mês para comparar — são necessários pelo menos 4.",
@@ -176,6 +182,17 @@ export default function LearningsCard({ clientId, canGenerate = true }: { client
       ) : (
         <div className="space-y-3">
           <LearningsSummary learnings={data.learnings} reading={data.reading} lang={lang} />
+          {data.clicks && data.clicks.postsWithLinks > 0 && (
+            <div className="rounded-md border border-edge bg-surface-2 p-3 text-sm" data-testid="learnings-clicks">
+              <p className="text-xs font-semibold uppercase tracking-wide text-muted">Cliques nos links dos posts</p>
+              <p className="mt-1">{`${data.clicks.totalClicks} cliques em ${data.clicks.postsWithLinks} post(s) publicados com link`}</p>
+              <ul className="mt-1 space-y-0.5 text-xs text-muted">
+                {data.clicks.byFormat.slice(0, 3).map((row) => (
+                  <li key={row.key}>{`${row.key}: ${row.avg} cliques por post`}</li>
+                ))}
+              </ul>
+            </div>
+          )}
           {data.learnings.hasEnoughData && canGenerate && (!data.reading || data.readingStale) && (
             <div className="flex flex-wrap items-center gap-2">
               <Button variant="ghost" className="!px-3 !py-1.5 text-xs" onClick={generate} disabled={busy} data-testid="learnings-generate">

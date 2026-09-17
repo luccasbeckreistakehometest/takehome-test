@@ -7,6 +7,7 @@ import { listRecentProposals } from "@/lib/proposals-db";
 import { countLeads, getAgencyPage } from "@/lib/agency-page-db";
 import { Icon } from "@/components/icons";
 import { GROWTH_CARDS, type GrowthStats } from "@/lib/growth-cards";
+import { agencyLinksOverview } from "@/lib/links-db";
 
 export const dynamic = "force-dynamic";
 export const metadata = { title: "Crescimento" };
@@ -20,12 +21,15 @@ export default async function GrowthPage() {
   const scope = scopeForSession(session);
   const agencyId = session.agencyId ?? "agency";
   const proposals = listRecentProposals(scope, 200);
+  const links = agencyLinksOverview(scope.agencyId);
   const stats: GrowthStats = {
     prospects: listProspects(scope).length,
     openProposals: proposals.filter((p) => p.state === "open").length,
     acceptedProposals: proposals.filter((p) => p.state === "accepted").length,
     leads: countLeads(scope),
     pagePublished: getAgencyPage(agencyId).published,
+    clicks30: links.reduce((sum, r) => sum + r.clicks30, 0),
+    bioPages: links.filter((r) => r.bioPublished).length,
   };
   return (
     <div className="space-y-6">

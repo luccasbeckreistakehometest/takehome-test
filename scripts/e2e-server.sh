@@ -32,6 +32,8 @@ export META_GRAPH_VERIFY=off
 # assinatura no cartão: transporte falso do Mercado Pago (requisições em
 # data/e2e/mp-outbox.json, respostas lidas de data/e2e/mp-fake.json)
 export MP_TRANSPORT=file
+# links/analytics: o navegador headless e o cliente do Playwright contam como visita
+export TRACKING_TEST_MODE=1
 export LOGIN_RATE_LIMIT_PER_IP=10000
 export REGISTER_RATE_LIMIT_PER_HOUR=30
 export AI_RATE_LIMIT_PER_10MIN=10000

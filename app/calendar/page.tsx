@@ -352,6 +352,7 @@ function PostPanel({
             </Button>
           )}
           <BrandVoiceCheck clientId={post.clientId} text={caption} kind="post" onRewrite={setCaption} />
+          <PostLink post={post} onInsert={(url) => setCaption((c) => (c.includes(url) ? c : `${c.trimEnd()}\n\n${url}`))} />
         </div>
         <div className="mt-4 flex flex-wrap items-end gap-2">
           <div>
@@ -535,6 +536,69 @@ function QuickAdd({
           </Button>
         </div>
       </div>
+    </div>
+  );
+}
+
+type PostLinkRow = { code: string; destUrl: string; shortUrl: string; clicks: number };
+
+// Link do post: com "Rastrear" ligado vira link curto com UTM (cliques contam
+// no "o que funciona" e no relatório); desligado, entra o endereço como está.
+function PostLink({ post, onInsert }: { post: Post; onInsert: (url: string) => void }) {
+  const [link, setLink] = useState<PostLinkRow | null>(null);
+  const [dest, setDest] = useState("");
+  const [track, setTrack] = useState(true);
+  const [error, setError] = useState("");
+  useEffect(() => {
+    fetch(`/api/clients/${post.clientId}/links?postId=${post.id}`)
+      .then((r) => (r.ok ? r.json() : { links: [] }))
+      .then((j: { links: PostLinkRow[] }) => {
+        const found = j.links[0] ?? null;
+        setLink(found);
+        if (found) setDest(found.destUrl);
+      })
+      .catch(() => {});
+  }, [post.clientId, post.id]);
+
+  async function apply() {
+    setError("");
+    if (!track) {
+      onInsert(dest.trim());
+      return;
+    }
+    try {
+      const created = await api<PostLinkRow>(`/api/clients/${post.clientId}/links`, {
+        method: "POST",
+        body: JSON.stringify({ destUrl: dest, postId: post.id, channel: post.channel, label: post.title }),
+      });
+      setLink({ ...created, clicks: link?.code === created.code ? link.clicks : 0 });
+      onInsert(created.shortUrl);
+    } catch (e) {
+      setError(e instanceof Error ? e.message : "Endereço inválido");
+    }
+  }
+
+  return (
+    <div className="space-y-1.5 rounded-md border border-edge p-2" data-testid="post-link">
+      <Label>Link</Label>
+      <div className="flex flex-wrap items-center gap-2">
+        <div className="min-w-48 flex-1">
+          <Input value={dest} onChange={(e) => setDest(e.target.value)} placeholder="https://loja.com/produto" data-testid="post-link-dest" />
+        </div>
+        <label className="flex items-center gap-1 text-xs">
+          <input type="checkbox" checked={track} onChange={(e) => setTrack(e.target.checked)} data-testid="post-link-track" /> Rastrear
+        </label>
+        <Button variant="ghost" className="!px-2.5 !py-1 text-xs" onClick={apply} disabled={!dest.trim()} data-testid="post-link-apply">
+          Inserir na legenda
+        </Button>
+      </div>
+      {link && (
+        <p className="text-xs text-muted" data-testid="post-link-short">
+          <span className="font-mono text-accent">{link.shortUrl.replace(/^https?:\/\//, "")}</span>
+          {` · ${link.clicks} clique(s)`}
+        </p>
+      )}
+      {error && <p className="text-xs text-red-500">{error}</p>}
     </div>
   );
 }

@@ -70,6 +70,7 @@ export const TAB_GROUPS: { key: TabGroupKey; label: string; tabs: TabDef[] }[] =
       { key: "post_batch", label: "Posts" },
       { key: "carousels", label: "Carrosséis" },
       { key: "visual_identity", label: "Identidade" },
+      { key: "bio", label: "Link na bio" },
       { key: "landing_page", label: "Landing pages", needsLanding: true },
     ],
   },

@@ -42,6 +42,8 @@ import { PackageSummaryCard } from "./PackageUsage";
 import InvoicesPanel from "./InvoicesPanel";
 import CarouselTab from "./CarouselTab";
 import BriefingVoiceStart from "./BriefingVoiceStart";
+import LinksTab from "./LinksTab";
+import ClicksCard from "./ClicksCard";
 import { briefingCompleteness, BRIEFING_READY_PCT } from "@/lib/activation-rules";
 import {
   CampaignPlanView,
@@ -348,6 +350,7 @@ export default function Workspace({
           {briefingCompleteness(client) < BRIEFING_READY_PCT && (
             <BriefingVoiceStart client={client} onSaved={onClientUpdated} onWrite={() => setTab("briefing")} />
           )}
+          <ClicksCard clientId={client.id} onOpen={() => setTab("bio")} />
           {viewerRole !== "client" && (
             <div className="grid gap-4 lg:grid-cols-2">
               <PackageSummaryCard clientId={client.id} onOpen={() => setTab("package")} />
@@ -615,6 +618,8 @@ export default function Workspace({
       {tab === "invoices" && <InvoicesPanel clientId={client.id} />}
 
       {tab === "carousels" && <CarouselTab client={client} />}
+
+      {tab === "bio" && <LinksTab client={client} />}
 
       {tab === "campaign30" && <CampaignTab client={client} />}
 

@@ -120,6 +120,8 @@ export type MonthlyReportData = {
   // o que funcionou no mês (determinístico) + leitura da IA, quando existir
   learnings?: Learnings;
   learningsReading?: LearningsReading | null;
+  // links rastreáveis mais clicados no mês
+  topLinks?: { label: string; clicks: number }[];
 };
 
 export function isValidMonth(month: string): boolean {

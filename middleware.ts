@@ -40,6 +40,8 @@ const PUBLIC_PREFIXES = [
   "/a/", // página pública da agência (/a/[slug])
   "/aprovar/", // aprovação por link, sem login
   "/fatura/", // fatura Pix do cliente, sem login
+  "/l/", // link curto rastreável
+  "/b/", // link na bio do cliente
   "/opengraph-image",
   "/legal/",
 ];
@@ -57,6 +59,7 @@ const PRIVATE_PREFIXES = [
   "/ideas",
   "/insights",
   "/invoices",
+  "/links",
   "/messages",
   "/plans",
   "/portal",
@@ -98,6 +101,7 @@ export function isPublicApi(pathname: string, method: string): boolean {
   if ((method === "GET" || method === "POST") && /^\/api\/approve\/[^/]+$/.test(pathname)) return true;
   if (method === "GET" && /^\/api\/approve\/[^/]+\/file\/[^/]+$/.test(pathname)) return true;
   if (method === "POST" && /^\/api\/fatura\/[^/]+\/paid$/.test(pathname)) return true;
+  if (method === "GET" && /^\/api\/b\/[^/]+\/(logo|img\/[^/]+)$/.test(pathname)) return true;
   // slide de carrossel com assinatura (o Instagram baixa por URL)
   if (method === "GET" && /^\/api\/c\/[^/]+\/[^/]+$/.test(pathname)) return true;
   return false;
@@ -130,6 +134,7 @@ const CLIENT_API = [
   /^\/api\/voice\/(briefing|speak)$/,
   /^\/api\/scope-requests\/[^/]+$/,
   /^\/api\/carousels\/[^/]+(\/(slide\/[^/]+|zip|schedule))?$/,
+  /^\/api\/links\/[^/]+$/,
 ];
 const PROFESSIONAL_API = [/^\/api\/professional-assets\/[^/]+$/, /^\/api\/projects\/[^/]+\/applications$/];
 
