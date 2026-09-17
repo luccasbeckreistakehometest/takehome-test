@@ -1,5 +1,5 @@
 import { randomUUID } from "crypto";
-import { db } from "./db";
+import { addColumnIfMissing, db } from "./db";
 import type {
   Annotation,
   ArtReview,
@@ -112,32 +112,14 @@ db.exec(`
 const now = () => new Date().toISOString();
 
 // Migração: coluna do sketch de referência da IA
-const projectColumns = (
-  db.prepare("PRAGMA table_info(projects)").all() as { name: string }[]
-).map((column) => column.name);
-if (projectColumns.length > 0 && !projectColumns.includes("sketch")) {
-  db.exec("ALTER TABLE projects ADD COLUMN sketch TEXT NOT NULL DEFAULT ''");
-}
-const deliverableColumns = (
-  db.prepare("PRAGMA table_info(deliverables)").all() as { name: string }[]
-).map((column) => column.name);
-if (deliverableColumns.length > 0 && !deliverableColumns.includes("kind")) {
-  db.exec(`
-    ALTER TABLE deliverables ADD COLUMN kind TEXT NOT NULL DEFAULT 'delivery';
-    ALTER TABLE deliverables ADD COLUMN meaning TEXT NOT NULL DEFAULT '';
-  `);
-}
-if (projectColumns.length > 0 && !projectColumns.includes("mode")) {
-  db.exec("ALTER TABLE projects ADD COLUMN mode TEXT NOT NULL DEFAULT 'marketplace'");
-}
+addColumnIfMissing("projects", "sketch", "TEXT NOT NULL DEFAULT ''");
+addColumnIfMissing("deliverables", "kind", "TEXT NOT NULL DEFAULT 'delivery'");
+addColumnIfMissing("deliverables", "meaning", "TEXT NOT NULL DEFAULT ''");
+addColumnIfMissing("projects", "mode", "TEXT NOT NULL DEFAULT 'marketplace'");
 // Migração: aprovação por entrega (o que dispara as automações do portal)
-if (deliverableColumns.length > 0 && !deliverableColumns.includes("approvalStatus")) {
-  db.exec(`
-    ALTER TABLE deliverables ADD COLUMN approvalStatus TEXT NOT NULL DEFAULT 'pending';
-    ALTER TABLE deliverables ADD COLUMN approvedAt TEXT;
-    ALTER TABLE deliverables ADD COLUMN approvalNote TEXT NOT NULL DEFAULT '';
-  `);
-}
+addColumnIfMissing("deliverables", "approvalStatus", "TEXT NOT NULL DEFAULT 'pending'");
+addColumnIfMissing("deliverables", "approvedAt", "TEXT");
+addColumnIfMissing("deliverables", "approvalNote", "TEXT NOT NULL DEFAULT ''");
 db.exec(`
   CREATE TABLE IF NOT EXISTS applications (
     id TEXT PRIMARY KEY,
@@ -225,40 +207,17 @@ db.exec(`
   );
 `);
 // Migração: post agendado pode nascer de uma entrega aprovada (rascunho)
-const scheduledPostColumns = (
-  db.prepare("PRAGMA table_info(scheduled_posts)").all() as { name: string }[]
-).map((column) => column.name);
-if (scheduledPostColumns.length > 0 && !scheduledPostColumns.includes("deliverableId")) {
-  db.exec("ALTER TABLE scheduled_posts ADD COLUMN deliverableId TEXT");
-}
+addColumnIfMissing("scheduled_posts", "deliverableId", "TEXT");
 // Migração: atributos do post (formato, tipo de gancho, brief da imagem) e a
 // campanha de 30 dias que o gerou — base dos "aprendizados" por cliente.
-if (scheduledPostColumns.length > 0 && !scheduledPostColumns.includes("campaignId")) {
-  db.exec(`
-    ALTER TABLE scheduled_posts ADD COLUMN campaignId TEXT;
-    ALTER TABLE scheduled_posts ADD COLUMN format TEXT NOT NULL DEFAULT '';
-    ALTER TABLE scheduled_posts ADD COLUMN hookType TEXT NOT NULL DEFAULT '';
-    ALTER TABLE scheduled_posts ADD COLUMN imageBrief TEXT NOT NULL DEFAULT '';
-  `);
-}
-const professionalColumns = (
-  db.prepare("PRAGMA table_info(professionals)").all() as { name: string }[]
-).map((column) => column.name);
-if (professionalColumns.length > 0 && !professionalColumns.includes("availability")) {
-  db.exec("ALTER TABLE professionals ADD COLUMN availability TEXT NOT NULL DEFAULT ''");
-}
-if (professionalColumns.length > 0 && !professionalColumns.includes("employmentType")) {
-  db.exec("ALTER TABLE professionals ADD COLUMN employmentType TEXT NOT NULL DEFAULT 'freelancer'");
-}
-const annotationColumns = (
-  db.prepare("PRAGMA table_info(annotations)").all() as { name: string }[]
-).map((column) => column.name);
-if (annotationColumns.length > 0 && !annotationColumns.includes("author")) {
-  db.exec(`
-    ALTER TABLE annotations ADD COLUMN author TEXT NOT NULL DEFAULT 'agency';
-    ALTER TABLE annotations ADD COLUMN audience TEXT NOT NULL DEFAULT 'all';
-  `);
-}
+addColumnIfMissing("scheduled_posts", "campaignId", "TEXT");
+addColumnIfMissing("scheduled_posts", "format", "TEXT NOT NULL DEFAULT ''");
+addColumnIfMissing("scheduled_posts", "hookType", "TEXT NOT NULL DEFAULT ''");
+addColumnIfMissing("scheduled_posts", "imageBrief", "TEXT NOT NULL DEFAULT ''");
+addColumnIfMissing("professionals", "availability", "TEXT NOT NULL DEFAULT ''");
+addColumnIfMissing("professionals", "employmentType", "TEXT NOT NULL DEFAULT 'freelancer'");
+addColumnIfMissing("annotations", "author", "TEXT NOT NULL DEFAULT 'agency'");
+addColumnIfMissing("annotations", "audience", "TEXT NOT NULL DEFAULT 'all'");
 
 // ---------- Profissionais ----------
 

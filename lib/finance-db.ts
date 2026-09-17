@@ -1,5 +1,5 @@
 import { randomUUID } from "crypto";
-import { db, listClients } from "./db";
+import { addColumnIfMissing, db, listClients } from "./db";
 import { getKv, setKv } from "./kv-settings";
 // garante clients/professionals/projects/deliverables antes das migrações
 import { listProfessionals } from "./marketplace-db";
@@ -24,16 +24,8 @@ import {
 
 const SETTINGS_KEY = "finance_settings";
 
-{
-  const clientCols = (db.prepare("PRAGMA table_info(clients)").all() as { name: string }[]).map((c) => c.name);
-  if (clientCols.length > 0 && !clientCols.includes("monthlyFee")) {
-    db.exec("ALTER TABLE clients ADD COLUMN monthlyFee REAL NOT NULL DEFAULT 0");
-  }
-  const proCols = (db.prepare("PRAGMA table_info(professionals)").all() as { name: string }[]).map((c) => c.name);
-  if (proCols.length > 0 && !proCols.includes("hourlyCost")) {
-    db.exec("ALTER TABLE professionals ADD COLUMN hourlyCost REAL NOT NULL DEFAULT 0");
-  }
-}
+addColumnIfMissing("clients", "monthlyFee", "REAL NOT NULL DEFAULT 0");
+addColumnIfMissing("professionals", "hourlyCost", "REAL NOT NULL DEFAULT 0");
 db.exec(`
   CREATE TABLE IF NOT EXISTS time_entries (
     id TEXT PRIMARY KEY,

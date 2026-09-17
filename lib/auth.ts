@@ -1,5 +1,5 @@
 import { randomUUID, scryptSync, timingSafeEqual } from "crypto";
-import { db, listClients } from "./db";
+import { addColumnIfMissing, db, listClients } from "./db";
 import { listProfessionals } from "./marketplace-db";
 
 export type BrandSource = "agency" | "platform";
@@ -30,17 +30,8 @@ db.exec(`
   );
 `);
 // Migração leve
-{
-  const cols = (db.prepare("PRAGMA table_info(users)").all() as { name: string }[]).map(
-    (c) => c.name
-  );
-  if (!cols.includes("brandSource")) {
-    db.exec("ALTER TABLE users ADD COLUMN brandSource TEXT NOT NULL DEFAULT 'agency'");
-  }
-  if (!cols.includes("onboardedAt")) {
-    db.exec("ALTER TABLE users ADD COLUMN onboardedAt TEXT");
-  }
-}
+addColumnIfMissing("users", "brandSource", "TEXT NOT NULL DEFAULT 'agency'");
+addColumnIfMissing("users", "onboardedAt", "TEXT");
 
 function hashPassword(password: string): string {
   const salt = randomUUID().slice(0, 8);
@@ -150,41 +141,48 @@ export function userExistsForRef(refId: string): boolean {
 const DEFAULT_PASSWORD = process.env.SEED_PASSWORD || "luccas123";
 // Admin geral da plataforma: controla agências, clientes, profissionais,
 // planos e receita. Login: admin / luccas123
-if (!db.prepare("SELECT 1 FROM users WHERE role = 'admin'").get()) {
-  createUser({
-    username: "admin",
-    password: DEFAULT_PASSWORD,
-    role: "admin",
-    refId: null,
-    name: "Admin da Plataforma",
-  });
-}
-if (!db.prepare("SELECT 1 FROM users WHERE role = 'agency'").get()) {
-  createUser({
-    username: "agencia",
-    password: DEFAULT_PASSWORD,
-    role: "agency",
-    refId: null,
-    name: "Agência",
-  });
-}
-for (const client of listClients()) {
-  if (!userExistsForRef(client.id)) {
+// O `next build` carrega este módulo em vários workers ao mesmo tempo, todos
+// no mesmo arquivo. Sem serializar, dois deles viam "não há admin": ou o build
+// caía na unicidade do username, ou nascia um segundo admin ("admin2").
+// BEGIN IMMEDIATE faz o próximo esperar o anterior e reler com os usuários já
+// criados — no Docker o banco do build nasce vazio, então isso roda sempre.
+db.transaction(() => {
+  if (!db.prepare("SELECT 1 FROM users WHERE role = 'admin'").get()) {
     createUser({
+      username: "admin",
       password: DEFAULT_PASSWORD,
-      role: "client",
-      refId: client.id,
-      name: client.name,
+      role: "admin",
+      refId: null,
+      name: "Admin da Plataforma",
     });
   }
-}
-for (const professional of listProfessionals()) {
-  if (!userExistsForRef(professional.id)) {
+  if (!db.prepare("SELECT 1 FROM users WHERE role = 'agency'").get()) {
     createUser({
+      username: "agencia",
       password: DEFAULT_PASSWORD,
-      role: "professional",
-      refId: professional.id,
-      name: professional.name,
+      role: "agency",
+      refId: null,
+      name: "Agência",
     });
   }
-}
+  for (const client of listClients()) {
+    if (!userExistsForRef(client.id)) {
+      createUser({
+        password: DEFAULT_PASSWORD,
+        role: "client",
+        refId: client.id,
+        name: client.name,
+      });
+    }
+  }
+  for (const professional of listProfessionals()) {
+    if (!userExistsForRef(professional.id)) {
+      createUser({
+        password: DEFAULT_PASSWORD,
+        role: "professional",
+        refId: professional.id,
+        name: professional.name,
+      });
+    }
+  }
+}).immediate();

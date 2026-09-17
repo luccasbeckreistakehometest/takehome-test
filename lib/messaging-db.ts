@@ -1,5 +1,5 @@
 import { randomUUID } from "crypto";
-import { db } from "./db";
+import { addColumnIfMissing, db } from "./db";
 
 // Central de mensagens: contatos, listas de transmissão, fila de envio
 // (outbox) e conexões por canal. WhatsApp e Instagram, via API oficial ou
@@ -113,17 +113,9 @@ db.exec(`
 
 // Migração leve: atendente por cliente — mensagens recebidas e enviadas
 // sabem a qual conta pertencem (roteadas pelo phone_number_id do WhatsApp).
-{
-  const inboundCols = (db.prepare("PRAGMA table_info(inbound_messages)").all() as { name: string }[]).map((c) => c.name);
-  if (!inboundCols.includes("clientId")) {
-    db.exec("ALTER TABLE inbound_messages ADD COLUMN clientId TEXT");
-    db.exec("ALTER TABLE inbound_messages ADD COLUMN phoneNumberId TEXT NOT NULL DEFAULT ''");
-  }
-  const outboxCols = (db.prepare("PRAGMA table_info(message_outbox)").all() as { name: string }[]).map((c) => c.name);
-  if (!outboxCols.includes("clientId")) {
-    db.exec("ALTER TABLE message_outbox ADD COLUMN clientId TEXT");
-  }
-}
+addColumnIfMissing("inbound_messages", "clientId", "TEXT");
+addColumnIfMissing("inbound_messages", "phoneNumberId", "TEXT NOT NULL DEFAULT ''");
+addColumnIfMissing("message_outbox", "clientId", "TEXT");
 
 const now = () => new Date().toISOString();
 

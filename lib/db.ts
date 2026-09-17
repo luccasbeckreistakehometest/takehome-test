@@ -4,6 +4,17 @@ import path from "path";
 import { randomUUID } from "crypto";
 import type { Client, ClientInput, Generation, GenerationType } from "./types";
 
+export function addColumn(database: Pick<Database.Database, "prepare" | "exec">, table: string, column: string, definition: string): void {
+  const columns = (database.prepare(`PRAGMA table_info(${table})`).all() as { name: string }[]).map((c) => c.name);
+  // Tabela inexistente: quem a cria ainda não carregou; a migração roda quando carregar.
+  if (columns.length === 0 || columns.includes(column)) return;
+  try {
+    database.exec(`ALTER TABLE ${table} ADD COLUMN ${column} ${definition}`);
+  } catch (error) {
+    if (!(error instanceof Error && /duplicate column name/i.test(error.message))) throw error;
+  }
+}
+
 function createDb() {
   const dataDir = process.env.DATA_DIR ?? path.join(process.cwd(), "data");
   fs.mkdirSync(dataDir, { recursive: true });
@@ -48,30 +59,12 @@ function createDb() {
   db.pragma("foreign_keys = ON");
 
   // Migrações leves para bancos criados em versões anteriores
-  const clientColumns = (
-    db.prepare("PRAGMA table_info(clients)").all() as { name: string }[]
-  ).map((column) => column.name);
-  if (!clientColumns.includes("language")) {
-    db.exec("ALTER TABLE clients ADD COLUMN language TEXT NOT NULL DEFAULT 'pt-BR'");
-  }
-  if (!clientColumns.includes("source")) {
-    db.exec("ALTER TABLE clients ADD COLUMN source TEXT NOT NULL DEFAULT 'agency'");
-  }
-  if (!clientColumns.includes("country")) {
-    db.exec("ALTER TABLE clients ADD COLUMN country TEXT NOT NULL DEFAULT 'Brasil'");
-  }
-  if (!clientColumns.includes("capabilities")) {
-    db.exec("ALTER TABLE clients ADD COLUMN capabilities TEXT NOT NULL DEFAULT ''");
-  }
-  if (!clientColumns.includes("selfServe")) {
-    db.exec("ALTER TABLE clients ADD COLUMN selfServe INTEGER NOT NULL DEFAULT 0");
-  }
-  const generationColumns = (
-    db.prepare("PRAGMA table_info(generations)").all() as { name: string }[]
-  ).map((column) => column.name);
-  if (generationColumns.length > 0 && !generationColumns.includes("actuals")) {
-    db.exec("ALTER TABLE generations ADD COLUMN actuals TEXT NOT NULL DEFAULT '{}'");
-  }
+  addColumn(db, "clients", "language", "TEXT NOT NULL DEFAULT 'pt-BR'");
+  addColumn(db, "clients", "source", "TEXT NOT NULL DEFAULT 'agency'");
+  addColumn(db, "clients", "country", "TEXT NOT NULL DEFAULT 'Brasil'");
+  addColumn(db, "clients", "capabilities", "TEXT NOT NULL DEFAULT ''");
+  addColumn(db, "clients", "selfServe", "INTEGER NOT NULL DEFAULT 0");
+  addColumn(db, "generations", "actuals", "TEXT NOT NULL DEFAULT '{}'");
 
   return db;
 }
@@ -80,6 +73,17 @@ function createDb() {
 const globalForDb = globalThis as unknown as { __agencyhubDb?: Database.Database };
 export const db = globalForDb.__agencyhubDb ?? createDb();
 globalForDb.__agencyhubDb = db;
+
+// Migração de coluna idempotente e segura entre processos. O `next build`
+// importa os módulos (que migram ao carregar) em vários workers ao mesmo
+// tempo, todos no mesmo arquivo: dois deles podem ver a coluna faltando e
+// ambos tentarem o ALTER — o segundo falhava com "duplicate column name" e
+// derrubava o build (no Docker o banco nasce vazio, então todo ALTER roda).
+// Toda migração de coluna passa por aqui; `table`/`column`/`definition` são
+// sempre literais do código, nunca entrada de usuário.
+export function addColumnIfMissing(table: string, column: string, definition: string): void {
+  addColumn(db, table, column, definition);
+}
 
 type ClientRow = Omit<Client, "channels" | "selfServe"> & {
   channels: string;

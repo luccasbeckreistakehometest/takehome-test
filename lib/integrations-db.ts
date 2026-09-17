@@ -1,5 +1,5 @@
 import { randomUUID } from "crypto";
-import { db } from "./db";
+import { addColumnIfMissing, db } from "./db";
 
 // Integrações & vendas — propositalmente GENÉRICO para qualquer indústria:
 // e-commerce de produto, serviço, SaaS, agência, imobiliária... Nada de tipo
@@ -108,15 +108,8 @@ db.exec(`
 `);
 
 // Migração leve para bancos criados antes dos campos OAuth
-{
-  const cols = (
-    db.prepare("PRAGMA table_info(client_connections)").all() as { name: string }[]
-  ).map((c) => c.name);
-  for (const col of ["refreshToken", "oauthClientId", "oauthClientSecret"]) {
-    if (!cols.includes(col)) {
-      db.exec(`ALTER TABLE client_connections ADD COLUMN ${col} TEXT NOT NULL DEFAULT ''`);
-    }
-  }
+for (const col of ["refreshToken", "oauthClientId", "oauthClientSecret"]) {
+  addColumnIfMissing("client_connections", col, "TEXT NOT NULL DEFAULT ''");
 }
 
 const now = () => new Date().toISOString();

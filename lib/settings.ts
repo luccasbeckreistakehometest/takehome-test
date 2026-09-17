@@ -1,4 +1,4 @@
-import { db } from "./db";
+import { addColumnIfMissing, db } from "./db";
 
 // Quanto gastar com IA:
 // - economy: modelo mais barato (Sonnet) em tudo
@@ -57,37 +57,16 @@ db.exec(`
 `);
 
 // Migração para bancos criados antes das flags
-const settingsColumns = (
-  db.prepare("PRAGMA table_info(settings)").all() as { name: string }[]
-).map((column) => column.name);
-if (!settingsColumns.includes("landingPagesEnabled")) {
-  db.exec(
-    "ALTER TABLE settings ADD COLUMN landingPagesEnabled INTEGER NOT NULL DEFAULT 0"
-  );
-}
-if (!settingsColumns.includes("economyMode")) {
-  db.exec("ALTER TABLE settings ADD COLUMN economyMode INTEGER NOT NULL DEFAULT 1");
-}
-if (!settingsColumns.includes("aiMode")) {
-  db.exec("ALTER TABLE settings ADD COLUMN aiMode TEXT NOT NULL DEFAULT 'balanced'");
-}
-if (!settingsColumns.includes("anthropicApiKey")) {
-  db.exec("ALTER TABLE settings ADD COLUMN anthropicApiKey TEXT NOT NULL DEFAULT ''");
-  db.exec("ALTER TABLE settings ADD COLUMN googleAiApiKey TEXT NOT NULL DEFAULT ''");
-}
-if (!settingsColumns.includes("houseStyle")) {
-  db.exec("ALTER TABLE settings ADD COLUMN houseStyle TEXT NOT NULL DEFAULT ''");
-}
-if (!settingsColumns.includes("togetherApiKey")) {
-  db.exec("ALTER TABLE settings ADD COLUMN togetherApiKey TEXT NOT NULL DEFAULT ''");
-  db.exec("ALTER TABLE settings ADD COLUMN imageProvider TEXT NOT NULL DEFAULT 'pollinations'");
-}
-if (!settingsColumns.includes("hfApiKey")) {
-  db.exec("ALTER TABLE settings ADD COLUMN hfApiKey TEXT NOT NULL DEFAULT ''");
-}
-if (!settingsColumns.includes("logoMime")) {
-  db.exec("ALTER TABLE settings ADD COLUMN logoMime TEXT NOT NULL DEFAULT ''");
-}
+addColumnIfMissing("settings", "landingPagesEnabled", "INTEGER NOT NULL DEFAULT 0");
+addColumnIfMissing("settings", "economyMode", "INTEGER NOT NULL DEFAULT 1");
+addColumnIfMissing("settings", "aiMode", "TEXT NOT NULL DEFAULT 'balanced'");
+addColumnIfMissing("settings", "anthropicApiKey", "TEXT NOT NULL DEFAULT ''");
+addColumnIfMissing("settings", "googleAiApiKey", "TEXT NOT NULL DEFAULT ''");
+addColumnIfMissing("settings", "houseStyle", "TEXT NOT NULL DEFAULT ''");
+addColumnIfMissing("settings", "togetherApiKey", "TEXT NOT NULL DEFAULT ''");
+addColumnIfMissing("settings", "imageProvider", "TEXT NOT NULL DEFAULT 'pollinations'");
+addColumnIfMissing("settings", "hfApiKey", "TEXT NOT NULL DEFAULT ''");
+addColumnIfMissing("settings", "logoMime", "TEXT NOT NULL DEFAULT ''");
 
 type SettingsRow = {
   agencyName: string;

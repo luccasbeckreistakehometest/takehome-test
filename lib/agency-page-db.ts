@@ -1,5 +1,5 @@
 import { randomUUID } from "crypto";
-import { db } from "./db";
+import { addColumnIfMissing, db } from "./db";
 import { getKv, setKv } from "./kv-settings";
 // Garante que deliverables/clients/client_assets/prospects existem antes das
 // migrações abaixo (os módulos criam as tabelas ao serem importados).
@@ -22,16 +22,8 @@ import {
 
 const PAGE_KEY = "agency_page";
 
-{
-  const deliverableCols = (db.prepare("PRAGMA table_info(deliverables)").all() as { name: string }[]).map((c) => c.name);
-  if (deliverableCols.length > 0 && !deliverableCols.includes("public")) {
-    db.exec("ALTER TABLE deliverables ADD COLUMN public INTEGER NOT NULL DEFAULT 0");
-  }
-  const clientCols = (db.prepare("PRAGMA table_info(clients)").all() as { name: string }[]).map((c) => c.name);
-  if (clientCols.length > 0 && !clientCols.includes("showcase")) {
-    db.exec("ALTER TABLE clients ADD COLUMN showcase INTEGER NOT NULL DEFAULT 0");
-  }
-}
+addColumnIfMissing("deliverables", "public", "INTEGER NOT NULL DEFAULT 0");
+addColumnIfMissing("clients", "showcase", "INTEGER NOT NULL DEFAULT 0");
 db.exec(`
   CREATE TABLE IF NOT EXISTS leads (
     id TEXT PRIMARY KEY,
