@@ -5,6 +5,7 @@ import { api } from "@/lib/api";
 import { CAROUSEL_TEMPLATES, TEMPLATE_LABEL, BODY_MAX, TITLE_MAX, type CarouselContent, type CarouselTemplate } from "@/lib/carousel-rules";
 import type { Client } from "@/lib/types";
 import BrandVoiceCheck from "./BrandVoiceCheck";
+import PanelTester from "./PanelTester";
 import { Button, Card, ErrorBox, Input, Label, SectionTitle, Select, Spinner, Tag, Textarea } from "./ui";
 import { Icon } from "./icons";
 
@@ -260,6 +261,9 @@ function CarouselEditor({ clientId, carousel, onChanged }: { clientId: string; c
         <Textarea id="carousel-caption" value={content.caption} onChange={(e) => setContent({ ...content, caption: e.target.value })} data-testid="carousel-caption" />
         <p className="text-xs text-muted">{[content.cta, content.hashtags.map((h) => `#${h}`).join(" ")].filter(Boolean).join(" · ")}</p>
         <BrandVoiceCheck clientId={clientId} text={content.caption} kind="post" onRewrite={(text) => setContent({ ...content, caption: text })} />
+        {content.slides[0] && (
+          <PanelTester clientId={clientId} initial={content.slides[0].title} label="Testar o gancho (slide 1) com o público" onApply={(text) => setSlide(0, { title: text.slice(0, 60) })} />
+        )}
       </Card>
 
       <div className="flex flex-wrap items-end gap-2">

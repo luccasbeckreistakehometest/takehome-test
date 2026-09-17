@@ -137,6 +137,7 @@ const CLIENT_API = [
   /^\/api\/scope-requests\/[^/]+$/,
   /^\/api\/carousels\/[^/]+(\/(slide\/[^/]+|zip|schedule))?$/,
   /^\/api\/links\/[^/]+$/,
+  /^\/api\/panel\/[^/]+\/schedule$/,
 ];
 const PROFESSIONAL_API = [/^\/api\/professional-assets\/[^/]+$/, /^\/api\/projects\/[^/]+\/applications$/];
 

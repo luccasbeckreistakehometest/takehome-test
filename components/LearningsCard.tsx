@@ -14,6 +14,7 @@ type Payload = {
   reading: (LearningsReading & { createdAt: string }) | null;
   readingStale: boolean;
   clicks?: { byFormat: ClickRow[]; byHour: ClickRow[]; totalClicks: number; postsWithLinks: number };
+  panel?: { calibration: { hits: number; total: number; pct: number } | null } | null;
 };
 
 const REASON_TEXT: Record<ThinReason, string> = {
@@ -192,6 +193,13 @@ export default function LearningsCard({ clientId, canGenerate = true }: { client
                 ))}
               </ul>
             </div>
+          )}
+          {data.panel && (
+            <p className="text-xs text-muted" data-testid="learnings-panel">
+              {data.panel.calibration
+                ? `Painel de público: acertou ${data.panel.calibration.hits} de ${data.panel.calibration.total} testes que foram ao ar (${data.panel.calibration.pct}%).`
+                : "Painel de público: ainda sem dados suficientes para saber se ele acerta (precisa de 5 testes que foram ao ar)."}
+            </p>
           )}
           {data.learnings.hasEnoughData && canGenerate && (!data.reading || data.readingStale) && (
             <div className="flex flex-wrap items-center gap-2">

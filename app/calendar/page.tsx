@@ -19,6 +19,7 @@ import { Button, Card, ErrorBox, Input, Label, Select, Spinner, Tag, Textarea } 
 import { Icon } from "@/components/icons";
 import BrandVoiceCheck from "@/components/BrandVoiceCheck";
 import { ApprovalLinkDialog } from "@/components/ApprovalLinkPanel";
+import PanelTester from "@/components/PanelTester";
 
 type Post = ScheduledPostWithClient;
 type View = "month" | "week";
@@ -353,6 +354,7 @@ function PostPanel({
           )}
           <BrandVoiceCheck clientId={post.clientId} text={caption} kind="post" onRewrite={setCaption} />
           <PostLink post={post} onInsert={(url) => setCaption((c) => (c.includes(url) ? c : `${c.trimEnd()}\n\n${url}`))} />
+          {post.status !== "published" && <PanelTester clientId={post.clientId} initial={caption} postId={post.id} onApply={setCaption} />}
         </div>
         <div className="mt-4 flex flex-wrap items-end gap-2">
           <div>
