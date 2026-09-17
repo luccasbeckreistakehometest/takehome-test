@@ -6,6 +6,10 @@ export const UI_DICT: Record<string, string> = {
   // Endurecimento do lançamento (modo da marca, uploads, cobrança)
   "Quem muda o modo da sua marca é a sua agência.": "Your agency decides how your brand is managed.",
   "O conteúdo do arquivo não confere com o formato.": "The file's content doesn't match its format.",
+  "Troque a senha provisória em Minha conta para continuar.": "Change your temporary password in My account to continue.",
+  "Você entrou com uma senha provisória.": "You signed in with a temporary password.",
+  "Troque a senha": "Change your password",
+  "para usar a plataforma.": "to use the platform.",
   "A sua agência cuida da IA da sua marca e paga pelo uso. Você não precisa comprar plano nem coins.":
     "Your agency runs the AI for your brand and pays for it. You don't need to buy a plan or coins.",
   "A conta de profissional é grátis: perfil, portfólio e candidaturas não usam coins. Não há nada para comprar.":

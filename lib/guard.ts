@@ -47,6 +47,9 @@ export async function guard(
 ): Promise<SessionPayload | NextResponse> {
   const session = await getSession();
   if (!session) return unauthorized();
+  // Senha provisória (vista por quem criou o login): nada além de Minha conta
+  // até a troca (as rotas de conta não usam guard).
+  if (session.mustChangePassword) return mustChangePassword();
   if (!roles.includes(session.role)) return forbidden();
   if (session.role === "client") {
     if (opts.clientId !== undefined && session.refId !== opts.clientId) return forbidden();
@@ -96,6 +99,11 @@ export function isDenied<T>(auth: T | NextResponse): auth is NextResponse {
 
 export function unauthorized(): NextResponse {
   return NextResponse.json({ error: "Não autenticado" }, { status: 401 });
+}
+
+export const MUST_CHANGE_PASSWORD = "Troque a senha provisória em Minha conta para continuar.";
+export function mustChangePassword(): NextResponse {
+  return NextResponse.json({ error: MUST_CHANGE_PASSWORD, code: "must_change_password" }, { status: 403 });
 }
 
 export function forbidden(): NextResponse {

@@ -314,9 +314,11 @@ export function findUserByRef(refId: string): User | null {
 // Consulta barata (PK) feita em toda requisição autenticada.
 export function getSessionState(
   userId: string
-): { sessionVersion: number; disabled: boolean; agencyId: string | null; role: UserRole } | null {
-  const row = db.prepare("SELECT sessionVersion, disabledAt, agencyId, role FROM users WHERE id = ?").get(userId) as
-    | { sessionVersion: number; disabledAt: string | null; agencyId: string | null; role: UserRole }
+): { sessionVersion: number; disabled: boolean; agencyId: string | null; role: UserRole; mustChangePassword: boolean } | null {
+  const row = db
+    .prepare("SELECT sessionVersion, disabledAt, agencyId, role, mustChangePassword FROM users WHERE id = ?")
+    .get(userId) as
+    | { sessionVersion: number; disabledAt: string | null; agencyId: string | null; role: UserRole; mustChangePassword: number }
     | undefined;
   if (!row) return null;
   return {
@@ -324,6 +326,7 @@ export function getSessionState(
     disabled: Boolean(row.disabledAt),
     agencyId: row.agencyId ?? null,
     role: row.role,
+    mustChangePassword: Number(row.mustChangePassword ?? 0) === 1,
   };
 }
 

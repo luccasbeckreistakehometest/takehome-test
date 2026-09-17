@@ -1,11 +1,22 @@
 import { expect, type APIRequestContext, type Page } from "@playwright/test";
 
+// Senhas provisórias já trocadas nesta run (username → senha nova).
+const rotatedPasswords = new Map<string, string>();
+
 export async function login(page: Page, username: string, password = "e2e-pass") {
+  const current = rotatedPasswords.get(username) ?? password;
   await page.goto("/login");
   await page.getByLabel("Usuário ou e-mail").fill(username);
-  await page.getByLabel("Senha", { exact: true }).fill(password);
+  await page.getByLabel("Senha", { exact: true }).fill(current);
   await page.getByRole("button", { name: "Entrar", exact: true }).click();
   await expect(page).not.toHaveURL(/\/login/);
+  // Login com senha provisória: a troca é obrigatória antes de usar o app.
+  if (/\/conta\?trocar=1/.test(page.url())) {
+    const next = `${current}-trocada`;
+    const changed = await page.request.post("/api/account/password", { data: { current, next } });
+    expect(changed.status(), await changed.text()).toBe(200);
+    rotatedPasswords.set(username, next);
+  }
 }
 
 /** Marca o tour como concluído para specs que não são sobre ele. */

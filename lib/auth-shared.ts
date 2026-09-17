@@ -25,6 +25,9 @@ export type SessionPayload = {
   // false = gerenciada por uma agência (portal read-only). Fica na sessão para
   // o middleware (edge, sem banco) rotear sem consultar o SQLite.
   selfServe?: boolean;
+  // Senha provisória ainda não trocada (resolvido do banco a cada pedido,
+  // nunca do cookie): as rotas com guard() recusam até a troca.
+  mustChangePassword?: boolean;
   // Versão da sessão do usuário no momento da emissão. Trocar a senha,
   // desativar a conta ou "sair de todos os dispositivos" incrementa a versão
   // no banco e derruba todos os cookies antigos.

@@ -22,22 +22,23 @@ export async function sessionFromToken(token: string | undefined): Promise<Sessi
   if ((payload.sv ?? 0) !== state.sessionVersion) return null;
   // Papel mudou no banco (admin editou): o cookie antigo não vale mais.
   if (state.role !== payload.role) return null;
+  const withState = { ...payload, mustChangePassword: state.mustChangePassword };
   // O modo da marca pode mudar pelo painel da agência: lê o valor atual.
   // A agência (tenant) vem sempre do banco, nunca do cookie.
   if (payload.role === "client") {
     const client = payload.refId ? getClient(payload.refId) : null;
     if (!client || !client.agencyId) return null;
-    return { ...payload, selfServe: client.selfServe, agencyId: client.agencyId };
+    return { ...withState, selfServe: client.selfServe, agencyId: client.agencyId };
   }
   if (payload.role === "agency") {
     // Conta de agência sem tenant não entra (falha fechada).
     if (!state.agencyId) return null;
-    return { ...payload, agencyId: state.agencyId };
+    return { ...withState, agencyId: state.agencyId };
   }
   if (payload.role === "professional") {
-    return { ...payload, agencyId: state.agencyId };
+    return { ...withState, agencyId: state.agencyId };
   }
-  return { ...payload, agencyId: null };
+  return { ...withState, agencyId: null };
 }
 
 // Lê a sessão nas rotas/servidor.
@@ -70,10 +71,11 @@ export async function reissueSession(
   session: SessionPayload,
   changes: Partial<Pick<SessionPayload, "selfServe" | "sv" | "name">>
 ): Promise<void> {
-  const { iat, exp, agencyId, ...rest } = session;
+  const { iat, exp, agencyId, mustChangePassword, ...rest } = session;
   void iat;
   void exp;
   void agencyId;
+  void mustChangePassword; // sempre lido do banco, nunca do cookie
   const token = await signSession({ ...rest, ...changes });
   response.cookies.set(SESSION_COOKIE, token, sessionCookieOptions());
 }
