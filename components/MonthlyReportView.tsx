@@ -4,6 +4,7 @@ import type { MonthlyReportData } from "@/lib/report-aggregate";
 import type { MonthlyReportSummary } from "@/lib/reports-db";
 import { fmtCurrency, fmtNum, type UiLang } from "@/lib/i18n";
 import { Card, SectionTitle, Tag } from "./ui";
+import { LearningsSummary } from "./LearningsCard";
 
 // Renderização do relatório mensal — a mesma nas três telas (agência, portal
 // do cliente e impressão). Só os rótulos são do chrome (traduzidos pelo
@@ -170,6 +171,13 @@ export default function MonthlyReportView({
           </div>
         </Card>
       </div>
+
+      {data.learnings && (
+        <Card data-testid="report-learnings">
+          <SectionTitle>O que funcionou no mês</SectionTitle>
+          <LearningsSummary learnings={data.learnings} reading={data.learningsReading ?? null} lang={lang} compact />
+        </Card>
+      )}
 
       {data.satisfaction && (
         <Card data-testid="report-satisfaction">

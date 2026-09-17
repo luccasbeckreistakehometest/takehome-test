@@ -86,6 +86,14 @@ const ITEMS: { anchor: string; icon: IconName; title: string; body: string; href
     href: "/clients",
     cta: "Gerar em um cliente",
   },
+  {
+    anchor: "diff-learnings",
+    icon: "chart",
+    title: "O que funciona pra este cliente",
+    body: "Posts cruzados com as vendas e métricas dos dias seguintes: melhor formato, dia e horário, o que menos rende — e uma leitura de 3 linhas da IA.",
+    href: "/clients",
+    cta: "Ver num cliente",
+  },
 ];
 
 export default function DifferentiatorsStrip() {

@@ -2,6 +2,7 @@
 // e devolve os números do mês. Sem banco, sem IA — testável em isolamento.
 
 import { satisfactionForMonth, type MonthSatisfaction, type PulseLike } from "./pulse-rules";
+import { computeLearnings, describeLearnings, type Learnings, type LearningsReading } from "./learnings-rules";
 
 export type ReportMonth = string; // "YYYY-MM"
 
@@ -35,6 +36,8 @@ export type ReportPostInput = {
   status: "draft" | "scheduled" | "published" | "canceled";
   scheduledFor: string;
   publishedAt: string | null;
+  format?: string; // atributos usados nos "aprendizados" do mês
+  hookType?: string;
 };
 
 export type ReportSnapshotInput = {
@@ -114,6 +117,9 @@ export type MonthlyReportData = {
   sales: { hasData: boolean; revenue: number; units: number; entries: number; currency: string };
   generations: { count: number; items: { type: string; title: string; createdAt: string }[] };
   satisfaction?: MonthSatisfaction;
+  // o que funcionou no mês (determinístico) + leitura da IA, quando existir
+  learnings?: Learnings;
+  learningsReading?: LearningsReading | null;
 };
 
 export function isValidMonth(month: string): boolean {
@@ -267,6 +273,12 @@ export function aggregateMonth(input: ReportInput): MonthlyReportData {
       items: monthGenerations.map((g) => ({ type: g.type, title: g.title, createdAt: g.createdAt })),
     },
     satisfaction: satisfactionForMonth(input.pulses ?? [], input.month),
+    learnings: computeLearnings({
+      month: input.month,
+      posts: input.posts.map((p) => ({ id: p.id, channel: p.channel, status: p.status, scheduledFor: p.scheduledFor, format: p.format, hookType: p.hookType })),
+      snapshots: input.snapshots,
+      sales: input.sales,
+    }),
   };
 }
 
@@ -314,5 +326,6 @@ export function describeMonth(data: MonthlyReportData): string {
   } else {
     lines.push("Satisfação do cliente: sem respostas neste mês");
   }
+  if (data.learnings) lines.push(...describeLearnings(data.learnings));
   return lines.join("\n");
 }

@@ -12,6 +12,7 @@ import { googleCalendarUrl } from "@/lib/gcal";
 import TierBadge, { TierProgress } from "./TierBadge";
 import OnboardingModal from "./OnboardingModal";
 import { ClientPulseCard } from "./PulseOverviewCard";
+import LearningsCard from "./LearningsCard";
 import { Button, Card, SectionTitle, Spinner, Tag } from "./ui";
 
 type DashboardData = {
@@ -132,6 +133,8 @@ export default function ClientDashboard({
       </Card>
 
       {!client.selfServe && <ClientPulseCard clientId={client.id} />}
+
+      <LearningsCard clientId={client.id} />
 
       {data.pulseSummary && (
         <Card>

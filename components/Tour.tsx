@@ -24,6 +24,7 @@ const STEPS: Step[] = [
   { anchor: "diff-margin", path: "/", t: "Horas e margem por cliente", b: "Na aba Horas de cada cliente você aponta tempo (cronômetro ou à mão) por demanda. Em Horas & margem, cada cliente aparece com fee, horas, custo e margem do mês — quem dá prejuízo fica em vermelho, com CSV para a contabilidade." },
   { anchor: "diff-brand-voice", path: "/", t: "Guardião da voz da marca", b: "No calendário e no atendente, o botão Checar voz da marca compara o texto com o briefing e as regras do cliente (termos proibidos, CTA, hashtags, emojis, alegações sem fonte) e dá uma nota de tom. Reescrever no tom corrige em 1 clique. As regras ficam na aba Briefing." },
   { anchor: "diff-campaign", path: "/", t: "Campanha de 30 dias", b: "Na aba 30 dias de cada cliente: objetivo, canais e data de início. A IA planeja as semanas e escreve cada post; tudo entra no calendário como rascunho nos dias livres, e você aceita ou pula um a um." },
+  { anchor: "diff-learnings", path: "/", t: "O que funciona pra este cliente", b: "No Dashboard de cada cliente, os posts publicados são cruzados com as vendas e métricas dos dias seguintes: melhor formato, dia e horário e o que menos rende, com uma leitura de 3 linhas da IA. Com poucos dados, a tela diz o que falta. Os números também entram no relatório mensal." },
 ];
 type Rect = { top: number; left: number; width: number; height: number };
 

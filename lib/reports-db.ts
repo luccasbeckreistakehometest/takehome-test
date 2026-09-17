@@ -6,6 +6,7 @@ import { db } from "./db";
 import { listProjects, listScheduledPosts } from "./marketplace-db";
 import { listSales } from "./integrations-db";
 import { listPulses } from "./pulse-db";
+import { getFreshReading } from "./learnings-db";
 import {
   aggregateMonth,
   type MonthlyReportData,
@@ -111,6 +112,8 @@ export function buildMonthData(clientId: string, month: ReportMonth): MonthlyRep
     status: p.status as ReportPostInput["status"],
     scheduledFor: p.scheduledFor,
     publishedAt: p.publishedAt,
+    format: p.format,
+    hookType: p.hookType,
   }));
   const snapshots = db
     .prepare("SELECT * FROM metric_snapshots WHERE clientId = ?")
@@ -120,7 +123,9 @@ export function buildMonthData(clientId: string, month: ReportMonth): MonthlyRep
     .prepare("SELECT type, title, createdAt FROM generations WHERE clientId = ?")
     .all(clientId) as ReportGenerationInput[];
   const pulses = listPulses(clientId, 1000);
-  return aggregateMonth({ month, projects, deliverables, annotations, posts, snapshots, sales, generations, pulses });
+  const data = aggregateMonth({ month, projects, deliverables, annotations, posts, snapshots, sales, generations, pulses });
+  if (data.learnings) data.learningsReading = getFreshReading(clientId, month, data.learnings);
+  return data;
 }
 
 export function getMonthlyReport(clientId: string, month: ReportMonth): MonthlyReport | null {
