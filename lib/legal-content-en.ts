@@ -102,6 +102,7 @@ export const PRIVACY_EN: LegalDoc = {
       paragraphs: [
         "The controller is the party identified in the \"Who runs Marqa\" box on this page. To reach the data protection officer, use the contact form and choose \"Privacy and my data (LGPD)\".",
         "When an agency registers its own clients and professionals, the agency is the controller of that work data and Marqa acts as a processor on the agency's instructions.",
+        "Brands that sign up directly on Marqa, without an agency's invitation, are looked after by Marqa's own team: that team can see and edit the brand's data to give support and, if the brand chooses to have an agency handle its work, to deliver it. No other agency can see that data.",
       ],
     },
     {

@@ -155,6 +155,12 @@ export default function RegistrationForm({
             <Label htmlFor="reg-country">País</Label>
             <Input id="reg-country" autoComplete="country-name" value={form.country} onChange={(e) => setForm({ ...form, country: e.target.value })} />
           </div>
+          {!token && (
+            <p className="text-xs text-muted sm:col-span-2" data-testid="reg-brand-house-note">
+              Sua marca fica com o time da Marqa: a gente pode ver os dados para dar suporte e, se você escolher ter uma
+              agência cuidando, para fazer as entregas. Outras agências não veem nada.
+            </p>
+          )}
         </div>
       )}
 

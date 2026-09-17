@@ -101,6 +101,7 @@ export const PRIVACY_PT: LegalDoc = {
       paragraphs: [
         "O controlador dos dados é o responsável identificado no quadro \"Quem opera a Marqa\" desta página. Para falar com o encarregado pelo tratamento de dados (DPO), use o formulário de contato escolhendo o assunto \"Privacidade e meus dados (LGPD)\".",
         "Quando uma agência cadastra os próprios clientes e profissionais na plataforma, a agência é controladora desses dados de trabalho e a Marqa atua como operadora, seguindo as instruções da agência.",
+        "Marcas que se cadastram direto na Marqa, sem convite de uma agência, são atendidas pelo time da própria Marqa: esse time pode ver e editar os dados da marca para dar suporte e, se a marca escolher ter uma agência cuidando, para fazer as entregas. Nenhuma outra agência vê esses dados.",
       ],
     },
     {
