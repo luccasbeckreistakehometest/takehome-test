@@ -20,6 +20,7 @@ const STEPS: Step[] = [
   { anchor: "diff-proposal", path: "/", t: "Proposta pública em 5 minutos", b: "Em Prospecção, cada prospect ganha uma página com pitch, pacotes e prazo. Ele aceita sem login e já vira cliente com acesso ao portal." },
   { anchor: "nav-calendar", path: "/", t: "Calendário de conteúdo", b: "Semana ou mês por cliente, status com um clique e aviso dos dias sem conteúdo." },
   { anchor: "diff-public-page", path: "/", t: "Página pública da agência", b: "Em Configurações → Página pública você liga /a/sua-agencia: serviços, trabalhos que o cliente autorizou, clientes e depoimentos. O formulário vira prospect e avisa você no sino e no WhatsApp." },
+  { anchor: "diff-pulse", path: "/", t: "Pulso do cliente e NPS", b: "No portal, o cliente responde 😞😐😀 depois de cada aprovação e uma vez por mês, e o NPS a cada trimestre. A Hoje mostra quem está em risco (nota caindo, 😞, silêncio) e o relatório mensal traz os números." },
 ];
 type Rect = { top: number; left: number; width: number; height: number };
 

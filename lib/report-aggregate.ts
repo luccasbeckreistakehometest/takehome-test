@@ -1,6 +1,8 @@
 // Agregação PURA do relatório mensal do cliente: recebe listas já carregadas
 // e devolve os números do mês. Sem banco, sem IA — testável em isolamento.
 
+import { satisfactionForMonth, type MonthSatisfaction, type PulseLike } from "./pulse-rules";
+
 export type ReportMonth = string; // "YYYY-MM"
 
 export type ReportDeliverableInput = {
@@ -58,6 +60,8 @@ export type ReportSaleInput = {
 
 export type ReportGenerationInput = { type: string; title: string; createdAt: string };
 
+export type ReportPulseInput = PulseLike;
+
 export type ReportInput = {
   month: ReportMonth;
   projects: ReportProjectInput[];
@@ -67,6 +71,7 @@ export type ReportInput = {
   snapshots: ReportSnapshotInput[];
   sales: ReportSaleInput[];
   generations: ReportGenerationInput[];
+  pulses?: ReportPulseInput[]; // pulso do cliente (😞😐😀 + NPS); ausente em relatórios antigos
 };
 
 export type MonthlyReportData = {
@@ -108,6 +113,7 @@ export type MonthlyReportData = {
   };
   sales: { hasData: boolean; revenue: number; units: number; entries: number; currency: string };
   generations: { count: number; items: { type: string; title: string; createdAt: string }[] };
+  satisfaction?: MonthSatisfaction;
 };
 
 export function isValidMonth(month: string): boolean {
@@ -260,6 +266,7 @@ export function aggregateMonth(input: ReportInput): MonthlyReportData {
       count: monthGenerations.length,
       items: monthGenerations.map((g) => ({ type: g.type, title: g.title, createdAt: g.createdAt })),
     },
+    satisfaction: satisfactionForMonth(input.pulses ?? [], input.month),
   };
 }
 
@@ -297,5 +304,15 @@ export function describeMonth(data: MonthlyReportData): string {
   lines.push(`Entregáveis de IA gerados: ${data.generations.count}`);
   for (const g of data.generations.items.slice(0, 10)) lines.push(`- ${g.type}: ${g.title}`);
   lines.push(`Revisões: ${data.annotations.total} anotações (${data.annotations.resolved} resolvidas)`);
+  const sat = data.satisfaction;
+  if (sat?.hasData) {
+    lines.push(
+      `Satisfação do cliente: ${sat.responses} resposta(s) no mês (😀 ${sat.happy}, 😐 ${sat.neutral}, 😞 ${sat.sad}${sat.avg !== null ? `, média ${sat.avg}/3` : ""})` +
+        (sat.nps.score !== null ? ` · NPS do trimestre ${sat.nps.score} (${sat.nps.responses} resposta(s))` : "")
+    );
+    for (const c of sat.comments) lines.push(`- comentário do cliente: "${c}"`);
+  } else {
+    lines.push("Satisfação do cliente: sem respostas neste mês");
+  }
   return lines.join("\n");
 }

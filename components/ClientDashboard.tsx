@@ -11,6 +11,7 @@ import type { TierInfo } from "@/lib/ranking";
 import { googleCalendarUrl } from "@/lib/gcal";
 import TierBadge, { TierProgress } from "./TierBadge";
 import OnboardingModal from "./OnboardingModal";
+import { ClientPulseCard } from "./PulseOverviewCard";
 import { Button, Card, SectionTitle, Spinner, Tag } from "./ui";
 
 type DashboardData = {
@@ -129,6 +130,8 @@ export default function ClientDashboard({
           </Link>
         </div>
       </Card>
+
+      {!client.selfServe && <ClientPulseCard clientId={client.id} />}
 
       {data.pulseSummary && (
         <Card>

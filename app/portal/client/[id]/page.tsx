@@ -19,6 +19,7 @@ import { ClientReportView } from "@/components/renderers";
 import TierBadge, { TierProgress } from "@/components/TierBadge";
 import { Button, Card, Input, SectionTitle, Spinner, Tag, Textarea } from "@/components/ui";
 import MarcaModeChoice from "@/components/MarcaModeChoice";
+import PulsePrompt from "@/components/PulsePrompt";
 import type { AccountMessage } from "@/lib/marketplace-db";
 
 type ProjectDetail = Project & {
@@ -45,6 +46,8 @@ export default function ClientPortalPage({
   const [requestText, setRequestText] = useState("");
   const [requestSent, setRequestSent] = useState(false);
   const [chooserOpen, setChooserOpen] = useState(false);
+  // recarrega o pulso depois de cada aprovação (a pergunta "como foi?" aparece na hora)
+  const [pulseKey, setPulseKey] = useState(0);
 
   useEffect(() => {
     // Abre o seletor de modo logo após o cadastro (?choose=1)
@@ -94,6 +97,7 @@ export default function ClientPortalPage({
       body: JSON.stringify({ status: approve ? "approved" : "in_progress" }),
     });
     await reloadProjects();
+    if (approve) setPulseKey((k) => k + 1);
   }
 
   const [busyDeliverable, setBusyDeliverable] = useState<string | null>(null);
@@ -110,6 +114,7 @@ export default function ClientPortalPage({
         body: JSON.stringify({ decision, note }),
       });
       await reloadProjects();
+      if (decision === "approved") setPulseKey((k) => k + 1);
     } finally {
       setBusyDeliverable(null);
     }
@@ -207,6 +212,8 @@ export default function ClientPortalPage({
       </div>
 
       <MarcaModeChoice id={client.id} open={chooserOpen} onClose={() => setChooserOpen(false)} />
+
+      {!client.selfServe && <PulsePrompt clientId={client.id} refreshKey={pulseKey} />}
 
       <Card className="flex flex-wrap items-center justify-between gap-3">
         <div>

@@ -171,6 +171,31 @@ export default function MonthlyReportView({
         </Card>
       </div>
 
+      {data.satisfaction && (
+        <Card data-testid="report-satisfaction">
+          <SectionTitle>Satisfação do cliente</SectionTitle>
+          {data.satisfaction.hasData ? (
+            <div className="space-y-3">
+              <div className="grid grid-cols-2 gap-2 sm:grid-cols-4">
+                <Stat label="Respostas no mês" value={data.satisfaction.responses} hint={`😀 ${data.satisfaction.happy} · 😐 ${data.satisfaction.neutral} · 😞 ${data.satisfaction.sad}`} />
+                <Stat label="Média (1 a 3)" value={data.satisfaction.avg ?? "—"} />
+                <Stat label="NPS do trimestre" value={data.satisfaction.nps.score ?? "—"} hint={data.satisfaction.nps.responses ? `${data.satisfaction.nps.responses} resposta(s)` : undefined} />
+                <Stat label="Promotores" value={data.satisfaction.nps.promoters} hint={`${data.satisfaction.nps.detractors} detratores`} />
+              </div>
+              {data.satisfaction.comments.length > 0 && (
+                <ul className="space-y-1 text-sm text-muted">
+                  {data.satisfaction.comments.map((c, i) => (
+                    <li key={i}>“{c}”</li>
+                  ))}
+                </ul>
+              )}
+            </div>
+          ) : (
+            <p className="text-sm text-muted">Sem respostas de satisfação neste mês.</p>
+          )}
+        </Card>
+      )}
+
       <div className="grid gap-6 lg:grid-cols-2">
         <Card>
           <SectionTitle>Demandas</SectionTitle>

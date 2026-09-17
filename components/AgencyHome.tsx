@@ -8,6 +8,7 @@ import type { TierInfo } from "@/lib/ranking";
 import TierBadge, { TierProgress } from "@/components/TierBadge";
 import OnboardingModal from "@/components/OnboardingModal";
 import DifferentiatorsStrip from "@/components/DifferentiatorsStrip";
+import PulseOverviewCard from "@/components/PulseOverviewCard";
 import { Card, SectionTitle, Spinner, Tag } from "@/components/ui";
 
 type Overview = {
@@ -93,6 +94,7 @@ export default function AgencyHome() {
       )}
 
       <div className="grid gap-6 lg:grid-cols-2">
+        <PulseOverviewCard mode="home" />
         {data.pendingApplications.length > 0 && (
           <Card>
             <SectionTitle>✋ Candidaturas aguardando análise</SectionTitle>

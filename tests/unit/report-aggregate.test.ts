@@ -116,3 +116,25 @@ describe("aggregateMonth", () => {
     expect(text).toContain("sem registros");
   });
 });
+
+describe("satisfaction in the month", () => {
+  it("folds the client pulse into the month and into the AI text", () => {
+    const data = aggregateMonth(
+      base({
+        pulses: [
+          { kind: "approval", score: 3, comment: "adorei", context: "d1", createdAt: "2026-08-05T10:00:00Z" },
+          { kind: "monthly", score: 2, comment: "", context: "2026-08", createdAt: "2026-08-20T10:00:00Z" },
+          { kind: "nps", score: 9, comment: "", context: "", createdAt: "2026-07-01T10:00:00Z" },
+          { kind: "monthly", score: 1, comment: "mês passado", context: "2026-07", createdAt: "2026-07-20T10:00:00Z" },
+        ],
+      })
+    );
+    expect(data.satisfaction).toMatchObject({ hasData: true, responses: 2, avg: 2.5, happy: 1, neutral: 1, sad: 0, comments: ["adorei"] });
+    expect(data.satisfaction?.nps.score).toBe(100);
+    expect(describeMonth(data)).toContain("Satisfação do cliente: 2 resposta(s)");
+    expect(describeMonth(data)).toContain("NPS do trimestre 100");
+    const empty = aggregateMonth(base());
+    expect(empty.satisfaction?.hasData).toBe(false);
+    expect(describeMonth(empty)).toContain("sem respostas neste mês");
+  });
+});

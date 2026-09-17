@@ -5,6 +5,7 @@ import Link from "next/link";
 import { api } from "@/lib/api";
 import { Card, SectionTitle, Skeleton, Tag } from "@/components/ui";
 import TierBadge, { TierProgress } from "@/components/TierBadge";
+import PulseOverviewCard from "@/components/PulseOverviewCard";
 import { Icon, type IconName } from "@/components/icons";
 import { PROJECT_STATUS_LABELS, type ProjectStatus } from "@/lib/marketplace-types";
 import { TIER_COLORS, type TierInfo } from "@/lib/ranking";
@@ -242,6 +243,8 @@ export default function InsightsPage() {
           )}
         </Card>
       </div>
+
+      <PulseOverviewCard mode="full" />
 
       <div className="grid gap-6 lg:grid-cols-2">
         {/* Clientes por elo */}

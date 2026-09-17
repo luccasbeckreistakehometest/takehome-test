@@ -54,6 +54,14 @@ const ITEMS: { anchor: string; icon: IconName; title: string; body: string; href
     href: "/settings#pagina-publica",
     cta: "Configurar página",
   },
+  {
+    anchor: "diff-pulse",
+    icon: "target",
+    title: "Pulso do cliente e NPS",
+    body: "Depois de cada aprovação e uma vez por mês o cliente responde em 1 clique; a cada trimestre, o NPS. Quem está esfriando aparece aqui.",
+    href: "/insights#pulso",
+    cta: "Ver quem está em risco",
+  },
 ];
 
 export default function DifferentiatorsStrip() {

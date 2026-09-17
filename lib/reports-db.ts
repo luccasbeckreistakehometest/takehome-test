@@ -5,6 +5,7 @@ import { db } from "./db";
 // — importar por eles garante que existem mesmo num banco recém-criado.
 import { listProjects, listScheduledPosts } from "./marketplace-db";
 import { listSales } from "./integrations-db";
+import { listPulses } from "./pulse-db";
 import {
   aggregateMonth,
   type MonthlyReportData,
@@ -118,7 +119,8 @@ export function buildMonthData(clientId: string, month: ReportMonth): MonthlyRep
   const generations = db
     .prepare("SELECT type, title, createdAt FROM generations WHERE clientId = ?")
     .all(clientId) as ReportGenerationInput[];
-  return aggregateMonth({ month, projects, deliverables, annotations, posts, snapshots, sales, generations });
+  const pulses = listPulses(clientId, 1000);
+  return aggregateMonth({ month, projects, deliverables, annotations, posts, snapshots, sales, generations, pulses });
 }
 
 export function getMonthlyReport(clientId: string, month: ReportMonth): MonthlyReport | null {
