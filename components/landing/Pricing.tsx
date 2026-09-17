@@ -142,6 +142,8 @@ export default function Pricing({
                       : `/criar-conta?type=${accountType}&plan=${plan.id}&period=${period}`
                   }
                   data-testid={`pricing-cta-${plan.id}`}
+                  data-track="cta_click"
+                  data-track-label={plan.id}
                   className={`mt-6 inline-flex items-center justify-center gap-1.5 rounded-xl px-5 py-3 font-semibold transition-transform hover:-translate-y-0.5 ${
                     plan.recommended
                       ? "bg-accent text-accent-ink shadow-lg shadow-accent/20"

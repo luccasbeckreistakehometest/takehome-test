@@ -4,6 +4,7 @@ import QRCode from "qrcode";
 import { invoicePageData } from "@/lib/invoices-db";
 import { agencyLogoUrl } from "@/lib/branding";
 import InvoicePayView from "@/components/InvoicePayView";
+import { recordEvent } from "@/lib/analytics-db";
 
 export const dynamic = "force-dynamic";
 
@@ -24,6 +25,7 @@ export default async function InvoicePage({ params }: Props) {
   const data = valid(token) ? invoicePageData(token) : null;
   if (!data) notFound();
   const { invoice } = data;
+  recordEvent({ name: "invoice_opened", path: "/fatura/:token", audience: "geral", meta: { state: data.state } });
   const qrSvg = invoice.pixPayload ? await QRCode.toString(invoice.pixPayload, { type: "svg", margin: 1, width: 240, errorCorrectionLevel: "M" }) : "";
   return (
     <InvoicePayView

@@ -1,4 +1,6 @@
 import { NextResponse } from "next/server";
+import { recordUserEvent, saveSignupAttribution } from "@/lib/analytics-db";
+import { audienceFromRole, sanitizeUtm } from "@/lib/analytics-rules";
 import { z } from "zod";
 import {
   createUser,
@@ -49,6 +51,8 @@ const schema = z.object({
   country: z.string().trim().max(60).default("Brasil"),
   professionalRole: z.enum(["fotografo", "designer"]).optional(),
   location: z.string().trim().max(120).default(""),
+  // 1º toque (UTM) guardado na aba antes do cadastro
+  utm: z.record(z.string(), z.string().max(80)).optional(),
 });
 
 export async function POST(request: Request) {
@@ -188,6 +192,13 @@ export async function POST(request: Request) {
     setUserAgency(created.id, agencyId);
   }
   if (data.token) consumeInvite(data.token, refId ?? created.id);
+  // atribuição do cadastro (sem cookie: só a UTM que a própria página mandou)
+  try {
+    saveSignupAttribution(created.id, sanitizeUtm(data.utm ?? {}), audienceFromRole(role));
+    recordUserEvent("signup_completed", created.id, { invited: Boolean(data.token) });
+  } catch (error) {
+    console.error("[analytics] cadastro não registrado:", error);
+  }
   // Cota do plano de entrada já na criação da conta (agência nova: carteira própria).
   if (role === "agency" && createdAgency && agencyId) startAccount("agency", agencyId);
   else if (refId) startAccount(role, refId);

@@ -15,6 +15,7 @@ import ThemeToggle from "@/components/ThemeToggle";
 import Tour from "@/components/Tour";
 import { Icon } from "@/components/icons";
 import AgencyNav from "@/components/AgencyNav";
+import Track from "@/components/Track";
 import { MarqaMark } from "@/components/MarqaLogo";
 import { purchaseBlockReason } from "@/lib/plans";
 import "./globals.css";
@@ -76,6 +77,7 @@ export default async function RootLayout({
       </head>
       <body className="min-h-full flex flex-col">
         <Translator />
+        <Track />
         <JobsIndicator />
         <Tour role={session?.role ?? null} />
         <GlobalSearch />

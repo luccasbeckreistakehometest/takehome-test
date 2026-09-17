@@ -8,6 +8,7 @@ import { aiUsable } from "@/lib/ai-mock";
 import { carouselBrand, createCarousel, listCarousels } from "@/lib/carousels-db";
 import { cachedCarousel, draftCarousel } from "@/lib/carousel-ai";
 import { slideHashes } from "@/lib/carousel-render";
+import { recordUserEvent } from "@/lib/analytics-db";
 import { CAROUSEL_TEMPLATES, MAX_SLIDES, MIN_SLIDES, sanitizeContent } from "@/lib/carousel-rules";
 
 type Context = { params: Promise<{ id: string }> };
@@ -72,6 +73,7 @@ export async function POST(request: Request, { params }: Context) {
     if (!gate.ok) return NextResponse.json({ error: gate.reason, ...(gate.status === 402 ? { code: "no_coins" } : {}) }, { status: gate.status, headers: gate.headers });
     const draft = await runWithAiContext(aiContextFor(auth, "carousel", client.agencyId), () => draftCarousel(client, request_));
     const carousel = createCarousel({ clientId: id, postId: input.postId ?? null, ...request_, template: input.template, content: draft.content, source: draft.demo ? "demo" : "ai" });
+    recordUserEvent("first_value", auth.userId, { action: "carousel" }, { once: true });
     return NextResponse.json({ carousel, charged: true, cached: false, voiceIssues: draft.voiceIssues }, { status: 201 });
   } catch (error) {
     if (gate?.ok) gate.refund();

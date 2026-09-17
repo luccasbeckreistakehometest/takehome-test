@@ -1,6 +1,7 @@
 "use client";
 
-import { useState } from "react";
+import { useRef, useState } from "react";
+import { firstTouchUtm, track } from "./Track";
 import Link from "next/link";
 import { api } from "@/lib/api";
 import { Button, ErrorBox, Input, Label, Select } from "./ui";
@@ -59,15 +60,24 @@ export default function RegistrationForm({
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
 
+  // funil: o 1º campo tocado conta como "começou o cadastro" (uma vez)
+  const started = useRef(false);
+  function markStarted() {
+    if (started.current) return;
+    started.current = true;
+    track("signup_started", { role: role ?? "" });
+  }
+
   async function submit(event: React.FormEvent) {
     event.preventDefault();
     if (!role) return;
+    markStarted();
     setLoading(true);
     setError("");
     try {
       const result = await api<{ home: string }>("/api/auth/register", {
         method: "POST",
-        body: JSON.stringify({ role, token, acceptTerms, plan, period, ...form }),
+        body: JSON.stringify({ role, token, acceptTerms, plan, period, ...form, utm: firstTouchUtm() ?? undefined }),
       });
       // O servidor já devolve a home com ?welcome=1 (e o que mais precisar).
       window.location.href = result.home;
@@ -128,7 +138,7 @@ export default function RegistrationForm({
   }
 
   return (
-    <form className="space-y-3" onSubmit={submit} aria-label="Criar conta">
+    <form className="space-y-3" onSubmit={submit} onFocusCapture={markStarted} aria-label="Criar conta">
       {header}
 
       <div>

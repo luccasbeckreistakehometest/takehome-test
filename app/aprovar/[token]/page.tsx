@@ -3,6 +3,7 @@ import { notFound } from "next/navigation";
 import { linkPageData, markLinkViewed } from "@/lib/approval-links-db";
 import { isApprovalToken } from "@/lib/approval-link-rules";
 import ApprovalLinkView from "@/components/ApprovalLinkView";
+import { recordEvent } from "@/lib/analytics-db";
 
 export const dynamic = "force-dynamic";
 
@@ -23,7 +24,10 @@ export default async function ApprovalLinkPage({ params }: Props) {
   const { token } = await params;
   const data = isApprovalToken(token) ? linkPageData(token) : null;
   if (!data) notFound();
-  if (data.state === "open") markLinkViewed(data.link.id);
+  if (data.state === "open") {
+    markLinkViewed(data.link.id);
+    recordEvent({ name: "approval_link_opened", path: "/aprovar/:token", audience: "geral", meta: { items: data.items.length } });
+  }
   return (
     <ApprovalLinkView
       token={token}

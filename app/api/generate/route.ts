@@ -7,6 +7,7 @@ import { generateSchema } from "@/lib/validation";
 import { getSettings } from "@/lib/settings";
 import { guardClient, isDenied } from "@/lib/guard";
 import { aiErrorResponse, beginAi } from "@/lib/metering";
+import { recordUserEvent } from "@/lib/analytics-db";
 
 // Gerações com pesquisa web e landing pages podem levar alguns minutos
 export const maxDuration = 300;
@@ -53,6 +54,7 @@ export async function POST(request: Request) {
         : JSON.stringify(await generateStructured({ ...spec, schema: spec.schema! }))
     );
 
+    recordUserEvent("first_value", auth.userId, { action: type }, { once: true });
     const generation = createGeneration({
       clientId,
       type,

@@ -75,6 +75,7 @@ export const LIMITS = {
   exportPerAccount: () => ({ limit: 5, windowMs: 60 * MINUTE }),
   // páginas públicas por token (aprovação, fatura) e decisões nelas
   publicDecisionPerIp: () => ({ limit: envInt(process.env.PUBLIC_DECISION_RATE_LIMIT_PER_10MIN, 30), windowMs: 10 * MINUTE }),
+  analyticsPerIp: () => ({ limit: envInt(process.env.ANALYTICS_RATE_LIMIT_PER_MIN, 120), windowMs: MINUTE }),
   publicReadPerIp: () => ({ limit: envInt(process.env.PUBLIC_READ_RATE_LIMIT_PER_10MIN, 300), windowMs: 10 * MINUTE }),
 };
 

@@ -1,7 +1,9 @@
 import { NextResponse } from "next/server";
 import { getAuthorizedPayment, getPayment, getPreapprovalRemote, mpConfigured, subscriptionsAvailable } from "@/lib/mercadopago";
 import { applyMpPayment, applyPreapprovalStatus, applySubscriptionPayment, recordPaymentLookupFailure } from "@/lib/billing-db";
-import { authorizedPaymentApproved } from "@/lib/subscription-rules";
+import { authorizedPaymentApproved, parseSubRef } from "@/lib/subscription-rules";
+import { recordAccountEvent } from "@/lib/analytics-db";
+import { getPreapproval, parsePaymentRef } from "@/lib/billing-db";
 import { checkLimits, clientIp } from "@/lib/rate-limit";
 
 export const maxDuration = 60;
@@ -53,6 +55,10 @@ export async function POST(request: Request) {
       amount: Number(payment.transaction_amount ?? 0),
     });
     if (outcome === "invalid") console.error(`[mp] pagamento ${payment.id} não pôde ser creditado (ver admin)`);
+    if (outcome === "credited") {
+      const ref = parsePaymentRef(payment.external_reference ?? "");
+      if (ref) recordAccountEvent("payment_approved", ref, { kind: ref.kind });
+    }
     return NextResponse.json({ ok: true, outcome });
   } catch (error) {
     console.error(`[mp] falha ao aplicar pagamento ${dataId}:`, error);
@@ -83,6 +89,11 @@ async function handleSubscription(type: string, id: string) {
       mpStatus: String(record.payment?.status ?? record.status ?? ""),
     });
     if (outcome === "invalid") console.error(`[mp] cobrança recorrente ${id} não pôde ser creditada (ver admin)`);
+    if (outcome === "credited") {
+      const local = getPreapproval(String(record.preapproval_id ?? ""));
+      const owner = local ?? parseSubRef(record.external_reference);
+      if (owner) recordAccountEvent("payment_approved", owner, { kind: "subscription" });
+    }
     return NextResponse.json({ ok: true, outcome });
   } catch (error) {
     const detail = error instanceof Error ? error.message : String(error);

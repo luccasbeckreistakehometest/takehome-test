@@ -1,4 +1,5 @@
 import { NextResponse } from "next/server";
+import { recordUserEvent } from "@/lib/analytics-db";
 import { z } from "zod";
 import { billingAccount } from "@/lib/session";
 import { guard, isDenied } from "@/lib/guard";
@@ -60,6 +61,7 @@ export async function POST(request: Request) {
   if (!email || !isValidEmail(email)) {
     return NextResponse.json({ error: "Informe o e-mail da conta do Mercado Pago.", code: "email_required" }, { status: 400 });
   }
+  recordUserEvent("checkout_started", auth.userId, { kind: "subscription" });
   const price = ensurePlanPrice(plan.id, parsed.data.period);
   try {
     const created = await createRecurring({ ...account, planId: plan.id, period: parsed.data.period, amount: price.amount, payerEmail: email });

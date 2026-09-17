@@ -84,6 +84,7 @@ export function isPublicApi(pathname: string, method: string): boolean {
   if (pathname.startsWith("/api/webhooks/")) return true; // cada webhook se autentica
   if (pathname === "/api/health" && method === "GET") return true;
   if (pathname === "/api/contact" && method === "POST") return true; // limite + honeypot na rota
+  if (pathname === "/api/t" && method === "POST") return true; // coletor de eventos sem cookie
   if (pathname === "/api/auth/login" && method === "POST") return true;
   if (pathname === "/api/auth/register" && method === "POST") return true;
   if (pathname === "/api/auth/logout" && method === "POST") return true;

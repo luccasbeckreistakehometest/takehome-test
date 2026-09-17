@@ -153,6 +153,8 @@ export default function LandingPage({ config }: { config: LandingConfig }) {
   const CtaPrimary = ({ label, big }: { label: string; big?: boolean }) => (
     <Link
       href={signupHref}
+      data-track="cta_click"
+      data-track-label="hero"
       className={`group inline-flex items-center gap-2 rounded-xl bg-accent font-semibold text-accent-ink shadow-lg shadow-accent/25 transition-transform hover:-translate-y-0.5 ${
         big ? "px-8 py-4 text-lg" : "px-6 py-3.5"
       }`}
