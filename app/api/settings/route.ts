@@ -34,6 +34,7 @@ function publicView(session: SessionPayload) {
     aiMode: settings.aiMode,
     logoMime: settings.logoMime,
     canManagePlatform: session.role === "admin",
+    viewerRole: session.role,
   };
   if (session.role !== "agency" && session.role !== "admin") return base;
   const view = { ...base, houseStyle: settings.houseStyle, imageProvider: settings.imageProvider };

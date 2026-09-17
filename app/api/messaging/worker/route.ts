@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server";
 import { z } from "zod";
-import { getWorkerStatus, startWorker, stopWorker } from "@/lib/messaging/worker-manager";
+import { getWorkerStatus, sessionModeAvailable, startWorker, stopWorker } from "@/lib/messaging/worker-manager";
 import { enqueueDirect, getConnection } from "@/lib/messaging-db";
 import { agencyOnly, isDenied } from "@/lib/guard";
 
@@ -29,6 +29,12 @@ export async function POST(request: Request) {
     return NextResponse.json({ error: parsed.error.issues[0]?.message ?? "Dados inválidos" }, { status: 400 });
   }
   const { action, channel, testPhone, testMessage } = parsed.data;
+  if (action !== "stop" && !sessionModeAvailable()) {
+    return NextResponse.json(
+      { error: "O modo sessão não está disponível neste servidor. Use a API oficial da Meta." },
+      { status: 400 }
+    );
+  }
 
   if (channel === "instagram") {
     return NextResponse.json(

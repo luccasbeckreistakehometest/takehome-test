@@ -12,6 +12,16 @@ const statusFile = path.join(root, "data", "messaging-worker-status.json");
 const logFile = path.join(root, "data", "messaging-worker.log");
 const scriptPath = path.join(root, "scripts", "messaging-worker.mjs");
 
+// O modo "sessão" (WhatsApp Web dirigido pelo Playwright) só roda onde o
+// worker e um navegador existem — a máquina local do dono. A imagem de
+// produção não leva o script nem o Chromium: lá só a API oficial funciona.
+// MESSAGING_SESSION_MODE=true força a liberação (servidor preparado para isso).
+export function sessionModeAvailable(): boolean {
+  if (!fs.existsSync(scriptPath)) return false;
+  if (process.env.MESSAGING_SESSION_MODE === "true") return true;
+  return process.env.NODE_ENV !== "production";
+}
+
 export type WorkerState =
   | "idle"
   | "starting"

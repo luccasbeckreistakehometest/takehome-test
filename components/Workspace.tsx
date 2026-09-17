@@ -70,6 +70,8 @@ export default function Workspace({
   const [tab, setTab] = useState<TabKey>("dashboard");
   const [initialProjectId, setInitialProjectId] = useState<string | undefined>();
   const [landingEnabled, setLandingEnabled] = useState(false);
+  // A marca autônoma não vê as abas que dependem da operação da agência.
+  const [viewerRole, setViewerRole] = useState<string>("agency");
   const [campaignFocus, setCampaignFocus] = useState("");
   const [postTopic, setPostTopic] = useState("");
 
@@ -113,9 +115,10 @@ export default function Workspace({
     if (tabParam) setTab(tabParam as TabKey);
     const focusParam = params.get("focus");
     if (focusParam) setCampaignFocus(focusParam);
-    api<AgencySettings>("/api/settings").then((settings) =>
-      setLandingEnabled(settings.landingPagesEnabled)
-    );
+    api<AgencySettings & { viewerRole?: string }>("/api/settings").then((settings) => {
+      setLandingEnabled(settings.landingPagesEnabled);
+      if (settings.viewerRole) setViewerRole(settings.viewerRole);
+    });
   }, []);
   // Remonta as abas de geração após o kit completo, para recarregar o histórico
   const [kitVersion, setKitVersion] = useState(0);
@@ -182,8 +185,12 @@ export default function Workspace({
       : []),
     { key: "projects", label: "Demandas" },
     { key: "sales", label: "Vendas & Dados" },
-    { key: "attendant", label: "Atendente" },
-    { key: "time", label: "Horas" },
+    ...(viewerRole === "client"
+      ? []
+      : [
+          { key: "attendant" as TabKey, label: "Atendente" },
+          { key: "time" as TabKey, label: "Horas" },
+        ]),
     { key: "client_report", label: "Relatório" },
   ];
 
@@ -312,14 +319,22 @@ export default function Workspace({
           <ClientForm initial={client} onSaved={onClientUpdated} />
           <BrandVoiceCard clientId={client.id} />
           <BrandAssets clientId={client.id} />
-          <Card className="flex items-center justify-between">
-            <p className="text-sm text-muted">
-              Excluir este cliente remove também todo o histórico de gerações.
-            </p>
-            <Button variant="danger" onClick={deleteClient}>
-              Excluir cliente
-            </Button>
-          </Card>
+          {viewerRole === "client" ? (
+            <Card>
+              <p className="text-sm text-muted">
+                Para apagar a sua marca e todos os dados dela, use <Link href="/conta" className="text-accent hover:underline">Minha conta → Excluir minha conta</Link>.
+              </p>
+            </Card>
+          ) : (
+            <Card className="flex flex-wrap items-center justify-between gap-3">
+              <p className="text-sm text-muted">
+                Excluir este cliente remove também todo o histórico de gerações.
+              </p>
+              <Button variant="danger" onClick={deleteClient}>
+                Excluir cliente
+              </Button>
+            </Card>
+          )}
         </div>
       )}
 
