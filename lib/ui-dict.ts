@@ -3,6 +3,9 @@
 // da UI — textos de entregáveis não batem com o dicionário e passam intocados
 // (eles já são localizados por cliente na geração).
 export const UI_DICT: Record<string, string> = {
+  // Endurecimento do lançamento (modo da marca, uploads, cobrança)
+  "Quem muda o modo da sua marca é a sua agência.": "Your agency decides how your brand is managed.",
+  "O conteúdo do arquivo não confere com o formato.": "The file's content doesn't match its format.",
   // Multi-agência (workspace próprio, primeiros passos, convites, admin)
   "Primeiros passos": "First steps",
   "Seu espaço está pronto e é só seu. Comece por aqui:": "Your workspace is ready and it's all yours. Start here:",

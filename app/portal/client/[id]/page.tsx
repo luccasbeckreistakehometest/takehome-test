@@ -36,7 +36,8 @@ export default function ClientPortalPage({
   params: Promise<{ id: string }>;
 }) {
   const { id } = use(params);
-  const [client, setClient] = useState<Client | null>(null);
+  // canChooseMode: só a marca que se cadastrou sozinha troca o próprio modo
+  const [client, setClient] = useState<(Client & { canChooseMode?: boolean }) | null>(null);
   const [tier, setTier] = useState<TierInfo | null>(null);
   const [report, setReport] = useState<Generation | null>(null);
   const [landings, setLandings] = useState<Generation[]>([]);
@@ -193,25 +194,29 @@ export default function ClientPortalPage({
               >
                 ⚙ Abrir meu workspace →
               </a>
-              <button
-                onClick={() => setChooserOpen(true)}
-                className="text-sm text-muted underline-offset-2 transition-colors hover:text-foreground hover:underline"
-              >
-                Prefiro ter uma agência cuidando
-              </button>
+              {client.canChooseMode !== false && (
+                <button
+                  onClick={() => setChooserOpen(true)}
+                  className="text-sm text-muted underline-offset-2 transition-colors hover:text-foreground hover:underline"
+                >
+                  Prefiro ter uma agência cuidando
+                </button>
+              )}
             </>
-          ) : (
+          ) : client.canChooseMode !== false ? (
             <button
               onClick={() => setChooserOpen(true)}
               className="text-sm text-muted underline-offset-2 transition-colors hover:text-foreground hover:underline"
             >
               Quero fazer eu mesmo (modo autônomo) →
             </button>
-          )}
+          ) : null}
         </div>
       </div>
 
-      <MarcaModeChoice id={client.id} open={chooserOpen} onClose={() => setChooserOpen(false)} />
+      {client.canChooseMode !== false && (
+        <MarcaModeChoice id={client.id} open={chooserOpen} onClose={() => setChooserOpen(false)} />
+      )}
 
       {!client.selfServe && <PulsePrompt clientId={client.id} refreshKey={pulseKey} />}
 

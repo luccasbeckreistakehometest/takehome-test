@@ -1,15 +1,17 @@
 import { NextResponse } from "next/server";
 import { z } from "zod";
-import { clientAgencyId, setClientSelfServe } from "@/lib/db";
+import { clientAgencyId, getClient, setClientSelfServe } from "@/lib/db";
 import { getSession, reissueSession } from "@/lib/session";
-import { homeForUser } from "@/lib/auth";
+import { getUserById, homeForUser } from "@/lib/auth";
+import { brandOwnsItsWorkspace } from "@/lib/tenancy-rules";
 
 type Context = { params: Promise<{ id: string }> };
 
 // Define como a marca quer trabalhar:
 //  - selfServe: true  → autônoma (workspace próprio)
 //  - selfServe: false → gerenciada por uma agência (portal read-only)
-// A própria marca decide; agência/admin também podem alternar por ela.
+// A marca que se cadastrou sozinha decide; marca de uma agência (criada,
+// convidada ou fechada por proposta) só muda pela agência. Admin sempre.
 // Quando é a própria marca, reemite a sessão para o middleware/rotas passarem a
 // enxergar o novo modo sem precisar relogar.
 export async function POST(request: Request, { params }: Context) {
@@ -18,12 +20,21 @@ export async function POST(request: Request, { params }: Context) {
   if (!session) {
     return NextResponse.json({ error: "Não autenticado" }, { status: 401 });
   }
-  const isOwner = session.role === "client" && session.refId === id;
+  const client0 = session.role === "client" && session.refId === id ? getClient(id) : null;
+  const isOwner = Boolean(
+    client0 &&
+      brandOwnsItsWorkspace({
+        source: client0.source,
+        brandSource: getUserById(session.userId)?.brandSource,
+        agencyId: client0.agencyId,
+      })
+  );
   // Agência só troca o modo de marca dela.
   const isManager =
     session.role === "admin" || (session.role === "agency" && clientAgencyId(id) === session.agencyId);
   if (!isOwner && !isManager) {
-    return NextResponse.json({ error: "Acesso negado" }, { status: 403 });
+    const error = session.role === "client" ? "Quem muda o modo da sua marca é a sua agência." : "Acesso negado";
+    return NextResponse.json({ error }, { status: 403 });
   }
   const parsed = z
     .object({ selfServe: z.boolean() })

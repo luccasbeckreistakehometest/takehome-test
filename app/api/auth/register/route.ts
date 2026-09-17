@@ -131,7 +131,8 @@ export async function POST(request: Request) {
       notes: "",
       capabilities: "",
       language: "pt-BR",
-      source: "self",
+      // convidada por uma agência = marca da agência (não do login)
+      source: data.token ? "agency" : "self",
       country: data.country || "Brasil",
       selfServe,
     }, agencyId!).id;

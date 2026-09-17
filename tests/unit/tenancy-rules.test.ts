@@ -5,6 +5,7 @@ import {
   agencyScope,
   ALL_AGENCIES,
   billingAgencyId,
+  brandOwnsItsWorkspace,
   HOUSE_AGENCY_ID,
   inScope,
   isAllAgencies,
@@ -17,6 +18,19 @@ import {
   slugBase,
   uniqueSlug,
 } from "../../lib/tenancy-rules";
+
+describe("brand ownership", () => {
+  it("only a brand that signed up alone on the platform owns its workspace", () => {
+    expect(brandOwnsItsWorkspace({ source: "self", brandSource: "platform", agencyId: HOUSE_AGENCY_ID })).toBe(true);
+    // convidada por agência (cadastros antigos gravavam source "self")
+    expect(brandOwnsItsWorkspace({ source: "self", brandSource: "agency", agencyId: HOUSE_AGENCY_ID })).toBe(false);
+    // criada pela agência / fechada por proposta
+    expect(brandOwnsItsWorkspace({ source: "agency", brandSource: "platform", agencyId: HOUSE_AGENCY_ID })).toBe(false);
+    expect(brandOwnsItsWorkspace({ source: "agency", brandSource: undefined, agencyId: "a1" })).toBe(false);
+    // marca de outra agência nunca é "dona de si"
+    expect(brandOwnsItsWorkspace({ source: "self", brandSource: "platform", agencyId: "a1" })).toBe(false);
+  });
+});
 
 describe("tenant scope", () => {
   it("admin sees every agency; everyone else only their own", () => {

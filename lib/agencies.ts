@@ -192,6 +192,13 @@ export function deleteAgencyWorkspace(agencyId: string): { files: { id: string; 
         `UPDATE professionals SET agencyId = NULL WHERE agencyId = ? AND id IN (SELECT refId FROM users WHERE role = 'professional' AND refId IS NOT NULL)`
       ).run(agencyId);
       db.prepare("UPDATE professional_assets SET agencyId = NULL WHERE professionalId IN (SELECT id FROM professionals WHERE agencyId IS NULL)").run();
+      // A carteira e o plano do freelancer vão com ele (não caem com a agência).
+      for (const table of ["wallets", "subscriptions"]) {
+        if (!has(table)) continue;
+        db.prepare(
+          `UPDATE ${table} SET agencyId = NULL WHERE accountType = 'professional' AND accountId IN (SELECT id FROM professionals WHERE agencyId IS NULL)`
+        ).run();
+      }
       db.prepare("UPDATE users SET agencyId = NULL WHERE agencyId = ? AND role = 'professional'").run(agencyId);
     }
     // Logins de marca da agência saem junto com as marcas.

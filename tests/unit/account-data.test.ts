@@ -79,6 +79,42 @@ describe("LGPD self-service", () => {
     expect(getClient(client.id)).not.toBeNull();
   });
 
+  it("an invited brand (legacy source 'self') deleting its login keeps the agency's records", async () => {
+    // cadastros por convite antigos gravavam source "self"; o login diz brandSource "agency"
+    const client = brand("Marca Convidada", "self");
+    market.createProject({ clientId: client.id, title: "Campanha", brief: "", skillsNeeded: [], location: "", budget: "", deadline: "" });
+    const user = await auth.createUser({
+      password: "senha-forte-1",
+      role: "client",
+      refId: client.id,
+      agencyId: HOUSE_AGENCY_ID,
+      name: client.name,
+      brandSource: "agency",
+      email: "convidada@example.com",
+    });
+    expect(deleteAccount(user.id)).toEqual({ ok: true, removedWorkspace: false });
+    expect(getClient(client.id)).not.toBeNull();
+    expect((db.prepare("SELECT COUNT(*) AS c FROM projects WHERE clientId = ?").get(client.id) as { c: number }).c).toBe(1);
+  });
+
+  it("a freelancer moved to the marketplace keeps its plan and coins when the agency is deleted", async () => {
+    const agency = agencies.createAgency({ name: "Estúdio Fecha", ownerUserId: null });
+    const owner = await auth.createUser({ password: "senha-forte-1", role: "agency", refId: null, agencyId: agency.id, name: "Fecha" });
+    agencies.setAgencyOwner(agency.id, owner.id);
+    const pro = market.createProfessional(
+      { name: "Foto Livre", role: "fotografo", email: "", phone: "", location: "SP", skills: [], specialties: "", marketFocus: "", bio: "", portfolio: [], priceRange: "", availability: "", employmentType: "freelancer" },
+      agency.id
+    );
+    await auth.createUser({ password: "senha-forte-1", role: "professional", refId: pro.id, agencyId: agency.id, name: "Foto Livre" });
+    billing.adminSetPlan({ accountType: "professional", accountId: pro.id, planId: "pro_plus", months: 1 });
+    billing.addCoins("professional", pro.id, 50, "compra", "coin_purchase", 19);
+
+    expect(deleteAccount(owner.id)).toEqual({ ok: true, removedWorkspace: true });
+    expect(market.getProfessional(pro.id)?.agencyId ?? null).toBeNull();
+    expect(billing.getSubscription("professional", pro.id).planId).toBe("pro_plus");
+    expect(billing.getWallet("professional", pro.id).purchasedCoins).toBe(50);
+  });
+
   it("an agency owner who leaves alone takes the whole workspace (never the house)", async () => {
     const agency = agencies.createAgency({ name: "Estúdio Solo", ownerUserId: null });
     const owner = await auth.createUser({ password: "senha-forte-1", role: "agency", refId: null, agencyId: agency.id, name: "Solo" });

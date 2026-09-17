@@ -6,7 +6,7 @@ import { anonymiseAiUsage } from "./ai-spend";
 import { anonymiseInboxForUser, listInboxForUser } from "./contact-db";
 import { deleteGenericUpload, deleteUpload } from "./uploads";
 import { deleteAgencyWorkspace, getAgency, setAgencyOwner } from "./agencies";
-import { HOUSE_AGENCY_ID } from "./tenancy-rules";
+import { brandOwnsItsWorkspace, HOUSE_AGENCY_ID } from "./tenancy-rules";
 import type { AccountType } from "./plans";
 
 // LGPD self-service: "baixar meus dados" (JSON) e "excluir minha conta".
@@ -128,7 +128,8 @@ export function deleteAccount(userId: string): DeleteOutcome {
     }
     if (user.role === "client" && user.refId) {
       const client = getClient(user.refId);
-      const ownWorkspace = client && (client.source === "self" || user.brandSource === "platform");
+      const ownWorkspace =
+        client && brandOwnsItsWorkspace({ source: client.source, brandSource: user.brandSource, agencyId: client.agencyId });
       if (client && ownWorkspace) {
         const deliverables = db
           .prepare("SELECT d.id, d.mime FROM deliverables d JOIN projects p ON p.id = d.projectId WHERE p.clientId = ?")
