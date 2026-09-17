@@ -74,6 +74,7 @@ test("a request beyond the package waits for the client to approve the extra pri
   const otherCtx = await browser.newContext();
   const otherPage = await otherCtx.newPage();
   await login(otherPage, other.login.username, other.login.password);
+  await skipOnboarding(otherPage);
   expect((await otherPage.request.get(`/api/clients/${clientId}/package`)).status()).toBe(403);
   expect((await otherPage.request.patch(`/api/scope-requests/${pending.id}`, { data: { decision: "declined" } })).status()).toBe(403);
   expect((await portal.request.put(`/api/clients/${clientId}/package`, { data: { items: [] } })).status()).toBe(403);

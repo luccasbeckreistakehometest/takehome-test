@@ -10,6 +10,7 @@ test("client pulse: prompt after approval, monthly and NPS in the portal; agency
 
   // o cliente aprova no portal e a pergunta "como foi?" aparece na hora
   await login(page, client.login.username, client.login.password);
+  await skipOnboarding(page);
   await page.goto(`/portal/client/${client.id}`);
   await expect(page.getByTestId("portal-deliverable")).toBeVisible();
   // antes da aprovação só o pulso do mês é devido
@@ -49,6 +50,7 @@ test("client pulse: prompt after approval, monthly and NPS in the portal; agency
 
   // o segundo cliente responde 😞 → em risco, e a agência é avisada
   await login(page, other.login.username, other.login.password);
+  await skipOnboarding(page);
   const sad = await page.request.post(`/api/clients/${other.id}/pulse`, { data: { kind: "monthly", score: 1, comment: "Atrasou tudo este mês" } });
   expect(sad.status()).toBe(201);
 

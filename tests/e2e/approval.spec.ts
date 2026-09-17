@@ -18,6 +18,7 @@ test("client approval creates a post draft, notifies the agency and shows the ti
 
   // o cliente aprova no portal
   await login(page, client.login.username, client.login.password);
+  await skipOnboarding(page);
   await page.goto(`/portal/client/${client.id}`);
   await expect(page.getByTestId("portal-deliverable")).toBeVisible();
   await page.getByTestId("approve-deliverable").click();
@@ -57,6 +58,7 @@ test("a client cannot decide another client's deliverable", async ({ page }) => 
   const a = await seedClientWithDelivery(page.request, "Owner Co");
   const b = await seedClientWithDelivery(page.request, "Other Co");
   await login(page, b.client.login.username, b.client.login.password);
+  await skipOnboarding(page);
   const denied = await page.request.post(`/api/deliverables/${a.deliverable.id}/approval`, { data: { decision: "approved" } });
   expect(denied.status()).toBe(403);
 });

@@ -21,6 +21,7 @@ test("fee invoice: draft with the approved extra, Pix page, paid claim and confi
   const brandCtx = await browser.newContext();
   const brand = await brandCtx.newPage();
   await login(brand, client.login.username, client.login.password);
+  await skipOnboarding(brand);
   const request = await (await brand.request.post(`/api/clients/${client.id}/scope-requests`, { data: { text: "post extra de aniversário", itemKey: "post", qty: 1 } })).json();
   expect(request.needsApproval).toBe(true);
   expect((await brand.request.patch(`/api/scope-requests/${request.request.id}`, { data: { decision: "approved" } })).status()).toBe(200);

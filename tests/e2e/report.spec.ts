@@ -29,6 +29,7 @@ test("monthly report: numbers, AI summary, print link and the client portal view
 
   // o cliente vê o mesmo relatório dentro do portal
   await login(page, client.login.username, client.login.password);
+  await skipOnboarding(page);
   await page.goto(`/portal/client/${client.id}`);
   await page.getByTestId("portal-monthly-report").click();
   await expect(page).toHaveURL(new RegExp(`/portal/client/${client.id}/report`));
