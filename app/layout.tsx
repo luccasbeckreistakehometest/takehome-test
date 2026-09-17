@@ -33,6 +33,7 @@ const AGENCY_NAV: { href: string; label: string; icon: IconName }[] = [
   { href: "/", label: "Hoje", icon: "home" },
   { href: "/clients", label: "Clientes", icon: "briefcase" },
   { href: "/production", label: "Produção", icon: "kanban" },
+  { href: "/calendar", label: "Calendário", icon: "calendar" },
   { href: "/insights", label: "Insights", icon: "chart" },
   { href: "/messages", label: "Mensagens", icon: "message" },
   { href: "/prospecting", label: "Prospecção", icon: "radar" },

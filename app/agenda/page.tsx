@@ -118,7 +118,12 @@ export default function AgendaPage() {
       )}
 
       <Card className="space-y-3">
-        <SectionTitle>Fila de publicações</SectionTitle>
+        <div className="flex items-center justify-between">
+          <SectionTitle>Fila de publicações</SectionTitle>
+          <a href="/calendar" className="text-xs text-accent hover:underline">
+            Ver no calendário →
+          </a>
+        </div>
         <p className="text-sm text-muted">
           Posts agendados a partir do calendário/posts dos clientes. A publicação
           automática nas redes é ativada quando a integração (Meta/TikTok) estiver
