@@ -46,7 +46,7 @@ test("agency header has at most 7 items plus Mais and old URLs still open", asyn
 });
 
 test("a self-serve brand sees no agency-only tabs", async ({ page }) => {
-  await signupViaApi(page.request, "client", "Marca Sem Horas");
+  await signupViaApi(page.request, "client", "Marca Sem Horas", {}, "198.51.100.81");
   const me = await (await page.request.get("/api/auth/me")).json();
   await skipOnboarding(page);
   await page.goto(`/clients/${me.refId}?tab=time`);

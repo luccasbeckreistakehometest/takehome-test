@@ -295,6 +295,14 @@ export function costAndRevenueByAccount(days = 30, agencyId?: string | null) {
   return { costs, revenue };
 }
 
+// Caracteres de voz (TTS) gerados hoje por uma conta.
+export function ttsCharsTodayForAccount(accountType: string, accountId: string): number {
+  const row = db
+    .prepare("SELECT COALESCE(SUM(units),0) AS c FROM ai_usage WHERE day = ? AND provider LIKE 'tts_%' AND accountType = ? AND accountId = ?")
+    .get(new Date().toISOString().slice(0, 10), accountType, accountId) as { c: number };
+  return row.c;
+}
+
 export function purgeOldAiErrors(olderThanDays = 90): number {
   const cutoff = new Date(Date.now() - olderThanDays * 86_400_000).toISOString();
   return db.prepare("DELETE FROM ai_errors WHERE createdAt < ?").run(cutoff).changes;

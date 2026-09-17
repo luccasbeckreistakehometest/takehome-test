@@ -41,6 +41,8 @@ import PackageTab from "./PackageTab";
 import { PackageSummaryCard } from "./PackageUsage";
 import InvoicesPanel from "./InvoicesPanel";
 import CarouselTab from "./CarouselTab";
+import BriefingVoiceStart from "./BriefingVoiceStart";
+import { briefingCompleteness, BRIEFING_READY_PCT } from "@/lib/activation-rules";
 import {
   CampaignPlanView,
   ClientReportView,
@@ -343,6 +345,9 @@ export default function Workspace({
           onNavigate={(next) => setTab(resolveTab(next, viewer).tab)}
           onRunKit={runFullKit}
         >
+          {briefingCompleteness(client) < BRIEFING_READY_PCT && (
+            <BriefingVoiceStart client={client} onSaved={onClientUpdated} onWrite={() => setTab("briefing")} />
+          )}
           {viewerRole !== "client" && (
             <div className="grid gap-4 lg:grid-cols-2">
               <PackageSummaryCard clientId={client.id} onOpen={() => setTab("package")} />
@@ -354,7 +359,12 @@ export default function Workspace({
 
       {tab === "briefing" && (
         <div className="space-y-6">
-          <ClientForm initial={client} onSaved={onClientUpdated} />
+          {briefingCompleteness(client) < BRIEFING_READY_PCT && (
+            <BriefingVoiceStart key={`voice-${client.id}`} client={client} onSaved={onClientUpdated} onWrite={() => document.getElementById("briefing-form")?.scrollIntoView({ behavior: "smooth" })} />
+          )}
+          <div id="briefing-form" className="scroll-mt-20">
+            <ClientForm key={`form-${client.id}-${client.description.length}-${client.audience.length}`} initial={client} onSaved={onClientUpdated} />
+          </div>
           <BrandVoiceCard clientId={client.id} />
           <BrandAssets clientId={client.id} />
           {viewerRole === "client" ? (

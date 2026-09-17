@@ -289,9 +289,34 @@ export const UI_DICT_R3: Record<string, string> = {
   "O carrossel precisa de pelo menos 5 slides.": "The carousel needs at least 5 slides.",
   "Todo slide precisa de um título.": "Every slide needs a title.",
   "Escolha a data e a hora.": "Pick the date and time.",
+  // Briefing falado (troca de turno automática)
+  "Me conta da marca: como se chama, o que vende, quem compra e o que você quer que o marketing alcance. Quando você parar de falar, é a minha vez.":
+    "Tell me about the brand: what it's called, what it sells, who buys it and what you want marketing to achieve. When you stop talking, it's my turn.",
+  "Ouvindo…": "Listening…",
+  "Pensando…": "Thinking…",
+  "Falando…": "Speaking…",
+  "Quando você parar de falar, a IA entende que é a vez dela.": "When you stop talking, the AI knows it's its turn.",
+  "Terminei de falar": "I'm done talking",
+  "Interromper e falar": "Interrupt and talk",
+  "Começar a falar": "Start talking",
+  "Falar mais": "Say more",
+  "Seu navegador não suporta voz — use Chrome, Edge ou Safari. Você pode digitar o briefing.":
+    "Your browser doesn't support voice — use Chrome, Edge or Safari. You can type the briefing.",
+  "Digitar o briefing": "Type the briefing",
+  "Chegamos ao limite de conversa deste briefing. Revise os campos ou complete digitando.":
+    "This briefing has reached its conversation limit. Review the fields or finish by typing.",
+  "Não consegui abrir o microfone. Libere o acesso ou digite o briefing.": "I couldn't open the microphone. Allow access or type the briefing.",
+  "Salvar no briefing": "Save to the briefing",
+  "Como prefere contar sobre sua marca?": "How would you like to tell us about your brand?",
+  "Fale como numa conversa: quando você para, a IA entende que é a vez dela e pergunta o que faltar.":
+    "Talk like in a conversation: when you pause, the AI knows it's its turn and asks for whatever is missing.",
+  "Falando": "Talking",
+  "Escrevendo": "Writing",
+  "Briefing salvo. Confira os campos na aba Briefing quando quiser.": "Briefing saved. Check the fields in the Briefing tab whenever you like.",
 };
 
 export const UI_REGEX_R3: [RegExp, string][] = [
+  [/^(\d+)\/(\d+) falas$/, "$1/$2 turns"],
   [/^(\d+) slides · (.+)$/, "$1 slides · $2"],
   [/^Título do slide (\d+)$/, "Slide $1 title"],
   [/^Texto do slide (\d+)$/, "Slide $1 text"],

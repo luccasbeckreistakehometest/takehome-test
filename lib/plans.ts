@@ -214,7 +214,8 @@ export const ACTION_COST: Record<string, number> = {
   art_review: 3, // análise de arte com visão
   demand_suggestions: 2,
   meeting_recs: 2,
-  voice_briefing: 1, // uma rodada do briefing falado
+  voice_briefing: 1, // uma conversa do briefing falado (a 1ª fala)
+  voice_briefing_turn: 0, // falas seguintes da mesma conversa (até 12)
   tts: 0, // voz: limitada por taxa, não por coins
   attendant_reply: 1, // rascunho do atendente de WhatsApp (pago pela agência)
   scope_classify: 1, // classificação do pedido do portal (modelo barato, cache)

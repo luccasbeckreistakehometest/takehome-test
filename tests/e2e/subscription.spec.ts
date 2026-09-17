@@ -87,11 +87,11 @@ test("card subscription: preapproval, first charge, replay, cancel and grace", a
 });
 
 test("subscription API refuses managed brands and bad plans", async ({ page }) => {
-  await signupViaApi(page.request, "professional", "Fotógrafa Sem Plano", { professionalRole: "fotografo", location: "Recife, PE" });
+  await signupViaApi(page.request, "professional", "Fotógrafa Sem Plano", { professionalRole: "fotografo", location: "Recife, PE" }, "198.51.100.82");
   const blocked = await page.request.post("/api/billing/subscription", { data: { planId: "pro_plus" } });
   expect(blocked.status()).toBe(403);
   await page.context().clearCookies();
-  await signupViaApi(page.request, "client", "Marca Assinante");
+  await signupViaApi(page.request, "client", "Marca Assinante", {}, "198.51.100.83");
   const wrong = await page.request.post("/api/billing/subscription", { data: { planId: "agency_growth" } });
   expect(wrong.status()).toBe(400);
   const noCancel = await page.request.post("/api/billing/subscription/cancel");

@@ -1,4 +1,4 @@
-import { db, tenantColumn } from "./db";
+import { addColumnIfMissing, db, tenantColumn } from "./db";
 
 // Primeiro acesso, salvo no servidor: onde a pessoa parou no tour e o que fez
 // na primeira sessão (linha do tempo). O localStorage do modal era só cache
@@ -24,6 +24,7 @@ db.exec(`
 `);
 tenantColumn("onboarding");
 tenantColumn("voice_briefings");
+addColumnIfMissing("voice_briefings", "turns", "INTEGER NOT NULL DEFAULT 1");
 
 export type OnboardingRow = { userId: string; tourCompleted: number; tourStep: number; firstSeenAt: string; completedAt: string | null; events: string };
 export type OnboardingEvent = { at: string; type: string; meta?: Record<string, unknown> };
@@ -68,8 +69,14 @@ export function saveVoiceBriefing(input: { id: string; userId: string; lang: str
   const transcript = existing ? `${existing.transcript}\n${input.transcript}` : input.transcript;
   db.prepare(`INSERT INTO voice_briefings (id,userId,agencyId,lang,transcript,extracted,createdAt)
     VALUES (?,?,(SELECT agencyId FROM users WHERE id = ?),?,?,?,?)
-    ON CONFLICT(id) DO UPDATE SET transcript = excluded.transcript, extracted = excluded.extracted`)
+    ON CONFLICT(id) DO UPDATE SET transcript = excluded.transcript, extracted = excluded.extracted, turns = voice_briefings.turns + 1`)
     .run(input.id, input.userId, input.userId, input.lang, transcript, JSON.stringify(input.extracted), new Date().toISOString());
+}
+
+// Quantas falas já tem este briefing (da própria pessoa); 0 = novo.
+export function voiceBriefingTurns(id: string, userId: string): number {
+  const row = db.prepare("SELECT turns FROM voice_briefings WHERE id = ? AND userId = ?").get(id, userId) as { turns: number } | undefined;
+  return row?.turns ?? 0;
 }
 
 export function onboardingStats() {
