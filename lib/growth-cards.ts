@@ -9,6 +9,7 @@ export type GrowthStats = {
   pagePublished: boolean;
   clicks30: number;
   bioPages: number;
+  radarClients: number;
 };
 
 export type GrowthCard = {
@@ -57,5 +58,14 @@ export const GROWTH_CARDS: GrowthCard[] = [
     href: "/links",
     cta: "Ver links",
     stat: (s) => `${s.clicks30} cliques em 30 dias · ${s.bioPages} bio(s) no ar`,
+  },
+  {
+    key: "ai-radar",
+    icon: "radar",
+    title: "Radar de IA",
+    body: "Quando alguém pergunta para uma IA, seus clientes aparecem? Um relatório para revender todo mês.",
+    href: "/radar",
+    cta: "Abrir o radar",
+    stat: (s) => (s.radarClients ? `${s.radarClients} cliente(s) com radar` : "Nenhum radar rodado ainda"),
   },
 ];

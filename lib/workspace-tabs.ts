@@ -56,6 +56,7 @@ export const TAB_GROUPS: { key: TabGroupKey; label: string; tabs: TabDef[] }[] =
     tabs: [
       { key: "strategy_analysis", label: "Estratégia" },
       { key: "market_pulse", label: "Radar do mercado" },
+      { key: "ai_radar", label: "Radar de IA" },
       { key: "campaign_plan", label: "Campanha" },
       { key: "campaign30", label: "30 dias" },
       { key: "roi_projection", label: "ROI & Roadmap" },

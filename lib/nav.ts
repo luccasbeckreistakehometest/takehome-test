@@ -10,7 +10,7 @@ export const AGENCY_PRIMARY_NAV: NavItem[] = [
   { href: "/clients", label: "Clientes", icon: "briefcase", tour: "nav-clients" },
   { href: "/production", label: "Produção", icon: "kanban", tour: "nav-production" },
   { href: "/calendar", label: "Agenda", icon: "calendar", tour: "nav-calendar", match: ["/calendar", "/agenda"] },
-  { href: "/growth", label: "Crescimento", icon: "trend", tour: "nav-growth", match: ["/growth", "/prospecting", "/links"] },
+  { href: "/growth", label: "Crescimento", icon: "trend", tour: "nav-growth", match: ["/growth", "/prospecting", "/links", "/radar"] },
   { href: "/messages", label: "Mensagens", icon: "message", tour: "nav-messages" },
   { href: "/insights", label: "Resultados", icon: "chart", tour: "nav-insights", match: ["/insights", "/finance", "/invoices"] },
 ];

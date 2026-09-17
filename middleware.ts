@@ -67,6 +67,7 @@ const PRIVATE_PREFIXES = [
   "/production",
   "/professionals",
   "/prospecting",
+  "/radar",
   "/settings",
   "/treinamento",
 ];

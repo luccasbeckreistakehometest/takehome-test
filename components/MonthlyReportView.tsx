@@ -194,6 +194,22 @@ export default function MonthlyReportView({
         </Card>
       )}
 
+      {data.aiRadar && (
+        <Card data-testid="report-ai-radar">
+          <SectionTitle>Radar de IA</SectionTitle>
+          <div className="grid grid-cols-2 gap-2">
+            <Stat label="Participação da marca" value={`${fmtNum(data.aiRadar.shareOfVoice, lang)}%`} />
+            <Stat label="Respostas que citam a marca" value={`${data.aiRadar.answersWithClient}/${data.aiRadar.questions}`} />
+          </div>
+          <ol className="mt-3 list-decimal space-y-1 pl-5 text-sm">
+            {data.aiRadar.actions.map((a) => (
+              <li key={a}>{a}</li>
+            ))}
+          </ol>
+          <p className="mt-2 text-xs text-muted" data-testid="report-ai-radar-disclaimer">{data.aiRadar.disclaimer}</p>
+        </Card>
+      )}
+
       {data.satisfaction && (
         <Card data-testid="report-satisfaction">
           <SectionTitle>Satisfação do cliente</SectionTitle>

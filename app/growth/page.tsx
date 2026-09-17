@@ -8,6 +8,7 @@ import { countLeads, getAgencyPage } from "@/lib/agency-page-db";
 import { Icon } from "@/components/icons";
 import { GROWTH_CARDS, type GrowthStats } from "@/lib/growth-cards";
 import { agencyLinksOverview } from "@/lib/links-db";
+import { agencyRadarOverview } from "@/lib/ai-visibility-db";
 
 export const dynamic = "force-dynamic";
 export const metadata = { title: "Crescimento" };
@@ -30,6 +31,7 @@ export default async function GrowthPage() {
     pagePublished: getAgencyPage(agencyId).published,
     clicks30: links.reduce((sum, r) => sum + r.clicks30, 0),
     bioPages: links.filter((r) => r.bioPublished).length,
+    radarClients: agencyRadarOverview(scope.agencyId).filter((r) => r.ranAt).length,
   };
   return (
     <div className="space-y-6">

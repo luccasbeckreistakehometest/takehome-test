@@ -43,6 +43,7 @@ import InvoicesPanel from "./InvoicesPanel";
 import CarouselTab from "./CarouselTab";
 import BriefingVoiceStart from "./BriefingVoiceStart";
 import LinksTab from "./LinksTab";
+import AiRadarTab from "./AiRadarTab";
 import ClicksCard from "./ClicksCard";
 import { briefingCompleteness, BRIEFING_READY_PCT } from "@/lib/activation-rules";
 import {
@@ -621,6 +622,8 @@ export default function Workspace({
       {tab === "carousels" && <CarouselTab client={client} />}
 
       {tab === "bio" && <LinksTab client={client} />}
+
+      {tab === "ai_radar" && <AiRadarTab client={client} />}
 
       {tab === "campaign30" && <CampaignTab client={client} />}
 

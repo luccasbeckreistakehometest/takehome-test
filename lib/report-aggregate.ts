@@ -122,6 +122,8 @@ export type MonthlyReportData = {
   learningsReading?: LearningsReading | null;
   // links rastreáveis mais clicados no mês
   topLinks?: { label: string; clicks: number }[];
+  // radar de IA do mês (simulação, com aviso)
+  aiRadar?: { ranAt: string; shareOfVoice: number; answersWithClient: number; questions: number; actions: string[]; disclaimer: string; demo: boolean } | null;
 };
 
 export function isValidMonth(month: string): boolean {
