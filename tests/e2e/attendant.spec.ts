@@ -1,5 +1,6 @@
 import { test, expect } from "@playwright/test";
-import { login, skipOnboarding } from "./helpers";
+import { createHmac } from "crypto";
+import { login, skipOnboarding, E2E_META_APP_SECRET } from "./helpers";
 
 async function seedClient(page: import("@playwright/test").Page, name: string) {
   return (
@@ -108,24 +109,41 @@ test("the Meta webhook routes a message to the client by phone_number_id", async
     data: { mode: "draft", phoneNumberId: "PN-123", apiToken: "tok" },
   });
   await page.context().clearCookies();
-  const hook = await page.request.post("/api/webhooks/meta", {
-    data: {
-      entry: [
-        {
-          changes: [
-            {
-              value: {
-                metadata: { phone_number_id: "PN-123" },
-                contacts: [{ profile: { name: "Duda" } }],
-                messages: [{ from: "5521988887777", text: { body: "Vocês cortam cabelo infantil?" } }],
-              },
+  const body = JSON.stringify({
+    entry: [
+      {
+        changes: [
+          {
+            value: {
+              metadata: { phone_number_id: "PN-123" },
+              contacts: [{ profile: { name: "Duda" } }],
+              messages: [{ from: "5521988887777", text: { body: "Vocês cortam cabelo infantil?" } }],
             },
-          ],
-        },
-      ],
+          },
+        ],
+      },
+    ],
+  });
+  // Sem assinatura (ou assinada com outro segredo): recusado, nada entra.
+  const unsigned = await page.request.post("/api/webhooks/meta", { data: body, headers: { "content-type": "application/json" } });
+  expect(unsigned.status()).toBe(401);
+  const forged = await page.request.post("/api/webhooks/meta", {
+    data: body,
+    headers: { "content-type": "application/json", "x-hub-signature-256": `sha256=${createHmac("sha256", "wrong").update(body).digest("hex")}` },
+  });
+  expect(forged.status()).toBe(401);
+  const hook = await page.request.post("/api/webhooks/meta", {
+    data: body,
+    headers: {
+      "content-type": "application/json",
+      "x-hub-signature-256": `sha256=${createHmac("sha256", E2E_META_APP_SECRET).update(body).digest("hex")}`,
     },
   });
   expect(hook.status()).toBe(200);
+  // Handshake: o token público antigo não vale; o configurado vale.
+  expect((await page.request.get("/api/webhooks/meta?hub.mode=subscribe&hub.verify_token=agencyhub-verify&hub.challenge=x")).status()).toBe(403);
+  const ok = await page.request.get("/api/webhooks/meta?hub.mode=subscribe&hub.verify_token=e2e-verify-token-0123&hub.challenge=abc");
+  expect(await ok.text()).toBe("abc");
   await login(page, "agencia");
   const view = await (await page.request.get(`/api/clients/${client.id}/attendant`)).json();
   expect(view.inbound[0].fromName).toBe("Duda");

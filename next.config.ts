@@ -36,6 +36,9 @@ export default function config(phase: string): NextConfig {
     // próprio app, servidos por rotas com checagem de acesso) e já teve falhas
     // críticas — desligado para não expor o endpoint /_next/image.
     images: { unoptimized: true },
+    // O e2e desliga o cache em disco do Turbopack (a máquina de testes tem
+    // pouco espaço e cada run começa do zero de qualquer forma).
+    experimental: { turbopackFileSystemCacheForDev: process.env.NEXT_DEV_FS_CACHE !== "0" },
     async headers() {
       return [
         { source: "/:path*", headers: securityHeaders },

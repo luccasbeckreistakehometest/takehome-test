@@ -266,52 +266,112 @@ function startEntryPlan(accountType: AccountType, accountId: string, at: string,
   });
 }
 
-// Aplica o calendário da conta (preguiçoso: chamado em toda leitura/uso e no
-// tick do scheduler). Cria a assinatura grátis se não existir, expira plano
-// pago vencido e recarrega a cota mensal. Idempotente.
+// Projeção pura do calendário da conta: o que a assinatura e a cota do plano
+// SERIAM agora (plano grátis se não houver linha, vencimento de plano pago,
+// recarga mensal). Usada para gravar (refreshAccount) e para leituras sem
+// efeito colateral (rotas GET).
+type AccountProjection = {
+  sub: Subscription;
+  planCoins: number;
+  change: null | { kind: "signup" | "expired" | "refill"; plan: Plan; previous?: Plan };
+};
+
+function projectAccount(
+  accountType: AccountType,
+  accountId: string,
+  row: SubscriptionRow | undefined,
+  currentPlanCoins: number,
+  at: string
+): AccountProjection {
+  const entry = getPlan(entryPlanId(accountType))!;
+  const fresh = (kind: "signup" | "expired", previous?: Plan): AccountProjection => ({
+    sub: {
+      accountType,
+      accountId,
+      planId: entry.id,
+      period: "monthly",
+      status: "active",
+      startedAt: at,
+      renewsAt: addMonthsIso(at, 1),
+      lastRefillAt: at,
+    },
+    planCoins: planQuota(entry),
+    change: { kind, plan: entry, previous },
+  });
+  if (!row) return fresh("signup");
+  const plan = getPlan(row.planId);
+  if (!plan || plan.accountType !== accountType) return fresh("expired", plan);
+  if (isPaidPlan(plan) && row.renewsAt <= at) return fresh("expired", plan);
+  const current: Subscription = { ...row, period: isBillingPeriod(row.period) ? row.period : "monthly" };
+  const lastRefill = row.lastRefillAt ?? row.startedAt;
+  if (addMonthsIso(lastRefill, 1) > at) return { sub: current, planCoins: currentPlanCoins, change: null };
+  // Avança em meses inteiros a partir da última recarga (o dia do mês fica estável).
+  let next = lastRefill;
+  while (addMonthsIso(next, 1) <= at) next = addMonthsIso(next, 1);
+  return {
+    sub: {
+      ...current,
+      status: "active",
+      lastRefillAt: next,
+      // plano grátis não vence: o "renova em" acompanha a próxima recarga
+      renewsAt: isPaidPlan(plan) ? row.renewsAt : addMonthsIso(next, 1),
+    },
+    planCoins: planQuota(plan),
+    change: { kind: "refill", plan },
+  };
+}
+
+// Aplica o calendário da conta (preguiçoso: chamado nos caminhos que gravam —
+// cobrança, pagamento, cadastro — e no tick do scheduler). Idempotente.
 export function refreshAccount(accountType: AccountType, accountId: string, now: Date = new Date()): void {
   const at = now.toISOString();
   db.transaction(() => {
     const row = subscriptionRow(accountType, accountId);
-    if (!row) {
-      startEntryPlan(accountType, accountId, at, "signup");
-      return;
-    }
-    const plan = getPlan(row.planId);
-    if (!plan || plan.accountType !== accountType) {
-      startEntryPlan(accountType, accountId, at, "expired", plan);
-      return;
-    }
-    if (isPaidPlan(plan) && row.renewsAt <= at) {
-      startEntryPlan(accountType, accountId, at, "expired", plan);
-      return;
-    }
-    const lastRefill = row.lastRefillAt ?? row.startedAt;
-    if (addMonthsIso(lastRefill, 1) <= at) {
-      // Avança em meses inteiros a partir da última recarga (o dia do mês fica estável).
-      let next = lastRefill;
-      while (addMonthsIso(next, 1) <= at) next = addMonthsIso(next, 1);
-      const quota = planQuota(plan);
-      writeSubscription({
-        ...row,
-        status: "active",
-        lastRefillAt: next,
-        // plano grátis não vence: o "renova em" acompanha a próxima recarga
-        renewsAt: isPaidPlan(plan) ? row.renewsAt : addMonthsIso(next, 1),
+    const projection = projectAccount(accountType, accountId, row, walletRow(accountType, accountId).planCoins, at);
+    const change = projection.change;
+    if (!change) return;
+    if (change.kind === "refill") {
+      writeSubscription(projection.sub);
+      setPlanCoins(accountType, accountId, projection.planCoins);
+      recordTx({
+        accountType,
+        accountId,
+        kind: "refill",
+        description: `Cota mensal do plano ${change.plan.name}`,
+        coins: projection.planCoins,
+        at,
       });
-      setPlanCoins(accountType, accountId, quota);
-      recordTx({ accountType, accountId, kind: "refill", description: `Cota mensal do plano ${plan.name}`, coins: quota, at });
+      return;
     }
+    startEntryPlan(accountType, accountId, at, change.kind, change.previous);
   }).immediate();
+}
+
+// Leitura sem gravar nada (para rotas GET).
+export function viewAccount(
+  accountType: AccountType,
+  accountId: string,
+  now: Date = new Date()
+): { subscription: Subscription; wallet: Wallet } {
+  const row = subscriptionRow(accountType, accountId);
+  const wallet = walletRow(accountType, accountId);
+  const projection = projectAccount(accountType, accountId, row, Number(wallet.planCoins ?? 0), now.toISOString());
+  return { subscription: projection.sub, wallet: toWallet({ ...wallet, planCoins: projection.planCoins }) };
 }
 
 // Tick do scheduler: expira planos vencidos e recarrega cotas de todas as
 // contas com assinatura (o acesso também faz isso, de forma preguiçosa).
 export function refreshAllAccounts(now: Date = new Date()): number {
-  const rows = db.prepare("SELECT accountType, accountId FROM subscriptions").all() as {
-    accountType: AccountType;
-    accountId: string;
-  }[];
+  // Inclui contas antigas que ainda não têm assinatura gravada.
+  const hasProfessionals = Boolean(db.prepare("SELECT 1 FROM sqlite_master WHERE type = 'table' AND name = 'professionals'").get());
+  const rows = db
+    .prepare(
+      `SELECT accountType, accountId FROM subscriptions
+       UNION SELECT 'client', id FROM clients
+       ${hasProfessionals ? "UNION SELECT 'professional', id FROM professionals" : ""}
+       UNION SELECT 'agency', 'agency'`
+    )
+    .all() as { accountType: AccountType; accountId: string }[];
   for (const row of rows) refreshAccount(row.accountType, row.accountId, now);
   return rows.length;
 }
@@ -510,8 +570,9 @@ export type BillingSummary = {
   prepaid: true; // sem renovação automática
 };
 
+// Resumo para telas (GET): não grava nada.
 export function billingSummary(accountType: AccountType, accountId: string): BillingSummary {
-  const subscription = getSubscription(accountType, accountId);
+  const { subscription, wallet } = viewAccount(accountType, accountId);
   const monthStart = new Date();
   monthStart.setUTCDate(1);
   monthStart.setUTCHours(0, 0, 0, 0);
@@ -524,7 +585,7 @@ export function billingSummary(accountType: AccountType, accountId: string): Bil
   return {
     plan: getPlan(subscription.planId),
     subscription,
-    wallet: getWallet(accountType, accountId),
+    wallet,
     usageThisMonth: Math.max(0, usage.c),
     prepaid: true,
   };

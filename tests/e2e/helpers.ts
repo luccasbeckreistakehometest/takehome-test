@@ -2,9 +2,9 @@ import { expect, type APIRequestContext, type Page } from "@playwright/test";
 
 export async function login(page: Page, username: string, password = "e2e-pass") {
   await page.goto("/login");
-  await page.getByPlaceholder("ex.: agencia").fill(username);
-  await page.getByPlaceholder("••••••••").fill(password);
-  await page.getByRole("button", { name: /entrar/i }).click();
+  await page.getByLabel("Usuário ou e-mail").fill(username);
+  await page.getByLabel("Senha", { exact: true }).fill(password);
+  await page.getByRole("button", { name: "Entrar", exact: true }).click();
   await expect(page).not.toHaveURL(/\/login/);
 }
 
@@ -39,3 +39,36 @@ export async function seedClientWithDelivery(request: APIRequestContext, name: s
   return { client, project, deliverable };
 }
 
+
+export const E2E_META_APP_SECRET = "e2e-meta-app-secret";
+
+let signupSeq = 0;
+/** Cadastro pela API (o navegador guarda o cookie da sessão nova). */
+export async function signupViaApi(
+  request: APIRequestContext,
+  role: "client" | "professional",
+  name: string,
+  extra: Record<string, unknown> = {}
+) {
+  signupSeq += 1;
+  const email = `${name.toLowerCase().replace(/[^a-z0-9]+/g, ".")}.${Date.now()}.${signupSeq}@example.com`;
+  const response = await request.post("/api/auth/register", {
+    data: { role, name, email, password: "senha-forte-123", acceptTerms: true, ...extra },
+  });
+  expect(response.status(), await response.text()).toBe(201);
+  return { ...(await response.json()), email, password: "senha-forte-123" } as {
+    home: string;
+    username: string;
+    role: string;
+    email: string;
+    password: string;
+  };
+}
+
+/** Id do usuário pelo username (via API do admin, com a sessão do admin). */
+export async function adminUserId(request: APIRequestContext, username: string): Promise<string> {
+  const { users } = (await (await request.get("/api/admin/users")).json()) as { users: { id: string; username: string }[] };
+  const found = users.find((u) => u.username === username);
+  if (!found) throw new Error(`usuário ${username} não encontrado`);
+  return found.id;
+}
