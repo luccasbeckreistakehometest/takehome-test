@@ -1,3 +1,5 @@
+import { notifyActivation } from "./activation-events";
+
 export async function api<T>(path: string, init?: RequestInit): Promise<T> {
   const response = await fetch(path, {
     ...init,
@@ -13,5 +15,7 @@ export async function api<T>(path: string, init?: RequestInit): Promise<T> {
     }
     throw new Error(message);
   }
+  const method = (init?.method ?? "GET").toUpperCase();
+  if (method !== "GET" && method !== "HEAD") notifyActivation();
   return response.json() as Promise<T>;
 }

@@ -1,6 +1,10 @@
 import { NextResponse } from "next/server";
-import { getPayment, mpConfigured } from "@/lib/mercadopago";
-import { applyMpPayment, recordPaymentLookupFailure } from "@/lib/billing-db";
+import { getAuthorizedPayment, getPayment, getPreapprovalRemote, mpConfigured, subscriptionsAvailable } from "@/lib/mercadopago";
+import { applyMpPayment, applyPreapprovalStatus, applySubscriptionPayment, recordPaymentLookupFailure } from "@/lib/billing-db";
+import { authorizedPaymentApproved, parseSubRef, paymentSubscriptionLink } from "@/lib/subscription-rules";
+import { cancelRetiredPreapprovals } from "@/lib/subscription-sync";
+import { recordAccountEvent } from "@/lib/analytics-db";
+import { getPreapproval, parsePaymentRef } from "@/lib/billing-db";
 import { checkLimits, clientIp } from "@/lib/rate-limit";
 
 export const maxDuration = 60;
@@ -24,6 +28,9 @@ export async function POST(request: Request) {
       ""
   ).trim();
   const type = String(body?.type ?? body?.topic ?? url.searchParams.get("type") ?? url.searchParams.get("topic") ?? "");
+  if (type === "subscription_preapproval" || type === "subscription_authorized_payment") {
+    return handleSubscription(type, dataId);
+  }
   // Só eventos de pagamento interessam (merchant_order etc. são ignorados).
   if (!dataId || (type && type !== "payment") || !/^\d{1,30}$/.test(dataId)) {
     return NextResponse.json({ ok: true, ignored: true });
@@ -47,12 +54,58 @@ export async function POST(request: Request) {
       status: payment.status,
       externalReference: payment.external_reference ?? "",
       amount: Number(payment.transaction_amount ?? 0),
+      ...paymentSubscriptionLink(payment),
     });
     if (outcome === "invalid") console.error(`[mp] pagamento ${payment.id} não pôde ser creditado (ver admin)`);
+    if (outcome === "refunded") await cancelRetiredPreapprovals().catch(() => 0);
+    if (outcome === "credited") {
+      const ref = parsePaymentRef(payment.external_reference ?? "");
+      if (ref) recordAccountEvent("payment_approved", ref, { kind: ref.kind });
+    }
     return NextResponse.json({ ok: true, outcome });
   } catch (error) {
     console.error(`[mp] falha ao aplicar pagamento ${dataId}:`, error);
     return NextResponse.json({ error: "apply failed" }, { status: 500 });
+  }
+}
+
+// Assinatura no cartão: a notificação só traz o id; o estado vem do MP.
+async function handleSubscription(type: string, id: string) {
+  if (!/^[A-Za-z0-9_-]{1,64}$/.test(id)) return NextResponse.json({ ok: true, ignored: true });
+  if (!subscriptionsAvailable()) {
+    console.error("[mp] webhook de assinatura sem MP_ACCESS_TOKEN configurado");
+    return NextResponse.json({ error: "not configured" }, { status: 503 });
+  }
+  try {
+    if (type === "subscription_preapproval") {
+      const remote = await getPreapprovalRemote(id);
+      const outcome = applyPreapprovalStatus({ id: String(remote.id), status: String(remote.status ?? ""), externalReference: remote.external_reference });
+      await cancelRetiredPreapprovals().catch(() => 0);
+      return NextResponse.json({ ok: true, outcome });
+    }
+    const record = await getAuthorizedPayment(id);
+    const outcome = applySubscriptionPayment({
+      authorizedPaymentId: String(record.id),
+      preapprovalId: String(record.preapproval_id ?? ""),
+      approved: authorizedPaymentApproved(record),
+      amount: Number(record.transaction_amount ?? 0),
+      externalReference: record.external_reference,
+      mpStatus: String(record.payment?.status ?? record.status ?? ""),
+      paymentId: record.payment?.id != null ? String(record.payment.id) : null,
+    });
+    if (outcome === "invalid") console.error(`[mp] cobrança recorrente ${id} não pôde ser creditada (ver admin)`);
+    // assinatura nova substitui a antiga; estorno aposenta a autorização
+    if (outcome === "credited" || outcome === "refunded" || outcome === "invalid") await cancelRetiredPreapprovals().catch(() => 0);
+    if (outcome === "credited") {
+      const local = getPreapproval(String(record.preapproval_id ?? ""));
+      const owner = local ?? parseSubRef(record.external_reference);
+      if (owner) recordAccountEvent("payment_approved", owner, { kind: "subscription" });
+    }
+    return NextResponse.json({ ok: true, outcome });
+  } catch (error) {
+    const detail = error instanceof Error ? error.message : String(error);
+    console.error(`[mp] assinatura ${type} ${id} falhou: ${detail}`);
+    return NextResponse.json({ error: "lookup failed" }, { status: 502 });
   }
 }
 

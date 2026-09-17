@@ -1,6 +1,7 @@
 import { randomUUID } from "crypto";
 import { addColumnIfMissing, db, tenantColumn } from "./db";
 import { billingAgencyId, HOUSE_AGENCY_ID } from "./tenancy-rules";
+import { nextPeriodEnd, parseSubRef, preapprovalEffect, subscriptionExpired } from "./subscription-rules";
 import {
   actionCost,
   entryPlanId,
@@ -39,6 +40,11 @@ export type Subscription = {
   startedAt: string;
   renewsAt: string;
   lastRefillAt: string | null;
+  // cobrança automática no cartão (MP); cancelada = vale até renewsAt
+  recurring?: boolean;
+  cancelAtPeriodEnd?: boolean;
+  mpPreapprovalId?: string | null;
+  mpStatus?: string;
 };
 
 export type Wallet = {
@@ -88,6 +94,11 @@ db.exec(`
   );
 `);
 addColumnIfMissing("subscriptions", "lastRefillAt", "TEXT");
+// Assinatura recorrente no cartão (Mercado Pago preapproval)
+addColumnIfMissing("subscriptions", "recurring", "INTEGER NOT NULL DEFAULT 0");
+addColumnIfMissing("subscriptions", "cancelAtPeriodEnd", "INTEGER NOT NULL DEFAULT 0");
+addColumnIfMissing("subscriptions", "mpPreapprovalId", "TEXT");
+addColumnIfMissing("subscriptions", "mpStatus", "TEXT NOT NULL DEFAULT ''");
 addColumnIfMissing("wallets", "planCoins", "REAL NOT NULL DEFAULT 0");
 addColumnIfMissing("billing_transactions", "ref", "TEXT");
 addColumnIfMissing("mp_payments", "status", "TEXT NOT NULL DEFAULT 'credited'");
@@ -98,6 +109,10 @@ addColumnIfMissing("mp_payments", "amount", "REAL NOT NULL DEFAULT 0");
 addColumnIfMissing("mp_payments", "mpStatus", "TEXT NOT NULL DEFAULT ''");
 addColumnIfMissing("mp_payments", "detail", "TEXT NOT NULL DEFAULT ''");
 addColumnIfMissing("mp_payments", "updatedAt", "TEXT");
+// cobrança recorrente: o pagamento do MP que ela gerou e a assinatura dela
+// (é por aqui que um estorno/chargeback do pagamento acha o que desfazer)
+addColumnIfMissing("mp_payments", "linkedPaymentId", "TEXT");
+addColumnIfMissing("mp_payments", "preapprovalId", "TEXT");
 for (const table of ["subscriptions", "wallets", "billing_transactions", "mp_payments"]) tenantColumn(table);
 
 // Agência de uma conta de billing: a própria (conta de agência), a da marca
@@ -258,21 +273,42 @@ export function addCoins(
 }
 
 // ---------- Assinatura (pré-paga) ----------
+type RawSubscriptionRow = Omit<Subscription, "lastRefillAt" | "recurring" | "cancelAtPeriodEnd"> & {
+  lastRefillAt: string | null;
+  recurring?: number | boolean | null;
+  cancelAtPeriodEnd?: number | boolean | null;
+};
 type SubscriptionRow = Omit<Subscription, "lastRefillAt"> & { lastRefillAt: string | null };
 
 function subscriptionRow(accountType: AccountType, accountId: string): SubscriptionRow | undefined {
-  return db
+  const row = db
     .prepare("SELECT * FROM subscriptions WHERE accountType = ? AND accountId = ?")
-    .get(accountType, accountId) as SubscriptionRow | undefined;
+    .get(accountType, accountId) as RawSubscriptionRow | undefined;
+  if (!row) return undefined;
+  return {
+    ...row,
+    recurring: Number(row.recurring ?? 0) === 1,
+    cancelAtPeriodEnd: Number(row.cancelAtPeriodEnd ?? 0) === 1,
+    mpPreapprovalId: row.mpPreapprovalId ?? null,
+    mpStatus: row.mpStatus ?? "",
+  };
 }
 
 function writeSubscription(sub: Subscription): void {
   db.prepare(
-    `INSERT INTO subscriptions (accountType, accountId, agencyId, planId, period, status, startedAt, renewsAt, lastRefillAt)
-     VALUES (@accountType, @accountId, @agencyId, @planId, @period, @status, @startedAt, @renewsAt, @lastRefillAt)
+    `INSERT INTO subscriptions (accountType, accountId, agencyId, planId, period, status, startedAt, renewsAt, lastRefillAt, recurring, cancelAtPeriodEnd, mpPreapprovalId, mpStatus)
+     VALUES (@accountType, @accountId, @agencyId, @planId, @period, @status, @startedAt, @renewsAt, @lastRefillAt, @recurring, @cancelAtPeriodEnd, @mpPreapprovalId, @mpStatus)
      ON CONFLICT(accountType, accountId) DO UPDATE SET agencyId=@agencyId, planId=@planId, period=@period, status=@status,
-       startedAt=@startedAt, renewsAt=@renewsAt, lastRefillAt=@lastRefillAt`
-  ).run({ ...sub, agencyId: accountAgencyId(sub.accountType, sub.accountId) });
+       startedAt=@startedAt, renewsAt=@renewsAt, lastRefillAt=@lastRefillAt, recurring=@recurring,
+       cancelAtPeriodEnd=@cancelAtPeriodEnd, mpPreapprovalId=@mpPreapprovalId, mpStatus=@mpStatus`
+  ).run({
+    ...sub,
+    agencyId: accountAgencyId(sub.accountType, sub.accountId),
+    recurring: sub.recurring ? 1 : 0,
+    cancelAtPeriodEnd: sub.cancelAtPeriodEnd ? 1 : 0,
+    mpPreapprovalId: sub.mpPreapprovalId ?? null,
+    mpStatus: sub.mpStatus ?? "",
+  });
 }
 
 function planQuota(plan: Plan): number {
@@ -340,13 +376,19 @@ function projectAccount(
   if (!row) return fresh("signup");
   const plan = getPlan(row.planId);
   if (!plan || plan.accountType !== accountType) return fresh("expired", plan);
-  if (isPaidPlan(plan) && row.renewsAt <= at) return fresh("expired", plan);
+  if (isPaidPlan(plan) && subscriptionExpired({ renewsAt: row.renewsAt, recurring: Boolean(row.recurring), cancelAtPeriodEnd: Boolean(row.cancelAtPeriodEnd) }, new Date(at))) {
+    return fresh("expired", plan);
+  }
   const current: Subscription = { ...row, period: isBillingPeriod(row.period) ? row.period : "monthly" };
   const lastRefill = row.lastRefillAt ?? row.startedAt;
-  if (addMonthsIso(lastRefill, 1) > at) return { sub: current, planCoins: currentPlanCoins, change: null };
+  // Plano pago só recarrega pelo calendário DENTRO do período já pago (plano
+  // trimestral/anual recarrega todo mês). No fim do período quem recarrega é a
+  // cobrança aprovada — nada de cota nova na carência nem antes da renovação.
+  const refillDue = (date: string) => addMonthsIso(date, 1) <= at && (!isPaidPlan(plan) || addMonthsIso(date, 1) < row.renewsAt);
+  if (!refillDue(lastRefill)) return { sub: current, planCoins: currentPlanCoins, change: null };
   // Avança em meses inteiros a partir da última recarga (o dia do mês fica estável).
   let next = lastRefill;
-  while (addMonthsIso(next, 1) <= at) next = addMonthsIso(next, 1);
+  while (refillDue(next)) next = addMonthsIso(next, 1);
   return {
     sub: {
       ...current,
@@ -445,6 +487,11 @@ function activatePlan(input: {
   const current = subscriptionRow(input.accountType, input.accountId);
   const extending = Boolean(current && current.planId === input.plan.id && current.renewsAt > at && isPaidPlan(input.plan));
   const sub: Subscription = {
+    // pagamento avulso do mesmo plano não desliga a renovação no cartão
+    recurring: extending ? current!.recurring : false,
+    cancelAtPeriodEnd: extending ? current!.cancelAtPeriodEnd : false,
+    mpPreapprovalId: extending ? current!.mpPreapprovalId : null,
+    mpStatus: extending ? current!.mpStatus : "",
     accountType: input.accountType,
     accountId: input.accountId,
     planId: input.plan.id,
@@ -779,7 +826,9 @@ export function expectedAmount(ref: PaymentRef): number {
   return periodPrice(getPlan(ref.planId)!.monthlyPrice, ref.period);
 }
 
-export type PaymentStatus = "credited" | "refunded" | "rejected" | "pending" | "invalid";
+// linked = pagamento gerado por uma cobrança da assinatura no cartão (quem
+// credita é a cobrança `sub_<id>`; esta linha só registra o pagamento)
+export type PaymentStatus = "credited" | "refunded" | "rejected" | "pending" | "invalid" | "linked";
 
 export type PaymentRow = {
   id: string;
@@ -791,6 +840,8 @@ export type PaymentRow = {
   accountId: string | null;
   amount: number;
   detail: string;
+  linkedPaymentId?: string | null;
+  preapprovalId?: string | null;
   createdAt: string;
   updatedAt: string | null;
 };
@@ -825,11 +876,18 @@ export function listPayments(
 function upsertPayment(row: Omit<PaymentRow, "createdAt" | "updatedAt">): void {
   const at = nowIso();
   db.prepare(
-    `INSERT INTO mp_payments (id, agencyId, status, mpStatus, externalReference, accountType, accountId, amount, detail, createdAt, updatedAt)
-     VALUES (@id, @agencyId, @status, @mpStatus, @externalReference, @accountType, @accountId, @amount, @detail, @at, @at)
+    `INSERT INTO mp_payments (id, agencyId, status, mpStatus, externalReference, accountType, accountId, amount, detail, linkedPaymentId, preapprovalId, createdAt, updatedAt)
+     VALUES (@id, @agencyId, @status, @mpStatus, @externalReference, @accountType, @accountId, @amount, @detail, @linkedPaymentId, @preapprovalId, @at, @at)
      ON CONFLICT(id) DO UPDATE SET agencyId=@agencyId, status=@status, mpStatus=@mpStatus, externalReference=@externalReference,
-       accountType=@accountType, accountId=@accountId, amount=@amount, detail=@detail, updatedAt=@at`
-  ).run({ ...row, at, agencyId: accountAgencyId(row.accountType, row.accountId) });
+       accountType=@accountType, accountId=@accountId, amount=@amount, detail=@detail,
+       linkedPaymentId=COALESCE(@linkedPaymentId, linkedPaymentId), preapprovalId=COALESCE(@preapprovalId, preapprovalId), updatedAt=@at`
+  ).run({
+    ...row,
+    linkedPaymentId: row.linkedPaymentId ?? null,
+    preapprovalId: row.preapprovalId ?? null,
+    at,
+    agencyId: accountAgencyId(row.accountType, row.accountId),
+  });
 }
 
 export type MpPaymentInput = {
@@ -837,6 +895,9 @@ export type MpPaymentInput = {
   status: string; // status do MP: approved | pending | in_process | rejected | cancelled | refunded | charged_back
   externalReference: string;
   amount: number;
+  // pagamento gerado por assinatura: a autorização (preapproval) e a cobrança
+  preapprovalId?: string | null;
+  authorizedPaymentId?: string | null;
 };
 
 export type PaymentOutcome = "credited" | "already_credited" | "refunded" | "already_refunded" | "ignored" | "invalid";
@@ -849,6 +910,8 @@ export function applyMpPayment(p: MpPaymentInput): PaymentOutcome {
   return db
     .transaction((): PaymentOutcome => {
       const existing = getPaymentRow(id);
+      const subRefFound = parseSubRef(p.externalReference);
+      if (subRefFound || p.preapprovalId) return applyLinkedSubscriptionPayment(p, existing, subRefFound);
       const ref = parsePaymentRef(p.externalReference);
       const base = {
         id,
@@ -958,4 +1021,382 @@ export function recordPaymentLookupFailure(id: string, detail: string): void {
     amount: existing?.amount ?? 0,
     detail: `consulta ao Mercado Pago falhou: ${detail}`.slice(0, 300),
   });
+}
+
+// ---------- Assinatura recorrente (Mercado Pago preapproval) ----------
+db.exec(`
+  CREATE TABLE IF NOT EXISTS mp_plans (
+    id TEXT PRIMARY KEY,
+    planId TEXT NOT NULL,
+    period TEXT NOT NULL,
+    amount REAL NOT NULL,
+    createdAt TEXT NOT NULL,
+    UNIQUE (planId, period, amount)
+  );
+  CREATE TABLE IF NOT EXISTS mp_preapprovals (
+    id TEXT PRIMARY KEY,
+    accountType TEXT NOT NULL,
+    accountId TEXT NOT NULL,
+    planId TEXT NOT NULL,
+    period TEXT NOT NULL,
+    amount REAL NOT NULL,
+    mpPlanRowId TEXT,
+    status TEXT NOT NULL DEFAULT 'pending',
+    payerEmail TEXT NOT NULL DEFAULT '',
+    initPoint TEXT NOT NULL DEFAULT '',
+    createdAt TEXT NOT NULL,
+    updatedAt TEXT NOT NULL
+  );
+  CREATE INDEX IF NOT EXISTS idx_mp_preapprovals_account ON mp_preapprovals(accountType, accountId);
+`);
+tenantColumn("mp_preapprovals");
+// substituída (assinatura nova da mesma conta, cancelamento, estorno ou
+// pendente esquecida): o sincronizador cancela no MP e cobranças dela não ligam plano
+addColumnIfMissing("mp_preapprovals", "supersededAt", "TEXT");
+
+export type MpPlanRow = { id: string; planId: string; period: BillingPeriod; amount: number; createdAt: string };
+
+// Preço recorrente de um plano/período. Mudou o preço → nova linha; quem já
+// assina segue no valor da própria assinatura.
+export function ensurePlanPrice(planId: string, period: BillingPeriod): MpPlanRow {
+  const plan = getPlan(planId);
+  if (!plan || !isPaidPlan(plan)) throw new Error("Plano inválido");
+  const amount = periodPrice(plan.monthlyPrice, period);
+  const existing = db.prepare("SELECT * FROM mp_plans WHERE planId = ? AND period = ? AND amount = ?").get(planId, period, amount) as MpPlanRow | undefined;
+  if (existing) return existing;
+  const row: MpPlanRow = { id: randomUUID(), planId, period, amount, createdAt: nowIso() };
+  db.prepare("INSERT OR IGNORE INTO mp_plans (id, planId, period, amount, createdAt) VALUES (@id, @planId, @period, @amount, @createdAt)").run(row);
+  return db.prepare("SELECT * FROM mp_plans WHERE planId = ? AND period = ? AND amount = ?").get(planId, period, amount) as MpPlanRow;
+}
+
+export type PreapprovalRow = {
+  id: string;
+  supersededAt?: string | null;
+  accountType: AccountType;
+  accountId: string;
+  planId: string;
+  period: BillingPeriod;
+  amount: number;
+  status: string;
+  payerEmail: string;
+  initPoint: string;
+  createdAt: string;
+  updatedAt: string;
+};
+
+export function recordPreapproval(input: Omit<PreapprovalRow, "createdAt" | "updatedAt"> & { mpPlanRowId: string }): void {
+  const at = nowIso();
+  db.prepare(
+    `INSERT INTO mp_preapprovals (id, agencyId, accountType, accountId, planId, period, amount, mpPlanRowId, status, payerEmail, initPoint, createdAt, updatedAt)
+     VALUES (@id, @agencyId, @accountType, @accountId, @planId, @period, @amount, @mpPlanRowId, @status, @payerEmail, @initPoint, @at, @at)
+     ON CONFLICT(id) DO UPDATE SET status = excluded.status, updatedAt = excluded.updatedAt`
+  ).run({ ...input, agencyId: accountAgencyId(input.accountType, input.accountId), at });
+}
+
+export function getPreapproval(id: string): PreapprovalRow | null {
+  return (db.prepare("SELECT * FROM mp_preapprovals WHERE id = ?").get(id) as PreapprovalRow | undefined) ?? null;
+}
+
+export function listPreapprovals(filter: { accountType?: AccountType; accountId?: string; agencyId?: string | null; limit?: number } = {}): PreapprovalRow[] {
+  const where: string[] = [];
+  const args: (string | number)[] = [];
+  if (filter.agencyId) {
+    where.push("agencyId = ?");
+    args.push(filter.agencyId);
+  }
+  if (filter.accountType) {
+    where.push("accountType = ?");
+    args.push(filter.accountType);
+  }
+  if (filter.accountId) {
+    where.push("accountId = ?");
+    args.push(filter.accountId);
+  }
+  args.push(Math.min(500, filter.limit ?? 100));
+  return db
+    .prepare(`SELECT * FROM mp_preapprovals ${where.length ? `WHERE ${where.join(" AND ")}` : ""} ORDER BY createdAt DESC LIMIT ?`)
+    .all(...args) as PreapprovalRow[];
+}
+
+// Mudança de estado da autorização no MP (autorizada, pausada, cancelada).
+export function applyPreapprovalStatus(input: { id: string; status: string; externalReference?: string }): "updated" | "unknown" {
+  const local = getPreapproval(input.id);
+  if (!local) {
+    const ref = parseSubRef(input.externalReference);
+    if (!ref) return "unknown";
+  }
+  const at = nowIso();
+  db.transaction(() => {
+    db.prepare("UPDATE mp_preapprovals SET status = ?, updatedAt = ? WHERE id = ?").run(input.status, at, input.id);
+    const effect = preapprovalEffect(input.status);
+    const owner = local ?? parseSubRef(input.externalReference);
+    if (!owner) return;
+    const sub = subscriptionRow(owner.accountType, owner.accountId);
+    if (!sub || sub.mpPreapprovalId !== input.id) return;
+    if (effect === "cancel") {
+      writeSubscription({ ...sub, cancelAtPeriodEnd: true, mpStatus: input.status });
+    } else if (effect === "active") {
+      writeSubscription({ ...sub, mpStatus: input.status });
+    }
+  }).immediate();
+  return "updated";
+}
+
+export type SubscriptionPaymentInput = {
+  authorizedPaymentId: string;
+  preapprovalId: string;
+  approved: boolean;
+  amount: number;
+  externalReference?: string;
+  mpStatus: string;
+  // id do pagamento que a cobrança gerou no MP (liga estorno/chargeback)
+  paymentId?: string | null;
+};
+
+const REVERSAL_STATUSES = new Set(["refunded", "charged_back"]);
+
+// Autorização que não pode mais ligar plano: cancelada ou substituída por
+// uma assinatura mais nova da mesma conta.
+function preapprovalRetired(row: (PreapprovalRow & { supersededAt?: string | null }) | null): boolean {
+  return Boolean(row && (row.status === "cancelled" || row.supersededAt));
+}
+
+// Marca as outras autorizações abertas da conta como substituídas: o
+// sincronizador (lib/subscription-sync) cancela cada uma no Mercado Pago.
+export function supersedeOtherPreapprovals(accountType: AccountType, accountId: string, keepId: string | null, onlyPending = false): number {
+  return db
+    .prepare(
+      `UPDATE mp_preapprovals SET supersededAt = ?, updatedAt = ?
+       WHERE accountType = ? AND accountId = ? AND id != ? AND supersededAt IS NULL
+         AND status ${onlyPending ? "= 'pending'" : "NOT IN ('cancelled')"}`
+    )
+    .run(nowIso(), nowIso(), accountType, accountId, keepId ?? "").changes;
+}
+
+// Pendentes há mais de `days` (o cliente nunca concluiu no MP) saem do ar.
+export function supersedeStalePendingPreapprovals(days = 7, now: Date = new Date()): number {
+  const cutoff = new Date(now.getTime() - days * 86_400_000).toISOString();
+  return db
+    .prepare("UPDATE mp_preapprovals SET supersededAt = ?, updatedAt = ? WHERE status = 'pending' AND supersededAt IS NULL AND createdAt < ?")
+    .run(now.toISOString(), now.toISOString(), cutoff).changes;
+}
+
+// Autorizações que precisam ser canceladas no MP (substituídas e ainda não
+// canceladas). Janela de 30 dias para não tentar para sempre.
+export function preapprovalsToCancel(now: Date = new Date()): PreapprovalRow[] {
+  const since = new Date(now.getTime() - 30 * 86_400_000).toISOString();
+  return db
+    .prepare("SELECT * FROM mp_preapprovals WHERE supersededAt IS NOT NULL AND supersededAt >= ? AND status != 'cancelled' ORDER BY supersededAt LIMIT 50")
+    .all(since) as PreapprovalRow[];
+}
+
+export function markPreapprovalCancelled(id: string): void {
+  db.prepare("UPDATE mp_preapprovals SET status = 'cancelled', updatedAt = ? WHERE id = ?").run(nowIso(), id);
+}
+
+// Estorno/chargeback de uma cobrança recorrente já creditada: a conta volta
+// ao plano de entrada (sem a cota do plano pago), a receita sai do caixa e a
+// autorização é aposentada (o sincronizador cancela no MP; cobranças novas
+// dela são ignoradas).
+function reverseSubscriptionCredit(row: PaymentRow, mpStatus: string, paymentId: string | null): void {
+  if (!row.accountType || !row.accountId) return;
+  const current = subscriptionRow(row.accountType, row.accountId);
+  const preapprovalId = row.preapprovalId ?? null;
+  const plan = current ? getPlan(current.planId) : undefined;
+  const fundedByIt = Boolean(current && current.recurring && preapprovalId && current.mpPreapprovalId === preapprovalId);
+  if (fundedByIt) startEntryPlan(row.accountType, row.accountId, nowIso(), "expired", plan);
+  recordTx({
+    accountType: row.accountType,
+    accountId: row.accountId,
+    kind: "payment_refund",
+    description: `Estorno da cobrança no cartão${plan && fundedByIt ? ` (${plan.name})` : ""} — ${mpStatus === "charged_back" ? "chargeback" : "reembolso"}`,
+    amount: -Math.abs(Number(row.amount) || 0),
+    ref: `mp_sub:${row.id.replace(/^sub_/, "")}`,
+  });
+  upsertPayment({
+    ...row,
+    status: "refunded",
+    mpStatus,
+    detail: `estorno (${mpStatus})`,
+    linkedPaymentId: paymentId ?? row.linkedPaymentId ?? null,
+  });
+  if (preapprovalId) {
+    db.prepare("UPDATE mp_preapprovals SET supersededAt = COALESCE(supersededAt, ?), updatedAt = ? WHERE id = ?").run(nowIso(), nowIso(), preapprovalId);
+  }
+}
+
+// Pagamento (tópico "payment") que nasceu de uma assinatura. Aprovado: só
+// registra (quem credita é a cobrança). Estornado: desfaz a cobrança ligada.
+function applyLinkedSubscriptionPayment(p: MpPaymentInput, existing: PaymentRow | null, ref: ReturnType<typeof parseSubRef>): PaymentOutcome {
+  const id = String(p.id);
+  const byPayment = db.prepare("SELECT * FROM mp_payments WHERE linkedPaymentId = ? AND id LIKE 'sub\\_%' ESCAPE '\\'").get(id) as PaymentRow | undefined;
+  const byCharge = p.authorizedPaymentId ? getPaymentRow(`sub_${p.authorizedPaymentId}`) : null;
+  const byPreapproval = p.preapprovalId
+    ? (db
+        .prepare("SELECT * FROM mp_payments WHERE preapprovalId = ? AND id LIKE 'sub\\_%' ESCAPE '\\' AND status IN ('credited','refunded') ORDER BY createdAt DESC LIMIT 1")
+        .get(p.preapprovalId) as PaymentRow | undefined)
+    : undefined;
+  const charge = byPayment ?? byCharge ?? byPreapproval ?? null;
+  const local = p.preapprovalId ? getPreapproval(p.preapprovalId) : null;
+  const owner = charge?.accountType && charge.accountId ? { accountType: charge.accountType, accountId: charge.accountId } : (local ?? ref);
+  const base = {
+    id,
+    mpStatus: p.status,
+    externalReference: p.externalReference ?? "",
+    accountType: owner?.accountType ?? null,
+    accountId: owner?.accountId ?? null,
+    amount: Number(p.amount) || 0,
+    preapprovalId: p.preapprovalId ?? charge?.preapprovalId ?? null,
+  };
+  if (REVERSAL_STATUSES.has(p.status)) {
+    if (existing?.status === "refunded") return "already_refunded";
+    if (!charge) {
+      upsertPayment({ ...base, status: "invalid", detail: `estorno (${p.status}) de assinatura sem cobrança ligada — conferir no admin` });
+      return "invalid";
+    }
+    if (charge.status === "refunded") {
+      upsertPayment({ ...base, status: "refunded", detail: `estorno (${p.status}) já aplicado na cobrança ${charge.id}` });
+      return "already_refunded";
+    }
+    if (charge.status !== "credited") {
+      upsertPayment({ ...base, status: "refunded", detail: "estornado antes de ser creditado" });
+      return "ignored";
+    }
+    reverseSubscriptionCredit(charge, p.status, id);
+    upsertPayment({ ...base, status: "refunded", detail: `estorno (${p.status}) da cobrança ${charge.id}` });
+    return "refunded";
+  }
+  if (existing?.status === "refunded") return "already_refunded";
+  // guarda a ligação para um estorno futuro achar a cobrança
+  if (charge && !charge.linkedPaymentId) {
+    db.prepare("UPDATE mp_payments SET linkedPaymentId = ? WHERE id = ?").run(id, charge.id);
+  }
+  upsertPayment({
+    ...base,
+    status: "linked",
+    detail: charge ? `cobrança da assinatura (${charge.id})` : `cobrança da assinatura (status ${p.status})`,
+  });
+  return "ignored";
+}
+
+// Cobrança recorrente: cada pagamento aprovado renova o período e recarrega a
+// cota do plano (sem acumular). Idempotente pelo id da cobrança.
+// - cobrança de autorização cancelada/substituída não liga nada (fica no
+//   admin para estornar);
+// - a 1ª cobrança de uma assinatura nova substitui a anterior (o
+//   sincronizador cancela a antiga no MP);
+// - reembolso/chargeback de uma cobrança creditada desfaz o plano.
+export function applySubscriptionPayment(input: SubscriptionPaymentInput, now: Date = new Date()): PaymentOutcome {
+  const paymentKey = `sub_${input.authorizedPaymentId}`;
+  return db
+    .transaction((): PaymentOutcome => {
+      const existing = getPaymentRow(paymentKey);
+      const local = getPreapproval(input.preapprovalId) as (PreapprovalRow & { supersededAt?: string | null }) | null;
+      const ref = local
+        ? { accountType: local.accountType, accountId: local.accountId, planId: local.planId, period: local.period }
+        : parseSubRef(input.externalReference);
+      const base = {
+        id: paymentKey,
+        mpStatus: input.mpStatus,
+        externalReference: input.externalReference ?? `preapproval:${input.preapprovalId}`,
+        accountType: ref?.accountType ?? null,
+        accountId: ref?.accountId ?? null,
+        amount: Number(input.amount) || 0,
+        linkedPaymentId: input.paymentId ? String(input.paymentId) : null,
+        preapprovalId: input.preapprovalId || null,
+      };
+      if (!input.approved) {
+        if (existing?.status === "refunded") return "already_refunded";
+        if (existing?.status === "credited") {
+          if (!REVERSAL_STATUSES.has(input.mpStatus)) return "ignored";
+          reverseSubscriptionCredit({ ...existing, linkedPaymentId: existing.linkedPaymentId ?? base.linkedPaymentId, preapprovalId: existing.preapprovalId ?? base.preapprovalId }, input.mpStatus, base.linkedPaymentId);
+          return "refunded";
+        }
+        if (!ref) {
+          upsertPayment({ ...base, status: "invalid", detail: "assinatura desconhecida" });
+          return "invalid";
+        }
+        upsertPayment({ ...base, status: existing?.status === "rejected" ? "rejected" : "pending", detail: `cobrança recorrente ${input.mpStatus}` });
+        return "ignored";
+      }
+      if (existing?.status === "credited") return "already_credited";
+      if (existing?.status === "refunded") return "already_refunded";
+      if (!ref) {
+        upsertPayment({ ...base, status: "invalid", detail: "assinatura desconhecida" });
+        return "invalid";
+      }
+      if (preapprovalRetired(local)) {
+        upsertPayment({ ...base, status: "invalid", detail: "cobrança de assinatura cancelada ou substituída — estornar no Mercado Pago" });
+        return "invalid";
+      }
+      const plan = getPlan(ref.planId);
+      if (!plan || plan.accountType !== ref.accountType || !isPaidPlan(plan)) {
+        upsertPayment({ ...base, status: "invalid", detail: "plano inválido" });
+        return "invalid";
+      }
+      const expected = local?.amount ?? periodPrice(plan.monthlyPrice, ref.period);
+      if (base.amount + 0.01 < expected) {
+        upsertPayment({ ...base, status: "invalid", detail: `valor pago ${base.amount} menor que ${expected}` });
+        return "invalid";
+      }
+      const at = now.toISOString();
+      const months = PERIOD_DISCOUNT[ref.period].months;
+      const current = subscriptionRow(ref.accountType, ref.accountId);
+      // mesmo plano ainda vigente (renovação no cartão, ou pré-pago que vira
+      // cartão): o período novo começa no fim do atual — nada pago se perde
+      const currentValid = Boolean(
+        current &&
+          !subscriptionExpired({ renewsAt: current.renewsAt, recurring: Boolean(current.recurring), cancelAtPeriodEnd: Boolean(current.cancelAtPeriodEnd) }, now)
+      );
+      const samePlan = Boolean(current && current.planId === plan.id && (current.recurring || currentValid));
+      writeSubscription({
+        accountType: ref.accountType,
+        accountId: ref.accountId,
+        planId: plan.id,
+        period: ref.period,
+        status: "active",
+        startedAt: samePlan ? current!.startedAt : at,
+        renewsAt: nextPeriodEnd(samePlan ? current!.renewsAt : null, now, months),
+        lastRefillAt: at,
+        recurring: true,
+        cancelAtPeriodEnd: false,
+        mpPreapprovalId: input.preapprovalId,
+        mpStatus: "authorized",
+      });
+      setPlanCoins(ref.accountType, ref.accountId, planQuota(plan));
+      recordTx({
+        accountType: ref.accountType,
+        accountId: ref.accountId,
+        kind: "subscription_renewal",
+        description: `${plan.name} · cobrança no cartão (${PERIOD_DISCOUNT[ref.period].label})`,
+        amount: base.amount,
+        coins: planQuota(plan),
+        ref: `mp_sub:${input.authorizedPaymentId}`,
+        at,
+      });
+      db.prepare("UPDATE mp_preapprovals SET status = 'authorized', updatedAt = ? WHERE id = ?").run(at, input.preapprovalId);
+      // uma assinatura só por conta: as outras abertas saem (cancelar no MP)
+      supersedeOtherPreapprovals(ref.accountType, ref.accountId, input.preapprovalId);
+      upsertPayment({ ...base, status: "credited", detail: "" });
+      return "credited";
+    })
+    .immediate();
+}
+
+// Cancelar a renovação: o plano vale até o fim do período já pago.
+export function markCancelAtPeriodEnd(accountType: AccountType, accountId: string): Subscription | null {
+  const sub = subscriptionRow(accountType, accountId);
+  if (!sub || !sub.recurring) return null;
+  writeSubscription({ ...sub, cancelAtPeriodEnd: true, mpStatus: "cancelled" });
+  if (sub.mpPreapprovalId) {
+    db.prepare("UPDATE mp_preapprovals SET status = 'cancelled', supersededAt = COALESCE(supersededAt, ?), updatedAt = ? WHERE id = ?").run(nowIso(), nowIso(), sub.mpPreapprovalId);
+  }
+  // nenhuma outra autorização da conta continua cobrando
+  supersedeOtherPreapprovals(accountType, accountId, sub.mpPreapprovalId ?? null);
+  return getSubscription(accountType, accountId);
+}
+
+export function recurringSubscriptions(): SubscriptionRow[] {
+  const rows = db.prepare("SELECT accountType, accountId FROM subscriptions WHERE recurring = 1").all() as { accountType: AccountType; accountId: string }[];
+  return rows.map((r) => subscriptionRow(r.accountType, r.accountId)).filter((r): r is SubscriptionRow => Boolean(r));
 }

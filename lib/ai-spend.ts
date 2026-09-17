@@ -75,6 +75,8 @@ tenantColumn("ai_errors");
 addColumnIfMissing("ai_usage", "tier", "TEXT");
 
 import { estimateCostUsd, type TokenUsage } from "./ai-spend-cost";
+import { getKv, setKv } from "./kv-settings";
+import { effectiveAccountCap } from "./ai-margin";
 
 export { estimateCostUsd, type TokenUsage };
 
@@ -174,6 +176,19 @@ export function aiAccountLimitUsd(tier: SpendTier): number {
   return Number.POSITIVE_INFINITY;
 }
 
+// Ajuste do admin no teto diário de UMA conta (null = padrão da faixa).
+const capKey = (accountType: string, accountId: string) => `ai_cap_override:${accountType}:${accountId}`;
+export function accountCapOverride(accountType: string, accountId: string): number | null {
+  const value = getKv<{ usd: number | null }>(capKey(accountType, accountId), { usd: null }).usd;
+  return typeof value === "number" && Number.isFinite(value) && value >= 0 ? value : null;
+}
+export function setAccountCapOverride(accountType: string, accountId: string, usd: number | null): void {
+  setKv(capKey(accountType, accountId), { usd: usd === null ? null : Math.max(0, usd) });
+}
+export function accountCapFor(accountType: AccountType, accountId: string, tier: SpendTier): number {
+  return effectiveAccountCap(aiAccountLimitUsd(tier), accountCapOverride(accountType, accountId));
+}
+
 export function accountSpendTodayUsd(accountType: AccountType, accountId: string): number {
   const row = db
     .prepare("SELECT COALESCE(SUM(costUsd),0) AS c FROM ai_usage WHERE accountType = ? AND accountId = ? AND day = ?")
@@ -189,7 +204,7 @@ export function aiBudgetBlock(ctx: AiContext | undefined = currentAiContext()): 
   const tier = tierOf(ctx);
   if (!tier || !ctx?.accountType || !ctx.accountId) return null;
   if (tier === "free" && aiFreePoolSpendTodayUsd() >= aiFreePoolLimitUsd()) return "free_pool";
-  if (accountSpendTodayUsd(ctx.accountType, ctx.accountId) >= aiAccountLimitUsd(tier)) return "account";
+  if (accountSpendTodayUsd(ctx.accountType, ctx.accountId) >= accountCapFor(ctx.accountType, ctx.accountId, tier)) return "account";
   return null;
 }
 
@@ -245,6 +260,47 @@ export function spendByDay(days = 14, agencyId?: string | null): { day: string; 
   return db
     .prepare(`SELECT day, SUM(costUsd) AS costUsd, COUNT(*) AS calls FROM ai_usage WHERE day >= ? ${where} GROUP BY day ORDER BY day`)
     .all(since, ...(agencyId ? [agencyId] : [])) as { day: string; costUsd: number; calls: number }[];
+}
+
+// Custo por ação e modelo (admin): onde o dinheiro de IA está indo.
+export type ActionModelRow = { action: string; provider: string; model: string; calls: number; costUsd: number; webSearches: number };
+export function usageByActionModel(days = 30, agencyId?: string | null): ActionModelRow[] {
+  const since = new Date(Date.now() - days * 86_400_000).toISOString();
+  const where = agencyId ? "AND agencyId = ?" : "";
+  return db
+    .prepare(
+      `SELECT action, provider, model, COUNT(*) AS calls, SUM(costUsd) AS costUsd, SUM(webSearches) AS webSearches
+       FROM ai_usage WHERE createdAt >= ? ${where} GROUP BY action, provider, model ORDER BY costUsd DESC LIMIT 100`
+    )
+    .all(since, ...(agencyId ? [agencyId] : [])) as ActionModelRow[];
+}
+
+// Custo de IA e receita confirmada por conta no período (entrada da margem).
+export function costAndRevenueByAccount(days = 30, agencyId?: string | null) {
+  const since = new Date(Date.now() - days * 86_400_000).toISOString();
+  const where = agencyId ? "AND agencyId = ?" : "";
+  const args = agencyId ? [agencyId] : [];
+  const costs = db
+    .prepare(
+      `SELECT accountType, accountId, SUM(costUsd) AS costUsd, COUNT(*) AS calls FROM ai_usage
+       WHERE createdAt >= ? ${where} GROUP BY accountType, accountId`
+    )
+    .all(since, ...args) as { accountType: string | null; accountId: string | null; costUsd: number; calls: number }[];
+  const revenue = db
+    .prepare(
+      `SELECT accountType, accountId, SUM(amount) AS revenueBrl FROM billing_transactions
+       WHERE createdAt >= ? AND amount != 0 ${where} GROUP BY accountType, accountId`
+    )
+    .all(since, ...args) as { accountType: string | null; accountId: string | null; revenueBrl: number }[];
+  return { costs, revenue };
+}
+
+// Caracteres de voz (TTS) gerados hoje por uma conta.
+export function ttsCharsTodayForAccount(accountType: string, accountId: string): number {
+  const row = db
+    .prepare("SELECT COALESCE(SUM(units),0) AS c FROM ai_usage WHERE day = ? AND provider LIKE 'tts_%' AND accountType = ? AND accountId = ?")
+    .get(new Date().toISOString().slice(0, 10), accountType, accountId) as { c: number };
+  return row.c;
 }
 
 export function purgeOldAiErrors(olderThanDays = 90): number {

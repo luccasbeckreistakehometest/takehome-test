@@ -1,5 +1,5 @@
 import { randomUUID } from "crypto";
-import { db, getClient, tenantColumn } from "./db";
+import { addColumnIfMissing, db, getClient, tenantColumn } from "./db";
 import { kvKeyFor } from "./tenancy-rules";
 import {
   createScheduledPost,
@@ -42,6 +42,11 @@ export type ApprovalEvent = {
   decision: ApprovalDecision;
   note: string;
   actions: ApprovalEventAction[];
+  // portal (logado) ou link (sem login); quem aprovou pelo link se identifica
+  source: "portal" | "link";
+  approverName: string;
+  // aprovação de post do calendário (sem entrega): deliverableId/projectId vazios
+  postId: string | null;
   createdAt: string;
 };
 
@@ -60,6 +65,9 @@ db.exec(`
   CREATE INDEX IF NOT EXISTS idx_approval_events_project ON approval_events(projectId, createdAt);
 `);
 tenantColumn("approval_events");
+addColumnIfMissing("approval_events", "source", "TEXT NOT NULL DEFAULT 'portal'");
+addColumnIfMissing("approval_events", "approverName", "TEXT NOT NULL DEFAULT ''");
+addColumnIfMissing("approval_events", "postId", "TEXT");
 
 const RULES_KEY = "approval_rules";
 
@@ -122,11 +130,21 @@ export function listApprovalEvents(filter: {
   ).map(toEvent);
 }
 
-function recordEvent(input: Omit<ApprovalEvent, "id" | "createdAt">): ApprovalEvent {
-  const event: ApprovalEvent = { ...input, id: randomUUID(), createdAt: new Date().toISOString() };
+type EventInput = Omit<ApprovalEvent, "id" | "createdAt" | "source" | "approverName" | "postId"> &
+  Partial<Pick<ApprovalEvent, "source" | "approverName" | "postId">>;
+
+export function recordEvent(input: EventInput): ApprovalEvent {
+  const event: ApprovalEvent = {
+    ...input,
+    source: input.source ?? "portal",
+    approverName: input.approverName ?? "",
+    postId: input.postId ?? null,
+    id: randomUUID(),
+    createdAt: new Date().toISOString(),
+  };
   db.prepare(
-    `INSERT INTO approval_events (id, agencyId, deliverableId, projectId, clientId, actor, decision, note, actions, createdAt)
-     VALUES (@id, (SELECT agencyId FROM clients WHERE id = @clientId), @deliverableId, @projectId, @clientId, @actor, @decision, @note, @actions, @createdAt)`
+    `INSERT INTO approval_events (id, agencyId, deliverableId, projectId, clientId, actor, decision, note, actions, source, approverName, postId, createdAt)
+     VALUES (@id, (SELECT agencyId FROM clients WHERE id = @clientId), @deliverableId, @projectId, @clientId, @actor, @decision, @note, @actions, @source, @approverName, @postId, @createdAt)`
   ).run({ ...event, actions: JSON.stringify(event.actions) });
   return event;
 }
@@ -150,6 +168,8 @@ export function decideDeliverable(input: {
   actor: ApprovalActor;
   decision: ApprovalDecision;
   note?: string;
+  source?: "portal" | "link";
+  approverName?: string;
 }): DecisionResult | null {
   const deliverable = getDeliverable(input.deliverableId);
   if (!deliverable || deliverable.kind === "reference") return null;
@@ -157,6 +177,9 @@ export function decideDeliverable(input: {
   const client = project ? getClient(project.clientId) : null;
   if (!project || !client) return null;
   const note = (input.note ?? "").trim().slice(0, 1000);
+  const origin = { source: input.source ?? "portal", approverName: (input.approverName ?? "").slice(0, 80) } as const;
+  const who = origin.approverName ? `${origin.approverName} (${client.name})` : client.name;
+  const via = origin.source === "link" ? " pelo link" : "";
   const link = appLink(`/clients/${client.id}?project=${project.id}`);
   const projectHref = `/clients/${client.id}?project=${project.id}`;
 
@@ -167,7 +190,7 @@ export function decideDeliverable(input: {
       audience: "agency",
       clientId: client.id,
       projectId: project.id,
-      text: `↩ ${client.name} pediu ajustes em "${deliverable.title}"${note ? `: ${note.slice(0, 120)}` : ""}`,
+      text: `↩ ${who} pediu ajustes${via} em "${deliverable.title}"${note ? `: ${note.slice(0, 120)}` : ""}`,
       href: projectHref,
     });
     actions.push({ type: "activity", reason: "changes" });
@@ -190,6 +213,7 @@ export function decideDeliverable(input: {
       decision: "changes_requested",
       note,
       actions,
+      ...origin,
     });
     return { event, deliverable: getDeliverable(deliverable.id)!, project: getProject(project.id)!, alreadyDecided: false };
   }
@@ -246,7 +270,7 @@ export function decideDeliverable(input: {
     clientId: client.id,
     projectId: project.id,
     text:
-      `✅ ${input.actor === "client" ? client.name : "Agência"} aprovou "${deliverable.title}"` +
+      `✅ ${input.actor === "client" ? who : "Agência"} aprovou${via} "${deliverable.title}"` +
       (postDraft ? " · rascunho de post criado" : ""),
     href: postDraft ? "/calendar" : projectHref,
   });
@@ -276,6 +300,7 @@ export function decideDeliverable(input: {
     decision: "approved",
     note,
     actions,
+    ...origin,
   });
   return { event, deliverable: getDeliverable(deliverable.id)!, project: getProject(project.id)!, alreadyDecided: false };
 }

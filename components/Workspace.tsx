@@ -36,6 +36,16 @@ import AttendantTab from "./AttendantTab";
 import TimeTab from "./TimeTab";
 import BrandVoiceCard from "./BrandVoiceCard";
 import CampaignTab from "./CampaignTab";
+import { ApprovalLinkCard } from "./ApprovalLinkPanel";
+import PackageTab from "./PackageTab";
+import { PackageSummaryCard } from "./PackageUsage";
+import InvoicesPanel from "./InvoicesPanel";
+import CarouselTab from "./CarouselTab";
+import BriefingVoiceStart from "./BriefingVoiceStart";
+import LinksTab from "./LinksTab";
+import AiRadarTab from "./AiRadarTab";
+import ClicksCard from "./ClicksCard";
+import { briefingCompleteness, BRIEFING_READY_PCT } from "@/lib/activation-rules";
 import {
   CampaignPlanView,
   ClientReportView,
@@ -48,8 +58,7 @@ import {
   VisualIdentityView,
 } from "./renderers";
 import { Button, Card, ErrorBox, Spinner, Tag } from "./ui";
-
-type TabKey = "dashboard" | "briefing" | "projects" | "sales" | "attendant" | "time" | "campaign30" | GenerationType;
+import { groupOfTab, isTabKey, resolveTab, visibleGroups, type TabKey } from "@/lib/workspace-tabs";
 
 function nextMonthLabel(): string {
   const date = new Date();
@@ -67,12 +76,37 @@ export default function Workspace({
   onClientUpdated: (client: Client) => void;
 }) {
   const router = useRouter();
-  const [tab, setTab] = useState<TabKey>("dashboard");
-  const [initialProjectId, setInitialProjectId] = useState<string | undefined>();
+  // Deep-links (o workspace só renderiza no navegador, depois do fetch do
+  // cliente): ?project=... (portal do profissional), ?tab=... e ?focus=...
+  // (fluxo ideias → campanha).
+  const [linkParams] = useState(() => new URLSearchParams(typeof window === "undefined" ? "" : window.location.search));
+  const [requestedTab, setRequestedTab] = useState<string>(() =>
+    linkParams.get("project") ? "projects" : (linkParams.get("tab") ?? "dashboard")
+  );
+  const [initialProjectId, setInitialProjectId] = useState<string | undefined>(() => linkParams.get("project") ?? undefined);
   const [landingEnabled, setLandingEnabled] = useState(false);
   // A marca autônoma não vê as abas que dependem da operação da agência.
   const [viewerRole, setViewerRole] = useState<string>("agency");
-  const [campaignFocus, setCampaignFocus] = useState("");
+  const [campaignFocus, setCampaignFocus] = useState(() => linkParams.get("focus") ?? "");
+  const viewer = { viewerRole, landingEnabled };
+  // "Falando ou escrevendo?" enquanto o briefing está ralo; fica na tela
+  // depois de salvo (mostra a confirmação) até a próxima visita.
+  const [showVoiceStart] = useState(() => briefingCompleteness(client) < BRIEFING_READY_PCT);
+  // Aba efetiva: a pedida, se este visitante pode vê-la; senão o Dashboard.
+  const tab: TabKey = resolveTab(requestedTab, viewer).tab;
+  const groups = visibleGroups(viewer);
+  const activeGroup = groupOfTab(tab);
+  const setTab = (next: TabKey) => {
+    setRequestedTab(next);
+    try {
+      const url = new URL(window.location.href);
+      url.searchParams.set("tab", next);
+      url.searchParams.delete("project");
+      window.history.replaceState(window.history.state, "", url.toString());
+    } catch {
+      // URL só espelha a aba; falhar aqui não importa
+    }
+  };
   const [postTopic, setPostTopic] = useState("");
 
   // Encadeia entregáveis: qualquer análise vira campanha, posts ou demanda
@@ -102,19 +136,17 @@ export default function Workspace({
     },
   };
 
-  // Deep-links: ?project=... (portal do profissional), ?tab=... e
-  // ?focus=... (fluxo ideias → campanha)
+  // O tour guiado abre a aba do passo sem recarregar a página.
   useEffect(() => {
-    const params = new URLSearchParams(window.location.search);
-    const projectId = params.get("project");
-    if (projectId) {
-      setInitialProjectId(projectId);
-      setTab("projects");
-    }
-    const tabParam = params.get("tab");
-    if (tabParam) setTab(tabParam as TabKey);
-    const focusParam = params.get("focus");
-    if (focusParam) setCampaignFocus(focusParam);
+    const onTab = (event: Event) => {
+      const next = (event as CustomEvent<string>).detail;
+      if (isTabKey(next)) setTab(next);
+    };
+    window.addEventListener("ah:workspace-tab", onTab);
+    return () => window.removeEventListener("ah:workspace-tab", onTab);
+  });
+
+  useEffect(() => {
     api<AgencySettings & { viewerRole?: string }>("/api/settings").then((settings) => {
       setLandingEnabled(settings.landingPagesEnabled);
       if (settings.viewerRole) setViewerRole(settings.viewerRole);
@@ -167,32 +199,6 @@ export default function Workspace({
     await api(`/api/clients/${client.id}`, { method: "DELETE" });
     router.push("/");
   }
-
-  const tabs: { key: TabKey; label: string }[] = [
-    { key: "dashboard", label: "Dashboard" },
-    { key: "briefing", label: "Briefing" },
-    { key: "strategy_analysis", label: "Estratégia" },
-    { key: "market_pulse", label: "Radar" },
-    { key: "campaign_plan", label: "Campanha" },
-    { key: "roi_projection", label: "ROI & Roadmap" },
-    { key: "social_calendar", label: "Social" },
-    { key: "post_batch", label: "Posts" },
-    { key: "campaign30", label: "30 dias" },
-    { key: "visual_identity", label: "Identidade" },
-    { key: "product_recs", label: "Ofertas" },
-    ...(landingEnabled
-      ? [{ key: "landing_page" as TabKey, label: "Landing pages" }]
-      : []),
-    { key: "projects", label: "Demandas" },
-    { key: "sales", label: "Vendas & Dados" },
-    ...(viewerRole === "client"
-      ? []
-      : [
-          { key: "attendant" as TabKey, label: "Atendente" },
-          { key: "time" as TabKey, label: "Horas" },
-        ]),
-    { key: "client_report", label: "Relatório" },
-  ];
 
   const monthDefault = nextMonthLabel();
 
@@ -268,18 +274,38 @@ export default function Workspace({
         </Card>
       )}
 
-      {/* Mobile: compact native select mirroring the tabs */}
-      <div className="sm:hidden">
-        <label htmlFor="workspace-tab" className="sr-only">
+      {/* Mobile: dois selects (seção e aba) */}
+      <div className="grid grid-cols-2 gap-2 sm:hidden">
+        <label htmlFor="workspace-group" className="sr-only">
           Seção do workspace
         </label>
         <select
+          id="workspace-group"
+          data-testid="workspace-group-select"
+          value={activeGroup}
+          onChange={(e) => {
+            const group = groups.find((g) => g.key === e.target.value);
+            if (group) setTab(group.tabs[0].key);
+          }}
+          className="w-full rounded-md border border-edge bg-surface px-3 py-2 text-sm font-medium"
+        >
+          {groups.map((g) => (
+            <option key={g.key} value={g.key} className="bg-surface text-foreground">
+              {g.label}
+            </option>
+          ))}
+        </select>
+        <label htmlFor="workspace-tab" className="sr-only">
+          Aba do workspace
+        </label>
+        <select
           id="workspace-tab"
+          data-testid="workspace-tab-select"
           value={tab}
           onChange={(e) => setTab(e.target.value as TabKey)}
           className="w-full rounded-md border border-edge bg-surface px-3 py-2 text-sm font-medium text-accent"
         >
-          {tabs.map(({ key, label }) => (
+          {(groups.find((g) => g.key === activeGroup)?.tabs ?? []).map(({ key, label }) => (
             <option key={key} value={key} className="bg-surface text-foreground">
               {label}
             </option>
@@ -287,36 +313,75 @@ export default function Workspace({
         </select>
       </div>
 
-      {/* Desktop: scrollable tab row */}
-      <nav className="hidden snap-x gap-1 overflow-x-auto border-b border-edge pb-px sm:flex">
-        {tabs.map(({ key, label }) => (
-          <button
-            key={key}
-            onClick={() => setTab(key)}
-            className={`snap-start whitespace-nowrap rounded-t-md px-3.5 py-2 text-sm transition-colors ${
-              tab === key
-                ? "border border-b-0 border-edge bg-surface font-medium text-accent"
-                : "text-muted hover:text-foreground"
-            }`}
-          >
-            {label}
-          </button>
-        ))}
-      </nav>
+      {/* Desktop: seções + abas da seção */}
+      <div className="hidden space-y-2 sm:block">
+        <nav aria-label="Seções do cliente" className="flex flex-wrap gap-1" data-testid="workspace-groups">
+          {groups.map((g) => (
+            <button
+              key={g.key}
+              type="button"
+              data-group={g.key}
+              data-tour={`ws-group-${g.key}`}
+              aria-current={g.key === activeGroup ? "true" : undefined}
+              onClick={() => setTab(g.tabs[0].key)}
+              className={`rounded-full px-3.5 py-1.5 text-sm transition-colors ${
+                g.key === activeGroup
+                  ? "bg-accent font-medium text-accent-ink"
+                  : "border border-edge bg-surface-2 text-muted hover:text-foreground"
+              }`}
+            >
+              {g.label}
+            </button>
+          ))}
+        </nav>
+        <nav aria-label="Abas da seção" className="flex snap-x gap-1 overflow-x-auto border-b border-edge pb-px" data-testid="workspace-tabs">
+          {(groups.find((g) => g.key === activeGroup)?.tabs ?? []).map(({ key, label }) => (
+            <button
+              key={key}
+              type="button"
+              data-tab={key}
+              data-tour={`ws-tab-${key}`}
+              aria-current={tab === key ? "page" : undefined}
+              onClick={() => setTab(key)}
+              className={`snap-start whitespace-nowrap rounded-t-md px-3.5 py-2 text-sm transition-colors ${
+                tab === key
+                  ? "border border-b-0 border-edge bg-surface font-medium text-accent"
+                  : "text-muted hover:text-foreground"
+              }`}
+            >
+              {label}
+            </button>
+          ))}
+        </nav>
+      </div>
 
       {tab === "dashboard" && (
         <ClientDashboard
           key={`dash-${kitVersion}`}
           client={client}
           landingEnabled={landingEnabled}
-          onNavigate={(next) => setTab(next as TabKey)}
+          onNavigate={(next) => setTab(resolveTab(next, viewer).tab)}
           onRunKit={runFullKit}
-        />
+        >
+          {showVoiceStart && <BriefingVoiceStart client={client} onSaved={onClientUpdated} onWrite={() => setTab("briefing")} />}
+          <ClicksCard clientId={client.id} onOpen={() => setTab("bio")} />
+          {viewerRole !== "client" && (
+            <div className="grid gap-4 lg:grid-cols-2">
+              <PackageSummaryCard clientId={client.id} onOpen={() => setTab("package")} />
+              <ApprovalLinkCard clientId={client.id} clientName={client.name} />
+            </div>
+          )}
+        </ClientDashboard>
       )}
 
       {tab === "briefing" && (
         <div className="space-y-6">
-          <ClientForm initial={client} onSaved={onClientUpdated} />
+          {showVoiceStart && (
+            <BriefingVoiceStart key={`voice-${client.id}`} client={client} onSaved={onClientUpdated} onWrite={() => document.getElementById("briefing-form")?.scrollIntoView({ behavior: "smooth" })} />
+          )}
+          <div id="briefing-form" className="scroll-mt-20">
+            <ClientForm key={`form-${client.id}-${client.description.length}-${client.audience.length}`} initial={client} onSaved={onClientUpdated} />
+          </div>
           <BrandVoiceCard clientId={client.id} />
           <BrandAssets clientId={client.id} />
           {viewerRole === "client" ? (
@@ -561,6 +626,16 @@ export default function Workspace({
       {tab === "attendant" && <AttendantTab client={client} />}
 
       {tab === "time" && <TimeTab client={client} />}
+
+      {tab === "package" && <PackageTab clientId={client.id} />}
+
+      {tab === "invoices" && <InvoicesPanel clientId={client.id} />}
+
+      {tab === "carousels" && <CarouselTab client={client} />}
+
+      {tab === "bio" && <LinksTab client={client} />}
+
+      {tab === "ai_radar" && <AiRadarTab client={client} />}
 
       {tab === "campaign30" && <CampaignTab client={client} />}
 

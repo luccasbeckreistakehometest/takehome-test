@@ -11,3 +11,9 @@ export function isAiMock(opts: { orNoKey?: boolean } = {}): boolean {
   const hasKey = Boolean(getSettings().anthropicApiKey || process.env.ANTHROPIC_API_KEY);
   return !hasKey;
 }
+
+// A IA pode rodar agora? (modo de teste ou chave configurada)
+export function aiUsable(): boolean {
+  if (process.env.AI_MOCK === "1") return true;
+  return Boolean(getSettings().anthropicApiKey || process.env.ANTHROPIC_API_KEY);
+}

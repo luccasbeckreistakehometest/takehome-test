@@ -1,8 +1,9 @@
 import { NextResponse } from "next/server";
 import { z } from "zod";
-import { synthesise, ttsProvider } from "@/lib/tts";
+import { synthesise, ttsCached, ttsDailyCharsPerAccount, ttsProvider } from "@/lib/tts";
 import { guard, isDenied } from "@/lib/guard";
-import { beginAi } from "@/lib/metering";
+import { beginAi, payerFor } from "@/lib/metering";
+import { ttsCharsTodayForAccount } from "@/lib/ai-spend";
 
 const schema = z.object({ text: z.string().min(1).max(600), lang: z.enum(["pt", "en"]).default("pt") });
 
@@ -14,6 +15,12 @@ export async function POST(request: Request) {
   const parsed = schema.safeParse(await request.json().catch(() => ({})));
   if (!parsed.success) return NextResponse.json({ error: "Dados inválidos" }, { status: 400 });
   if (!ttsProvider()) return new Response(null, { status: 204 });
+  // teto diário de caracteres de voz por conta (frase em cache não conta)
+  const payer = payerFor(auth);
+  if (payer && !ttsCached(parsed.data.text, parsed.data.lang)) {
+    const used = ttsCharsTodayForAccount(payer.accountType, payer.accountId);
+    if (used + parsed.data.text.length > ttsDailyCharsPerAccount()) return new Response(null, { status: 204, headers: { "X-Voice-Limit": "daily" } });
+  }
   const ticket = await beginAi(request, auth, "tts", { limits: ["ttsPerAccount", "ttsPerIp"] });
   if (isDenied(ticket)) return ticket;
   try {

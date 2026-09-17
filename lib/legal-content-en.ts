@@ -51,7 +51,9 @@ export const TERMS_EN: LegalDoc = {
     {
       heading: "6. Plans, coins and payments",
       paragraphs: [
-        "Plans are prepaid for a period (monthly, quarterly, half-yearly or yearly) and do not renew automatically: when the period ends the account returns to the free plan and nothing else is charged. To stay on a paid plan, pay for a new period.",
+        "There are two ways to pay for a plan. With a one-off payment (Pix, bank slip or a single card charge) the plan is prepaid for a period (monthly, quarterly, half-yearly or yearly) and does not renew automatically: when the period ends the account returns to the free plan and nothing else is charged.",
+        "With a card subscription you authorise Mercado Pago to charge the same amount every period (monthly by default) until you cancel. The charge happens on the renewal date shown under Plans, at the price of your own subscription; if we change prices we tell you first and you can cancel. Each account has at most one card subscription: subscribing to another plan cancels the previous one as soon as the new one is approved.",
+        "To stop the renewal, click \"Cancelar renovação\" on the Plans screen — no penalty, no need to talk to anyone. The plan stays active until the end of the period you already paid for and the account then returns to the free plan. If a charge does not go through, access continues for up to 3 days while Mercado Pago retries.",
         "Each plan includes a monthly coin allowance, refilled every month of the paid period; unused allowance does not roll over. Coins bought separately do not expire while the account exists. Each AI action uses the number of coins shown in the platform; failed actions are not charged.",
         "Prices are in Brazilian reais (BRL, R$) and payments are processed by Mercado Pago (Pix, card or boleto). Your plan or coins are released once Mercado Pago confirms the payment.",
         "Cancellation, refunds and chargebacks follow the Refund Policy.",
@@ -108,8 +110,11 @@ export const PRIVACY_EN: LegalDoc = {
     {
       heading: "2. Data we process",
       bullets: [
-        "Sign-up: name, email, username, password (stored only as a hash), account type, date and version of the terms you accepted.",
+        "Sign-up: name, email, username, password (stored only as a hash), account type, date and version of the terms you accepted, and the visit source (utm parameters) that brought you to the sign-up form.",
         "Usage: sign-in records, source IP (for security and rate limits), first-session events, theme and language preferences.",
+        "Our own measurement of the public pages (no cookies): page visited, referrer, utm parameters, device type and an identifier that is a hash of a daily salt + IP + browser. The salt changes every day and is not stored with the event, so the identifier cannot follow you from one day to the next. We also record account events (sign-up, first value delivered, checkout started and payment approved).",
+        "Clicks on short links (/l/...) and visits to a brand's link page (/b/...): the same cookie-free measurement, done so the agency that owns the link can see what works.",
+        "Approval links: the name a person types when approving or asking for changes, and the date of the decision.",
         "Content: briefs, uploaded files and images, deliverables, comments, messages, reports and AI output.",
         "Spoken brief: the transcript of what you say. Your browser's speech recognition produces it (in Chrome, a Google service); Marqa only receives the text and does not record audio.",
         "Messaging (when an agency connects it): contact names and numbers/identifiers and the text of WhatsApp/Instagram messages.",
@@ -124,7 +129,7 @@ export const PRIVACY_EN: LegalDoc = {
         "Charging for plans and coins and keeping financial records — contract and legal obligation (art. 7, II and V).",
         "Security, fraud and abuse prevention, rate limits and access logs — legitimate interest and the legal obligation in Brazil's Internet Civil Framework (art. 7, II and IX).",
         "Answering contact and access requests — pre-contract steps and legitimate interest (art. 7, V and IX).",
-        "Improving the product with aggregated usage metrics — legitimate interest (art. 7, IX).",
+        "Improving the product with aggregated usage metrics and measuring where visits and sign-ups come from, with no cookies and no personal profiling — legitimate interest (art. 7, IX).",
       ],
       paragraphs: ["We do not sell personal data and we do not use it for third-party advertising."],
     },
@@ -152,6 +157,7 @@ export const PRIVACY_EN: LegalDoc = {
         "Account data and content: while the account exists. When you delete your account we erase it together with your own workspace (self-registered brand or professional profile).",
         "Financial records: kept for the period tax law requires (usually 5 years), unlinked from you after account deletion.",
         "Access logs (date, time and IP of sign-ins): 6 months, as Brazil's Internet Civil Framework requires, then deleted.",
+        "Measurement events for public pages and link clicks: 90 days in detail; after that only the daily counts remain, with no identifier.",
         "Contact messages: up to 2 years after they are answered.",
         "Backups: rotated within a few weeks; deleted data leaves them at the end of that cycle.",
       ],
@@ -172,7 +178,9 @@ export const PRIVACY_EN: LegalDoc = {
     },
     {
       heading: "9. Cookies",
-      paragraphs: ["We only use an essential sign-in cookie and local storage for theme and language. See the Cookie Policy."],
+      paragraphs: [
+        "We only use an essential sign-in cookie and browser storage for theme and language and, while the tab is open, the source (utm) of your first visit. Our audience measurement uses no cookies and no third-party trackers. See the Cookie Policy.",
+      ],
     },
     {
       heading: "10. Children",
@@ -206,18 +214,25 @@ export const REFUNDS_EN: LegalDoc = {
       ],
     },
     {
-      heading: "3. After 7 days",
+      heading: "3. Card subscription: how to cancel",
       paragraphs: [
-        "Plans are prepaid and do not renew automatically, so there is no future charge to cancel: the plan simply ends at the end of the paid period.",
+        "A card subscription renews on its own every period until you cancel. To cancel, open Plans and click \"Cancelar renovação\": nothing else is charged, the plan stays active until the end of the period you already paid for, and the account then returns to the free plan. You can also cancel the authorisation directly at Mercado Pago.",
+        "The 7-day cooling-off right applies to each charge: cancel within 7 calendar days of a renewal and we refund that charge and move the account back to the free plan.",
+        "If a renewal is not paid, access continues for up to 3 days while Mercado Pago retries; after that the account returns to the free plan with nothing outstanding.",
+      ],
+    },
+    {
+      heading: "4. After 7 days",
+      paragraphs: [
         "Outside the cooling-off period we do not refund a period already started or coins already bought, except for a failure on our side that prevents you from using the service, a billing error, or where the law requires it. Contact us through the form in those cases.",
       ],
     },
     {
-      heading: "4. Failed AI actions",
+      heading: "5. Failed AI actions",
       paragraphs: ["If an AI action fails, the coins reserved for it return to your wallet automatically."],
     },
     {
-      heading: "5. Payments between agency, brand and professional",
+      heading: "6. Payments between agency, brand and professional",
       paragraphs: [
         "Amounts agreed between agency, brand and professional inside a job are negotiated and paid directly between them. Marqa does not intermediate or refund those payments.",
       ],
@@ -239,8 +254,18 @@ export const COOKIES_EN: LegalDoc = {
     },
     {
       heading: "Browser local storage",
-      bullets: ["Light/dark theme and interface language.", "Flags for welcome screens and celebrations already shown."],
+      bullets: [
+        "Light/dark theme and interface language.",
+        "Flags for welcome screens and celebrations already shown.",
+        "marqa_ft — the source (utm) of your first visit, kept only while the tab is open and sent along if you create an account.",
+      ],
       paragraphs: ["This stays in your browser and is not used to track you."],
+    },
+    {
+      heading: "Cookie-free audience measurement",
+      paragraphs: [
+        "We count visits to the public pages, clicks on short links (/l/...) and visits to brand link pages (/b/...) on our own server, with no cookies: a visitor is identified by a hash of a daily salt + IP + browser that changes every day. Detailed events are kept for 90 days; after that only the daily counts remain.",
+      ],
     },
     {
       heading: "What we do not use",

@@ -13,7 +13,10 @@ import GlobalSearch from "@/components/GlobalSearch";
 import AssistantWidget from "@/components/AssistantWidget";
 import ThemeToggle from "@/components/ThemeToggle";
 import Tour from "@/components/Tour";
-import { Icon, type IconName } from "@/components/icons";
+import { tourKind } from "@/lib/tour-steps";
+import { Icon } from "@/components/icons";
+import AgencyNav from "@/components/AgencyNav";
+import Track from "@/components/Track";
 import { MarqaMark } from "@/components/MarqaLogo";
 import { purchaseBlockReason } from "@/lib/plans";
 import "./globals.css";
@@ -48,20 +51,6 @@ export async function generateMetadata(): Promise<Metadata> {
   };
 }
 
-const AGENCY_NAV: { href: string; label: string; icon: IconName }[] = [
-  { href: "/", label: "Hoje", icon: "home" },
-  { href: "/clients", label: "Clientes", icon: "briefcase" },
-  { href: "/production", label: "Produção", icon: "kanban" },
-  { href: "/calendar", label: "Calendário", icon: "calendar" },
-  { href: "/insights", label: "Insights", icon: "chart" },
-  { href: "/messages", label: "Mensagens", icon: "message" },
-  { href: "/prospecting", label: "Prospecção", icon: "radar" },
-  { href: "/professionals", label: "Profissionais", icon: "users" },
-  { href: "/agenda", label: "Agenda", icon: "calendar" },
-  { href: "/ideas", label: "Ideias", icon: "lightbulb" },
-  { href: "/plans", label: "Planos", icon: "money" },
-];
-
 export default async function RootLayout({
   children,
 }: Readonly<{
@@ -89,8 +78,9 @@ export default async function RootLayout({
       </head>
       <body className="min-h-full flex flex-col">
         <Translator />
+        <Track />
         <JobsIndicator />
-        <Tour role={session?.role ?? null} />
+        <Tour kind={tourKind(session)} refId={session?.refId ?? null} />
         <GlobalSearch />
         <header className="sticky top-0 z-40 border-b border-edge bg-background/80 backdrop-blur">
           <div className="mx-auto flex h-14 w-full max-w-6xl items-center justify-between gap-4 px-4">
@@ -125,43 +115,7 @@ export default async function RootLayout({
               </span>
             </Link>
             <div className="flex items-center gap-1 text-sm text-muted">
-              {session?.role === "agency" && (
-                <nav aria-label="Navegação" className="hidden items-center gap-0.5 lg:flex">
-                  {AGENCY_NAV.map((item) => (
-                    <Link
-                      key={item.href}
-                      href={item.href}
-                      data-tour={item.href === "/" ? "nav-home" : `nav-${item.href.slice(1)}`}
-                      className="group flex items-center gap-1.5 whitespace-nowrap rounded-md px-2.5 py-1.5 transition-colors hover:bg-surface-2 hover:text-foreground"
-                    >
-                      <Icon name={item.icon} size={16} className="opacity-70 transition-opacity group-hover:opacity-100" />
-                      {item.label}
-                    </Link>
-                  ))}
-                </nav>
-              )}
-              {session?.role === "agency" && (
-                <details className="relative lg:hidden">
-                  <summary
-                    aria-label="Menu de navegação"
-                    className="grid size-8 list-none place-items-center rounded-md hover:bg-surface-2 [&::-webkit-details-marker]:hidden"
-                  >
-                    <Icon name="kanban" size={18} />
-                  </summary>
-                  <nav aria-label="Navegação principal" className="absolute right-0 top-10 z-50 w-52 rounded-xl border border-edge bg-surface p-1.5 shadow-2xl">
-                    {AGENCY_NAV.map((item) => (
-                      <Link
-                        key={item.href}
-                        href={item.href}
-                        className="flex items-center gap-2.5 rounded-md px-3 py-2 transition-colors hover:bg-surface-2 hover:text-foreground"
-                      >
-                        <Icon name={item.icon} size={16} />
-                        {item.label}
-                      </Link>
-                    ))}
-                  </nav>
-                </details>
-              )}
+              {session?.role === "agency" && <AgencyNav />}
               <div className="mx-1 hidden h-5 w-px bg-edge sm:block" />
               <ThemeToggle />
               {session && session.role !== "admin" && (

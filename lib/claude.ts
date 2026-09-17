@@ -71,6 +71,23 @@ export function assertAiAvailable(ctx?: AiContext): void {
   }
 }
 
+// Modelo barato (classificação curta, sem pensamento estendido).
+export const CHEAP_MODEL = "claude-haiku-4-5";
+
+// Com AI_MOCK=1 nenhuma chamada sai, mas o caminho é o mesmo da produção:
+// os tetos de gasto valem e o ledger ganha uma linha com um uso fictício
+// pequeno (o admin e os testes enxergam o custo por conta/ação).
+export const MOCK_USAGE = { input_tokens: 400, output_tokens: 150 } as const;
+export function recordMockCall(opts: { tier?: ModelTier; model?: string; webSearches?: number } = {}): void {
+  assertAiAvailable();
+  const model = opts.model ?? pickModel(opts.tier ?? "premium");
+  try {
+    recordAiUsage(model, { ...MOCK_USAGE, server_tool_use: { web_search_requests: opts.webSearches ?? 0 } });
+  } catch (error) {
+    console.error("[ai] falha ao registrar uso (mock):", error);
+  }
+}
+
 export const WEB_SEARCH_TOOL = {
   type: "web_search_20260209" as const,
   name: "web_search" as const,
@@ -127,6 +144,10 @@ type RequestOptions = {
     label?: string;
   }[];
   tier?: ModelTier;
+  // modelo fixo (ex.: CHEAP_MODEL para classificação curta); ignora o tier
+  model?: string;
+  // localização aproximada para a busca na web (Radar de IA)
+  webSearchUserLocation?: { city?: string; region?: string; country?: string; timezone?: string };
 };
 
 // Roda a request com streaming (respostas longas) e retoma automaticamente
@@ -154,17 +175,29 @@ async function runMessage(options: RequestOptions): Promise<Anthropic.Message> {
   }
   let messages: Anthropic.MessageParam[] = [{ role: "user", content }];
 
-  const model = pickModel(options.tier ?? "premium");
+  const model = options.model ?? pickModel(options.tier ?? "premium");
+  // Haiku 4.5 não tem pensamento adaptativo: vai sem o parâmetro.
+  const thinking = model === CHEAP_MODEL ? {} : { thinking: { type: "adaptive" as const } };
+  const location = options.webSearchUserLocation;
+  const hasLocation = Boolean(location && (location.city || location.region || location.country || location.timezone));
   for (let attempt = 0; attempt < 6; attempt++) {
     assertAiAvailable();
     const message = await streamWithRetry({
       model,
       max_tokens: options.maxTokens,
-      thinking: { type: "adaptive" },
+      ...thinking,
       system: options.system,
       messages,
       ...(options.useWebSearch
-        ? { tools: [{ ...WEB_SEARCH_TOOL, max_uses: options.webSearchMaxUses ?? WEB_SEARCH_TOOL.max_uses }] }
+        ? {
+            tools: [
+              {
+                ...WEB_SEARCH_TOOL,
+                max_uses: options.webSearchMaxUses ?? WEB_SEARCH_TOOL.max_uses,
+                ...(hasLocation ? { user_location: { type: "approximate" as const, ...location } } : {}),
+              },
+            ],
+          }
         : {}),
       ...(options.outputSchema
         ? {
@@ -225,8 +258,13 @@ export async function generateStructured<T>(options: {
   webSearchMaxUses?: number;
   images?: RequestOptions["images"];
   tier?: ModelTier;
+  model?: string;
+  webSearchUserLocation?: RequestOptions["webSearchUserLocation"];
 }): Promise<T> {
-  if (aiMockEnabled()) return mockFromSchema(options.schema) as T;
+  if (aiMockEnabled()) {
+    recordMockCall({ tier: options.tier, model: options.model, webSearches: options.useWebSearch ? 1 : 0 });
+    return mockFromSchema(options.schema) as T;
+  }
   try {
     const message = await runMessage({
       system: options.system,
@@ -237,6 +275,8 @@ export async function generateStructured<T>(options: {
       outputSchema: options.schema,
       images: options.images,
       tier: options.tier,
+      model: options.model,
+      webSearchUserLocation: options.webSearchUserLocation,
     });
     return extractJson<T>(message);
   } catch (error) {
@@ -273,7 +313,10 @@ export async function generateHtml(options: {
   maxTokens?: number;
   tier?: ModelTier;
 }): Promise<string> {
-  if (aiMockEnabled()) return mockLandingHtml();
+  if (aiMockEnabled()) {
+    recordMockCall({ tier: options.tier });
+    return mockLandingHtml();
+  }
   try {
     const message = await runMessage({
       system: options.system,

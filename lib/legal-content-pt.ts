@@ -50,7 +50,9 @@ export const TERMS_PT: LegalDoc = {
     {
       heading: "6. Planos, coins e pagamentos",
       paragraphs: [
-        "Os planos são pré-pagos por período (mensal, trimestral, semestral ou anual) e não renovam automaticamente: ao fim do período, a conta volta para o plano grátis, sem cobrança nova. Para continuar no plano pago, basta pagar um novo período.",
+        "Há duas formas de contratar um plano. No pagamento avulso (Pix, boleto ou cartão em uma vez) o plano é pré-pago por período (mensal, trimestral, semestral ou anual) e não renova automaticamente: ao fim do período, a conta volta para o plano grátis, sem cobrança nova.",
+        "Na assinatura no cartão, você autoriza o Mercado Pago a cobrar o mesmo valor a cada período (mensal por padrão) até você cancelar. A cobrança acontece na data de renovação mostrada em Planos e o valor vigente é o da sua assinatura; se mudarmos o preço, avisamos antes e você pode cancelar. Cada conta tem no máximo uma assinatura no cartão: ao assinar outro plano, a assinatura anterior é cancelada quando a nova for aprovada.",
+        "Para cancelar a renovação, é só clicar em \"Cancelar renovação\" na tela Planos — sem multa e sem precisar falar com ninguém. O plano continua valendo até o fim do período já pago e depois a conta volta para o grátis. Se uma cobrança não entrar, o acesso continua por até 3 dias enquanto o Mercado Pago tenta de novo.",
         "Cada plano inclui uma cota mensal de coins, renovada a cada mês do período pago e que não acumula de um mês para o outro. Coins comprados à parte não expiram enquanto a conta existir. Cada ação de IA consome uma quantidade de coins mostrada na plataforma; ações que falham não são cobradas.",
         "Os preços são em reais (R$) e os pagamentos são processados pelo Mercado Pago (Pix, cartão ou boleto). O plano ou os coins são liberados quando o Mercado Pago confirma o pagamento.",
         "Direito de arrependimento, reembolsos e estornos seguem a Política de Reembolso.",
@@ -107,8 +109,11 @@ export const PRIVACY_PT: LegalDoc = {
     {
       heading: "2. Dados que tratamos",
       bullets: [
-        "Cadastro: nome, e-mail, usuário, senha (guardada só como hash), tipo de conta, data e versão do aceite dos termos.",
+        "Cadastro: nome, e-mail, usuário, senha (guardada só como hash), tipo de conta, data e versão do aceite dos termos, e a origem da visita (parâmetros utm) que trouxe você até o cadastro.",
         "Uso: registros de acesso, IP de origem (para segurança e limites de uso), eventos do primeiro acesso, preferências de tema e idioma.",
+        "Medição própria das páginas públicas (sem cookie): página visitada, referência, parâmetros utm, tipo de dispositivo e um identificador que é o hash de um sal do dia + IP + navegador. O sal muda todo dia e não fica guardado com o evento, então o identificador não segue você de um dia para o outro. Guardamos também eventos da sua conta (cadastro, primeiro valor entregue, início de pagamento e pagamento aprovado).",
+        "Cliques em links curtos (/l/...) e visitas às páginas de links da marca (/b/...): mesma medição sem cookie, feita para a agência dona do link saber o que funciona.",
+        "Aprovação por link: o nome que a pessoa digita ao aprovar ou pedir ajuste, e a data da decisão.",
         "Conteúdo: briefings, arquivos e imagens enviados, entregáveis, comentários, mensagens, relatórios e respostas geradas por IA.",
         "Briefing falado: a transcrição do que você diz. A transcrição é feita pelo reconhecimento de voz do seu navegador (no Chrome, um serviço do Google); a Marqa recebe só o texto e não grava o áudio.",
         "Mensageria (quando conectada pela agência): nome e número/identificador de contatos e o texto das mensagens trocadas pelo WhatsApp/Instagram.",
@@ -123,7 +128,7 @@ export const PRIVACY_PT: LegalDoc = {
         "Cobrar planos e coins e emitir registros financeiros — execução de contrato e cumprimento de obrigação legal (art. 7º, II e V).",
         "Segurança, prevenção a fraude e abuso, limites de uso e registros de acesso — legítimo interesse e obrigação legal do Marco Civil da Internet (art. 7º, II e IX).",
         "Responder contatos e pedidos de acesso — procedimentos preliminares a contrato e legítimo interesse (art. 7º, V e IX).",
-        "Melhorar o produto com métricas agregadas de uso — legítimo interesse (art. 7º, IX).",
+        "Melhorar o produto com métricas agregadas de uso e medir a origem das visitas e cadastros, sem cookie e sem perfil de pessoa — legítimo interesse (art. 7º, IX).",
       ],
       paragraphs: ["Não vendemos dados pessoais e não usamos seus dados para publicidade de terceiros."],
     },
@@ -153,6 +158,7 @@ export const PRIVACY_PT: LegalDoc = {
         "Dados da conta e conteúdo: enquanto a conta existir. Ao excluir a conta, apagamos os dados da conta e do espaço de trabalho próprio (marca que se cadastrou sozinha ou perfil de profissional).",
         "Registros financeiros: mantidos pelo prazo exigido pela legislação fiscal (em geral, 5 anos), sem vínculo com a pessoa após a exclusão da conta.",
         "Registros de acesso (data, hora e IP de logins): 6 meses, como exige o Marco Civil da Internet, e depois apagados.",
+        "Eventos de medição das páginas públicas e de cliques em links: 90 dias na forma detalhada; depois disso fica só a contagem por dia, sem identificador.",
         "Mensagens de contato: até 2 anos depois de respondidas.",
         "Cópias de segurança: rotacionadas em poucas semanas; dados excluídos saem delas ao fim desse ciclo.",
       ],
@@ -174,7 +180,7 @@ export const PRIVACY_PT: LegalDoc = {
     {
       heading: "9. Cookies",
       paragraphs: [
-        "Usamos apenas cookies essenciais (sessão de login) e armazenamento local para preferências de tema e idioma. Detalhes na Política de Cookies.",
+        "Usamos apenas cookies essenciais (sessão de login) e armazenamento no navegador para preferências de tema e idioma e para guardar, durante a aba aberta, a origem (utm) da sua primeira visita. Nossa medição de audiência não usa cookie nem rastreador de terceiros. Detalhes na Política de Cookies.",
       ],
     },
     {
@@ -209,18 +215,25 @@ export const REFUNDS_PT: LegalDoc = {
       ],
     },
     {
-      heading: "3. Depois dos 7 dias",
+      heading: "3. Assinatura no cartão: como cancelar",
       paragraphs: [
-        "Os planos são pré-pagos e não renovam automaticamente, então não existe cobrança futura para cancelar: o plano simplesmente termina no fim do período pago.",
+        "A assinatura no cartão renova sozinha a cada período até você cancelar. Para cancelar, entre em Planos e clique em \"Cancelar renovação\": nada mais é cobrado, o plano vale até o fim do período já pago e depois a conta volta para o grátis. Você também pode cancelar a autorização direto no Mercado Pago.",
+        "O prazo de arrependimento de 7 dias vale para cada cobrança: se você cancelar em até 7 dias corridos de uma renovação, devolvemos o valor daquela cobrança e o plano volta para o grátis.",
+        "Se a renovação não for paga, o acesso continua por até 3 dias enquanto o Mercado Pago tenta de novo; depois a conta volta para o plano grátis, sem cobrança pendente.",
+      ],
+    },
+    {
+      heading: "4. Depois dos 7 dias",
+      paragraphs: [
         "Fora do prazo de arrependimento, não reembolsamos o período já iniciado nem coins já comprados, salvo falha nossa que impeça o uso do serviço, erro de cobrança ou quando a lei exigir. Nesses casos, fale com a gente pelo formulário de contato.",
       ],
     },
     {
-      heading: "4. Ações de IA que falham",
+      heading: "5. Ações de IA que falham",
       paragraphs: ["Se uma ação de IA falhar, os coins reservados para ela voltam automaticamente para a carteira."],
     },
     {
-      heading: "5. Pagamentos entre agência, marca e profissional",
+      heading: "6. Pagamentos entre agência, marca e profissional",
       paragraphs: [
         "Valores combinados entre agência, marca e profissional dentro das demandas são negociados e pagos diretamente entre eles. A Marqa não intermedeia nem reembolsa esses pagamentos.",
       ],
@@ -245,8 +258,15 @@ export const COOKIES_PT: LegalDoc = {
       bullets: [
         "Tema claro/escuro e idioma da interface.",
         "Marcações de telas de boas-vindas e celebrações já vistas.",
+        "marqa_ft — a origem (utm) da sua primeira visita, guardada só enquanto a aba fica aberta e enviada junto se você criar conta.",
       ],
       paragraphs: ["Esses dados ficam só no seu navegador e não são usados para rastrear você."],
+    },
+    {
+      heading: "Medição de audiência sem cookie",
+      paragraphs: [
+        "Contamos visitas às páginas públicas, cliques em links curtos (/l/...) e visitas às páginas de links das marcas (/b/...) no nosso próprio servidor, sem cookie: o visitante é identificado por um hash de um sal do dia + IP + navegador, que muda todo dia. Os eventos detalhados ficam 90 dias; depois disso só a contagem por dia.",
+      ],
     },
     {
       heading: "O que não usamos",

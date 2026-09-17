@@ -1,4 +1,4 @@
-import { db, tenantColumn } from "./db";
+import { addColumnIfMissing, db, tenantColumn } from "./db";
 
 // Primeiro acesso, salvo no servidor: onde a pessoa parou no tour e o que fez
 // na primeira sessão (linha do tempo). O localStorage do modal era só cache
@@ -24,6 +24,11 @@ db.exec(`
 `);
 tenantColumn("onboarding");
 tenantColumn("voice_briefings");
+addColumnIfMissing("voice_briefings", "turns", "INTEGER NOT NULL DEFAULT 1");
+// primeiros passos: quais já foram registrados (evento único por passo) e se
+// a pessoa fechou o card depois de concluir
+addColumnIfMissing("onboarding", "activationLogged", "TEXT NOT NULL DEFAULT '[]'");
+addColumnIfMissing("onboarding", "activationDismissedAt", "TEXT");
 
 export type OnboardingRow = { userId: string; tourCompleted: number; tourStep: number; firstSeenAt: string; completedAt: string | null; events: string };
 export type OnboardingEvent = { at: string; type: string; meta?: Record<string, unknown> };
@@ -68,8 +73,47 @@ export function saveVoiceBriefing(input: { id: string; userId: string; lang: str
   const transcript = existing ? `${existing.transcript}\n${input.transcript}` : input.transcript;
   db.prepare(`INSERT INTO voice_briefings (id,userId,agencyId,lang,transcript,extracted,createdAt)
     VALUES (?,?,(SELECT agencyId FROM users WHERE id = ?),?,?,?,?)
-    ON CONFLICT(id) DO UPDATE SET transcript = excluded.transcript, extracted = excluded.extracted`)
+    ON CONFLICT(id) DO UPDATE SET transcript = excluded.transcript, extracted = excluded.extracted, turns = voice_briefings.turns + 1`)
     .run(input.id, input.userId, input.userId, input.lang, transcript, JSON.stringify(input.extracted), new Date().toISOString());
+}
+
+// Quantas falas já tem este briefing (da própria pessoa); 0 = novo.
+export function voiceBriefingTurns(id: string, userId: string): number {
+  const row = db.prepare("SELECT turns FROM voice_briefings WHERE id = ? AND userId = ?").get(id, userId) as { turns: number } | undefined;
+  return row?.turns ?? 0;
+}
+
+export function activationState(userId: string): { logged: string[]; dismissed: boolean } {
+  const row = db.prepare("SELECT activationLogged, activationDismissedAt FROM onboarding WHERE userId = ?").get(userId) as
+    | { activationLogged: string; activationDismissedAt: string | null }
+    | undefined;
+  if (!row) return { logged: [], dismissed: false };
+  let logged: string[] = [];
+  try {
+    const parsed = JSON.parse(row.activationLogged) as unknown;
+    if (Array.isArray(parsed)) logged = parsed.filter((x): x is string => typeof x === "string");
+  } catch {
+    /* lista vazia */
+  }
+  return { logged, dismissed: Boolean(row.activationDismissedAt) };
+}
+
+// Grava os passos novos numa transação (duas abas ao mesmo tempo não
+// registram o mesmo passo duas vezes) e devolve só os novos.
+export function markActivationLogged(userId: string, keys: string[]): string[] {
+  if (keys.length === 0) return [];
+  return db.transaction(() => {
+    getOnboarding(userId);
+    const { logged } = activationState(userId);
+    const fresh = keys.filter((k) => !logged.includes(k));
+    if (fresh.length) db.prepare("UPDATE onboarding SET activationLogged = ? WHERE userId = ?").run(JSON.stringify([...logged, ...fresh].slice(-50)), userId);
+    return fresh;
+  }).immediate();
+}
+
+export function dismissActivation(userId: string): void {
+  getOnboarding(userId);
+  db.prepare("UPDATE onboarding SET activationDismissedAt = COALESCE(activationDismissedAt, ?) WHERE userId = ?").run(new Date().toISOString(), userId);
 }
 
 export function onboardingStats() {

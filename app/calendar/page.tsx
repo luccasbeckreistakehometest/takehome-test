@@ -18,6 +18,8 @@ import {
 import { Button, Card, ErrorBox, Input, Label, Select, Spinner, Tag, Textarea } from "@/components/ui";
 import { Icon } from "@/components/icons";
 import BrandVoiceCheck from "@/components/BrandVoiceCheck";
+import { ApprovalLinkDialog } from "@/components/ApprovalLinkPanel";
+import PanelTester from "@/components/PanelTester";
 
 type Post = ScheduledPostWithClient;
 type View = "month" | "week";
@@ -48,6 +50,7 @@ export default function CalendarPage() {
   const [clientFilter, setClientFilter] = useState("all");
   const [selected, setSelected] = useState<Post | null>(null);
   const [adding, setAdding] = useState<{ date: string } | null>(null);
+  const [sharing, setSharing] = useState(false);
   const [error, setError] = useState("");
 
   const load = useCallback(() => api<Post[]>("/api/scheduled-posts").then(setPosts).catch((e) => setError(e.message)), []);
@@ -131,6 +134,9 @@ export default function CalendarPage() {
               ›
             </button>
           </div>
+          <Button variant="ghost" onClick={() => setSharing(true)} data-testid="calendar-approval-link" disabled={clients.length === 0}>
+            <Icon name="send" size={14} /> Enviar para aprovação
+          </Button>
           <Button onClick={() => setAdding({ date: today })} data-testid="calendar-add">
             <Icon name="plus" size={14} /> Novo post
           </Button>
@@ -229,6 +235,7 @@ export default function CalendarPage() {
                               data-testid="calendar-post"
                               data-status={post.status}
                             >
+                              {post.clientApproval === "approved" ? "✓ " : post.clientApproval === "changes_requested" ? "↩ " : post.clientApproval === "pending" ? "⏳ " : ""}
                               {post.title}
                               {clientFilter === "all" && <span className="text-muted"> · {post.clientName}</span>}
                             </button>
@@ -252,6 +259,17 @@ export default function CalendarPage() {
           onClose={() => setSelected(null)}
           onPatch={(body) => patch(selected, body)}
           onDelete={() => remove(selected)}
+        />
+      )}
+
+      {sharing && (
+        <ApprovalLinkDialog
+          clients={clients}
+          defaultClientId={clientFilter !== "all" ? clientFilter : ""}
+          onClose={() => {
+            setSharing(false);
+            load();
+          }}
         />
       )}
 
@@ -288,7 +306,7 @@ function PostPanel({
   const [caption, setCaption] = useState(post.caption);
   return (
     <div className="fixed inset-0 z-[70] flex items-end justify-center bg-black/40 p-4 sm:items-center" onClick={onClose}>
-      <div className="w-full max-w-lg animate-pop-in rounded-2xl border border-edge bg-surface p-5 shadow-2xl [transform-origin:center]" onClick={(e) => e.stopPropagation()} data-testid="post-panel">
+      <div className="max-h-[calc(100dvh-2rem)] w-full max-w-lg animate-pop-in overflow-y-auto overscroll-contain rounded-2xl border border-edge bg-surface p-5 shadow-2xl [transform-origin:center]" onClick={(e) => e.stopPropagation()} data-testid="post-panel">
         <div className="flex items-start justify-between gap-3">
           <div>
             <p className="text-xs uppercase tracking-widest text-accent">{post.clientName}</p>
@@ -299,6 +317,9 @@ function PostPanel({
               {post.hookType && <Tag>{post.hookType}</Tag>}
               <Tag>{STATUS_LABEL[post.status]}</Tag>
               {post.campaignId && <Tag>campanha de 30 dias</Tag>}
+              {post.clientApproval === "pending" && <Tag>Aguardando o cliente</Tag>}
+              {post.clientApproval === "approved" && <Tag>Aprovado pelo cliente</Tag>}
+              {post.clientApproval === "changes_requested" && <Tag>Cliente pediu ajuste</Tag>}
             </div>
           </div>
           <button onClick={onClose} className="text-muted hover:text-foreground" aria-label="Fechar" data-testid="post-close">
@@ -311,6 +332,36 @@ function PostPanel({
             <img src={`/api/files/${post.deliverableId}`} alt={post.title} className="max-h-48 rounded-md border border-edge object-contain" />
             <span className="mt-1 block text-xs text-accent">Peça aprovada pelo cliente ↗</span>
           </a>
+        )}
+        {(post.clientApproval === "pending" || post.clientApproval === "changes_requested") && post.status !== "published" && post.status !== "canceled" && (
+          <div className="mt-3 flex flex-wrap items-center justify-between gap-2 rounded-md border border-edge bg-surface-2 px-3 py-2 text-xs" data-testid="post-approval-hold">
+            <span className="min-w-0 flex-1">
+              {post.clientApproval === "pending"
+                ? "Não vai ao ar enquanto o cliente não aprovar pelo link."
+                : "Não vai ao ar até o cliente aprovar a versão nova. Ajuste e mande outro link."}
+            </span>
+            <button
+              type="button"
+              className="rounded-md border border-edge px-2.5 py-1 hover:border-accent"
+              onClick={() => {
+                if (window.confirm("Liberar este post sem a aprovação do cliente? Ele vai ao ar no horário marcado.")) void onPatch({ releaseApproval: true });
+              }}
+              data-testid="post-release-approval"
+            >
+              Liberar sem aprovação
+            </button>
+          </div>
+        )}
+        {post.status === "scheduled" && Number(post.publishAttempts ?? 0) >= 5 && (
+          <p className="mt-3 rounded-md border border-red-500/50 bg-red-500/10 px-3 py-2 text-xs" data-testid="post-publish-error">
+            {`Não conseguimos publicar: ${post.publishError || "erro desconhecido"}. Confira a conexão e agende de novo para tentar outra vez.`}
+          </p>
+        )}
+        {post.clientApproval === "changes_requested" && post.clientApprovalNote && (
+          <p className="mt-3 rounded-md border border-amber-500/50 bg-amber-500/10 px-3 py-2 text-sm" data-testid="post-client-note">
+            <span className="block text-xs font-medium">{post.clientApprovalBy ? `Ajuste pedido por ${post.clientApprovalBy}` : "Ajuste pedido pelo cliente"}</span>
+            “{post.clientApprovalNote}”
+          </p>
         )}
         {post.imageBrief && (
           <p className="mt-3 whitespace-pre-wrap rounded-md border border-edge bg-surface-2 p-2 text-xs text-muted" data-testid="post-image-brief">
@@ -326,6 +377,8 @@ function PostPanel({
             </Button>
           )}
           <BrandVoiceCheck clientId={post.clientId} text={caption} kind="post" onRewrite={setCaption} />
+          <PostLink post={post} onInsert={(url) => setCaption((c) => (c.includes(url) ? c : `${c.trimEnd()}\n\n${url}`))} />
+          {post.status !== "published" && <PanelTester clientId={post.clientId} initial={caption} postId={post.id} onApply={setCaption} />}
         </div>
         <div className="mt-4 flex flex-wrap items-end gap-2">
           <div>
@@ -361,6 +414,15 @@ function PostPanel({
             <Button variant="ghost" onClick={() => onPatch({ status: "scheduled" })}>
               Reativar
             </Button>
+          )}
+          {post.status !== "published" && post.format !== "Carrossel" && (
+            <a
+              href={`/clients/${post.clientId}?tab=carousels&topic=${encodeURIComponent(post.title)}&post=${post.id}`}
+              className="inline-flex items-center gap-1.5 rounded-md border border-edge px-3.5 py-2 text-sm hover:border-accent"
+              data-testid="post-to-carousel"
+            >
+              <Icon name="layers" size={14} /> Transformar em carrossel
+            </a>
           )}
           <Button variant="danger" className="ml-auto" onClick={onDelete}>
             Excluir
@@ -426,7 +488,7 @@ function QuickAdd({
   }
   return (
     <div className="fixed inset-0 z-[70] flex items-end justify-center bg-black/40 p-4 sm:items-center" onClick={onClose}>
-      <div className="w-full max-w-lg animate-pop-in space-y-3 rounded-2xl border border-edge bg-surface p-5 shadow-2xl [transform-origin:center]" onClick={(e) => e.stopPropagation()} data-testid="quick-add">
+      <div className="max-h-[calc(100dvh-2rem)] w-full max-w-lg animate-pop-in space-y-3 overflow-y-auto overscroll-contain rounded-2xl border border-edge bg-surface p-5 shadow-2xl [transform-origin:center]" onClick={(e) => e.stopPropagation()} data-testid="quick-add">
         <h3 className="font-[family-name:var(--font-display)] text-lg font-semibold">Novo post</h3>
         <div className="grid gap-3 sm:grid-cols-2">
           <div className="sm:col-span-2">
@@ -500,6 +562,69 @@ function QuickAdd({
           </Button>
         </div>
       </div>
+    </div>
+  );
+}
+
+type PostLinkRow = { code: string; destUrl: string; shortUrl: string; clicks: number };
+
+// Link do post: com "Rastrear" ligado vira link curto com UTM (cliques contam
+// no "o que funciona" e no relatório); desligado, entra o endereço como está.
+function PostLink({ post, onInsert }: { post: Post; onInsert: (url: string) => void }) {
+  const [link, setLink] = useState<PostLinkRow | null>(null);
+  const [dest, setDest] = useState("");
+  const [track, setTrack] = useState(true);
+  const [error, setError] = useState("");
+  useEffect(() => {
+    fetch(`/api/clients/${post.clientId}/links?postId=${post.id}`)
+      .then((r) => (r.ok ? r.json() : { links: [] }))
+      .then((j: { links: PostLinkRow[] }) => {
+        const found = j.links[0] ?? null;
+        setLink(found);
+        if (found) setDest(found.destUrl);
+      })
+      .catch(() => {});
+  }, [post.clientId, post.id]);
+
+  async function apply() {
+    setError("");
+    if (!track) {
+      onInsert(dest.trim());
+      return;
+    }
+    try {
+      const created = await api<PostLinkRow>(`/api/clients/${post.clientId}/links`, {
+        method: "POST",
+        body: JSON.stringify({ destUrl: dest, postId: post.id, channel: post.channel, label: post.title }),
+      });
+      setLink({ ...created, clicks: link?.code === created.code ? link.clicks : 0 });
+      onInsert(created.shortUrl);
+    } catch (e) {
+      setError(e instanceof Error ? e.message : "Endereço inválido");
+    }
+  }
+
+  return (
+    <div className="space-y-1.5 rounded-md border border-edge p-2" data-testid="post-link">
+      <Label>Link</Label>
+      <div className="flex flex-wrap items-center gap-2">
+        <div className="min-w-48 flex-1">
+          <Input value={dest} onChange={(e) => setDest(e.target.value)} placeholder="https://loja.com/produto" data-testid="post-link-dest" />
+        </div>
+        <label className="flex items-center gap-1 text-xs">
+          <input type="checkbox" checked={track} onChange={(e) => setTrack(e.target.checked)} data-testid="post-link-track" /> Rastrear
+        </label>
+        <Button variant="ghost" className="!px-2.5 !py-1 text-xs" onClick={apply} disabled={!dest.trim()} data-testid="post-link-apply">
+          Inserir na legenda
+        </Button>
+      </div>
+      {link && (
+        <p className="text-xs text-muted" data-testid="post-link-short">
+          <span className="font-mono text-accent">{link.shortUrl.replace(/^https?:\/\//, "")}</span>
+          {` · ${link.clicks} clique(s)`}
+        </p>
+      )}
+      {error && <p className="text-xs text-red-500">{error}</p>}
     </div>
   );
 }

@@ -179,6 +179,37 @@ export default function MonthlyReportView({
         </Card>
       )}
 
+      {data.topLinks && data.topLinks.length > 0 && (
+        <Card data-testid="report-links">
+          <SectionTitle>Links mais clicados</SectionTitle>
+          <ul className="space-y-1.5 text-sm">
+            {data.topLinks.map((link) => (
+              <li key={link.label} className="flex items-center justify-between gap-3">
+                <span className="min-w-0 truncate">{link.label}</span>
+                <span className="shrink-0 font-semibold tabular-nums">{fmtNum(link.clicks, lang)}</span>
+              </li>
+            ))}
+          </ul>
+          <p className="mt-2 text-xs text-muted">Cliques nos links rastreáveis da marca (sem robôs, sem cookies).</p>
+        </Card>
+      )}
+
+      {data.aiRadar && (
+        <Card data-testid="report-ai-radar">
+          <SectionTitle>Radar de IA</SectionTitle>
+          <div className="grid grid-cols-2 gap-2">
+            <Stat label="Participação da marca" value={`${fmtNum(data.aiRadar.shareOfVoice, lang)}%`} />
+            <Stat label="Respostas que citam a marca" value={`${data.aiRadar.answersWithClient}/${data.aiRadar.questions}`} />
+          </div>
+          <ol className="mt-3 list-decimal space-y-1 pl-5 text-sm">
+            {data.aiRadar.actions.map((a) => (
+              <li key={a}>{a}</li>
+            ))}
+          </ol>
+          <p className="mt-2 text-xs text-muted" data-testid="report-ai-radar-disclaimer">{data.aiRadar.disclaimer}</p>
+        </Card>
+      )}
+
       {data.satisfaction && (
         <Card data-testid="report-satisfaction">
           <SectionTitle>Satisfação do cliente</SectionTitle>

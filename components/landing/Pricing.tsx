@@ -4,6 +4,7 @@ import { useState } from "react";
 import Link from "next/link";
 import { Icon } from "@/components/icons";
 import {
+  ACTION_COST,
   COIN_PACKS,
   PERIOD_DISCOUNT,
   periodPrice,
@@ -19,6 +20,19 @@ const L = {
   pt: {
     title: "Planos e preços",
     sub: "Comece grátis, sem cartão. Planos pré-pagos: você paga o período escolhido e ele não renova sozinho.",
+    subCard: "Comece grátis, sem cartão. Depois, assine no cartão ou pague um período à vista.",
+    card: "Assinatura mensal no cartão pelo Mercado Pago · cancele quando quiser, vale até o fim do período.",
+    prepaidCard: "Preços em reais (R$). Prefere não assinar? Pague 1, 3, 6 ou 12 meses à vista (Pix, cartão ou boleto), sem renovação; no fim do período a conta volta para o plano grátis. Arrependimento em 7 dias.",
+    costsTitle: "Quanto custa cada ação de IA",
+    costsSub: "Preço fixo em coins, sempre o mesmo:",
+    costs: {
+      strategy_analysis: "Estratégia e deep dive",
+      campaign_30d: "30 dias de posts",
+      carousel: "Carrossel",
+      ai_radar: "Radar de IA (rodada semanal)",
+      panel_test: "Teste com o público",
+      brand_voice_check: "Checagem da voz da marca",
+    } as Record<string, string>,
     prepaid: "Preços em reais (R$). Pré-pago, sem renovação automática; no fim do período a conta volta para o plano grátis. Arrependimento em 7 dias.",
     per: (m: number) => (m === 1 ? "/mês" : `/${m} meses`),
     free: "Grátis",
@@ -37,6 +51,19 @@ const L = {
   en: {
     title: "Plans & pricing",
     sub: "Start free, no card. Prepaid plans: you pay for the period you choose and it never renews on its own.",
+    subCard: "Start free, no card. Later, subscribe by card or prepay a period.",
+    card: "Monthly card subscription through Mercado Pago · cancel anytime, it lasts until the end of the period.",
+    prepaidCard: "Prices in Brazilian reais (R$), billed in BRL. Rather not subscribe? Prepay 1, 3, 6 or 12 months (Pix, card or boleto) with no renewal; when the period ends the account returns to the free plan. 7-day refund window.",
+    costsTitle: "What each AI action costs",
+    costsSub: "A fixed price in coins, always the same:",
+    costs: {
+      strategy_analysis: "Strategy and deep dive",
+      campaign_30d: "30 days of posts",
+      carousel: "Carousel",
+      ai_radar: "AI radar (weekly run)",
+      panel_test: "Audience test",
+      brand_voice_check: "Brand voice check",
+    } as Record<string, string>,
     prepaid: "Prices in Brazilian reais (BRL, R$), charged in BRL. Prepaid, no auto-renewal; when the period ends the account returns to the free plan. 7-day refund window.",
     per: (m: number) => (m === 1 ? "/mo" : `/${m} mo`),
     free: "Free",
@@ -57,9 +84,11 @@ const L = {
 export default function Pricing({
   accountType,
   lang,
+  cardSubscription = false,
 }: {
   accountType: AccountType;
   lang: Lang;
+  cardSubscription?: boolean;
 }) {
   const [period, setPeriod] = useState<BillingPeriod>("monthly");
   const t = L[lang];
@@ -74,7 +103,12 @@ export default function Pricing({
           <h2 className="font-[family-name:var(--font-display)] text-4xl font-extrabold tracking-tight">
             {t.title}
           </h2>
-          <p className="mt-4 text-muted">{t.sub}</p>
+          <p className="mt-4 text-muted">{cardSubscription ? t.subCard : t.sub}</p>
+          {cardSubscription && hasPaid && (
+            <p className="mt-3 inline-flex items-center gap-1.5 rounded-full border border-accent/40 bg-accent/10 px-3 py-1 text-xs font-medium text-accent" data-testid="pricing-card-line">
+              <Icon name="check" size={13} /> {t.card}
+            </p>
+          )}
         </div>
 
         {/* Toggle de período (só faz sentido com plano pago) */}
@@ -142,6 +176,8 @@ export default function Pricing({
                       : `/criar-conta?type=${accountType}&plan=${plan.id}&period=${period}`
                   }
                   data-testid={`pricing-cta-${plan.id}`}
+                  data-track="cta_click"
+                  data-track-label={plan.id}
                   className={`mt-6 inline-flex items-center justify-center gap-1.5 rounded-xl px-5 py-3 font-semibold transition-transform hover:-translate-y-0.5 ${
                     plan.recommended
                       ? "bg-accent text-accent-ink shadow-lg shadow-accent/20"
@@ -186,7 +222,21 @@ export default function Pricing({
           </div>
         </div>
 
-        <p className="reveal mx-auto mt-6 max-w-2xl text-center text-xs text-muted">{t.prepaid}</p>
+        {/* Transparência: custo fixo por ação */}
+        <div className="reveal mt-6 rounded-2xl border border-edge bg-surface p-6" data-testid="pricing-action-costs">
+          <h3 className="font-bold">{t.costsTitle}</h3>
+          <p className="mt-1 text-sm text-muted">{t.costsSub}</p>
+          <ul className="mt-4 grid gap-2 sm:grid-cols-2 lg:grid-cols-3">
+            {Object.entries(t.costs).map(([action, label]) => (
+              <li key={action} className="flex items-center justify-between gap-3 rounded-lg border border-edge bg-surface-2 px-3 py-2 text-sm">
+                <span>{label}</span>
+                <span className="shrink-0 font-semibold tabular-nums text-accent">{`${ACTION_COST[action]} ${t.coins}`}</span>
+              </li>
+            ))}
+          </ul>
+        </div>
+
+        <p className="reveal mx-auto mt-6 max-w-2xl text-center text-xs text-muted">{cardSubscription ? t.prepaidCard : t.prepaid}</p>
 
         {/* Métodos de pagamento (confiança) */}
         <div className="reveal mt-8 flex flex-wrap items-center justify-center gap-x-6 gap-y-2 text-sm text-muted">

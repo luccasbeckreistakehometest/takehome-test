@@ -21,6 +21,19 @@ export function ttsProvider(): TtsProvider {
   return null;
 }
 
+// Já está no cache? (repetir uma frase não gasta nem conta no teto diário)
+export function ttsCached(text: string, lang: "pt" | "en"): boolean {
+  const provider = ttsProvider();
+  if (!provider) return false;
+  const key = createHash("sha1").update(`${provider}|${lang}|${text}`).digest("hex");
+  return fs.existsSync(path.join(CACHE_DIR, `${key}.mp3`));
+}
+
+export function ttsDailyCharsPerAccount(): number {
+  const n = Number(process.env.TTS_DAILY_CHARS_PER_ACCOUNT);
+  return Number.isFinite(n) && n >= 0 ? Math.floor(n) : 6000;
+}
+
 export async function synthesise(text: string, lang: "pt" | "en"): Promise<Buffer | null> {
   const provider = ttsProvider();
   if (!provider) return null;

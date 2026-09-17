@@ -2,7 +2,8 @@ import { NextResponse } from "next/server";
 import { randomUUID } from "crypto";
 import { z } from "zod";
 import { extractVoiceBriefing } from "@/lib/voice-briefing";
-import { recordOnboardingEvent, saveVoiceBriefing } from "@/lib/onboarding-db";
+import { recordOnboardingEvent, saveVoiceBriefing, voiceBriefingTurns } from "@/lib/onboarding-db";
+import { MAX_VOICE_TURNS } from "@/lib/turn-taking";
 import { guard, isDenied } from "@/lib/guard";
 import { meterAi } from "@/lib/metering";
 
@@ -22,7 +23,13 @@ export async function POST(request: Request) {
   if (isDenied(auth)) return auth;
   const parsed = schema.safeParse(await request.json().catch(() => ({})));
   if (!parsed.success) return NextResponse.json({ error: "Fale um pouco mais e tente de novo." }, { status: 400 });
-  return meterAi(request, auth, "voice_briefing", async () => {
+  // 1 coin por conversa (a primeira fala); as seguintes não cobram, até 12.
+  const turns = parsed.data.briefingId ? voiceBriefingTurns(parsed.data.briefingId, auth.userId) : 0;
+  if (turns >= MAX_VOICE_TURNS) {
+    return NextResponse.json({ error: "Chegamos ao limite de conversa deste briefing. Revise os campos ou complete digitando." }, { status: 429 });
+  }
+  const action = turns > 0 ? "voice_briefing_turn" : "voice_briefing";
+  return meterAi(request, auth, action, async () => {
     const briefing = await extractVoiceBriefing({
       transcript: parsed.data.transcript,
       lang: parsed.data.lang,

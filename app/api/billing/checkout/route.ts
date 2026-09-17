@@ -1,4 +1,5 @@
 import { NextResponse } from "next/server";
+import { recordUserEvent } from "@/lib/analytics-db";
 import { z } from "zod";
 import { billingAccount } from "@/lib/session";
 import { createCoinCheckout, createPlanCheckout, mpConfigured } from "@/lib/mercadopago";
@@ -45,6 +46,7 @@ export async function POST(request: Request) {
   if (!mpConfigured()) {
     return NextResponse.json({ error: "O pagamento ainda não está disponível. Fale com o suporte." }, { status: 503 });
   }
+  recordUserEvent("checkout_started", auth.userId, { kind: "checkout" });
   const email = getUserById(auth.userId)?.email ?? undefined;
   try {
     const { url } =

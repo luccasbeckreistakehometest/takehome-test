@@ -39,6 +39,12 @@ export default function ApprovalTimeline({ events, compact = false }: { events: 
             )}{" "}
             <span className="text-xs font-normal text-muted">{fmt(event.createdAt)}</span>
           </p>
+          {event.source === "link" && (
+            <p className="text-xs text-muted" data-testid="approval-source-link">
+              <span>Pelo link de aprovação</span>
+              {event.approverName ? <span> · {event.approverName}</span> : null}
+            </p>
+          )}
           {event.note && <p className="text-xs italic text-muted">“{event.note}”</p>}
           <ul className="mt-1 space-y-0.5 text-xs text-muted">
             {event.actions.map((action, index) => (

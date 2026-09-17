@@ -161,6 +161,24 @@ const PATHS: Record<string, React.ReactNode> = {
     </>
   ),
   megaphone: <path d="M3 11v2a1 1 0 0 0 1 1h2l7 4V6l-7 4H4a1 1 0 0 0-1 1ZM17 8a4 4 0 0 1 0 8M8 15v4a1 1 0 0 0 1 1h1a1 1 0 0 0 1-1v-2" />,
+  trend: <path d="M3 17l6-6 4 4 8-8M14 7h7v7" />,
+  qr: (
+    <>
+      <rect x="3" y="3" width="7" height="7" rx="1" />
+      <rect x="14" y="3" width="7" height="7" rx="1" />
+      <rect x="3" y="14" width="7" height="7" rx="1" />
+      <path d="M14 14h3v3h-3zM20 14v.01M14 20h.01M17 20h4v-3" />
+    </>
+  ),
+  layers: <path d="M12 3 2 8l10 5 10-5-10-5ZM2 13l10 5 10-5M2 17.5l10 5 10-5" />,
+  package: <path d="M3 7.5 12 3l9 4.5v9L12 21l-9-4.5v-9ZM3 7.5l9 4.5 9-4.5M12 12v9" />,
+  mic: (
+    <>
+      <rect x="9" y="3" width="6" height="11" rx="3" />
+      <path d="M5 11a7 7 0 0 0 14 0M12 18v3" />
+    </>
+  ),
+  download: <path d="M12 4v11M7 10l5 5 5-5M4 20h16" />,
 };
 
 export type IconName = keyof typeof PATHS;

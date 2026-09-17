@@ -8,6 +8,8 @@ export default defineConfig({
   test: {
     include: ["tests/unit/**/*.test.ts"],
     environment: "node",
+    // apaga o DATA_DIR temporário de cada arquivo no fim
+    setupFiles: ["tests/unit/setup-tmp.ts"],
   },
   resolve: {
     alias: { "@": path.resolve(__dirname) },

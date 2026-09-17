@@ -25,7 +25,7 @@ const securityHeaders = [
 // substitui o que a rota define, por isso a exclusão.
 const appCsp = { key: "Content-Security-Policy", value: "frame-ancestors 'self'; base-uri 'self'; object-src 'none'" };
 const APP_CSP_SOURCE =
-  "/((?!api/generations/[^/]+/html|api/assets/|api/files/|api/professional-assets/|api/a/[^/]+/logo/|api/a/[^/]+/work/|api/settings/logo).*)";
+  "/((?!api/generations/[^/]+/html|api/assets/|api/files/|api/professional-assets/|api/a/[^/]+/logo/|api/a/[^/]+/work/|api/settings/logo|api/approve/[^/]+/file/|api/carousels/[^/]+/slide/|api/c/|api/b/).*)";
 // Rotas que servem arquivos enviados: sandbox + nada carrega de fora.
 const FILE_ROUTES = [
   "/api/assets/:id",
@@ -34,6 +34,11 @@ const FILE_ROUTES = [
   "/api/a/:slug/logo/:clientId",
   "/api/a/:slug/work/:id",
   "/api/settings/logo",
+  "/api/approve/:token/file/:id",
+  "/api/carousels/:id/slide/:n",
+  "/api/c/:id/:n",
+  "/api/b/:slug/logo",
+  "/api/b/:slug/img/:id",
 ];
 // Igual a FILE_RESPONSE_HEADERS em lib/uploads.ts (um teste confere). Sem
 // import local: a imagem de produção copia só este arquivo, sem lib/.

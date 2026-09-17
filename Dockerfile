@@ -41,6 +41,8 @@ COPY --from=builder /app/.next ./.next
 COPY --from=builder /app/public ./public
 COPY --from=builder /app/package.json ./package.json
 COPY --from=builder /app/next.config.ts ./next.config.ts
+# Fonte dos slides de carrossel (lida em runtime pelo renderizador)
+COPY --from=builder /app/assets ./assets
 # Só o script de manutenção de senhas (o worker de WhatsApp por sessão NÃO
 # entra: sem ele, a produção usa apenas a API oficial da Meta).
 COPY --from=builder /app/scripts/rotate-weak-passwords.mjs ./scripts/rotate-weak-passwords.mjs

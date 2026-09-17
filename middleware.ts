@@ -38,6 +38,10 @@ const PUBLIC_PREFIXES = [
   "/print/report/",
   "/para-", // landings de funil (/para-agencias, /para-marcas, ...)
   "/a/", // página pública da agência (/a/[slug])
+  "/aprovar/", // aprovação por link, sem login
+  "/fatura/", // fatura Pix do cliente, sem login
+  "/l/", // link curto rastreável
+  "/b/", // link na bio do cliente
   "/opengraph-image",
   "/legal/",
 ];
@@ -51,8 +55,11 @@ const PRIVATE_PREFIXES = [
   "/clients",
   "/conta",
   "/finance",
+  "/growth",
   "/ideas",
   "/insights",
+  "/invoices",
+  "/links",
   "/messages",
   "/plans",
   "/portal",
@@ -60,6 +67,7 @@ const PRIVATE_PREFIXES = [
   "/production",
   "/professionals",
   "/prospecting",
+  "/radar",
   "/settings",
   "/treinamento",
 ];
@@ -77,6 +85,7 @@ export function isPublicApi(pathname: string, method: string): boolean {
   if (pathname.startsWith("/api/webhooks/")) return true; // cada webhook se autentica
   if (pathname === "/api/health" && method === "GET") return true;
   if (pathname === "/api/contact" && method === "POST") return true; // limite + honeypot na rota
+  if (pathname === "/api/t" && method === "POST") return true; // coletor de eventos sem cookie
   if (pathname === "/api/auth/login" && method === "POST") return true;
   if (pathname === "/api/auth/register" && method === "POST") return true;
   if (pathname === "/api/auth/logout" && method === "POST") return true;
@@ -90,6 +99,13 @@ export function isPublicApi(pathname: string, method: string): boolean {
   if (method === "POST" && /^\/api\/proposals\/[^/]+\/accept$/.test(pathname)) return true;
   if (method === "GET" && /^\/api\/a\/[^/]+\/(work|logo)\/[^/]+$/.test(pathname)) return true;
   if (method === "POST" && /^\/api\/a\/[^/]+\/lead$/.test(pathname)) return true;
+  // aprovação por link: o token é a credencial (cada rota confere o item)
+  if ((method === "GET" || method === "POST") && /^\/api\/approve\/[^/]+$/.test(pathname)) return true;
+  if (method === "GET" && /^\/api\/approve\/[^/]+\/file\/[^/]+$/.test(pathname)) return true;
+  if (method === "POST" && /^\/api\/fatura\/[^/]+\/paid$/.test(pathname)) return true;
+  if (method === "GET" && /^\/api\/b\/[^/]+\/(logo|img\/[^/]+)$/.test(pathname)) return true;
+  // slide de carrossel com assinatura (o Instagram baixa por URL)
+  if (method === "GET" && /^\/api\/c\/[^/]+\/[^/]+$/.test(pathname)) return true;
   return false;
 }
 
@@ -99,10 +115,10 @@ const SHARED_PORTAL_API = [
   /^\/api\/auth\//,
   /^\/api\/account(\/.*)?$/,
   /^\/api\/activities$/,
-  /^\/api\/onboarding$/,
+  /^\/api\/onboarding(\/activation)?$/,
   /^\/api\/jobs$/,
   /^\/api\/settings$/,
-  /^\/api\/billing(\/(checkout|subscribe))?$/,
+  /^\/api\/billing(\/(checkout|subscribe|subscription|subscription\/cancel))?$/,
   /^\/api\/contact$/,
 ];
 const CLIENT_API = [
@@ -118,6 +134,10 @@ const CLIENT_API = [
   /^\/api\/scheduled-posts(\/[^/]+)?$/,
   /^\/api\/campaigns\/[^/]+$/,
   /^\/api\/voice\/(briefing|speak)$/,
+  /^\/api\/scope-requests\/[^/]+$/,
+  /^\/api\/carousels\/[^/]+(\/(slide\/[^/]+|zip|schedule))?$/,
+  /^\/api\/links\/[^/]+$/,
+  /^\/api\/panel\/[^/]+\/schedule$/,
 ];
 const PROFESSIONAL_API = [/^\/api\/professional-assets\/[^/]+$/, /^\/api\/projects\/[^/]+\/applications$/];
 
@@ -157,7 +177,7 @@ export async function middleware(request: NextRequest) {
   if (isPublicPage(pathname)) {
     const response = NextResponse.next();
     // Páginas com token nunca vão para buscadores.
-    if (/^\/(convite|proposta|print)\//.test(pathname)) response.headers.set("X-Robots-Tag", "noindex, nofollow");
+    if (/^\/(convite|proposta|print|aprovar|fatura)\//.test(pathname)) response.headers.set("X-Robots-Tag", "noindex, nofollow");
     return response;
   }
 

@@ -79,3 +79,66 @@ test("brand and professional screens fit a phone", async ({ page, browser }) => 
   await expect(proPage.getByTestId("user-menu")).toBeVisible();
   await pro.close();
 });
+
+// 390 px: todo passo de todo tour mostra um card inteiro na tela (folha
+// inferior quando a âncora não aparece no celular).
+async function walkTourOnPhone(page: Page, label: string) {
+  await page.getByTestId("user-menu").click();
+  await page.getByTestId("tour-restart").click();
+  const card = page.getByTestId("tour-step");
+  await expect(card).toBeVisible();
+  for (let guard = 0; guard < 40; guard++) {
+    if (!(await card.isVisible())) return guard;
+    const step = await card.getAttribute("data-step");
+    // a navegação entre páginas termina antes da medida
+    await page.waitForTimeout(250);
+    const box = await card.boundingBox();
+    expect(box, `${label} step ${step}`).not.toBeNull();
+    const viewport = page.viewportSize()!;
+    expect(box!.y, `${label} step ${step} top`).toBeGreaterThanOrEqual(0);
+    expect(box!.y + box!.height, `${label} step ${step} bottom`).toBeLessThanOrEqual(viewport.height + 1);
+    expect(box!.x + box!.width, `${label} step ${step} right`).toBeLessThanOrEqual(viewport.width + 1);
+    await expect(card.getByTestId("tour-next")).toBeInViewport();
+    const more = card.getByTestId("tour-more");
+    if (await more.isVisible()) await more.click();
+    else await card.getByTestId("tour-next").click();
+    await expect.poll(async () => ((await card.isVisible()) ? await card.getAttribute("data-step") : "gone")).not.toBe(step);
+  }
+  throw new Error(`${label}: tour did not end`);
+}
+
+test.describe("tours at 390 px", () => {
+  test.use({ viewport: { width: 390, height: 844 } });
+
+  test("every step of every role tour renders a visible card", async ({ page, browser }) => {
+    await login(page, "agencia");
+    await skipOnboarding(page);
+    await page.goto("/");
+    expect(await walkTourOnPhone(page, "agency")).toBeGreaterThan(20);
+
+    const managed = await (await page.request.post("/api/clients", { data: { name: "Tour Celular Gerenciado", channels: ["Instagram"] } })).json();
+    const selfServe = await (await page.request.post("/api/clients", { data: { name: "Tour Celular Autônoma", channels: ["Instagram"] } })).json();
+    expect((await page.request.post(`/api/clients/${selfServe.id}/mode`, { data: { selfServe: true } })).status()).toBe(200);
+
+    for (const [label, client, path, steps] of [
+      ["managed", managed, `/portal/client/${managed.id}`, 4],
+      ["brand", selfServe, `/clients/${selfServe.id}`, 5],
+    ] as const) {
+      const context = await browser.newContext({ viewport: { width: 390, height: 844 }, baseURL: "http://localhost:3200", locale: "pt-BR" });
+      const phone = await context.newPage();
+      await login(phone, client.login.username, client.login.password);
+      await skipOnboarding(phone);
+      await phone.goto(path);
+      expect(await walkTourOnPhone(phone, label)).toBe(steps);
+      await context.close();
+    }
+
+    const proContext = await browser.newContext({ viewport: { width: 390, height: 844 }, baseURL: "http://localhost:3200", locale: "pt-BR" });
+    const proPage = await proContext.newPage();
+    const pro = await signupViaApi(proContext.request, "professional", "Tour Celular Pro", { professionalRole: "designer", location: "Recife, PE" }, "198.51.100.93");
+    await skipOnboarding(proPage);
+    await proPage.goto(pro.home.replace(/\?.*$/, ""));
+    expect(await walkTourOnPhone(proPage, "professional")).toBe(5);
+    await proContext.close();
+  });
+});

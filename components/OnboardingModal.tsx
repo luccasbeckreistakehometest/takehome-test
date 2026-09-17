@@ -4,7 +4,11 @@ import { useEffect, useState } from "react";
 import { Icon, type IconName } from "./icons";
 import WelcomeLogin from "./WelcomeLogin";
 
-type Role = "agency" | "client" | "professional";
+type Role = "agency" | "client" | "managed" | "professional";
+
+// Qual tour (lib/tour-steps) cada modal apresenta: o modal só abre para quem
+// é daquele tipo — a agência olhando o workspace de um cliente não vê o da marca.
+const KIND: Record<Role, string> = { agency: "agency", client: "brand", managed: "managed", professional: "professional" };
 
 type Step = { icon: IconName; title: string; body: string; href?: string; cta?: string };
 
@@ -24,6 +28,14 @@ const FLOWS: Record<Role, { title: string; steps: Step[] }> = {
       { icon: "clipboard", title: "Complete o briefing", body: "Conte sobre o seu negócio: é isso que alimenta toda a IA — estratégia, campanhas e materiais sob medida." },
       { icon: "sparkle", title: "Gere seu primeiro kit", body: "Com um clique a IA cria estratégia, plano de campanha, ROI, identidade e calendário social." },
       { icon: "message", title: "Fale com a agência", body: "Aprove entregas, peça produções e acompanhe reuniões pelo seu portal." },
+    ],
+  },
+  managed: {
+    title: "Bem-vindo ao seu portal",
+    steps: [
+      { icon: "check", title: "Aprove sem complicação", body: "A agência manda as peças por aqui ou por um link no WhatsApp. Você olha, aprova ou pede ajuste." },
+      { icon: "clipboard", title: "Seu pacote do mês", body: "Veja o que já foi produzido e peça novas produções. Extra só entra com valor aprovado por você." },
+      { icon: "message", title: "Fale com a agência", body: "Mensagens, faturas com Pix e o relatório do mês ficam no mesmo lugar." },
     ],
   },
   professional: {
@@ -56,8 +68,10 @@ export default function OnboardingModal({
     // está visitando o painel, ex.: agência vendo um profissional).
     // O servidor manda: quem já concluiu em outra máquina não vê de novo.
     let cancelled = false;
+    // logo após o cadastro, o seletor de modo da marca vem primeiro
+    if (new URLSearchParams(window.location.search).get("choose") === "1") return;
     fetch("/api/onboarding", { cache: "no-store" }).then((r) => r.json()).then((j) => {
-      if (cancelled || j.tourCompleted) return;
+      if (cancelled || j.tourCompleted || j.kind !== KIND[role]) return;
       if (welcome === "1" || (!welcomeOnly && !localStorage.getItem(key))) {
         setOpen(true);
         setShowLogin(welcome === "1");
@@ -74,13 +88,13 @@ export default function OnboardingModal({
       /* ignore */
     }
     setOpen(false);
-    // Agência: o modal apresenta, o tour mostra na tela. Demais papéis: o modal
-    // já é o tour, então fica concluído aqui.
-    if (role === "agency" && reason === "done") {
+    // O modal apresenta, o tour mostra na tela (todos os papéis). Pular o
+    // modal pula o tour também.
+    if (reason === "done") {
       fetch("/api/onboarding", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ event: "welcome_done" }) }).catch(() => {});
       window.dispatchEvent(new Event("ah:tour-start"));
     } else {
-      fetch("/api/onboarding", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ completed: true, event: reason === "done" ? "welcome_done" : "welcome_skip" }) }).catch(() => {});
+      fetch("/api/onboarding", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ completed: true, event: "welcome_skip" }) }).catch(() => {});
     }
   }
 

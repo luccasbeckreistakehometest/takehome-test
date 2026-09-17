@@ -1,5 +1,8 @@
 import { randomBytes, randomUUID } from "crypto";
-import { db, tenantColumn } from "./db";
+import { monthTopLinks } from "./links-db";
+import { monthRun } from "./ai-visibility-db";
+import { disclaimer } from "./ai-visibility-rules";
+import { db, getClient, tenantColumn } from "./db";
 // Os módulos abaixo criam as tabelas que o relatório lê (projects,
 // deliverables, annotations, scheduled_posts, metric_snapshots, sales_entries)
 // — importar por eles garante que existem mesmo num banco recém-criado.
@@ -126,6 +129,20 @@ export function buildMonthData(clientId: string, month: ReportMonth): MonthlyRep
   const pulses = listPulses(clientId, 1000);
   const data = aggregateMonth({ month, projects, deliverables, annotations, posts, snapshots, sales, generations, pulses });
   if (data.learnings) data.learningsReading = getFreshReading(clientId, month, data.learnings);
+  data.topLinks = monthTopLinks(clientId, month);
+  const radar = monthRun(clientId, month);
+  const lang = getClient(clientId)?.language === "en" ? "en" : "pt-BR";
+  data.aiRadar = radar
+    ? {
+        ranAt: radar.ranAt,
+        shareOfVoice: radar.summary.shareOfVoice,
+        answersWithClient: radar.summary.answersWithClient,
+        questions: radar.summary.questions,
+        actions: radar.summary.actions,
+        disclaimer: disclaimer(radar.ranAt, lang),
+        demo: radar.demo,
+      }
+    : null;
   return data;
 }
 

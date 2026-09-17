@@ -19,8 +19,19 @@ test("first login: welcome → anchored tour across pages → saved on the serve
   await expect(page).toHaveURL(/\/$/);
   await expect(page.getByTestId("tour-step")).toHaveAttribute("data-step", "5");
   await expect(page.getByTestId("differentiators")).toBeVisible();
-  // um passo por diferencial (5 da rodada 1 + os da rodada 2)
-  for (let i = 0; i < 11; i++) await page.getByTestId("tour-next").click();
+  // a primeira volta para no 6º passo; "Ver todos os diferenciais" segue um por card
+  await expect(page.getByTestId("tour-step")).toContainText("6 / 6");
+  await page.getByTestId("tour-more").click();
+  await expect(page.getByTestId("tour-step")).toHaveAttribute("data-step", "6");
+  const counter = (await page.getByTestId("tour-step").locator("p").first().textContent()) ?? "";
+  const total = Number(counter.split("/")[1]);
+  expect(total).toBeGreaterThan(20);
+  for (let i = 6; i < total; i++) {
+    await expect(page.getByTestId("tour-step")).toHaveAttribute("data-step", String(i));
+    // todo diferencial tem card na Hoje (a lista abre sozinha)
+    await expect(page.getByTestId("tour-step")).toHaveAttribute("data-anchor", /^(diff-|nav-)/);
+    await page.getByTestId("tour-next").click();
+  }
   await expect(page.getByTestId("tour-step")).toBeHidden();
   const state = await page.evaluate(() => fetch("/api/onboarding").then((r) => r.json()));
   expect(state.tourCompleted).toBe(true);
