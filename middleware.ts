@@ -123,6 +123,7 @@ const CLIENT_API = [
   /^\/api\/scheduled-posts(\/[^/]+)?$/,
   /^\/api\/campaigns\/[^/]+$/,
   /^\/api\/voice\/(briefing|speak)$/,
+  /^\/api\/scope-requests\/[^/]+$/,
 ];
 const PROFESSIONAL_API = [/^\/api\/professional-assets\/[^/]+$/, /^\/api\/projects\/[^/]+\/applications$/];
 

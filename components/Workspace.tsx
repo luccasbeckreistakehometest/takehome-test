@@ -37,6 +37,8 @@ import TimeTab from "./TimeTab";
 import BrandVoiceCard from "./BrandVoiceCard";
 import CampaignTab from "./CampaignTab";
 import { ApprovalLinkCard } from "./ApprovalLinkPanel";
+import PackageTab from "./PackageTab";
+import { PackageSummaryCard } from "./PackageUsage";
 import {
   CampaignPlanView,
   ClientReportView,
@@ -339,7 +341,12 @@ export default function Workspace({
           onNavigate={(next) => setTab(resolveTab(next, viewer).tab)}
           onRunKit={runFullKit}
         >
-          {viewerRole !== "client" && <ApprovalLinkCard clientId={client.id} clientName={client.name} />}
+          {viewerRole !== "client" && (
+            <div className="grid gap-4 lg:grid-cols-2">
+              <PackageSummaryCard clientId={client.id} onOpen={() => setTab("package")} />
+              <ApprovalLinkCard clientId={client.id} clientName={client.name} />
+            </div>
+          )}
         </ClientDashboard>
       )}
 
@@ -590,6 +597,8 @@ export default function Workspace({
       {tab === "attendant" && <AttendantTab client={client} />}
 
       {tab === "time" && <TimeTab client={client} />}
+
+      {tab === "package" && <PackageTab clientId={client.id} />}
 
       {tab === "campaign30" && <CampaignTab client={client} />}
 

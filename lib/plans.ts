@@ -217,6 +217,11 @@ export const ACTION_COST: Record<string, number> = {
   voice_briefing: 1, // uma rodada do briefing falado
   tts: 0, // voz: limitada por taxa, não por coins
   attendant_reply: 1, // rascunho do atendente de WhatsApp (pago pela agência)
+  scope_classify: 1, // classificação do pedido do portal (modelo barato, cache)
+  carousel: 3, // roteiro de 5–8 slides; re-render de imagem não cobra
+  ai_radar_questions: 1, // sugestão das perguntas do radar de IA
+  ai_radar: 12, // rodada do radar (até 10 perguntas com busca na web)
+  panel_test: 2, // painel de público sintético (2–3 variantes)
 };
 export function actionCost(action: string): number {
   return ACTION_COST[action] ?? 2;

@@ -10,6 +10,7 @@ import OnboardingModal from "@/components/OnboardingModal";
 import DifferentiatorsStrip from "@/components/DifferentiatorsStrip";
 import PulseOverviewCard from "@/components/PulseOverviewCard";
 import { Card, SectionTitle, Spinner, Tag } from "@/components/ui";
+import { fmtMoney } from "@/lib/i18n";
 
 type Overview = {
   pendingApplications: {
@@ -27,6 +28,7 @@ type Overview = {
   clients: (Client & { tier: TierInfo })[];
   agency: { tier: TierInfo };
   staleApprovals: { id: string; clientId: string; clientName: string; createdAt: string; pending: number }[];
+  extras: { total: number; count: number; pending: number };
 };
 
 // Home operacional da agência: o que precisa da sua ação agora
@@ -99,6 +101,14 @@ export default function AgencyHome() {
 
       <div className="grid gap-6 lg:grid-cols-2">
         <PulseOverviewCard mode="home" />
+        {(data.extras.count > 0 || data.extras.pending > 0) && (
+          <Card data-testid="extras-summary">
+            <SectionTitle>💰 Extras do mês</SectionTitle>
+            <p className="text-sm">{`Extras aprovados este mês: ${fmtMoney(data.extras.total)}`}</p>
+            {data.extras.pending > 0 && <p className="mt-1 text-sm text-muted">{`${data.extras.pending} pedido(s) esperando o cliente aprovar o valor`}</p>}
+            <p className="mt-2 text-xs text-muted">Os extras aprovados entram na fatura do mês de cada cliente.</p>
+          </Card>
+        )}
         {data.staleApprovals.length > 0 && (
           <Card data-testid="stale-approvals">
             <SectionTitle>⏳ Aguardando aprovação há mais de 48h</SectionTitle>

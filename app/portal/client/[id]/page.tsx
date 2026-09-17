@@ -17,9 +17,10 @@ import type { ClientReport } from "@/lib/marketplace-schemas";
 import type { TierInfo } from "@/lib/ranking";
 import { ClientReportView } from "@/components/renderers";
 import TierBadge, { TierProgress } from "@/components/TierBadge";
-import { Button, Card, Input, SectionTitle, Spinner, Tag, Textarea } from "@/components/ui";
+import { Button, Card, Input, SectionTitle, Spinner, Tag } from "@/components/ui";
 import MarcaModeChoice from "@/components/MarcaModeChoice";
 import PulsePrompt from "@/components/PulsePrompt";
+import ScopeRequestCard from "@/components/ScopeRequestCard";
 import type { AccountMessage } from "@/lib/marketplace-db";
 
 type ProjectDetail = Project & {
@@ -44,8 +45,6 @@ export default function ClientPortalPage({
   const [projects, setProjects] = useState<ProjectDetail[]>([]);
   const [messages, setMessages] = useState<AccountMessage[]>([]);
   const [chatText, setChatText] = useState("");
-  const [requestText, setRequestText] = useState("");
-  const [requestSent, setRequestSent] = useState(false);
   const [chooserOpen, setChooserOpen] = useState(false);
   // recarrega o pulso depois de cada aprovação (a pergunta "como foi?" aparece na hora)
   const [pulseKey, setPulseKey] = useState(0);
@@ -129,32 +128,6 @@ export default function ClientPortalPage({
     });
     setChatText("");
     setMessages(await api<AccountMessage[]>(`/api/clients/${id}/account-messages`));
-  }
-
-  async function requestProduction() {
-    if (!requestText.trim()) return;
-    await api("/api/projects", {
-      method: "POST",
-      body: JSON.stringify({
-        clientId: id,
-        title: `Solicitação do cliente: ${requestText.slice(0, 60)}`,
-        brief: `Solicitação enviada pelo cliente no portal:\n\n${requestText.trim()}`,
-        skillsNeeded: [],
-        location: "",
-        budget: "",
-        deadline: "",
-        mode: "marketplace",
-      }),
-    });
-    await api(`/api/clients/${id}/account-messages`, {
-      method: "POST",
-      body: JSON.stringify({
-        sender: "client",
-        text: `📋 Nova solicitação: ${requestText.trim().slice(0, 120)}`,
-      }),
-    });
-    setRequestText("");
-    setRequestSent(true);
   }
 
   if (!client) {
@@ -377,29 +350,7 @@ export default function ClientPortalPage({
           </div>
         </Card>
 
-        <Card className="space-y-3">
-          <SectionTitle>Solicitar uma produção</SectionTitle>
-          <p className="text-sm text-muted">
-            Precisa de algo? Descreva e a solicitação vira uma demanda no painel
-            da agência na hora.
-          </p>
-          {requestSent ? (
-            <p className="rounded-md border border-accent/40 bg-accent/5 p-3 text-sm">
-              ✅ Solicitação enviada! A agência já recebeu e vai preparar o brief.
-            </p>
-          ) : (
-            <>
-              <Textarea
-                value={requestText}
-                onChange={(e) => setRequestText(e.target.value)}
-                placeholder='Ex.: "preciso de posts para o feriado de setembro" ou "quero fotos novas do cardápio"...'
-              />
-              <Button onClick={requestProduction} disabled={!requestText.trim()}>
-                📋 Enviar solicitação
-              </Button>
-            </>
-          )}
-        </Card>
+        <ScopeRequestCard clientId={id} />
       </div>
       )}
 

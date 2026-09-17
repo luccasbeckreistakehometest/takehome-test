@@ -47,6 +47,7 @@ export const TAB_GROUPS: { key: TabGroupKey; label: string; tabs: TabDef[] }[] =
     tabs: [
       { key: "dashboard", label: "Dashboard" },
       { key: "briefing", label: "Briefing" },
+      { key: "package", label: "Pacote", agencyOnly: true },
     ],
   },
   {

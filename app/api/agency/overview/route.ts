@@ -10,6 +10,7 @@ import { agencyTier, clientTier } from "@/lib/ranking";
 import { agencyOnly, isDenied, tenantOf } from "@/lib/guard";
 import { scopeWhere } from "@/lib/tenancy-rules";
 import { staleApprovalLinks } from "@/lib/approval-links-db";
+import { approvedExtrasTotal, pendingScopeCount } from "@/lib/scope-db";
 
 // Home operacional da agência: "o que preciso fazer hoje" cross-contas — só
 // as contas da agência da sessão (admin: todas, ou ?agency=).
@@ -78,5 +79,6 @@ export async function GET(request: Request) {
     clients,
     unread,
     staleApprovals: staleApprovalLinks(scope.agencyId, 48),
+    extras: { ...approvedExtrasTotal(scope.agencyId), pending: pendingScopeCount(scope.agencyId) },
   });
 }
