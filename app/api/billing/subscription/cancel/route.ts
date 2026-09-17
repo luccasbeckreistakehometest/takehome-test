@@ -3,6 +3,7 @@ import { billingAccount } from "@/lib/session";
 import { guard, isDenied } from "@/lib/guard";
 import { getSubscription, markCancelAtPeriodEnd } from "@/lib/billing-db";
 import { cancelRecurring } from "@/lib/mercadopago";
+import { cancelRetiredPreapprovals } from "@/lib/subscription-sync";
 
 // Cancelar a renovação no cartão: nada mais é cobrado e o plano vale até o
 // fim do período já pago.
@@ -21,5 +22,7 @@ export async function POST() {
     return NextResponse.json({ error: "Não conseguimos cancelar no Mercado Pago agora. Tente de novo em instantes." }, { status: 502 });
   }
   const updated = markCancelAtPeriodEnd(account.accountType, account.accountId);
+  // qualquer outra autorização aberta da conta também é cancelada no MP
+  await cancelRetiredPreapprovals().catch(() => 0);
   return NextResponse.json({ ok: true, renewsAt: updated?.renewsAt ?? sub.renewsAt });
 }

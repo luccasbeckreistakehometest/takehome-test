@@ -5,7 +5,9 @@ import { billingAccount } from "@/lib/session";
 import { guard, isDenied } from "@/lib/guard";
 import { checkLimits, retryAfterHeader } from "@/lib/rate-limit";
 import { getPlan, isPurchasablePlan, purchaseBlockReason } from "@/lib/plans";
-import { ensurePlanPrice, listPreapprovals, recordPreapproval, getSubscription } from "@/lib/billing-db";
+import { ensurePlanPrice, listPreapprovals, recordPreapproval, getSubscription, supersedeOtherPreapprovals } from "@/lib/billing-db";
+import { cancelRetiredPreapprovals } from "@/lib/subscription-sync";
+import { subscriptionExpired } from "@/lib/subscription-rules";
 import { createRecurring, subscriptionsAvailable } from "@/lib/mercadopago";
 import { getUserById, isValidEmail, normalizeEmail } from "@/lib/auth";
 
@@ -26,7 +28,7 @@ export async function GET() {
     renewsAt: sub.renewsAt,
     planId: sub.planId,
     email: getUserById(auth.userId)?.email ?? "",
-    pending: listPreapprovals({ ...account, limit: 5 }).filter((p) => p.status === "pending").map((p) => ({ planId: p.planId, period: p.period, createdAt: p.createdAt })),
+    pending: listPreapprovals({ ...account, limit: 5 }).filter((p) => p.status === "pending" && !p.supersededAt).map((p) => ({ planId: p.planId, period: p.period, createdAt: p.createdAt })),
   });
 }
 
@@ -57,6 +59,16 @@ export async function POST(request: Request) {
   if (!subscriptionsAvailable()) {
     return NextResponse.json({ error: "O pagamento ainda não está disponível. Fale com o suporte." }, { status: 503 });
   }
+  // uma assinatura no cartão por conta: o mesmo plano não é assinado duas
+  // vezes; outro plano substitui o atual quando a 1ª cobrança for aprovada
+  const current = getSubscription(account.accountType, account.accountId);
+  const activeRecurring =
+    Boolean(current.recurring) &&
+    !current.cancelAtPeriodEnd &&
+    !subscriptionExpired({ renewsAt: current.renewsAt, recurring: true, cancelAtPeriodEnd: false }, new Date());
+  if (activeRecurring && current.planId === plan.id) {
+    return NextResponse.json({ error: "Você já assina este plano no cartão.", code: "already_subscribed" }, { status: 409 });
+  }
   const email = normalizeEmail(parsed.data.email || getUserById(auth.userId)?.email || "");
   if (!email || !isValidEmail(email)) {
     return NextResponse.json({ error: "Informe o e-mail da conta do Mercado Pago.", code: "email_required" }, { status: 400 });
@@ -77,7 +89,11 @@ export async function POST(request: Request) {
       payerEmail: email,
       initPoint: created.initPoint,
     });
-    return NextResponse.json({ url: created.initPoint, preapprovalId: created.id });
+    // pedidos anteriores que o cliente não concluiu deixam de valer
+    if (supersedeOtherPreapprovals(account.accountType, account.accountId, created.id, true) > 0) {
+      await cancelRetiredPreapprovals().catch(() => 0);
+    }
+    return NextResponse.json({ url: created.initPoint, preapprovalId: created.id, replacesCurrent: activeRecurring });
   } catch (error) {
     console.error("[billing] assinatura falhou:", error instanceof Error ? error.message : error);
     return NextResponse.json({ error: "Não foi possível abrir a assinatura agora. Tente de novo em instantes." }, { status: 502 });

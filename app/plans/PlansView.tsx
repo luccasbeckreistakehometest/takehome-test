@@ -135,6 +135,13 @@ export default function PlansView() {
       setAskEmail(planId);
       return;
     }
+    if (
+      sub?.recurring &&
+      !sub.cancelAtPeriodEnd &&
+      !confirm("Você já tem uma assinatura no cartão. A atual é cancelada no Mercado Pago assim que a nova for aprovada, e o plano novo começa na hora. Continuar?")
+    ) {
+      return;
+    }
     setBusy(true);
     setError("");
     try {

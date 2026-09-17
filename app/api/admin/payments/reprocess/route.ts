@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import { z } from "zod";
 import { applyMpPayment, recordPaymentLookupFailure } from "@/lib/billing-db";
 import { getPayment, mpConfigured } from "@/lib/mercadopago";
+import { paymentSubscriptionLink } from "@/lib/subscription-rules";
 import { guard, isDenied } from "@/lib/guard";
 
 // "Reprocessar pagamento": relê o pagamento no Mercado Pago e aplica o estado
@@ -21,6 +22,7 @@ export async function POST(request: Request) {
       status: payment.status,
       externalReference: payment.external_reference ?? "",
       amount: Number(payment.transaction_amount ?? 0),
+      ...paymentSubscriptionLink(payment),
     });
     return NextResponse.json({ ok: true, outcome, mpStatus: payment.status });
   } catch (error) {

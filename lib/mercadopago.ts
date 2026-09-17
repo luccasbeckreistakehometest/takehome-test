@@ -114,6 +114,9 @@ export type MpPayment = {
   status: string;
   external_reference?: string;
   transaction_amount?: number;
+  // pagamento de assinatura: o MP indica a autorização e a cobrança
+  metadata?: Record<string, unknown> | null;
+  point_of_interaction?: { type?: string; transaction_data?: { subscription_id?: string | null; invoice_id?: string | number | null } | null } | null;
 };
 
 export async function getPayment(id: string): Promise<MpPayment> {

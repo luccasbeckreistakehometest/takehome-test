@@ -89,3 +89,18 @@ export function subscriptionNotice(
   }
   return null;
 }
+
+// Pagamento (tópico "payment") gerado por uma assinatura: o MP informa a
+// autorização (subscription_id / metadata.preapproval_id) e a cobrança
+// (invoice_id). Sem nada disso, não é pagamento de assinatura.
+export function paymentSubscriptionLink(payment: {
+  metadata?: Record<string, unknown> | null;
+  point_of_interaction?: { type?: string; transaction_data?: { subscription_id?: string | null; invoice_id?: string | number | null } | null } | null;
+}): { preapprovalId: string | null; authorizedPaymentId: string | null } {
+  const data = payment.point_of_interaction?.transaction_data ?? null;
+  const meta = payment.metadata ?? {};
+  const pre = String(data?.subscription_id ?? meta.preapproval_id ?? "").trim();
+  const invoice = String(data?.invoice_id ?? "").trim();
+  const clean = (v: string) => (/^[A-Za-z0-9_-]{1,64}$/.test(v) ? v : null);
+  return { preapprovalId: clean(pre), authorizedPaymentId: clean(invoice) };
+}

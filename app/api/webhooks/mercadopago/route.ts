@@ -1,7 +1,8 @@
 import { NextResponse } from "next/server";
 import { getAuthorizedPayment, getPayment, getPreapprovalRemote, mpConfigured, subscriptionsAvailable } from "@/lib/mercadopago";
 import { applyMpPayment, applyPreapprovalStatus, applySubscriptionPayment, recordPaymentLookupFailure } from "@/lib/billing-db";
-import { authorizedPaymentApproved, parseSubRef } from "@/lib/subscription-rules";
+import { authorizedPaymentApproved, parseSubRef, paymentSubscriptionLink } from "@/lib/subscription-rules";
+import { cancelRetiredPreapprovals } from "@/lib/subscription-sync";
 import { recordAccountEvent } from "@/lib/analytics-db";
 import { getPreapproval, parsePaymentRef } from "@/lib/billing-db";
 import { checkLimits, clientIp } from "@/lib/rate-limit";
@@ -53,8 +54,10 @@ export async function POST(request: Request) {
       status: payment.status,
       externalReference: payment.external_reference ?? "",
       amount: Number(payment.transaction_amount ?? 0),
+      ...paymentSubscriptionLink(payment),
     });
     if (outcome === "invalid") console.error(`[mp] pagamento ${payment.id} não pôde ser creditado (ver admin)`);
+    if (outcome === "refunded") await cancelRetiredPreapprovals().catch(() => 0);
     if (outcome === "credited") {
       const ref = parsePaymentRef(payment.external_reference ?? "");
       if (ref) recordAccountEvent("payment_approved", ref, { kind: ref.kind });
@@ -77,6 +80,7 @@ async function handleSubscription(type: string, id: string) {
     if (type === "subscription_preapproval") {
       const remote = await getPreapprovalRemote(id);
       const outcome = applyPreapprovalStatus({ id: String(remote.id), status: String(remote.status ?? ""), externalReference: remote.external_reference });
+      await cancelRetiredPreapprovals().catch(() => 0);
       return NextResponse.json({ ok: true, outcome });
     }
     const record = await getAuthorizedPayment(id);
@@ -87,8 +91,11 @@ async function handleSubscription(type: string, id: string) {
       amount: Number(record.transaction_amount ?? 0),
       externalReference: record.external_reference,
       mpStatus: String(record.payment?.status ?? record.status ?? ""),
+      paymentId: record.payment?.id != null ? String(record.payment.id) : null,
     });
     if (outcome === "invalid") console.error(`[mp] cobrança recorrente ${id} não pôde ser creditada (ver admin)`);
+    // assinatura nova substitui a antiga; estorno aposenta a autorização
+    if (outcome === "credited" || outcome === "refunded" || outcome === "invalid") await cancelRetiredPreapprovals().catch(() => 0);
     if (outcome === "credited") {
       const local = getPreapproval(String(record.preapproval_id ?? ""));
       const owner = local ?? parseSubRef(record.external_reference);
