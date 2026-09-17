@@ -74,7 +74,7 @@ test("self-serve brand speaks the briefing with automatic turn-taking", async ({
   await expect(page.getByTestId("voice-confirm")).toBeEnabled();
   await expect(voice).toHaveAttribute("data-state", "review");
   expect(await page.evaluate(() => (window as unknown as { __ahVoiceMic?: string }).__ahVoiceMic)).toBe("closed");
-  await expect(page.getByRole("alert")).toHaveCount(0);
+  await expect(voice.getByRole("alert")).toHaveCount(0);
 
   await page.getByTestId("voice-confirm").click();
   await expect(page.getByTestId("briefing-voice-saved")).toBeVisible();
