@@ -5,7 +5,8 @@ import Link from "next/link";
 import { Icon } from "./icons";
 
 // Menu da conta (todas as larguras de tela): minha conta, planos e sair.
-export default function UserMenu({ name, role }: { name: string; role: string }) {
+// showPlans: false para quem não compra nada (marca gerenciada, profissional).
+export default function UserMenu({ name, role, showPlans = true }: { name: string; role: string; showPlans?: boolean }) {
   const [open, setOpen] = useState(false);
   const ref = useRef<HTMLDivElement>(null);
 
@@ -57,11 +58,11 @@ export default function UserMenu({ name, role }: { name: string; role: string })
             <Link role="menuitem" href="/admin" onClick={() => setOpen(false)} className="flex items-center gap-2 rounded-md px-3 py-2 hover:bg-surface-2">
               <Icon name="chart" size={15} /> Admin
             </Link>
-          ) : (
+          ) : showPlans ? (
             <Link role="menuitem" href="/plans" onClick={() => setOpen(false)} className="flex items-center gap-2 rounded-md px-3 py-2 hover:bg-surface-2">
               <Icon name="sparkle" size={15} /> Planos & coins
             </Link>
-          )}
+          ) : null}
           <Link role="menuitem" href="/contato" onClick={() => setOpen(false)} className="flex items-center gap-2 rounded-md px-3 py-2 hover:bg-surface-2">
             <Icon name="mail" size={15} /> Ajuda e contato
           </Link>

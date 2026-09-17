@@ -15,6 +15,7 @@ import ThemeToggle from "@/components/ThemeToggle";
 import Tour from "@/components/Tour";
 import { Icon, type IconName } from "@/components/icons";
 import { MarqaMark } from "@/components/MarqaLogo";
+import { purchaseBlockReason } from "@/lib/plans";
 import "./globals.css";
 
 const geistSans = Geist({ variable: "--font-geist-sans", subsets: ["latin"] });
@@ -183,7 +184,7 @@ export default async function RootLayout({
               )}
               <LangToggle />
               {session ? (
-                <UserMenu name={session.name} role={session.role} />
+                <UserMenu name={session.name} role={session.role} showPlans={!purchaseBlockReason(session) || session.role === "admin"} />
               ) : (
                 <Link
                   href="/login"

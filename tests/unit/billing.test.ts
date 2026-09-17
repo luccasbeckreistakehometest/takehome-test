@@ -177,3 +177,17 @@ describe("read-only views", () => {
     expect(agency.planId).toBe("agency_free");
   });
 });
+
+describe("what each account can buy", () => {
+  it("sells only to accounts that run AI and only plans that are on sale", async () => {
+    const plans = await import("../../lib/plans");
+    expect(plans.purchaseBlockReason({ role: "agency" })).toBeNull();
+    expect(plans.purchaseBlockReason({ role: "client", selfServe: true })).toBeNull();
+    expect(plans.purchaseBlockReason({ role: "client", selfServe: false })).toBe(plans.PURCHASE_MANAGED_BRAND);
+    expect(plans.purchaseBlockReason({ role: "professional" })).toBe(plans.PURCHASE_PROFESSIONAL);
+    expect(plans.listedPlansFor("professional").map((p) => p.id)).toEqual(["pro_free"]);
+    expect(plans.isPurchasablePlan(plans.getPlan("pro_plus"))).toBe(false);
+    expect(plans.isPurchasablePlan(plans.getPlan("client_starter"))).toBe(true);
+    expect(plans.isPurchasablePlan(plans.getPlan("client_free"))).toBe(false);
+  });
+});

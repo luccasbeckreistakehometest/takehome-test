@@ -3,7 +3,7 @@ import { z } from "zod";
 import { billingAccount } from "@/lib/session";
 import { createCoinCheckout, createPlanCheckout, mpConfigured } from "@/lib/mercadopago";
 import { getUserById } from "@/lib/auth";
-import { getCoinPack, getPlan, isPaidPlan } from "@/lib/plans";
+import { getCoinPack, getPlan, isPurchasablePlan, purchaseBlockReason } from "@/lib/plans";
 import { guard, isDenied } from "@/lib/guard";
 import { checkLimits, retryAfterHeader } from "@/lib/rate-limit";
 
@@ -23,6 +23,9 @@ export async function POST(request: Request) {
   if (isDenied(auth)) return auth;
   const account = billingAccount(auth);
   if (!account) return NextResponse.json({ error: "Conta sem plano" }, { status: 400 });
+  // Nunca vender o que a conta não pode usar (marca gerenciada, profissional).
+  const blocked = purchaseBlockReason(auth);
+  if (blocked) return NextResponse.json({ error: blocked, code: "not_for_sale" }, { status: 403 });
   const verdict = checkLimits([["checkoutPerAccount", auth.userId]]);
   if (!verdict.ok) {
     return NextResponse.json({ error: "Muitas tentativas de pagamento. Espere um pouco." }, { status: 429, headers: retryAfterHeader(verdict) });
@@ -35,7 +38,7 @@ export async function POST(request: Request) {
   }
   if (kind === "plan") {
     const plan = getPlan(planId ?? "");
-    if (!plan || plan.accountType !== account.accountType || !isPaidPlan(plan)) {
+    if (!plan || plan.accountType !== account.accountType || !isPurchasablePlan(plan)) {
       return NextResponse.json({ error: "Plano inválido para esta conta" }, { status: 400 });
     }
   }

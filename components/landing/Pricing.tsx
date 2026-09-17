@@ -7,7 +7,7 @@ import {
   COIN_PACKS,
   PERIOD_DISCOUNT,
   periodPrice,
-  plansFor,
+  listedPlansFor,
   type AccountType,
   type BillingPeriod,
 } from "@/lib/plans";
@@ -64,7 +64,8 @@ export default function Pricing({
   const [period, setPeriod] = useState<BillingPeriod>("monthly");
   const t = L[lang];
   const brl = (n: number) => fmtMoney(n, lang);
-  const plans = plansFor(accountType);
+  const plans = listedPlansFor(accountType);
+  const hasPaid = plans.some((p) => p.monthlyPrice > 0);
 
   return (
     <section className="border-t border-edge px-4 py-24" id="planos">
@@ -76,8 +77,8 @@ export default function Pricing({
           <p className="mt-4 text-muted">{t.sub}</p>
         </div>
 
-        {/* Toggle de período */}
-        <div className="reveal mt-8 flex justify-center">
+        {/* Toggle de período (só faz sentido com plano pago) */}
+        <div className={`reveal mt-8 flex justify-center ${hasPaid ? "" : "hidden"}`}>
           <div className="inline-flex flex-wrap justify-center gap-1 rounded-full border border-edge bg-surface-2 p-1">
             {(Object.keys(PERIOD_DISCOUNT) as BillingPeriod[]).map((p) => (
               <button

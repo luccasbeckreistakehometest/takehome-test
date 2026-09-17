@@ -32,6 +32,7 @@ type Summary = {
   packs: Pack[];
   periods: Periods;
   enforced?: boolean;
+  purchaseBlocked?: string | null;
   revenue?: { total: number; mrr: number; byKind: Record<string, number> };
 };
 
@@ -186,6 +187,7 @@ export default function PlansView() {
             {" · "}uso no mês: {Math.round(data.usageThisMonth ?? 0)}
           </p>
         </div>
+        {!data.purchaseBlocked && (
         <div className="flex flex-wrap gap-1 rounded-lg border border-edge bg-surface-2 p-1" role="group" aria-label="Período de pagamento">
           {Object.entries(data.periods).map(([key, p]) => (
             <button
@@ -199,9 +201,10 @@ export default function PlansView() {
             </button>
           ))}
         </div>
+        )}
       </div>
 
-      <p className="rounded-md border border-edge bg-surface-2 px-3 py-2 text-xs text-muted">
+      <p className={`rounded-md border border-edge bg-surface-2 px-3 py-2 text-xs text-muted ${data.purchaseBlocked ? "hidden" : ""}`}>
         Preços em reais (R$), cobrados pelo Mercado Pago (Pix, cartão ou boleto). Os planos são pré-pagos e não renovam
         automaticamente: no fim do período a conta volta para o grátis. Arrependimento em até 7 dias —{" "}
         <Link href="/reembolso" className="text-accent hover:underline">
@@ -222,7 +225,13 @@ export default function PlansView() {
       )}
       {error && <ErrorBox message={error} />}
 
-      {wanted && !returned && (
+      {data.purchaseBlocked && (
+        <Card data-testid="purchase-blocked">
+          <p className="text-sm">{data.purchaseBlocked}</p>
+        </Card>
+      )}
+
+      {wanted && !returned && !data.purchaseBlocked && (
         <Card className="border-accent" data-testid="checkout-continue">
           <p className="text-sm text-muted">Plano escolhido</p>
           <p className="mt-1 text-lg font-semibold">
@@ -234,6 +243,8 @@ export default function PlansView() {
         </Card>
       )}
 
+      {!data.purchaseBlocked && (
+      <>
       <div className="grid gap-4 md:grid-cols-3">
         {data.plans?.map((plan) => {
           const isCurrent = current?.id === plan.id;
@@ -303,6 +314,8 @@ export default function PlansView() {
           ))}
         </div>
       </Card>
+      </>
+      )}
     </div>
   );
 }

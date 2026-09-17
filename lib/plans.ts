@@ -15,6 +15,8 @@ export type Plan = {
   aiCoinsPerMonth: number; // cota mensal de coins inclusa (0 = ilimitado se unlimited)
   quality: AiQuality; // teto de qualidade de IA
   unlimited?: boolean; // sem metering (planos topo)
+  // false = fora de venda (fica no catálogo para contas antigas e concessões)
+  purchasable?: boolean;
   highlights: string[];
   recommended?: boolean;
 };
@@ -83,7 +85,8 @@ export const PLANS: Plan[] = [
     monthlyPrice: 47,
     aiCoinsPerMonth: 200,
     quality: "balanced",
-    recommended: true,
+    // Profissional ainda não tem ação de IA: nada a vender por enquanto.
+    purchasable: false,
     highlights: ["200 coins/mês", "IA no modo balanceado", "Tudo do Grátis"],
   },
   // ---------- Agência ----------
@@ -129,6 +132,26 @@ export const PLANS: Plan[] = [
 
 export function plansFor(accountType: AccountType): Plan[] {
   return PLANS.filter((p) => p.accountType === accountType);
+}
+// Planos à venda (e o grátis) de um tipo de conta.
+export function listedPlansFor(accountType: AccountType): Plan[] {
+  return plansFor(accountType).filter((p) => p.monthlyPrice === 0 || p.purchasable !== false);
+}
+export function isPurchasablePlan(plan: Plan | undefined): boolean {
+  return isPaidPlan(plan) && plan!.purchasable !== false;
+}
+
+// Quem pode comprar plano/coins: só quem de fato roda IA e paga por ela.
+// Marca gerenciada: a agência paga. Profissional: nenhuma ação de IA hoje.
+export const PURCHASE_MANAGED_BRAND =
+  "A sua agência cuida da IA da sua marca e paga pelo uso. Você não precisa comprar plano nem coins.";
+export const PURCHASE_PROFESSIONAL =
+  "A conta de profissional é grátis: perfil, portfólio e candidaturas não usam coins. Não há nada para comprar.";
+export function purchaseBlockReason(session: { role: string; selfServe?: boolean }): string | null {
+  if (session.role === "agency") return null;
+  if (session.role === "client") return session.selfServe ? null : PURCHASE_MANAGED_BRAND;
+  if (session.role === "professional") return PURCHASE_PROFESSIONAL;
+  return "Esta conta não compra planos.";
 }
 export function getPlan(id: string): Plan | undefined {
   return PLANS.find((p) => p.id === id);
