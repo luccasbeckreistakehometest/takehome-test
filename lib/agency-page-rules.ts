@@ -143,35 +143,9 @@ export function leadToProspectFields(lead: Lead, lang: "pt-BR" | "en" = "pt-BR")
 }
 
 // ---------- Limite por IP (janela deslizante) ----------
-
-export type RateLimitVerdict = { ok: boolean; remaining: number; retryAfterMs: number };
-
-export function createRateLimiter(opts: { limit: number; windowMs: number }) {
-  const hits = new Map<string, number[]>();
-  const limit = Math.max(1, Math.floor(opts.limit));
-  const windowMs = Math.max(1000, opts.windowMs);
-  return {
-    // Conta a tentativa quando permitida; recusadas não consomem cota.
-    check(key: string, now: number = Date.now()): RateLimitVerdict {
-      const recent = (hits.get(key) ?? []).filter((t) => now - t < windowMs);
-      if (recent.length >= limit) {
-        const oldest = Math.min(...recent);
-        hits.set(key, recent);
-        return { ok: false, remaining: 0, retryAfterMs: Math.max(0, oldest + windowMs - now) };
-      }
-      recent.push(now);
-      hits.set(key, recent);
-      // Limpeza oportunista para o mapa não crescer para sempre
-      if (hits.size > 5000) {
-        for (const [k, v] of hits) if (v.every((t) => now - t >= windowMs)) hits.delete(k);
-      }
-      return { ok: true, remaining: limit - recent.length, retryAfterMs: 0 };
-    },
-    reset() {
-      hits.clear();
-    },
-  };
-}
+// A implementação mora em lib/rate-limit.ts (reusada por login, cadastro,
+// contato e rotas de IA); reexportada aqui para os usos antigos.
+export { createRateLimiter, type RateLimitVerdict } from "./rate-limit";
 
 export function leadRateLimitPerHour(env: string | undefined): number {
   const n = Number(env);

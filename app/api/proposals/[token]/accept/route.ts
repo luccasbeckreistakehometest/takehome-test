@@ -18,7 +18,7 @@ export async function POST(request: Request, { params }: Context) {
   if (!parsed.success) {
     return NextResponse.json({ error: parsed.error.issues[0]?.message ?? "Dados inválidos" }, { status: 400 });
   }
-  const result = acceptProposal({ token, ...parsed.data });
+  const result = await acceptProposal({ token, ...parsed.data });
   if (!result.ok) {
     const status = result.reason === "not_found" ? 404 : result.reason === "unknown_package" ? 400 : 409;
     return NextResponse.json({ error: result.reason }, { status });

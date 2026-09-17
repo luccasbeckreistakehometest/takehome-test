@@ -3,6 +3,8 @@
 // sozinhos). Só no runtime Node (better-sqlite3 não roda no edge).
 export async function register() {
   if (process.env.NEXT_RUNTIME === "nodejs") {
+    const { ensureSeedUsers } = await import("./lib/auth");
+    await ensureSeedUsers();
     const { startScheduler } = await import("./lib/scheduler");
     startScheduler();
   }

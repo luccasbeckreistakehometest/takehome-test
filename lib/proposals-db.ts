@@ -1,6 +1,6 @@
 import { randomBytes, randomUUID } from "crypto";
 import { createClient, db, getClient } from "./db";
-import { createUser } from "./auth";
+import { createUser, randomPassword } from "./auth";
 import { getProspect, updateProspect } from "./marketplace-db";
 import { notifyAgency } from "./notify";
 import {
@@ -131,21 +131,14 @@ export type AcceptResult =
   | { ok: true; clientId: string; login: { username: string; password: string } | null; portalUrl: string }
   | { ok: false; reason: "not_found" | "accepted" | "expired" | "unknown_package" };
 
-function randomPassword(): string {
-  // legível e sem ambiguidade (sem 0/O/1/l)
-  const alphabet = "abcdefghjkmnpqrstuvwxyz23456789";
-  const bytes = randomBytes(10);
-  return Array.from(bytes, (b) => alphabet[b % alphabet.length]).join("");
-}
-
 // Aceite público: cria o cliente (ou reaproveita o já convertido), o login do
 // portal, marca o prospect como convertido e avisa a agência.
-export function acceptProposal(input: {
+export async function acceptProposal(input: {
   token: string;
   packageName: string;
   name: string;
   contact: string;
-}): AcceptResult {
+}): Promise<AcceptResult> {
   const proposal = getProposalByToken(input.token);
   if (!proposal) return { ok: false, reason: "not_found" };
   const check = canAccept(proposal, input.packageName);
@@ -178,7 +171,13 @@ export function acceptProposal(input: {
     });
     clientId = client.id;
     const password = randomPassword();
-    const created = createUser({ password, role: "client", refId: client.id, name: client.name });
+    const created = await createUser({
+      password,
+      role: "client",
+      refId: client.id,
+      name: client.name,
+      mustChangePassword: true,
+    });
     login = { username: created.username, password };
   }
   if (prospect) updateProspect(prospect.id, { status: "converted", clientId });

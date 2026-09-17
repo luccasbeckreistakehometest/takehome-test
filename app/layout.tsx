@@ -1,10 +1,9 @@
 import type { Metadata } from "next";
 import Link from "next/link";
-import { cookies } from "next/headers";
 import { Geist, Geist_Mono, Space_Grotesk } from "next/font/google";
 import { getSettings } from "@/lib/settings";
 import { resolveBrand } from "@/lib/branding";
-import { SESSION_COOKIE, verifySession } from "@/lib/auth-shared";
+import { getSession } from "@/lib/session";
 import Translator, { LangToggle } from "@/components/Translator";
 import ActivityBell, { LogoutButton } from "@/components/ActivityBell";
 import JobsIndicator from "@/components/JobsIndicator";
@@ -49,7 +48,7 @@ export default async function RootLayout({
   children: React.ReactNode;
 }>) {
   const settings = getSettings();
-  const session = await verifySession((await cookies()).get(SESSION_COOKIE)?.value);
+  const session = await getSession();
   // Marca exibida no chrome: agência (whitelabel) para a agência e convidados;
   // plataforma para anônimos e auto-cadastrados.
   const brand = resolveBrand(session, settings);

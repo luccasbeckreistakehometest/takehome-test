@@ -1,9 +1,8 @@
 import { NextResponse } from "next/server";
 import { z } from "zod";
 import { getClient, setClientSelfServe } from "@/lib/db";
-import { getSession } from "@/lib/session";
+import { getSession, reissueSession } from "@/lib/session";
 import { homeForUser } from "@/lib/auth";
-import { SESSION_COOKIE, signSession } from "@/lib/auth-shared";
 
 type Context = { params: Promise<{ id: string }> };
 
@@ -43,20 +42,7 @@ export async function POST(request: Request, { params }: Context) {
 
   // Só reemite a sessão quando quem troca é a própria marca.
   if (isOwner) {
-    const token = await signSession({
-      userId: session.userId,
-      role: session.role,
-      refId: session.refId,
-      name: session.name,
-      brandSource: session.brandSource,
-      selfServe: parsed.data.selfServe,
-    });
-    response.cookies.set(SESSION_COOKIE, token, {
-      httpOnly: true,
-      sameSite: "lax",
-      path: "/",
-      maxAge: 60 * 60 * 24 * 30,
-    });
+    await reissueSession(response, session, { selfServe: parsed.data.selfServe });
   }
   return response;
 }
