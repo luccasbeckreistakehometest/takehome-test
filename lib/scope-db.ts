@@ -97,7 +97,11 @@ export function deletePackage(clientId: string): void {
 }
 
 function monthConsumption(clientId: string, month: string, pkg: ClientPackage): Consumption {
-  const reports = db.prepare("SELECT createdAt FROM monthly_reports WHERE clientId = ?").all(clientId) as { createdAt: string }[];
+  // a tabela nasce com o módulo do relatório mensal (pode ainda não existir)
+  const hasReports = Boolean(db.prepare("SELECT 1 FROM sqlite_master WHERE type = 'table' AND name = 'monthly_reports'").get());
+  const reports = hasReports
+    ? (db.prepare("SELECT createdAt FROM monthly_reports WHERE clientId = ?").all(clientId) as { createdAt: string }[])
+    : [];
   // demanda aberta por um pedido de post/reel/... não conta como "demanda"
   // (a peça conta quando entra no calendário)
   const unitOf = new Map(pkg.items.map((i) => [i.key, i.unit]));

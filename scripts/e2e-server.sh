@@ -29,6 +29,9 @@ export META_APP_SECRET="e2e-meta-app-secret"
 export META_VERIFY_TOKEN="e2e-verify-token-0123"
 # o e2e não fala com a Meta: a checagem de posse do id fica nos testes unitários
 export META_GRAPH_VERIFY=off
+# assinatura no cartão: transporte falso do Mercado Pago (requisições em
+# data/e2e/mp-outbox.json, respostas lidas de data/e2e/mp-fake.json)
+export MP_TRANSPORT=file
 export LOGIN_RATE_LIMIT_PER_IP=10000
 export REGISTER_RATE_LIMIT_PER_HOUR=30
 export AI_RATE_LIMIT_PER_10MIN=10000

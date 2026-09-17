@@ -3,12 +3,14 @@
 // (/api/webhooks/mercadopago), que credita/ativa de verdade.
 //
 // Credenciais em env (nunca no código): MP_ACCESS_TOKEN (obrigatório).
-// Planos são PRÉ-PAGOS por período, sem renovação automática (preapproval /
-// Pix Automático ficam para depois).
+// Planos: pré-pagos por período (Checkout Pro) ou assinatura no cartão com
+// renovação automática (preapproval, abaixo). Pix Automático fica para depois.
 
 import { getCoinPack, getPlan, periodPrice, PERIOD_DISCOUNT, type BillingPeriod } from "./plans";
 import type { AccountType } from "./plans";
 import { appBaseUrl } from "./legal";
+import { mpApi, mpFileTransport } from "./mp-transport";
+import { subRef } from "./subscription-rules";
 
 const BASE = "https://api.mercadopago.com";
 const token = () => process.env.MP_ACCESS_TOKEN || "";
@@ -116,4 +118,61 @@ export type MpPayment = {
 
 export async function getPayment(id: string): Promise<MpPayment> {
   return (await mp(`/v1/payments/${id}`)) as unknown as MpPayment;
+}
+
+// ---------- Assinatura recorrente (preapproval, sem plano associado) ----------
+// Com plano associado o MP exige o token do cartão no nosso formulário; sem
+// plano, a assinatura nasce "pending" e o cliente conclui no init_point.
+
+export function subscriptionsAvailable(): boolean {
+  return mpConfigured() || mpFileTransport();
+}
+
+export async function createRecurring(input: {
+  accountType: AccountType;
+  accountId: string;
+  planId: string;
+  period: BillingPeriod;
+  amount: number;
+  payerEmail: string;
+}): Promise<{ id: string; initPoint: string; status: string }> {
+  const plan = getPlan(input.planId);
+  if (!plan) throw new Error("Plano inválido");
+  const months = PERIOD_DISCOUNT[input.period].months;
+  const data = await mpApi("POST", "/preapproval", {
+    reason: `Marqa · Plano ${plan.name} (${months === 1 ? "mensal" : `a cada ${months} meses`})`,
+    external_reference: subRef({ accountType: input.accountType, accountId: input.accountId, planId: plan.id, period: input.period }),
+    payer_email: input.payerEmail,
+    back_url: `${appBaseUrl()}/plans?sub=return`,
+    status: "pending",
+    auto_recurring: {
+      frequency: months,
+      frequency_type: "months",
+      transaction_amount: input.amount,
+      currency_id: "BRL",
+    },
+  });
+  return { id: String(data.id), initPoint: String(data.init_point ?? ""), status: String(data.status ?? "pending") };
+}
+
+export async function cancelRecurring(preapprovalId: string): Promise<void> {
+  await mpApi("PUT", `/preapproval/${encodeURIComponent(preapprovalId)}`, { status: "cancelled" });
+}
+
+export type MpPreapproval = { id: string; status: string; external_reference?: string };
+export async function getPreapprovalRemote(id: string): Promise<MpPreapproval> {
+  return (await mpApi("GET", `/preapproval/${encodeURIComponent(id)}`)) as unknown as MpPreapproval;
+}
+
+export type MpAuthorizedPayment = {
+  id: string | number;
+  preapproval_id: string;
+  status?: string;
+  transaction_amount?: number;
+  currency_id?: string;
+  external_reference?: string;
+  payment?: { id?: string | number; status?: string } | null;
+};
+export async function getAuthorizedPayment(id: string): Promise<MpAuthorizedPayment> {
+  return (await mpApi("GET", `/authorized_payments/${encodeURIComponent(id)}`)) as unknown as MpAuthorizedPayment;
 }

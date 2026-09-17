@@ -1,6 +1,7 @@
 import { randomUUID } from "crypto";
 import { addColumnIfMissing, db, tenantColumn } from "./db";
 import { billingAgencyId, HOUSE_AGENCY_ID } from "./tenancy-rules";
+import { nextPeriodEnd, parseSubRef, preapprovalEffect, subscriptionExpired } from "./subscription-rules";
 import {
   actionCost,
   entryPlanId,
@@ -39,6 +40,11 @@ export type Subscription = {
   startedAt: string;
   renewsAt: string;
   lastRefillAt: string | null;
+  // cobrança automática no cartão (MP); cancelada = vale até renewsAt
+  recurring?: boolean;
+  cancelAtPeriodEnd?: boolean;
+  mpPreapprovalId?: string | null;
+  mpStatus?: string;
 };
 
 export type Wallet = {
@@ -88,6 +94,11 @@ db.exec(`
   );
 `);
 addColumnIfMissing("subscriptions", "lastRefillAt", "TEXT");
+// Assinatura recorrente no cartão (Mercado Pago preapproval)
+addColumnIfMissing("subscriptions", "recurring", "INTEGER NOT NULL DEFAULT 0");
+addColumnIfMissing("subscriptions", "cancelAtPeriodEnd", "INTEGER NOT NULL DEFAULT 0");
+addColumnIfMissing("subscriptions", "mpPreapprovalId", "TEXT");
+addColumnIfMissing("subscriptions", "mpStatus", "TEXT NOT NULL DEFAULT ''");
 addColumnIfMissing("wallets", "planCoins", "REAL NOT NULL DEFAULT 0");
 addColumnIfMissing("billing_transactions", "ref", "TEXT");
 addColumnIfMissing("mp_payments", "status", "TEXT NOT NULL DEFAULT 'credited'");
@@ -258,21 +269,42 @@ export function addCoins(
 }
 
 // ---------- Assinatura (pré-paga) ----------
+type RawSubscriptionRow = Omit<Subscription, "lastRefillAt" | "recurring" | "cancelAtPeriodEnd"> & {
+  lastRefillAt: string | null;
+  recurring?: number | boolean | null;
+  cancelAtPeriodEnd?: number | boolean | null;
+};
 type SubscriptionRow = Omit<Subscription, "lastRefillAt"> & { lastRefillAt: string | null };
 
 function subscriptionRow(accountType: AccountType, accountId: string): SubscriptionRow | undefined {
-  return db
+  const row = db
     .prepare("SELECT * FROM subscriptions WHERE accountType = ? AND accountId = ?")
-    .get(accountType, accountId) as SubscriptionRow | undefined;
+    .get(accountType, accountId) as RawSubscriptionRow | undefined;
+  if (!row) return undefined;
+  return {
+    ...row,
+    recurring: Number(row.recurring ?? 0) === 1,
+    cancelAtPeriodEnd: Number(row.cancelAtPeriodEnd ?? 0) === 1,
+    mpPreapprovalId: row.mpPreapprovalId ?? null,
+    mpStatus: row.mpStatus ?? "",
+  };
 }
 
 function writeSubscription(sub: Subscription): void {
   db.prepare(
-    `INSERT INTO subscriptions (accountType, accountId, agencyId, planId, period, status, startedAt, renewsAt, lastRefillAt)
-     VALUES (@accountType, @accountId, @agencyId, @planId, @period, @status, @startedAt, @renewsAt, @lastRefillAt)
+    `INSERT INTO subscriptions (accountType, accountId, agencyId, planId, period, status, startedAt, renewsAt, lastRefillAt, recurring, cancelAtPeriodEnd, mpPreapprovalId, mpStatus)
+     VALUES (@accountType, @accountId, @agencyId, @planId, @period, @status, @startedAt, @renewsAt, @lastRefillAt, @recurring, @cancelAtPeriodEnd, @mpPreapprovalId, @mpStatus)
      ON CONFLICT(accountType, accountId) DO UPDATE SET agencyId=@agencyId, planId=@planId, period=@period, status=@status,
-       startedAt=@startedAt, renewsAt=@renewsAt, lastRefillAt=@lastRefillAt`
-  ).run({ ...sub, agencyId: accountAgencyId(sub.accountType, sub.accountId) });
+       startedAt=@startedAt, renewsAt=@renewsAt, lastRefillAt=@lastRefillAt, recurring=@recurring,
+       cancelAtPeriodEnd=@cancelAtPeriodEnd, mpPreapprovalId=@mpPreapprovalId, mpStatus=@mpStatus`
+  ).run({
+    ...sub,
+    agencyId: accountAgencyId(sub.accountType, sub.accountId),
+    recurring: sub.recurring ? 1 : 0,
+    cancelAtPeriodEnd: sub.cancelAtPeriodEnd ? 1 : 0,
+    mpPreapprovalId: sub.mpPreapprovalId ?? null,
+    mpStatus: sub.mpStatus ?? "",
+  });
 }
 
 function planQuota(plan: Plan): number {
@@ -340,7 +372,9 @@ function projectAccount(
   if (!row) return fresh("signup");
   const plan = getPlan(row.planId);
   if (!plan || plan.accountType !== accountType) return fresh("expired", plan);
-  if (isPaidPlan(plan) && row.renewsAt <= at) return fresh("expired", plan);
+  if (isPaidPlan(plan) && subscriptionExpired({ renewsAt: row.renewsAt, recurring: Boolean(row.recurring), cancelAtPeriodEnd: Boolean(row.cancelAtPeriodEnd) }, new Date(at))) {
+    return fresh("expired", plan);
+  }
   const current: Subscription = { ...row, period: isBillingPeriod(row.period) ? row.period : "monthly" };
   const lastRefill = row.lastRefillAt ?? row.startedAt;
   if (addMonthsIso(lastRefill, 1) > at) return { sub: current, planCoins: currentPlanCoins, change: null };
@@ -445,6 +479,11 @@ function activatePlan(input: {
   const current = subscriptionRow(input.accountType, input.accountId);
   const extending = Boolean(current && current.planId === input.plan.id && current.renewsAt > at && isPaidPlan(input.plan));
   const sub: Subscription = {
+    // pagamento avulso do mesmo plano não desliga a renovação no cartão
+    recurring: extending ? current!.recurring : false,
+    cancelAtPeriodEnd: extending ? current!.cancelAtPeriodEnd : false,
+    mpPreapprovalId: extending ? current!.mpPreapprovalId : null,
+    mpStatus: extending ? current!.mpStatus : "",
     accountType: input.accountType,
     accountId: input.accountId,
     planId: input.plan.id,
@@ -958,4 +997,218 @@ export function recordPaymentLookupFailure(id: string, detail: string): void {
     amount: existing?.amount ?? 0,
     detail: `consulta ao Mercado Pago falhou: ${detail}`.slice(0, 300),
   });
+}
+
+// ---------- Assinatura recorrente (Mercado Pago preapproval) ----------
+db.exec(`
+  CREATE TABLE IF NOT EXISTS mp_plans (
+    id TEXT PRIMARY KEY,
+    planId TEXT NOT NULL,
+    period TEXT NOT NULL,
+    amount REAL NOT NULL,
+    createdAt TEXT NOT NULL,
+    UNIQUE (planId, period, amount)
+  );
+  CREATE TABLE IF NOT EXISTS mp_preapprovals (
+    id TEXT PRIMARY KEY,
+    accountType TEXT NOT NULL,
+    accountId TEXT NOT NULL,
+    planId TEXT NOT NULL,
+    period TEXT NOT NULL,
+    amount REAL NOT NULL,
+    mpPlanRowId TEXT,
+    status TEXT NOT NULL DEFAULT 'pending',
+    payerEmail TEXT NOT NULL DEFAULT '',
+    initPoint TEXT NOT NULL DEFAULT '',
+    createdAt TEXT NOT NULL,
+    updatedAt TEXT NOT NULL
+  );
+  CREATE INDEX IF NOT EXISTS idx_mp_preapprovals_account ON mp_preapprovals(accountType, accountId);
+`);
+tenantColumn("mp_preapprovals");
+
+export type MpPlanRow = { id: string; planId: string; period: BillingPeriod; amount: number; createdAt: string };
+
+// Preço recorrente de um plano/período. Mudou o preço → nova linha; quem já
+// assina segue no valor da própria assinatura.
+export function ensurePlanPrice(planId: string, period: BillingPeriod): MpPlanRow {
+  const plan = getPlan(planId);
+  if (!plan || !isPaidPlan(plan)) throw new Error("Plano inválido");
+  const amount = periodPrice(plan.monthlyPrice, period);
+  const existing = db.prepare("SELECT * FROM mp_plans WHERE planId = ? AND period = ? AND amount = ?").get(planId, period, amount) as MpPlanRow | undefined;
+  if (existing) return existing;
+  const row: MpPlanRow = { id: randomUUID(), planId, period, amount, createdAt: nowIso() };
+  db.prepare("INSERT OR IGNORE INTO mp_plans (id, planId, period, amount, createdAt) VALUES (@id, @planId, @period, @amount, @createdAt)").run(row);
+  return db.prepare("SELECT * FROM mp_plans WHERE planId = ? AND period = ? AND amount = ?").get(planId, period, amount) as MpPlanRow;
+}
+
+export type PreapprovalRow = {
+  id: string;
+  accountType: AccountType;
+  accountId: string;
+  planId: string;
+  period: BillingPeriod;
+  amount: number;
+  status: string;
+  payerEmail: string;
+  initPoint: string;
+  createdAt: string;
+  updatedAt: string;
+};
+
+export function recordPreapproval(input: Omit<PreapprovalRow, "createdAt" | "updatedAt"> & { mpPlanRowId: string }): void {
+  const at = nowIso();
+  db.prepare(
+    `INSERT INTO mp_preapprovals (id, agencyId, accountType, accountId, planId, period, amount, mpPlanRowId, status, payerEmail, initPoint, createdAt, updatedAt)
+     VALUES (@id, @agencyId, @accountType, @accountId, @planId, @period, @amount, @mpPlanRowId, @status, @payerEmail, @initPoint, @at, @at)
+     ON CONFLICT(id) DO UPDATE SET status = excluded.status, updatedAt = excluded.updatedAt`
+  ).run({ ...input, agencyId: accountAgencyId(input.accountType, input.accountId), at });
+}
+
+export function getPreapproval(id: string): PreapprovalRow | null {
+  return (db.prepare("SELECT * FROM mp_preapprovals WHERE id = ?").get(id) as PreapprovalRow | undefined) ?? null;
+}
+
+export function listPreapprovals(filter: { accountType?: AccountType; accountId?: string; agencyId?: string | null; limit?: number } = {}): PreapprovalRow[] {
+  const where: string[] = [];
+  const args: (string | number)[] = [];
+  if (filter.agencyId) {
+    where.push("agencyId = ?");
+    args.push(filter.agencyId);
+  }
+  if (filter.accountType) {
+    where.push("accountType = ?");
+    args.push(filter.accountType);
+  }
+  if (filter.accountId) {
+    where.push("accountId = ?");
+    args.push(filter.accountId);
+  }
+  args.push(Math.min(500, filter.limit ?? 100));
+  return db
+    .prepare(`SELECT * FROM mp_preapprovals ${where.length ? `WHERE ${where.join(" AND ")}` : ""} ORDER BY createdAt DESC LIMIT ?`)
+    .all(...args) as PreapprovalRow[];
+}
+
+// Mudança de estado da autorização no MP (autorizada, pausada, cancelada).
+export function applyPreapprovalStatus(input: { id: string; status: string; externalReference?: string }): "updated" | "unknown" {
+  const local = getPreapproval(input.id);
+  if (!local) {
+    const ref = parseSubRef(input.externalReference);
+    if (!ref) return "unknown";
+  }
+  const at = nowIso();
+  db.transaction(() => {
+    db.prepare("UPDATE mp_preapprovals SET status = ?, updatedAt = ? WHERE id = ?").run(input.status, at, input.id);
+    const effect = preapprovalEffect(input.status);
+    const owner = local ?? parseSubRef(input.externalReference);
+    if (!owner) return;
+    const sub = subscriptionRow(owner.accountType, owner.accountId);
+    if (!sub || sub.mpPreapprovalId !== input.id) return;
+    if (effect === "cancel") {
+      writeSubscription({ ...sub, cancelAtPeriodEnd: true, mpStatus: input.status });
+    } else if (effect === "active") {
+      writeSubscription({ ...sub, mpStatus: input.status });
+    }
+  }).immediate();
+  return "updated";
+}
+
+export type SubscriptionPaymentInput = {
+  authorizedPaymentId: string;
+  preapprovalId: string;
+  approved: boolean;
+  amount: number;
+  externalReference?: string;
+  mpStatus: string;
+};
+
+// Cobrança recorrente: cada pagamento aprovado renova o período e recarrega a
+// cota do plano (sem acumular). Idempotente pelo id da cobrança.
+export function applySubscriptionPayment(input: SubscriptionPaymentInput, now: Date = new Date()): PaymentOutcome {
+  const paymentKey = `sub_${input.authorizedPaymentId}`;
+  return db
+    .transaction((): PaymentOutcome => {
+      const existing = getPaymentRow(paymentKey);
+      if (existing?.status === "credited") return "already_credited";
+      const local = getPreapproval(input.preapprovalId);
+      const ref = local
+        ? { accountType: local.accountType, accountId: local.accountId, planId: local.planId, period: local.period }
+        : parseSubRef(input.externalReference);
+      const base = {
+        id: paymentKey,
+        mpStatus: input.mpStatus,
+        externalReference: input.externalReference ?? `preapproval:${input.preapprovalId}`,
+        accountType: ref?.accountType ?? null,
+        accountId: ref?.accountId ?? null,
+        amount: Number(input.amount) || 0,
+      };
+      if (!ref) {
+        upsertPayment({ ...base, status: "invalid", detail: "assinatura desconhecida" });
+        return "invalid";
+      }
+      if (!input.approved) {
+        upsertPayment({ ...base, status: existing?.status === "rejected" ? "rejected" : "pending", detail: `cobrança recorrente ${input.mpStatus}` });
+        return "ignored";
+      }
+      const plan = getPlan(ref.planId);
+      if (!plan || plan.accountType !== ref.accountType || !isPaidPlan(plan)) {
+        upsertPayment({ ...base, status: "invalid", detail: "plano inválido" });
+        return "invalid";
+      }
+      const expected = local?.amount ?? periodPrice(plan.monthlyPrice, ref.period);
+      if (base.amount + 0.01 < expected) {
+        upsertPayment({ ...base, status: "invalid", detail: `valor pago ${base.amount} menor que ${expected}` });
+        return "invalid";
+      }
+      const at = now.toISOString();
+      const months = PERIOD_DISCOUNT[ref.period].months;
+      const current = subscriptionRow(ref.accountType, ref.accountId);
+      const samePlan = Boolean(current && current.planId === plan.id && current.recurring);
+      writeSubscription({
+        accountType: ref.accountType,
+        accountId: ref.accountId,
+        planId: plan.id,
+        period: ref.period,
+        status: "active",
+        startedAt: samePlan ? current!.startedAt : at,
+        renewsAt: nextPeriodEnd(samePlan ? current!.renewsAt : null, now, months),
+        lastRefillAt: at,
+        recurring: true,
+        cancelAtPeriodEnd: false,
+        mpPreapprovalId: input.preapprovalId,
+        mpStatus: "authorized",
+      });
+      setPlanCoins(ref.accountType, ref.accountId, planQuota(plan));
+      recordTx({
+        accountType: ref.accountType,
+        accountId: ref.accountId,
+        kind: "subscription_renewal",
+        description: `${plan.name} · cobrança no cartão (${PERIOD_DISCOUNT[ref.period].label})`,
+        amount: base.amount,
+        coins: planQuota(plan),
+        ref: `mp_sub:${input.authorizedPaymentId}`,
+        at,
+      });
+      db.prepare("UPDATE mp_preapprovals SET status = 'authorized', updatedAt = ? WHERE id = ?").run(at, input.preapprovalId);
+      upsertPayment({ ...base, status: "credited", detail: "" });
+      return "credited";
+    })
+    .immediate();
+}
+
+// Cancelar a renovação: o plano vale até o fim do período já pago.
+export function markCancelAtPeriodEnd(accountType: AccountType, accountId: string): Subscription | null {
+  const sub = subscriptionRow(accountType, accountId);
+  if (!sub || !sub.recurring) return null;
+  writeSubscription({ ...sub, cancelAtPeriodEnd: true, mpStatus: "cancelled" });
+  if (sub.mpPreapprovalId) {
+    db.prepare("UPDATE mp_preapprovals SET status = 'cancelled', updatedAt = ? WHERE id = ?").run(nowIso(), sub.mpPreapprovalId);
+  }
+  return getSubscription(accountType, accountId);
+}
+
+export function recurringSubscriptions(): SubscriptionRow[] {
+  const rows = db.prepare("SELECT accountType, accountId FROM subscriptions WHERE recurring = 1").all() as { accountType: AccountType; accountId: string }[];
+  return rows.map((r) => subscriptionRow(r.accountType, r.accountId)).filter((r): r is SubscriptionRow => Boolean(r));
 }

@@ -234,9 +234,33 @@ export const UI_DICT_R3: Record<string, string> = {
   "Chave Pix inválida. Use CPF, CNPJ, e-mail, celular ou chave aleatória.": "Invalid Pix key. Use CPF, CNPJ, email, mobile or a random key.",
   "Confira os dados de recebimento.": "Check the payment details.",
   "Escolha o cliente e o mês.": "Choose the client and the month.",
+  // Assinatura no cartão
+  "Assinatura enviada ao Mercado Pago. O plano liga assim que a primeira cobrança no cartão for aprovada.":
+    "Subscription sent to Mercado Pago. The plan turns on as soon as the first card charge is approved.",
+  "Preços em reais (R$), cobrados pelo Mercado Pago.": "Prices in Brazilian reais (R$), billed in BRL by Mercado Pago.",
+  "Assinatura no cartão: renova sozinha no período escolhido; cancele quando quiser e o plano vale até o fim do período pago. Ou pague um período à vista (Pix, boleto ou cartão), sem renovação.":
+    "Card subscription: renews on its own for the period you pick; cancel anytime and the plan lasts until the end of the paid period. Or pay one period up front (Pix, boleto or card), with no renewal.",
+  "Os planos são pagos por período (Pix, cartão ou boleto) e não renovam sozinhos: no fim do período a conta volta para o grátis.":
+    "Plans are paid per period (Pix, card or boleto) and don't renew on their own: at the end of the period the account goes back to free.",
+  "Arrependimento em até 7 dias —": "7-day cooling-off period —",
+  "Assinatura no cartão (Mercado Pago)": "Card subscription (Mercado Pago)",
+  "Cancelar renovação": "Cancel renewal",
+  "Cancelar a renovação no cartão? Seu plano continua até o fim do período já pago.": "Cancel the card renewal? Your plan continues until the end of the period already paid.",
+  "Qual e-mail você usa no Mercado Pago? A assinatura fica ligada a ele.": "Which email do you use on Mercado Pago? The subscription is linked to it.",
+  "E-mail do Mercado Pago": "Mercado Pago email",
+  "Assinar no cartão · mensal": "Subscribe by card · monthly",
+  "Pagar o período à vista (Pix/boleto)": "Pay the period up front (Pix/boleto)",
+  "Informe o e-mail da conta do Mercado Pago.": "Enter the email of your Mercado Pago account.",
+  "Não foi possível abrir a assinatura agora. Tente de novo em instantes.": "We couldn't open the subscription right now. Try again shortly.",
+  "Não há assinatura no cartão para cancelar.": "There's no card subscription to cancel.",
+  "Não conseguimos cancelar no Mercado Pago agora. Tente de novo em instantes.": "We couldn't cancel on Mercado Pago right now. Try again shortly.",
 };
 
 export const UI_REGEX_R3: [RegExp, string][] = [
+  [/^Cancelada — o plano vale até (.+) e depois volta para o grátis\.$/, "Canceled — the plan lasts until $1 and then goes back to free."],
+  [/^Próxima cobrança em (.+)\. Sem fidelidade: cancele quando quiser\.$/, "Next charge on $1. No lock-in: cancel anytime."],
+  [/^Renovação cancelada\. Seu plano vale até (.+)\.$/, "Renewal canceled. Your plan lasts until $1."],
+  [/^Assinar no cartão · a cada (\d+) meses$/, "Subscribe by card · every $1 months"],
   [/^Vence (\d{2}\/\d{2}) · (\d+) linha\(s\)$/, "Due $1 · $2 line(s)"],
   [/^· atrasada há (\d+) dia\(s\)$/, "· $1 day(s) overdue"],
   [/^(\d+) fatura\(s\) vencem esta semana · (.+)$/, "$1 invoice(s) due this week · $2"],

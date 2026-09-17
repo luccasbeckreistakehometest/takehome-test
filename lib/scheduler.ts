@@ -12,6 +12,7 @@ import { purgeAuthEvents } from "./auth";
 import { purgeOldInbox } from "./contact-db";
 import { purgeOldAiErrors } from "./ai-spend";
 import { runMonthlyInvoiceDrafts } from "./invoices-db";
+import { runSubscriptionNotices } from "./subscription-notices";
 
 let running = false;
 
@@ -77,6 +78,7 @@ function runHousekeeping(now = Date.now()): void {
   try {
     const drafts = runMonthlyInvoiceDrafts();
     if (drafts > 0) console.log(`[scheduler] ${drafts} rascunho(s) de fatura criados`);
+    runSubscriptionNotices();
   } catch (error) {
     console.error("[scheduler] manutenção falhou:", error);
   }

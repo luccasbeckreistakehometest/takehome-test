@@ -4,7 +4,7 @@ import { useCallback, useEffect, useState } from "react";
 import Link from "next/link";
 import { useSearchParams } from "next/navigation";
 import { api } from "@/lib/api";
-import { Button, Card, ErrorBox, SectionTitle, Skeleton, Tag } from "@/components/ui";
+import { Button, Card, ErrorBox, Input, SectionTitle, Skeleton, Tag } from "@/components/ui";
 import { Icon } from "@/components/icons";
 import { fmtMoney, useUiLang } from "@/lib/i18n";
 
@@ -36,6 +36,17 @@ type Summary = {
   revenue?: { total: number; mrr: number; byKind: Record<string, number> };
 };
 
+type SubState = {
+  available: boolean;
+  recurring: boolean;
+  cancelAtPeriodEnd: boolean;
+  mpStatus: string;
+  renewsAt: string;
+  planId: string;
+  email: string;
+  pending: { planId: string; period: string; createdAt: string }[];
+};
+
 const QUALITY_LABEL: Record<string, string> = { economy: "IA econômica", balanced: "IA balanceada", premium: "IA premium (Opus)" };
 const fmtDate = (iso?: string) => (iso ? new Date(iso).toLocaleDateString("pt-BR") : "");
 
@@ -49,8 +60,13 @@ export default function PlansView() {
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState("");
   const [note, setNote] = useState("");
+  const [sub, setSub] = useState<SubState | null>(null);
+  const [email, setEmail] = useState("");
+  const [askEmail, setAskEmail] = useState<string | null>(null);
 
-  const returned = params.get("pago")
+  const returned = params.get("sub")
+    ? "Assinatura enviada ao Mercado Pago. O plano liga assim que a primeira cobrança no cartão for aprovada."
+    : params.get("pago")
     ? "Pagamento recebido. A liberação acontece assim que o Mercado Pago confirmar (normalmente em segundos)."
     : params.get("pendente")
       ? "Pagamento pendente. Assim que o Mercado Pago confirmar, liberamos sozinhos."
@@ -60,13 +76,20 @@ export default function PlansView() {
 
   const load = useCallback(() => {
     api<Summary>("/api/billing")
-      .then(setData)
+      .then((summary) => {
+        setData(summary);
+        if (summary.role !== "admin" && !summary.purchaseBlocked) {
+          api<SubState>("/api/billing/subscription")
+            .then(setSub)
+            .catch(() => setSub(null));
+        }
+      })
       .catch((e) => setError(e instanceof Error ? e.message : "Erro ao carregar"));
   }, []);
 
   useEffect(() => {
     load();
-    if (!params.get("pago") && !params.get("pendente")) return;
+    if (!params.get("pago") && !params.get("pendente") && !params.get("sub")) return;
     // Recarrega o saldo por alguns segundos (tempo do webhook chegar).
     const timer = setInterval(load, 5000);
     const stop = setTimeout(() => clearInterval(timer), 45000);
@@ -101,6 +124,42 @@ export default function PlansView() {
       window.location.assign(result.url); // página de pagamento do Mercado Pago
     } catch (e) {
       setError(e instanceof Error ? e.message : "Erro ao abrir o pagamento");
+      setBusy(false);
+    }
+  }
+
+  // Assinatura no cartão (renova sozinha; cancele quando quiser)
+  async function subscribe(planId: string) {
+    const payerEmail = email.trim() || sub?.email || "";
+    if (!payerEmail) {
+      setAskEmail(planId);
+      return;
+    }
+    setBusy(true);
+    setError("");
+    try {
+      const result = await api<{ url: string }>("/api/billing/subscription", {
+        method: "POST",
+        body: JSON.stringify({ planId, period, email: payerEmail }),
+      });
+      window.location.assign(result.url);
+    } catch (e) {
+      setError(e instanceof Error ? e.message : "Erro ao abrir a assinatura");
+      setBusy(false);
+    }
+  }
+
+  async function cancelSubscription() {
+    if (!confirm("Cancelar a renovação no cartão? Seu plano continua até o fim do período já pago.")) return;
+    setBusy(true);
+    setError("");
+    try {
+      const r = await api<{ renewsAt: string }>("/api/billing/subscription/cancel", { method: "POST" });
+      setNote(`Renovação cancelada. Seu plano vale até ${fmtDate(r.renewsAt)}.`);
+      load();
+    } catch (e) {
+      setError(e instanceof Error ? e.message : "Erro ao cancelar");
+    } finally {
       setBusy(false);
     }
   }
@@ -205,8 +264,11 @@ export default function PlansView() {
       </div>
 
       <p className={`rounded-md border border-edge bg-surface-2 px-3 py-2 text-xs text-muted ${data.purchaseBlocked ? "hidden" : ""}`}>
-        Preços em reais (R$), cobrados pelo Mercado Pago (Pix, cartão ou boleto). Os planos são pré-pagos e não renovam
-        automaticamente: no fim do período a conta volta para o grátis. Arrependimento em até 7 dias —{" "}
+        Preços em reais (R$), cobrados pelo Mercado Pago.{" "}
+        {sub?.available
+          ? "Assinatura no cartão: renova sozinha no período escolhido; cancele quando quiser e o plano vale até o fim do período pago. Ou pague um período à vista (Pix, boleto ou cartão), sem renovação."
+          : "Os planos são pagos por período (Pix, cartão ou boleto) e não renovam sozinhos: no fim do período a conta volta para o grátis."}{" "}
+        Arrependimento em até 7 dias —{" "}
         <Link href="/reembolso" className="text-accent hover:underline">
           política de reembolso
         </Link>
@@ -224,6 +286,47 @@ export default function PlansView() {
         </p>
       )}
       {error && <ErrorBox message={error} />}
+
+      {sub?.recurring && (
+        <Card className="flex flex-wrap items-center justify-between gap-3 border-accent/60" data-testid="subscription-status">
+          <div>
+            <p className="flex items-center gap-2 font-medium">
+              <Icon name="money" size={16} className="text-accent" /> Assinatura no cartão (Mercado Pago)
+            </p>
+            <p className="mt-1 text-sm text-muted">
+              {sub.cancelAtPeriodEnd
+                ? `Cancelada — o plano vale até ${fmtDate(sub.renewsAt)} e depois volta para o grátis.`
+                : `Próxima cobrança em ${fmtDate(sub.renewsAt)}. Sem fidelidade: cancele quando quiser.`}
+            </p>
+          </div>
+          {!sub.cancelAtPeriodEnd && (
+            <Button variant="ghost" onClick={cancelSubscription} disabled={busy} data-testid="subscription-cancel">
+              Cancelar renovação
+            </Button>
+          )}
+        </Card>
+      )}
+
+      {askEmail && (
+        <Card className="space-y-2 border-accent" data-testid="subscription-email">
+          <p className="text-sm">Qual e-mail você usa no Mercado Pago? A assinatura fica ligada a ele.</p>
+          <div className="flex flex-wrap gap-2">
+            <div className="min-w-56 flex-1">
+              <Input type="email" value={email} onChange={(e) => setEmail(e.target.value)} placeholder="voce@exemplo.com" aria-label="E-mail do Mercado Pago" />
+            </div>
+            <Button
+              disabled={busy || !email.includes("@")}
+              onClick={() => {
+                const planId = askEmail;
+                setAskEmail(null);
+                void subscribe(planId);
+              }}
+            >
+              Continuar
+            </Button>
+          </div>
+        </Card>
+      )}
 
       {data.purchaseBlocked && (
         <Card data-testid="purchase-blocked">
@@ -275,14 +378,27 @@ export default function PlansView() {
                   </li>
                 ))}
               </ul>
+              {!free && sub?.available && !(isCurrent && sub.recurring && !sub.cancelAtPeriodEnd) && (
+                <Button className="mt-4 w-full" disabled={busy} onClick={() => subscribe(plan.id)} data-testid={`subscribe-${plan.id}`}>
+                  {periodInfo.months === 1 ? "Assinar no cartão · mensal" : `Assinar no cartão · a cada ${periodInfo.months} meses`}
+                </Button>
+              )}
               <Button
-                className="mt-4 w-full"
-                variant={isCurrent && free ? "ghost" : "primary"}
+                className={`${!free && sub?.available ? "mt-2" : "mt-4"} w-full`}
+                variant={(isCurrent && free) || (!free && sub?.available) ? "ghost" : "primary"}
                 disabled={busy || (isCurrent && free)}
                 onClick={() => (free ? chooseFree(plan.id) : checkout({ kind: "plan", planId: plan.id, period }))}
                 data-testid={`plan-${plan.id}`}
               >
-                {free ? (isCurrent ? "Plano atual" : "Voltar ao grátis") : isCurrent ? `Pagar mais ${periodInfo.label.split(" ")[0].toLowerCase()}` : "Pagar e ativar"}
+                {free
+                  ? isCurrent
+                    ? "Plano atual"
+                    : "Voltar ao grátis"
+                  : sub?.available
+                    ? "Pagar o período à vista (Pix/boleto)"
+                    : isCurrent
+                      ? `Pagar mais ${periodInfo.label.split(" ")[0].toLowerCase()}`
+                      : "Pagar e ativar"}
               </Button>
             </Card>
           );

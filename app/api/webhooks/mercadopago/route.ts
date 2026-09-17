@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
-import { getPayment, mpConfigured } from "@/lib/mercadopago";
-import { applyMpPayment, recordPaymentLookupFailure } from "@/lib/billing-db";
+import { getAuthorizedPayment, getPayment, getPreapprovalRemote, mpConfigured, subscriptionsAvailable } from "@/lib/mercadopago";
+import { applyMpPayment, applyPreapprovalStatus, applySubscriptionPayment, recordPaymentLookupFailure } from "@/lib/billing-db";
+import { authorizedPaymentApproved } from "@/lib/subscription-rules";
 import { checkLimits, clientIp } from "@/lib/rate-limit";
 
 export const maxDuration = 60;
@@ -24,6 +25,9 @@ export async function POST(request: Request) {
       ""
   ).trim();
   const type = String(body?.type ?? body?.topic ?? url.searchParams.get("type") ?? url.searchParams.get("topic") ?? "");
+  if (type === "subscription_preapproval" || type === "subscription_authorized_payment") {
+    return handleSubscription(type, dataId);
+  }
   // Só eventos de pagamento interessam (merchant_order etc. são ignorados).
   if (!dataId || (type && type !== "payment") || !/^\d{1,30}$/.test(dataId)) {
     return NextResponse.json({ ok: true, ignored: true });
@@ -53,6 +57,37 @@ export async function POST(request: Request) {
   } catch (error) {
     console.error(`[mp] falha ao aplicar pagamento ${dataId}:`, error);
     return NextResponse.json({ error: "apply failed" }, { status: 500 });
+  }
+}
+
+// Assinatura no cartão: a notificação só traz o id; o estado vem do MP.
+async function handleSubscription(type: string, id: string) {
+  if (!/^[A-Za-z0-9_-]{1,64}$/.test(id)) return NextResponse.json({ ok: true, ignored: true });
+  if (!subscriptionsAvailable()) {
+    console.error("[mp] webhook de assinatura sem MP_ACCESS_TOKEN configurado");
+    return NextResponse.json({ error: "not configured" }, { status: 503 });
+  }
+  try {
+    if (type === "subscription_preapproval") {
+      const remote = await getPreapprovalRemote(id);
+      const outcome = applyPreapprovalStatus({ id: String(remote.id), status: String(remote.status ?? ""), externalReference: remote.external_reference });
+      return NextResponse.json({ ok: true, outcome });
+    }
+    const record = await getAuthorizedPayment(id);
+    const outcome = applySubscriptionPayment({
+      authorizedPaymentId: String(record.id),
+      preapprovalId: String(record.preapproval_id ?? ""),
+      approved: authorizedPaymentApproved(record),
+      amount: Number(record.transaction_amount ?? 0),
+      externalReference: record.external_reference,
+      mpStatus: String(record.payment?.status ?? record.status ?? ""),
+    });
+    if (outcome === "invalid") console.error(`[mp] cobrança recorrente ${id} não pôde ser creditada (ver admin)`);
+    return NextResponse.json({ ok: true, outcome });
+  } catch (error) {
+    const detail = error instanceof Error ? error.message : String(error);
+    console.error(`[mp] assinatura ${type} ${id} falhou: ${detail}`);
+    return NextResponse.json({ error: "lookup failed" }, { status: 502 });
   }
 }
 

@@ -110,7 +110,7 @@ const SHARED_PORTAL_API = [
   /^\/api\/onboarding$/,
   /^\/api\/jobs$/,
   /^\/api\/settings$/,
-  /^\/api\/billing(\/(checkout|subscribe))?$/,
+  /^\/api\/billing(\/(checkout|subscribe|subscription|subscription\/cancel))?$/,
   /^\/api\/contact$/,
 ];
 const CLIENT_API = [
