@@ -6,7 +6,16 @@ import { listUsers } from "@/lib/auth";
 import { listInvites } from "@/lib/invites-db";
 import { onboardingStats } from "@/lib/onboarding-db";
 import { guard, isDenied, tenantOf } from "@/lib/guard";
-import { aiDailyLimitUsd, aiSpendTodayUsd, recentAiErrors, spendByDay, usageByAccount } from "@/lib/ai-spend";
+import {
+  aiAccountLimitUsd,
+  aiDailyLimitUsd,
+  aiFreePoolLimitUsd,
+  aiFreePoolSpendTodayUsd,
+  aiSpendTodayUsd,
+  recentAiErrors,
+  spendByDay,
+  usageByAccount,
+} from "@/lib/ai-spend";
 import { inboxCounts } from "@/lib/contact-db";
 import { isEnforced, platformRevenue, viewAccount } from "@/lib/billing-db";
 import { listAgencies } from "@/lib/agencies";
@@ -105,6 +114,10 @@ export async function GET(request: Request) {
     ai: {
       spendTodayUsd: aiSpendTodayUsd(),
       dailyLimitUsd: aiDailyLimitUsd(),
+      freeSpendTodayUsd: aiFreePoolSpendTodayUsd(),
+      freeLimitUsd: aiFreePoolLimitUsd(),
+      freeAccountLimitUsd: aiAccountLimitUsd("free"),
+      paidAccountLimitUsd: aiAccountLimitUsd("paid"),
       byDay: spendByDay(14, agencyFilter),
       byAccount: usageByAccount(30, agencyFilter).map((row) => ({
         ...row,

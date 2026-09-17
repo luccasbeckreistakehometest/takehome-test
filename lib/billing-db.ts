@@ -146,6 +146,15 @@ export function enforcedFor(accountType: AccountType, accountId: string, plan: P
   return !isPaidPlan(plan);
 }
 
+// Faixa de gasto de IA de uma conta: a casa (operação do dono), plano pago
+// vigente ou grátis/entrada. Os tetos diários por conta e o "bolso" do
+// grátis (lib/ai-spend.ts) dependem disso.
+export type SpendTier = "house" | "paid" | "free";
+export function accountSpendTier(accountType: AccountType, accountId: string): SpendTier {
+  if (accountType === "agency" && accountId === HOUSE_AGENCY_ID) return "house";
+  return isPaidPlan(getPlan(getSubscription(accountType, accountId).planId)) ? "paid" : "free";
+}
+
 export function setEnforced(on: boolean): void {
   db.prepare("UPDATE billing_flags SET enforced = ? WHERE id = 1").run(on ? 1 : 0);
 }

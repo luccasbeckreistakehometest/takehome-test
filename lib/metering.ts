@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server";
 import type { SessionPayload } from "./auth-shared";
-import { chargeUsage, getSubscription, refundUsage } from "./billing-db";
+import { accountSpendTier, chargeUsage, getSubscription, refundUsage } from "./billing-db";
 import { AI_UNAVAILABLE, assertAiAvailable, GenerationError } from "./claude";
 import { recordAiError, runWithAiContext, type AiContext } from "./ai-spend";
 import { getPlan, type AccountType } from "./plans";
@@ -52,6 +52,7 @@ export type AiGate =
 export function aiContextFor(session: SessionPayload, action: string, agencyId?: string | null): AiContext {
   const payer = payerFor(session);
   const quality = payer ? (getPlan(getSubscription(payer.accountType, payer.accountId).planId)?.quality ?? null) : null;
+  const tier = payer ? accountSpendTier(payer.accountType, payer.accountId) : null;
   return {
     action,
     // admin agindo num recurso de outra agência pode informar a agência dele
@@ -60,6 +61,7 @@ export function aiContextFor(session: SessionPayload, action: string, agencyId?:
     accountId: payer?.accountId ?? null,
     userId: session.userId,
     quality,
+    tier,
   };
 }
 
@@ -69,7 +71,7 @@ export function gateAi(
   request: Request,
   session: SessionPayload,
   action: string,
-  opts: { units?: number; limits?: [LimitName, LimitName] } = {}
+  opts: { units?: number; limits?: [LimitName, LimitName]; agencyId?: string | null } = {}
 ): AiGate {
   const [perAccount, perIp] = opts.limits ?? ["aiPerAccount", "aiPerIp"];
   if (session.role !== "admin") {
@@ -87,7 +89,7 @@ export function gateAi(
     }
   }
   try {
-    assertAiAvailable();
+    assertAiAvailable(aiContextFor(session, action, opts.agencyId));
   } catch (error) {
     const status = error instanceof GenerationError ? error.status : 503;
     return { ok: false, status, reason: error instanceof Error ? error.message : AI_UNAVAILABLE };

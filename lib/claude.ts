@@ -1,6 +1,6 @@
 import Anthropic from "@anthropic-ai/sdk";
 import { getSettings } from "./settings";
-import { aiBudgetExceeded, currentAiContext, recordAiError, recordAiUsage } from "./ai-spend";
+import { aiBudgetBlock, currentAiContext, recordAiError, recordAiUsage, type AiContext } from "./ai-spend";
 import { mockFromSchema, mockLandingHtml } from "./ai-schema-mock";
 
 // Dois níveis de modelo para controle de custo:
@@ -33,6 +33,8 @@ export function getAnthropicClient(): Anthropic {
 export const AI_UNAVAILABLE = "A IA está indisponível no momento. Tente de novo em alguns minutos.";
 export const AI_BUSY = "A IA está com muita procura agora. Tente de novo em instantes.";
 export const AI_PAUSED = "A IA está pausada por hoje. Volte amanhã ou fale com o suporte.";
+export const AI_FREE_PAUSED = "A IA do plano grátis chegou ao limite de hoje. Volte amanhã ou escolha um plano para seguir agora.";
+export const AI_ACCOUNT_PAUSED = "Sua conta chegou ao limite de uso de IA de hoje. Volte amanhã ou fale com o suporte.";
 export const AI_BAD_OUTPUT = "A IA não conseguiu concluir desta vez. Tente de novo.";
 export const AI_REFUSED = "A IA não pode atender este pedido. Ajuste o briefing e tente de novo.";
 
@@ -50,11 +52,22 @@ export function aiMockEnabled(): boolean {
   return process.env.AI_MOCK === "1";
 }
 
-// Disjuntor global: passou do teto diário de gasto, nenhuma chamada sai.
-export function assertAiAvailable(): void {
-  if (aiBudgetExceeded()) {
-    recordAiError("daily_ceiling", "teto diário de gasto de IA atingido");
+// Disjuntores de gasto (global, bolso do grátis, teto da conta): passou de
+// um deles, a chamada não sai. Sem `ctx`, usa o contexto da execução atual.
+export function assertAiAvailable(ctx?: AiContext): void {
+  const context = ctx ?? currentAiContext();
+  const block = aiBudgetBlock(context);
+  if (block === "global") {
+    recordAiError("daily_ceiling", "teto diário global de gasto de IA atingido", context);
     throw new GenerationError(AI_PAUSED, 503, "daily_ceiling");
+  }
+  if (block === "free_pool") {
+    recordAiError("free_daily_ceiling", "teto diário do plano grátis atingido", context);
+    throw new GenerationError(AI_FREE_PAUSED, 503, "free_daily_ceiling");
+  }
+  if (block === "account") {
+    recordAiError("account_daily_ceiling", "teto diário de gasto da conta atingido", context);
+    throw new GenerationError(AI_ACCOUNT_PAUSED, 429, "account_daily_ceiling");
   }
 }
 

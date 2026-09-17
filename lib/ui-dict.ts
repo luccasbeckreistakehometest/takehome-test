@@ -6,6 +6,10 @@ export const UI_DICT: Record<string, string> = {
   // Endurecimento do lançamento (modo da marca, uploads, cobrança)
   "Quem muda o modo da sua marca é a sua agência.": "Your agency decides how your brand is managed.",
   "O conteúdo do arquivo não confere com o formato.": "The file's content doesn't match its format.",
+  "A IA do plano grátis chegou ao limite de hoje. Volte amanhã ou escolha um plano para seguir agora.":
+    "The free plan's AI has reached today's limit. Come back tomorrow or pick a plan to keep going now.",
+  "Sua conta chegou ao limite de uso de IA de hoje. Volte amanhã ou fale com o suporte.":
+    "Your account has reached today's AI usage limit. Come back tomorrow or contact support.",
   // Multi-agência (workspace próprio, primeiros passos, convites, admin)
   "Primeiros passos": "First steps",
   "Seu espaço está pronto e é só seu. Comece por aqui:": "Your workspace is ready and it's all yours. Start here:",

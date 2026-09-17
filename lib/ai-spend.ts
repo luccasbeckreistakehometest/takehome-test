@@ -1,11 +1,18 @@
 import { AsyncLocalStorage } from "node:async_hooks";
 import { randomUUID } from "crypto";
-import { db, tenantColumn } from "./db";
+import { addColumnIfMissing, db, tenantColumn } from "./db";
 import type { AccountType, AiQuality } from "./plans";
+import { accountSpendTier, type SpendTier } from "./billing-db";
 
-// Gasto real de IA (custo estimado a partir do `usage` de cada chamada) e o
-// teto diário global — o "disjuntor": passou do teto, toda IA para até o dia
-// seguinte (UTC). O teto vem de AI_DAILY_SPEND_LIMIT_USD e aparece no admin.
+// Gasto real de IA (custo estimado a partir do `usage` de cada chamada) e os
+// tetos diários (UTC):
+//  - global (AI_DAILY_SPEND_LIMIT_USD): último disjuntor, para toda a IA;
+//  - "bolso" do grátis (AI_FREE_DAILY_SPEND_LIMIT_USD, padrão 25% do global):
+//    contas sem plano pago param sozinhas, sem pausar quem paga;
+//  - por conta: grátis (AI_FREE_ACCOUNT_DAILY_SPEND_LIMIT_USD, padrão US$1) e
+//    paga (AI_PAID_ACCOUNT_DAILY_SPEND_LIMIT_USD, padrão 50% do global).
+//    A agência da casa só tem o global.
+// Voz (TTS) e imagem entram no mesmo gasto.
 
 export type AiContext = {
   action: string;
@@ -17,6 +24,8 @@ export type AiContext = {
   userId?: string | null;
   // teto de qualidade do plano de quem paga (economy força o modelo barato)
   quality?: AiQuality | null;
+  // faixa de gasto de quem paga (resolvida pela conta quando ausente)
+  tier?: SpendTier | null;
 };
 
 const storage = new AsyncLocalStorage<AiContext>();
@@ -63,6 +72,7 @@ db.exec(`
 `);
 tenantColumn("ai_usage");
 tenantColumn("ai_errors");
+addColumnIfMissing("ai_usage", "tier", "TEXT");
 
 import { estimateCostUsd, type TokenUsage } from "./ai-spend-cost";
 
@@ -70,14 +80,20 @@ export { estimateCostUsd, type TokenUsage };
 
 const today = () => new Date().toISOString().slice(0, 10);
 
+// Faixa de quem paga (a do contexto, ou resolvida pela conta).
+function tierOf(ctx: AiContext | undefined): SpendTier | null {
+  if (!ctx?.accountType || !ctx.accountId) return null;
+  return ctx.tier ?? accountSpendTier(ctx.accountType, ctx.accountId);
+}
+
 export function recordAiUsage(model: string, usage: TokenUsage): number {
   const ctx = currentAiContext();
   const cost = estimateCostUsd(model, usage);
   const at = new Date().toISOString();
   db.prepare(
-    `INSERT INTO ai_usage (id, createdAt, day, provider, action, agencyId, accountType, accountId, userId, model,
+    `INSERT INTO ai_usage (id, createdAt, day, provider, action, agencyId, accountType, accountId, userId, tier, model,
       inputTokens, outputTokens, cacheReadTokens, cacheWriteTokens, webSearches, costUsd)
-     VALUES (?, ?, ?, 'anthropic', ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`
+     VALUES (?, ?, ?, 'anthropic', ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`
   ).run(
     randomUUID(),
     at,
@@ -87,6 +103,7 @@ export function recordAiUsage(model: string, usage: TokenUsage): number {
     ctx?.accountType ?? null,
     ctx?.accountId ?? null,
     ctx?.userId ?? null,
+    tierOf(ctx),
     model,
     Number(usage.input_tokens ?? 0),
     Number(usage.output_tokens ?? 0),
@@ -103,8 +120,8 @@ export function recordExternalSpend(provider: string, units: number, costUsd: nu
   const ctx = currentAiContext();
   const at = new Date().toISOString();
   db.prepare(
-    `INSERT INTO ai_usage (id, createdAt, day, provider, action, agencyId, accountType, accountId, userId, model, units, costUsd)
-     VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`
+    `INSERT INTO ai_usage (id, createdAt, day, provider, action, agencyId, accountType, accountId, userId, tier, model, units, costUsd)
+     VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`
   ).run(
     randomUUID(),
     at,
@@ -115,6 +132,7 @@ export function recordExternalSpend(provider: string, units: number, costUsd: nu
     ctx?.accountType ?? null,
     ctx?.accountId ?? null,
     ctx?.userId ?? null,
+    tierOf(ctx),
     model,
     Math.max(0, Math.round(units)),
     Math.max(0, costUsd)
@@ -137,13 +155,50 @@ export function aiSpendTodayUsd(): number {
   return row.c;
 }
 
-// Teto 0 = IA desligada (disjuntor manual pelo env).
-export function aiBudgetExceeded(): boolean {
-  return aiSpendTodayUsd() >= aiDailyLimitUsd();
+// "Bolso" diário das contas sem plano pago (padrão: 25% do teto global).
+export function aiFreePoolLimitUsd(): number {
+  return envUsd("AI_FREE_DAILY_SPEND_LIMIT_USD", aiDailyLimitUsd() * 0.25);
 }
 
-export function recordAiError(kind: string, detail: string): void {
-  const ctx = currentAiContext();
+export function aiFreePoolSpendTodayUsd(): number {
+  const row = db.prepare("SELECT COALESCE(SUM(costUsd),0) AS c FROM ai_usage WHERE day = ? AND tier = 'free'").get(today()) as {
+    c: number;
+  };
+  return row.c;
+}
+
+// Teto diário de UMA conta (a casa não tem teto próprio, só o global).
+export function aiAccountLimitUsd(tier: SpendTier): number {
+  if (tier === "free") return envUsd("AI_FREE_ACCOUNT_DAILY_SPEND_LIMIT_USD", 1);
+  if (tier === "paid") return envUsd("AI_PAID_ACCOUNT_DAILY_SPEND_LIMIT_USD", aiDailyLimitUsd() * 0.5);
+  return Number.POSITIVE_INFINITY;
+}
+
+export function accountSpendTodayUsd(accountType: AccountType, accountId: string): number {
+  const row = db
+    .prepare("SELECT COALESCE(SUM(costUsd),0) AS c FROM ai_usage WHERE accountType = ? AND accountId = ? AND day = ?")
+    .get(accountType, accountId, today()) as { c: number };
+  return row.c;
+}
+
+// Qual teto barra esta chamada (null = liberada). Sem conta (admin/sistema):
+// só o global. Teto 0 = IA desligada (disjuntor manual pelo env).
+export type BudgetBlock = "global" | "free_pool" | "account" | null;
+export function aiBudgetBlock(ctx: AiContext | undefined = currentAiContext()): BudgetBlock {
+  if (aiSpendTodayUsd() >= aiDailyLimitUsd()) return "global";
+  const tier = tierOf(ctx);
+  if (!tier || !ctx?.accountType || !ctx.accountId) return null;
+  if (tier === "free" && aiFreePoolSpendTodayUsd() >= aiFreePoolLimitUsd()) return "free_pool";
+  if (accountSpendTodayUsd(ctx.accountType, ctx.accountId) >= aiAccountLimitUsd(tier)) return "account";
+  return null;
+}
+
+export function aiBudgetExceeded(ctx?: AiContext): boolean {
+  return aiBudgetBlock(ctx ?? currentAiContext()) !== null;
+}
+
+export function recordAiError(kind: string, detail: string, context?: AiContext): void {
+  const ctx = context ?? currentAiContext();
   const clean = detail.replace(/sk-[A-Za-z0-9_-]{8,}/g, "sk-***").slice(0, 600);
   console.error(`[ai] ${ctx?.action ?? "?"} ${kind}: ${clean}`);
   try {

@@ -44,6 +44,10 @@ type Overview = {
   ai: {
     spendTodayUsd: number;
     dailyLimitUsd: number;
+    freeSpendTodayUsd: number;
+    freeLimitUsd: number;
+    freeAccountLimitUsd: number;
+    paidAccountLimitUsd: number;
     keyConfigured: boolean;
     byDay: { day: string; costUsd: number; calls: number }[];
     byAccount: { accountType: string | null; accountId: string | null; name: string; calls: number; costUsd: number; lastAt: string }[];
@@ -191,7 +195,10 @@ export default function AdminPage() {
         </div>
         <p className="mt-2 text-xs text-muted">
           {spendPct >= 100 ? "Teto atingido: a IA está pausada até amanhã (UTC). " : ""}
-          Ajuste com AI_DAILY_SPEND_LIMIT_USD no servidor. Bloqueio por saldo: {data.billing.enforced ? "ligado para todos" : "planos grátis sempre bloqueiam; pagos e a agência da casa, livres"}.
+          Planos grátis hoje: {usd(data.ai.freeSpendTodayUsd)} de {usd(data.ai.freeLimitUsd)}. Teto por conta: grátis{" "}
+          {usd(data.ai.freeAccountLimitUsd)}, paga {usd(data.ai.paidAccountLimitUsd)}, casa só o global.{" "}
+          Ajuste com AI_DAILY_SPEND_LIMIT_USD, AI_FREE_DAILY_SPEND_LIMIT_USD, AI_FREE_ACCOUNT_DAILY_SPEND_LIMIT_USD e
+          AI_PAID_ACCOUNT_DAILY_SPEND_LIMIT_USD no servidor. Bloqueio por saldo: {data.billing.enforced ? "ligado para todos" : "planos grátis sempre bloqueiam; pagos e a agência da casa, livres"}.
           {!data.ai.keyConfigured && " ANTHROPIC_API_KEY não está definida no ambiente."}
         </p>
       </Card>
