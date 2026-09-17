@@ -1,99 +1,78 @@
-# AgencyHub — Plataforma de Marketing com IA
+# Marqa — marketing com IA para agências, marcas e profissionais
 
-Plataforma **whitelabel** que conecta as três pontas do marketing — **cliente ↔
-agência ↔ profissionais terceirizados** — com IA (Claude) orquestrando do
-briefing ao pagamento: estratégia com pesquisa real, produção de entregáveis,
-match de freelas, revisão visual com nota de qualidade, escrow e relatórios
-automatizados.
+Plataforma que conecta **agência ↔ marca ↔ profissionais criativos** e usa IA (Claude) do briefing à
+aprovação: estratégia com pesquisa real, calendário e posts, identidade visual, demandas de produção
+com match de fotógrafos e designers, aprovação do cliente, relatório mensal e atendimento no WhatsApp.
+Interface em português (nativo) e inglês. Em produção em <https://marqa.online>.
 
-## Módulo 1 — Central de entregáveis por IA (por cliente)
+## O que tem
 
-| Entregável | O que traz |
-|---|---|
-| **Estratégia & Deep Dive** | Pesquisa **real na web**: tendências com fontes, personas de target buyers, concorrentes, "best fits" priorizados e metas SMART |
-| **Radar de mercado** | Pulso recorrente do que mudou nos últimos dias no mercado do cliente + ajustes recomendados com urgência |
-| **Plano de campanha** | Tema, objetivos/KPIs, semana a semana, canais e verba |
-| **ROI & Roadmap** | Premissas, investimento, métricas **antes → depois**, ROI/payback, roadmap por fases |
-| **Calendário social & Posts** | Legendas prontas, hashtags, direção de arte, CTA |
-| **Identidade visual** | Essência, slogans, **logos em SVG**, paleta, tipografia, tom de voz |
-| **Landing pages** | HTML único responsivo com preview, download e portal |
-| **Relatório executivo** | Automatizado com os **dados reais da conta** (gerações, demandas, notas, reuniões), na visão certa: agência, cliente ou profissional |
+- **Kit por cliente**: estratégia e deep dive (com busca na web), radar de mercado, plano de campanha,
+  ROI e roadmap, calendário social, posts, identidade visual (SVG), ofertas, relatório executivo e
+  landing pages (liga/desliga pelo admin, por custo).
+- **Briefing falado**: a pessoa fala, a IA pergunta o que falta; a voz da IA vem do servidor
+  (ElevenLabs ou OpenAI), nunca do sintetizador do navegador.
+- **Operação da agência**: clientes, demandas com pipeline e revisão por pontos na imagem, análise de
+  arte 0-100, match de profissionais pelo histórico e portfólio, calendário, campanha de 30 dias,
+  aprovação que vira rascunho de post, horas e margem por cliente, pulso/NPS, "o que funciona",
+  guardião da voz da marca, proposta pública com aceite, página pública da agência com captação de leads.
+- **Mensageria** pela API oficial da Meta (WhatsApp Cloud e Instagram): listas, agendamento e um
+  atendente que rascunha respostas (pedido de humano, preço ou promessa nunca saem sozinhos).
+- **Marcas autônomas** operam o próprio workspace; **marcas gerenciadas** acompanham, aprovam e pedem
+  pelo portal; **profissionais** têm perfil, portfólio, candidaturas e elo (Bronze → Platina).
+- **Marca da agência** (logo, cores, nome) para os clientes e profissionais que ela convida.
+- **Planos pré-pagos e coins** pelo Mercado Pago (Pix, cartão, boleto), sem renovação automática; cota
+  mensal de coins; ações de IA que falham não cobram.
+- **Admin**: usuários (desativar, senha provisória, plano, coins), pagamentos com reprocessamento,
+  caixa de entrada, gasto de IA do dia contra o teto, uso por conta, leads, propostas e pulso.
+- **Conta e LGPD**: troca de senha, sair de todos os dispositivos, baixar meus dados, excluir conta;
+  termos, privacidade, reembolso e cookies em pt-BR e inglês.
 
-Transversais: **✦ Kit completo** (one-shot: uma informação → tudo gerado em
-sequência), **estratégia viva** (todo entregável recebe a análise mais recente
-como contexto), **refinamento humano** (feedback + evoluir versão anterior) e
-**multilíngue** (PT-BR/EN por cliente).
+O pagamento entre agência, marca e profissional dentro das demandas é só um registro de status: a
+plataforma não guarda nem repassa esse dinheiro. Domínio próprio para agências ainda não existe.
 
-## Módulo 2 — Marketplace & operações
+## Segurança e custos
 
-- **Profissionais** (fotógrafos/designers): cadastro com localização, skills,
-  especialidades, foco de mercado e portfolio.
-- **Match por IA**: rankeia quem tem mais propensão a entregar resultado para
-  *aquele* cliente — skills, localização, estética, verba e **track record real**
-  (nota média das entregas + demandas concluídas).
-- **Demandas** com pipeline: brief → match → **escrow** (pagamento reservado) →
-  produção → revisão → aprovação → **pagamento liberado**.
-- **Revisão visual**: clique em qualquer ponto da imagem para marcar ajustes
-  (pins numerados, resolver/reabrir).
-- **Análise de arte por IA**: nota **0-100** por critérios profissionais +
-  fit dentro da campanha/contexto + notas de revisão acionáveis.
-- **Ranking elo** (sem XP): Bronze → Prata → Ouro → **Platina**, calculado de
-  dados reais, para profissionais e empresas.
-- **Chat por demanda**, **reuniões agendadas** (com link Meet/Zoom) e arquivos
-  **baixáveis por todos os integrantes do contrato**.
+- Sessões assinadas com expiração e revogação (versão por usuário), cookie `Secure`, `AUTH_SECRET`
+  obrigatório em produção, scrypt assíncrono, limites de tentativa em login, cadastro e contato.
+- Middleware nega por padrão às marcas e profissionais tudo o que não é do portal deles; cada rota
+  checa a posse do recurso.
+- Toda rota de IA passa por limite de taxa, disjuntor de gasto diário (`AI_DAILY_SPEND_LIMIT_USD`) e
+  cobrança de coins com estorno em falha.
+- Webhooks autenticados (assinatura da Meta, token por cliente nas vendas; o do Mercado Pago relê o
+  pagamento na API).
+- HTML gerado por IA servido com CSP `sandbox`.
 
-## Módulo 3 — Crescimento
-
-- **Prospecção**: a IA pesquisa na web negócios reais do nicho/região,
-  qualifica cada lead (fit, maturidade, abordagem) e converte em cliente com um
-  clique — mesmo quem não está na plataforma.
-- **Auto-cadastro** de clientes via link compartilhável (`/cadastro`).
-- **Motor de ideias**: propostas proativas para agência, clientes e
-  profissionais, fundadas nas trends mais recentes e conectadas a quem já está
-  na plataforma.
-- **Portais por papel** (`/portal`): agência (app completo), cliente
-  (acompanhamento read-only + downloads) e profissional (demandas,
-  oportunidades, elo).
-- **Whitelabel**: nome, tagline e cor da agência em Configurações.
-- **Convites** para externos e página de **Treinamento** por papel.
-
-## Rodando
+## Rodando localmente
 
 ```bash
-cp .env.example .env.local   # e preencha ANTHROPIC_API_KEY
+cp .env.example .env.local   # preencha o que for usar (ANTHROPIC_API_KEY, SEED_PASSWORD...)
 npm install
-npm run dev                  # http://localhost:3000
+npm run dev
 ```
 
-Chave da API em <https://platform.claude.com>. Dados em SQLite local
-(`data/agencyhub.db`, fora do git; uploads em `data/uploads/`).
+Dados em SQLite (`data/agencyhub.db`, fora do git; uploads em `data/uploads/`). Sem chave da Anthropic,
+tudo funciona menos a geração por IA.
+
+## Testes
+
+```bash
+npx tsc --noEmit
+npm run test:unit                          # vitest
+npm run e2e                                # Playwright (1.55.x, macOS 13), dev server na porta 3200
+AUTH_SECRET=$(openssl rand -hex 32) DATA_DIR=$(mktemp -d) npx next build
+```
+
+O e2e usa `AI_MOCK=1` (respostas determinísticas no lugar da API) e um banco descartável em `data/e2e`;
+os projetos `enforced` rodam com `BILLING_ENFORCED=true` e o projeto `mobile` confere que nenhuma tela
+principal estoura a largura do celular.
 
 ## Stack
 
-- Next.js (App Router) + TypeScript + Tailwind CSS v4
-- SQLite via better-sqlite3 (zero configuração, com migrações leves)
-- Claude API (`claude-opus-4-8`): structured outputs (JSON garantido por
-  schema), adaptive thinking, streaming, **web search** server-side (estratégia,
-  radar, prospecção, ideias) e **vision** (análise de arte 0-100)
+Next.js 16 (App Router) + TypeScript + Tailwind CSS v4, better-sqlite3, Anthropic SDK (structured
+outputs, adaptive thinking, streaming, web search, visão), Mercado Pago Checkout Pro.
 
-## Estrutura
+## Deploy
 
-```
-app/                # páginas + 25 rotas de API (App Router)
-components/         # workspace, abas de geração, demandas, revisão visual
-lib/                # db, cliente Claude, prompts, schemas, ranking, uploads
-data/               # SQLite + uploads (gitignored)
-```
-
-## Próxima fase (roadmap)
-
-- **Autenticação real** (senha/SSO) por papel — hoje os portais são separados
-  por papel sem senha, para validar o fluxo
-- **Pagamentos reais** (Stripe/Mercado Pago) por trás do fluxo de escrow
-- **Integrações OAuth** (Meta Ads, Google Ads/GA4, TikTok, Canva, Figma,
-  Calendar/Meet, CRMs) — o hub e o catálogo já existem em Configurações
-- **Agendamentos executáveis** (job runner/cron): radar de mercado diário,
-  lembretes de prazo de entrega e auto-publicação do calendário social nas
-  redes (via integrações)
-- Exportação de relatórios em PDF/slides e notificações (e-mail/WhatsApp)
-```
+Ver [docs/DEPLOY.md](docs/DEPLOY.md): produção no VPS Hostinger pelo repositório `stack` (Caddy + compose
+dos três apps), variáveis de ambiente, Mercado Pago e rotação de senhas antigas.

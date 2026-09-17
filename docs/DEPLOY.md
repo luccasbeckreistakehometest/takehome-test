@@ -1,123 +1,120 @@
-# Subir o AgencyHub online (Hostinger VPS / qualquer VPS)
+# Marqa em produção
 
-Este app precisa de um **servidor Node contínuo com disco persistente** (por causa
-do SQLite, dos uploads, do agendador interno e do worker de mensagens). Por isso
-**não** vai em hospedagem compartilhada nem em serverless (Vercel/Netlify). Na
-Hostinger, use o produto **VPS** (não o "Hospedagem de Sites").
+A Marqa roda no VPS Hostinger junto com Betmatic e ResumeTailor, orquestrada pelo repositório
+**`stack`** (privado): um `docker-compose.yml` com os três apps, o Caddy (HTTPS automático e
+cabeçalhos de segurança) e os scripts de operação. Este repositório só fornece a imagem do app.
 
-Tudo roda em Docker. O guia abaixo leva do zero ao ar.
+| O quê | Onde |
+|---|---|
+| Código do app (este repo) | `/srv/apps/takehome-test` (clone de `main`) |
+| `.env` do app | `/srv/apps/takehome-test/.env` (permissão 600) |
+| Stack (compose, Caddyfile, scripts) | `/srv/apps/stack` |
+| Dados (SQLite, uploads, cache de voz) | `/srv/apps/stack/volumes/marqa/data` → `/app/data` no container |
+| Serviço no compose | `marqa` |
+| Domínio | `https://marqa.online` (o `www` redireciona) |
 
----
+> Precisa de VPS (Node contínuo + disco): SQLite, uploads, scheduler interno. Não roda em hospedagem
+> compartilhada nem em serverless.
 
-## Pré-requisitos
-- Um **VPS** (Hostinger VPS, DigitalOcean, Hetzner…), **Ubuntu 22.04/24.04**, com
-  **pelo menos 2 GB de RAM** (o build do Next consome memória; 1 GB pode falhar).
-- Um **domínio** (ex.: `minhamarca.com`) para ter HTTPS. Opcional — dá pra testar
-  só pelo IP, mas sem HTTPS.
-- A sua **chave da Anthropic** (`ANTHROPIC_API_KEY`).
+## Operação
 
----
+Tudo a partir de `/srv/apps/stack` (detalhes no `DEPLOY.md` do stack):
 
-## Passo 1 — Criar o VPS na Hostinger
-1. No hPanel da Hostinger, vá em **VPS → Comprar/Configurar**. Plano mínimo
-   recomendado: **KVM 1** (1 vCPU, 4 GB RAM — já basta pro build).
-2. Em **Sistema operacional**, escolha o **template com Docker** (ex.: “Ubuntu
-   24.04 com Docker” / “Docker” nas aplicações). Assim o Docker já vem instalado
-   e você **pula o Passo 2**. (Se escolher Ubuntu puro, faça o Passo 2.)
-3. Defina a senha root, finalize e anote o **IP** do servidor.
+- **Instalar do zero**: `bin/setup.sh` (cria pastas, `.env` a partir do exemplo, sobe o compose).
+- **Atualizar**: `bin/update.sh` (puxa `main` de cada app, reconstrói e recria só o que mudou).
+- **Backup**: `bin/backup.sh`, todo dia às 04:00 (UTC) pelo cron do stack (`/etc/cron.d/stack-backup`).
+- **Logs**: `docker compose logs -f marqa`.
+- **Reler o `.env`**: `docker compose up -d marqa` (um `restart` NÃO relê o `env_file`).
+- **Saúde**: `curl -s https://marqa.online/api/health` → `{"ok":true,"db":"ok"}` (também usado pelo
+  `HEALTHCHECK` da imagem).
 
-## Passo 2 — Acessar o servidor
-- Jeito fácil (sem instalar nada): no hPanel do VPS, abra o **Terminal do
-  navegador** (botão “Terminal” / “Browser terminal”).
-- Ou por SSH do seu computador: `ssh root@SEU_IP_DO_VPS`
-- Se escolheu Ubuntu puro (sem template Docker), instale o Docker agora:
-  ```bash
-  curl -fsSL https://get.docker.com | sh
-  ```
+## Variáveis de ambiente
 
-## Passo 3 — Colocar o código no servidor
-Opção A (recomendada) — via Git (repo privado seu):
+Gere segredos **no servidor** (`openssl rand -hex 32`), nunca no repositório.
+
+### Obrigatórias
+
+| Variável | Valor |
+|---|---|
+| `AUTH_SECRET` | aleatório, ≥ 32 caracteres. Também é *build arg* (o middleware o inlina): build e runtime usam o mesmo valor. Sem ele o build de produção falha e nenhum login funciona. Trocar derruba todas as sessões. |
+| `APP_URL` | `https://marqa.online` — links, canonical, sitemap e retorno/webhook do Mercado Pago. |
+| `SEED_PASSWORD` | senha forte das contas seed `admin` e `agencia` (só usada se elas ainda não existirem). |
+| `ANTHROPIC_API_KEY` | chave do console da Anthropic com crédito. Uma chave salva em Configurações (admin) tem prioridade sobre esta. |
+| `MP_ACCESS_TOKEN` | token de produção do Mercado Pago (`APP_USR-...`). |
+| `BILLING_ENFORCED` | `true` para bloquear IA sem saldo. Antes de ligar, dê um plano à agência da casa em **/admin → Usuários**. |
+
+### Custos e limites (têm padrão; ajuste se precisar)
+
+| Variável | Padrão | Efeito |
+|---|---|---|
+| `AI_DAILY_SPEND_LIMIT_USD` | `20` | teto diário de gasto de IA (estimado pelos tokens). Atingiu → IA pausa até o dia seguinte (UTC). `0` desliga a IA. |
+| `AI_RATE_LIMIT_PER_10MIN` / `AI_RATE_LIMIT_PER_IP_10MIN` | `40` / `80` | pedidos de IA por conta / por IP. |
+| `TTS_RATE_LIMIT_PER_10MIN` / `TTS_RATE_LIMIT_PER_IP_10MIN` | `30` / `60` | voz por conta / por IP. |
+| `LOGIN_RATE_LIMIT_PER_IP` / `LOGIN_RATE_LIMIT_PER_ACCOUNT` | `30` / `8` (15 min) | tentativas de login. |
+| `REGISTER_RATE_LIMIT_PER_HOUR`, `CONTACT_RATE_LIMIT_PER_HOUR`, `LEAD_RATE_LIMIT_PER_HOUR` | `5` | cadastro, contato e lead da página pública por IP. |
+| `TTS_USD_PER_1K_CHARS`, `IMAGE_USD_PER_IMAGE`, `CONCEPT_USD_PER_IMAGE` | estimativas | custo usado no teto diário para voz e imagem. |
+| `TTS_CACHE_MAX_FILES` | `2000` | arquivos de voz em cache. |
+
+### Cadastro, identidade legal e suporte
+
+| Variável | Uso |
+|---|---|
+| `AGENCY_SELF_SIGNUP` | `true` libera o cadastro público de agências. Padrão: desligado (agências pedem acesso pelo formulário). |
+| `LEGAL_NAME`, `LEGAL_DOCUMENT`, `LEGAL_ADDRESS`, `LEGAL_EMAIL` | razão social, CNPJ/CPF, endereço e e-mail nas páginas legais e no rodapé. Vazios → as linhas somem e as páginas apontam para o formulário de contato. |
+| `SUPPORT_EMAIL`, `SUPPORT_WHATSAPP` | canais extras na página de contato (só aparecem se definidos; WhatsApp com DDI, só dígitos). |
+
+### Integrações opcionais
+
+| Variável | Uso |
+|---|---|
+| `META_APP_SECRET` | App Secret do app da Meta. Sem ele, o webhook `/api/webhooks/meta` recusa todo POST. |
+| `META_VERIFY_TOKEN` | token do handshake do webhook (aleatório, ≥ 16 caracteres; o antigo valor público não vale mais). |
+| `SALES_WEBHOOK_SECRET` | token global opcional (≥ 16) para `/api/webhooks/sales/<clienteId>`. O normal é o token por cliente, gerado na aba **Vendas & Dados**. |
+| `ELEVENLABS_API_KEY`, `ELEVENLABS_VOICE_ID` / `OPENAI_API_KEY` | voz da IA no briefing falado. Sem nenhum, a interface mostra só o texto. |
+| `GOOGLE_AI_API_KEY`, `TOGETHER_API_KEY`, `HF_API_KEY` | imagens (também configuráveis pelo admin). |
+| `MESSAGING_SESSION_MODE` | `true` só num servidor preparado com Chrome + worker; a imagem padrão usa apenas a API oficial. |
+
+## Mercado Pago
+
+- Checkout Pro com `notification_url = ${APP_URL}/api/webhooks/mercadopago` em cada preferência.
+  Cadastre a mesma URL em **Suas integrações → Webhooks** (evento *Pagamentos*).
+- O webhook relê o pagamento na API do MP; aprovado → credita/ativa numa transação; estorno ou
+  chargeback → desfaz; falha na consulta → responde 502 e o MP tenta de novo.
+- Planos são **pré-pagos por período, sem renovação automática**. No vencimento a conta volta ao
+  plano grátis; a cota mensal de coins é recarregada a cada mês do período.
+- **Reprocessar**: **/admin → Pagamentos** relê um pagamento pelo número (idempotente).
+- Teste ponta a ponta com uma compra real de valor baixo depois de configurar o token.
+
+## Senhas antigas conhecidas
+
+`scripts/rotate-weak-passwords.mjs` (vai na imagem) troca a senha de toda conta que não seja `admin`
+nem `agencia` e ainda use `SEED_PASSWORD` ou uma senha passada em `LEGACY_PASSWORDS` (uma por linha,
+informada só no ambiente, nunca em arquivo versionado):
+
 ```bash
-git clone https://SEU-REPO.git agencyhub && cd agencyhub
+cd /srv/apps/stack
+docker compose exec -T -e LEGACY_PASSWORDS='...' marqa node scripts/rotate-weak-passwords.mjs          # conta
+docker compose exec -T -e LEGACY_PASSWORDS='...' marqa node scripts/rotate-weak-passwords.mjs \
+  --apply --out /app/data/.rotated-passwords.txt
+install -m 600 /dev/null /root/marqa-rotated-passwords.txt
+docker compose cp marqa:/app/data/.rotated-passwords.txt /root/marqa-rotated-passwords.txt
+chmod 600 /root/marqa-rotated-passwords.txt
+docker compose exec -T marqa rm /app/data/.rotated-passwords.txt
 ```
-Opção B — sem Git, enviando do seu computador:
+
+As contas trocadas entram com a senha provisória e precisam criar uma nova no primeiro acesso.
+
+## Primeiro acesso
+
+1. Entre como `admin` (senha = `SEED_PASSWORD`) e troque a senha em **Minha conta**.
+2. **/admin → Usuários**: dê à agência da casa o plano que ela deve ter (sem cobrança).
+3. **Configurações** (admin): modo de IA, landing pages e chaves.
+4. Só então ligue `BILLING_ENFORCED=true` e rode `docker compose up -d marqa`.
+
+## Build local
+
 ```bash
-# no SEU computador, dentro da pasta do projeto:
-rsync -av --exclude node_modules --exclude .next --exclude data --exclude pitch \
-  ./ root@SEU_IP_DO_VPS:/root/agencyhub/
-# depois, no VPS:
-cd /root/agencyhub
+AUTH_SECRET=$(openssl rand -hex 32) DATA_DIR=$(mktemp -d) npx next build
 ```
 
-## Passo 4 — Configurar as variáveis de ambiente
-```bash
-cp .env.example .env
-nano .env
-```
-Preencha (mínimo):
-- `ANTHROPIC_API_KEY` — sua chave da Anthropic.
-- `AUTH_SECRET` — gere uma aleatória:
-  `node -e "console.log(require('crypto').randomBytes(48).toString('hex'))"`
-  (ou `openssl rand -hex 48`).
-- `SEED_PASSWORD` — senha inicial das contas **admin** e **agencia** (troque depois).
-- `BILLING_ENFORCED=true` — liga o bloqueio de IA por saldo (evita estouro de custo).
-
-## Passo 5 — Apontar o domínio e configurar HTTPS
-1. No DNS do seu domínio (se for da Hostinger: hPanel → **Domínios → Zona DNS**),
-   crie/edite um registro **A** com o nome `@` apontando para o **IP do VPS**.
-   (Um `www` como CNAME para o domínio é opcional.)
-2. Edite o `Caddyfile` e troque `seu-dominio.com` pelo seu domínio:
-   ```bash
-   nano Caddyfile
-   ```
-3. Libere as portas **80** e **443** no firewall do VPS (hPanel do VPS →
-   **Firewall**; normalmente já ficam abertas).
-
-> Sem domínio? Pule este passo e troque, no `docker-compose.yml`, a seção do Caddy
-> por `ports: ["80:3000"]` no serviço `app` — você acessa por `http://SEU_IP`
-> (sem HTTPS, só para testes).
-
-## Passo 6 — Subir
-```bash
-docker compose up -d --build
-```
-A primeira vez demora alguns minutos (compila tudo). Depois:
-```bash
-docker compose logs -f app   # acompanhar
-```
-
-## Passo 7 — Primeiro acesso
-- Abra `https://SEU-DOMINIO`.
-- Entre como **admin** (senha = seu `SEED_PASSWORD`).
-- **Troque as senhas** de `admin` e `agencia`, configure o whitelabel
-  (logo/cor/nome) em Configurações e comece a cadastrar clientes.
-
----
-
-## Operação do dia a dia
-- **Atualizar** (novo código): `git pull` (ou reenviar via rsync) e
-  `docker compose up -d --build`.
-- **Logs**: `docker compose logs -f app`.
-- **Reiniciar**: `docker compose restart app`.
-- **Backup** (importante!): todos os dados ficam no volume `data`. Faça backup:
-  ```bash
-  docker run --rm -v agencyhub_data:/d -v $PWD:/b busybox \
-    tar czf /b/backup-$(date +%F).tar.gz -C /d .
-  ```
-
-## Segurança já incluída nesta versão
-- **Rotas de API exigem login** (só webhooks, login/cadastro e o logo público ficam abertos).
-- **Segredo de sessão** vem de `AUTH_SECRET` (env), não do código.
-- **Bloqueio de IA por saldo** liga com `BILLING_ENFORCED=true`.
-
-## Limitações conhecidas (v1)
-- **Isolamento por conta**: as APIs exigem login, mas o isolamento fino
-  (um cliente nunca conseguir ler dados de outro via API) ainda é parcial — o
-  reforço por recurso é um passo seguinte antes de escala grande.
-- **WhatsApp por sessão (Playwright)**: precisa de Chrome no servidor e não vem na
-  imagem. Na v1 use a **API oficial** do WhatsApp/Instagram (aba Mensagens →
-  Conexões). Envio por sessão é para uso local.
-- **Pagamento** é simulado (sem Stripe/Mercado Pago). Os planos registram receita,
-  mas não cobram de verdade ainda.
-- **Banco**: SQLite num volume aguenta bem um começo; para muitos usuários
-  simultâneos, migrar para Postgres é o próximo passo.
+Nunca rode `next build` com o `next dev` do mesmo repositório ligado (corrompe `.next`).

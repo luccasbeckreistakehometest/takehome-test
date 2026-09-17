@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server";
 import { z } from "zod";
-import { ensureSeedUsers, homeForUser, verifyLogin } from "@/lib/auth";
+import { ensureSeedUsers, homeForUser, recordAuthEvent, verifyLogin } from "@/lib/auth";
 import { getClient } from "@/lib/db";
 import { issueSession } from "@/lib/session";
 import { checkLimits, clientIp, limiterFor, retryAfterHeader } from "@/lib/rate-limit";
@@ -32,6 +32,7 @@ export async function POST(request: Request) {
   await ensureSeedUsers();
   const result = await verifyLogin(identifier, parsed.data.password);
   if (!result.ok) {
+    recordAuthEvent({ userId: null, kind: `login_${result.reason}`, ip });
     if (result.reason === "disabled") {
       return NextResponse.json(
         { error: "Esta conta está desativada. Fale com o suporte pelo formulário de contato." },
@@ -42,6 +43,7 @@ export async function POST(request: Request) {
   }
   limiterFor("loginPerAccount").reset(identifier);
   const user = result.user;
+  recordAuthEvent({ userId: user.id, kind: "login", ip });
   // Modo da marca (autônoma x agência) para rotear e liberar o workspace.
   const selfServe =
     user.role === "client" && user.refId ? (getClient(user.refId)?.selfServe ?? false) : undefined;

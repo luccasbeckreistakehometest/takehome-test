@@ -126,6 +126,11 @@ export async function generateConceptImages(options: {
 }): Promise<GeneratedImage[]> {
   const { prompt, provider } = options;
   const count = Math.max(1, Math.min(options.count, 6));
+  // Testes (AI_MOCK=1): imagem 1x1 local, sem rede.
+  if (process.env.AI_MOCK === "1") {
+    const pixel = "iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mNkYPhfDwAChwGA60e6kgAAAABJRU5ErkJggg==";
+    return Array.from({ length: count }, () => ({ base64: pixel, mime: "image/png" }));
+  }
   const seeds = Array.from({ length: count }, (_, i) => 1000 + i * 7919);
 
   if (provider === "huggingface") {

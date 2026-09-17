@@ -57,6 +57,38 @@ try {
   if (!(error instanceof Error && /already exists/i.test(error.message))) throw error;
 }
 
+// Registro de acesso (Marco Civil da Internet, art. 15): data, IP e resultado
+// de cada login, guardados por 6 meses (limpeza no scheduler).
+db.exec(`
+  CREATE TABLE IF NOT EXISTS auth_events (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    userId TEXT,
+    kind TEXT NOT NULL,
+    ip TEXT NOT NULL DEFAULT '',
+    createdAt TEXT NOT NULL
+  );
+  CREATE INDEX IF NOT EXISTS idx_auth_events_created ON auth_events(createdAt);
+  CREATE INDEX IF NOT EXISTS idx_auth_events_user ON auth_events(userId, createdAt);
+`);
+
+export function recordAuthEvent(input: { userId: string | null; kind: string; ip: string }): void {
+  try {
+    db.prepare("INSERT INTO auth_events (userId, kind, ip, createdAt) VALUES (?, ?, ?, ?)").run(
+      input.userId,
+      input.kind.slice(0, 40),
+      input.ip.slice(0, 64),
+      new Date().toISOString()
+    );
+  } catch (error) {
+    console.error("[auth] registro de acesso falhou:", error);
+  }
+}
+
+export function purgeAuthEvents(olderThanDays = 183): number {
+  const cutoff = new Date(Date.now() - olderThanDays * 86_400_000).toISOString();
+  return db.prepare("DELETE FROM auth_events WHERE createdAt < ?").run(cutoff).changes;
+}
+
 type UserRow = {
   id: string;
   username: string;

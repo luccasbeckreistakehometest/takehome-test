@@ -305,6 +305,17 @@ export function refreshAccount(accountType: AccountType, accountId: string, now:
   }).immediate();
 }
 
+// Tick do scheduler: expira planos vencidos e recarrega cotas de todas as
+// contas com assinatura (o acesso também faz isso, de forma preguiçosa).
+export function refreshAllAccounts(now: Date = new Date()): number {
+  const rows = db.prepare("SELECT accountType, accountId FROM subscriptions").all() as {
+    accountType: AccountType;
+    accountId: string;
+  }[];
+  for (const row of rows) refreshAccount(row.accountType, row.accountId, now);
+  return rows.length;
+}
+
 export function getSubscription(accountType: AccountType, accountId: string): Subscription {
   refreshAccount(accountType, accountId);
   const row = subscriptionRow(accountType, accountId)!;

@@ -118,6 +118,12 @@ export function inboxCounts(): Record<InboxStatus, number> {
   return out;
 }
 
+// Retenção: mensagens resolvidas somem 2 anos depois (Política de Privacidade).
+export function purgeOldInbox(olderThanDays = 730): number {
+  const cutoff = new Date(Date.now() - olderThanDays * 86_400_000).toISOString();
+  return db.prepare("DELETE FROM contact_messages WHERE status = 'done' AND updatedAt < ?").run(cutoff).changes;
+}
+
 // LGPD: mensagens ligadas a uma conta apagada perdem o vínculo e os dados de contato.
 export function anonymiseInboxForUser(userId: string): void {
   db.prepare(

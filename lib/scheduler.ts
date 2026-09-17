@@ -7,6 +7,10 @@ import { db } from "./db";
 import { processApiOutbox } from "./messaging/send";
 import { tryPublishPost } from "./messaging/publish";
 import { logActivity, updateScheduledPost, type ScheduledPost } from "./marketplace-db";
+import { refreshAllAccounts } from "./billing-db";
+import { purgeAuthEvents } from "./auth";
+import { purgeOldInbox } from "./contact-db";
+import { purgeOldAiErrors } from "./ai-spend";
 
 let running = false;
 
@@ -33,8 +37,9 @@ async function publishDuePosts(): Promise<number> {
         href: `/agenda`,
       });
       done++;
-    } catch {
+    } catch (error) {
       // falha de publicação real: deixa na fila para a próxima tentativa
+      console.error(`[scheduler] post ${post.id} não publicado:`, error instanceof Error ? error.message : error);
     }
   }
   return done;
@@ -45,10 +50,26 @@ export async function runSchedulerTick(): Promise<void> {
   if (running) return;
   running = true;
   try {
-    await processApiOutbox().catch(() => {});
-    await publishDuePosts().catch(() => {});
+    await processApiOutbox().catch((error) => console.error("[scheduler] fila de mensagens:", error));
+    await publishDuePosts().catch((error) => console.error("[scheduler] posts agendados:", error));
+    runHousekeeping();
   } finally {
     running = false;
+  }
+}
+
+// Uma vez por hora: planos (expiração/recarga) e retenção de registros.
+let lastHousekeeping = 0;
+function runHousekeeping(now = Date.now()): void {
+  if (now - lastHousekeeping < 60 * 60_000) return;
+  lastHousekeeping = now;
+  try {
+    refreshAllAccounts();
+    purgeAuthEvents();
+    purgeOldInbox();
+    purgeOldAiErrors();
+  } catch (error) {
+    console.error("[scheduler] manutenção falhou:", error);
   }
 }
 

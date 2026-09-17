@@ -202,6 +202,11 @@ export function spendByDay(days = 14): { day: string; costUsd: number; calls: nu
     .all(since) as { day: string; costUsd: number; calls: number }[];
 }
 
+export function purgeOldAiErrors(olderThanDays = 90): number {
+  const cutoff = new Date(Date.now() - olderThanDays * 86_400_000).toISOString();
+  return db.prepare("DELETE FROM ai_errors WHERE createdAt < ?").run(cutoff).changes;
+}
+
 // LGPD: o gasto fica (custo da plataforma), sem o vínculo com a pessoa.
 export function anonymiseAiUsage(accountType: AccountType, accountId: string, userId: string): void {
   db.prepare("UPDATE ai_usage SET accountId = NULL, userId = NULL WHERE (accountType = ? AND accountId = ?) OR userId = ?").run(
