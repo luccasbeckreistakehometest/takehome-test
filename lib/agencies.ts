@@ -1,5 +1,7 @@
 import { randomUUID } from "crypto";
-import { db } from "./db";
+import { addColumnIfMissing, db } from "./db";
+import { viewAccount } from "./billing-db";
+import { getPlan, isPaidPlan } from "./plans";
 import { ensureHouseAgency } from "./tenancy-migration";
 import { currentAiContext } from "./ai-spend";
 import {
@@ -29,7 +31,12 @@ export type Agency = {
 
 export type AgencyBranding = Pick<Agency, "name" | "tagline" | "accentColor" | "houseStyle">;
 
-type Row = Agency & { pageConfig: string };
+type Row = Agency & { pageConfig: string; pageIndexable?: number | null };
+
+// Moderação da página pública: agência nova publica, mas fica fora do Google
+// (noindex, fora do sitemap) até o admin liberar ou ela ter plano pago.
+// A casa é sempre indexável.
+addColumnIfMissing("agencies", "pageIndexable", "INTEGER NOT NULL DEFAULT 0");
 
 const DEFAULT_TAGLINE = "sua marca, acelerada por IA";
 const DEFAULT_ACCENT = "#f76b15";
@@ -164,9 +171,25 @@ export function saveAgencyPageConfig(agencyId: string, input: Partial<AgencyPage
   return { ok: true, config: next };
 }
 
+export function agencyPageIndexable(agencyId: string): boolean {
+  if (agencyId === HOUSE_AGENCY_ID) return true;
+  const row = db.prepare("SELECT pageIndexable FROM agencies WHERE id = ?").get(agencyId) as { pageIndexable: number } | undefined;
+  if (!row) return false;
+  if (row.pageIndexable === 1) return true;
+  // leitura pura (sem recarga/expiração gravadas): serve para GET
+  return isPaidPlan(getPlan(viewAccount("agency", agencyId).subscription.planId));
+}
+
+// Liberação manual do admin (true) ou volta para a regra padrão (false).
+export function setAgencyPageIndexable(agencyId: string, on: boolean): boolean {
+  return db.prepare("UPDATE agencies SET pageIndexable = ? WHERE id = ?").run(on ? 1 : 0, agencyId).changes > 0;
+}
+
+// Slugs das páginas publicadas que podem ir para o sitemap.
 export function listPublishedAgencySlugs(): string[] {
   const rows = db.prepare("SELECT id FROM agencies ORDER BY createdAt ASC").all() as { id: string }[];
   return rows
+    .filter((r) => agencyPageIndexable(r.id))
     .map((r) => getAgencyPageConfig(r.id))
     .filter((c) => c.published && c.slug)
     .map((c) => c.slug);

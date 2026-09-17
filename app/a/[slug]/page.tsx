@@ -1,7 +1,7 @@
 import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 import { findPublishedPage, listPublicWork, listShowcaseClients } from "@/lib/agency-page-db";
-import { getAgency } from "@/lib/agencies";
+import { agencyPageIndexable, getAgency } from "@/lib/agencies";
 import { agencyLogoUrl } from "@/lib/branding";
 import LeadForm from "@/components/LeadForm";
 
@@ -37,7 +37,8 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
     description,
     openGraph: { title, description, type: "website", siteName: settings.agencyName, locale: "pt_BR" },
     twitter: { card: "summary_large_image", title, description },
-    robots: { index: true, follow: true },
+    // agência nova fica fora do Google até o admin liberar (ou plano pago)
+    robots: agencyPageIndexable(page.agencyId) ? { index: true, follow: true } : { index: false, follow: false },
   };
 }
 

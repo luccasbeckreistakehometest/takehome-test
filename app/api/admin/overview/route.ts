@@ -18,7 +18,7 @@ import {
 } from "@/lib/ai-spend";
 import { inboxCounts } from "@/lib/contact-db";
 import { isEnforced, platformRevenue, viewAccount } from "@/lib/billing-db";
-import { listAgencies } from "@/lib/agencies";
+import { agencyPageIndexable, getAgencyPageConfig, listAgencies } from "@/lib/agencies";
 import { getPlan } from "@/lib/plans";
 import { scopeWhere } from "@/lib/tenancy-rules";
 import "@/lib/agency-page-db";
@@ -69,6 +69,8 @@ export async function GET(request: Request) {
         renewsAt: subscription.renewsAt,
         coins: wallet.coins,
         createdAt: a.createdAt,
+        pagePublished: getAgencyPageConfig(a.id).published,
+        pageIndexable: agencyPageIndexable(a.id),
       };
     }),
     onboarding: onboardingStats(),

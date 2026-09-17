@@ -21,6 +21,8 @@ type AgencyRow = {
   renewsAt: string;
   coins: number;
   createdAt: string;
+  pagePublished: boolean;
+  pageIndexable: boolean;
 };
 
 type Overview = {
@@ -76,11 +78,18 @@ export default function AdminPage() {
   const [tab, setTab] = useState<AdminTab>("overview");
   // Filtro por agência ("" = todas): vale para a visão geral, usuários e pagamentos.
   const [agency, setAgency] = useState("");
+  const [reloadKey, setReloadKey] = useState(0);
 
   useEffect(() => {
     const query = agency ? `?agency=${encodeURIComponent(agency)}` : "";
     api<Overview>(`/api/admin/overview${query}`).then(setData).catch(() => {});
-  }, [agency]);
+  }, [agency, reloadKey]);
+
+  // Moderação da página pública (liberar no Google / despublicar).
+  async function moderatePage(id: string, body: { pageIndexable?: boolean; unpublish?: true }) {
+    await api(`/api/admin/agencies/${id}`, { method: "PATCH", body: JSON.stringify(body) }).catch(() => {});
+    setReloadKey((k) => k + 1);
+  }
 
   if (!data) {
     return (
@@ -215,6 +224,7 @@ export default function AdminPage() {
                 <th className="py-2 pr-3 font-normal">Clientes</th>
                 <th className="py-2 pr-3 font-normal">Plano</th>
                 <th className="py-2 pr-3 font-normal">Coins</th>
+                <th className="py-2 pr-3 font-normal">Página</th>
                 <th className="py-2 font-normal">Criada em</th>
               </tr>
             </thead>
@@ -232,6 +242,27 @@ export default function AdminPage() {
                   <td className="py-2 pr-3">{a.clients}</td>
                   <td className="py-2 pr-3">{a.planName}</td>
                   <td className="py-2 pr-3">{a.coins}</td>
+                  <td className="py-2 pr-3 text-xs" data-testid={`agency-page-${a.slug}`}>
+                    <span className="block text-muted">
+                      {a.pagePublished ? "Publicada" : "Rascunho"} · {a.pageIndexable ? "no Google" : "fora do Google"}
+                    </span>
+                    {a.id !== "agency" && (
+                      <span className="mt-1 flex flex-wrap gap-2">
+                        <button
+                          type="button"
+                          className="text-accent hover:underline"
+                          onClick={() => moderatePage(a.id, { pageIndexable: !a.pageIndexable })}
+                        >
+                          {a.pageIndexable ? "Tirar do Google" : "Liberar no Google"}
+                        </button>
+                        {a.pagePublished && (
+                          <button type="button" className="text-red-500 hover:underline" onClick={() => moderatePage(a.id, { unpublish: true })}>
+                            Despublicar
+                          </button>
+                        )}
+                      </span>
+                    )}
+                  </td>
                   <td className="py-2 text-xs text-muted">{a.createdAt.slice(0, 10)}</td>
                 </tr>
               ))}
