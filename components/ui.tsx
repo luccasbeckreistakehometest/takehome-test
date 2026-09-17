@@ -72,9 +72,9 @@ export function Button({
   );
 }
 
-export function Label({ children }: { children: React.ReactNode }) {
+export function Label({ children, htmlFor }: { children: React.ReactNode; htmlFor?: string }) {
   return (
-    <label className="mb-1 block text-xs font-medium uppercase tracking-wide text-muted">
+    <label htmlFor={htmlFor} className="mb-1 block text-xs font-medium uppercase tracking-wide text-muted">
       {children}
     </label>
   );
@@ -106,7 +106,7 @@ export function Spinner({ label }: { label?: string }) {
 
 export function ErrorBox({ message }: { message: string }) {
   return (
-    <div className="rounded-md border border-red-900/60 bg-red-950/40 px-3 py-2 text-sm text-red-300">
+    <div role="alert" className="rounded-md border border-red-900/60 bg-red-950/40 px-3 py-2 text-sm text-red-300">
       {message}
     </div>
   );

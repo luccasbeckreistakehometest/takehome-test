@@ -33,6 +33,8 @@ function translateTree(root: Node) {
   const textNodes: Text[] = [];
   while (walker.nextNode()) textNodes.push(walker.currentNode as Text);
   for (const node of textNodes) {
+    // Textos legais têm versão própria em inglês: nunca traduzir por dicionário.
+    if (node.parentElement?.closest("[data-no-translate]")) continue;
     const translated = translateText(node.textContent ?? "");
     if (translated !== null && translated !== node.textContent) {
       node.textContent = translated;

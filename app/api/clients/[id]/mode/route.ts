@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server";
 import { z } from "zod";
-import { getClient, setClientSelfServe } from "@/lib/db";
+import { setClientSelfServe } from "@/lib/db";
 import { getSession, reissueSession } from "@/lib/session";
 import { homeForUser } from "@/lib/auth";
 

@@ -46,6 +46,7 @@ export default function OnboardingModal({
 }) {
   const [open, setOpen] = useState(false);
   const [step, setStep] = useState(0);
+  const [login, setLogin] = useState<{ username: string; email: string | null } | null>(null);
 
   useEffect(() => {
     const key = `onboarded_${role}`;
@@ -58,6 +59,16 @@ export default function OnboardingModal({
       if (cancelled || j.tourCompleted) return;
       if (welcome === "1" || (!welcomeOnly && !localStorage.getItem(key))) {
         setOpen(true);
+        // Mostra o usuário de acesso logo no primeiro contato (o cadastro gera
+        // o username a partir do nome; sem isso a pessoa não sabe como entrar).
+        if (welcome === "1") {
+          fetch("/api/account", { cache: "no-store" })
+            .then((r) => (r.ok ? r.json() : null))
+            .then((a) => {
+              if (!cancelled && a?.username) setLogin({ username: a.username, email: a.email ?? null });
+            })
+            .catch(() => {});
+        }
         fetch("/api/onboarding", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ event: "welcome_open", meta: { role } }) }).catch(() => {});
       }
     }).catch(() => {});
@@ -91,10 +102,21 @@ export default function OnboardingModal({
       <div className="w-full max-w-lg animate-pop-in rounded-2xl border border-edge bg-surface p-6 shadow-2xl [transform-origin:center]">
         <div className="mb-4 flex items-center justify-between">
           <p className="text-xs font-semibold uppercase tracking-widest text-accent">{flow.title}</p>
-          <button onClick={() => close("skip")} className="text-muted transition-colors hover:text-foreground">
+          <button onClick={() => close("skip")} aria-label="Fechar" className="text-muted transition-colors hover:text-foreground">
             <Icon name="x" size={18} />
           </button>
         </div>
+
+        {login && (
+          <div className="mb-4 rounded-lg border border-accent/40 bg-accent/5 px-3 py-2 text-sm" data-testid="welcome-username">
+            <p>
+              Seu usuário de acesso: <strong className="font-mono text-accent">{login.username}</strong>
+            </p>
+            <p className="text-xs text-muted">
+              {login.email ? `Você também pode entrar com o e-mail ${login.email}.` : "Guarde este usuário para entrar de novo."}
+            </p>
+          </div>
+        )}
 
         <div className="flex gap-4">
           <span className="grid size-12 shrink-0 place-items-center rounded-xl bg-accent/10 text-accent">

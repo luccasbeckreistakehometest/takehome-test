@@ -12,5 +12,5 @@ export default async function Home() {
   const session = await getSession();
   if (!session) return <LandingPage config={GENERAL} />;
   if (session.role === "agency") return <AgencyHome />;
-  redirect(homeForUser({ role: session.role, refId: session.refId }));
+  redirect(homeForUser({ role: session.role, refId: session.refId }, { selfServe: session.selfServe }));
 }

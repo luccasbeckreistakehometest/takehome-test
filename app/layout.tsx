@@ -5,7 +5,10 @@ import { getSettings } from "@/lib/settings";
 import { resolveBrand } from "@/lib/branding";
 import { getSession } from "@/lib/session";
 import Translator, { LangToggle } from "@/components/Translator";
-import ActivityBell, { LogoutButton } from "@/components/ActivityBell";
+import ActivityBell from "@/components/ActivityBell";
+import UserMenu from "@/components/UserMenu";
+import SiteFooter from "@/components/SiteFooter";
+import { appBaseUrl } from "@/lib/legal";
 import JobsIndicator from "@/components/JobsIndicator";
 import GlobalSearch from "@/components/GlobalSearch";
 import AssistantWidget from "@/components/AssistantWidget";
@@ -22,11 +25,28 @@ const spaceGrotesk = Space_Grotesk({ variable: "--font-display", subsets: ["lati
 // Whitelabel + sessão: marca e navegação vêm do banco/cookie a cada request
 export const dynamic = "force-dynamic";
 
-export const metadata: Metadata = {
-  title: "Marqa — Marketing com IA",
-  description:
-    "Centralize briefings, conecte clientes, agência e profissionais, e gere estratégia, campanhas, identidade e landing pages com IA.",
-};
+const DESCRIPTION =
+  "Marketing com IA para agências, marcas e profissionais: briefing falado, estratégia, calendário, aprovações, relatório mensal e atendimento no WhatsApp.";
+
+export async function generateMetadata(): Promise<Metadata> {
+  return {
+    metadataBase: new URL(appBaseUrl()),
+    title: { default: "Marqa — Marketing com IA", template: "%s · Marqa" },
+    description: DESCRIPTION,
+    applicationName: "Marqa",
+    alternates: { canonical: "/" },
+    openGraph: {
+      type: "website",
+      siteName: "Marqa",
+      locale: "pt_BR",
+      alternateLocale: ["en_US"],
+      title: "Marqa — Marketing com IA",
+      description: DESCRIPTION,
+    },
+    twitter: { card: "summary_large_image", title: "Marqa — Marketing com IA", description: DESCRIPTION },
+    formatDetection: { telephone: false },
+  };
+}
 
 const AGENCY_NAV: { href: string; label: string; icon: IconName }[] = [
   { href: "/", label: "Hoje", icon: "home" },
@@ -105,9 +125,9 @@ export default async function RootLayout({
                 {brand.name}
               </span>
             </Link>
-            <nav className="flex items-center gap-1 text-sm text-muted">
+            <div className="flex items-center gap-1 text-sm text-muted">
               {session?.role === "agency" && (
-                <div className="hidden items-center gap-0.5 lg:flex">
+                <nav aria-label="Navegação" className="hidden items-center gap-0.5 lg:flex">
                   {AGENCY_NAV.map((item) => (
                     <Link
                       key={item.href}
@@ -119,14 +139,17 @@ export default async function RootLayout({
                       {item.label}
                     </Link>
                   ))}
-                </div>
+                </nav>
               )}
               {session?.role === "agency" && (
                 <details className="relative lg:hidden">
-                  <summary className="grid size-8 list-none place-items-center rounded-md hover:bg-surface-2 [&::-webkit-details-marker]:hidden">
+                  <summary
+                    aria-label="Menu de navegação"
+                    className="grid size-8 list-none place-items-center rounded-md hover:bg-surface-2 [&::-webkit-details-marker]:hidden"
+                  >
                     <Icon name="kanban" size={18} />
                   </summary>
-                  <div className="absolute right-0 top-10 z-50 w-52 rounded-xl border border-edge bg-surface p-1.5 shadow-2xl">
+                  <nav aria-label="Navegação principal" className="absolute right-0 top-10 z-50 w-52 rounded-xl border border-edge bg-surface p-1.5 shadow-2xl">
                     {AGENCY_NAV.map((item) => (
                       <Link
                         key={item.href}
@@ -137,7 +160,7 @@ export default async function RootLayout({
                         {item.label}
                       </Link>
                     ))}
-                  </div>
+                  </nav>
                 </details>
               )}
               <div className="mx-1 hidden h-5 w-px bg-edge sm:block" />
@@ -160,24 +183,9 @@ export default async function RootLayout({
                   <Icon name="settings" size={17} />
                 </Link>
               )}
-              {(session?.role === "client" || session?.role === "professional") && (
-                <Link
-                  href="/plans"
-                  title="Planos & coins"
-                  className="flex items-center gap-1.5 whitespace-nowrap rounded-md px-2.5 py-1.5 transition-colors hover:bg-surface-2 hover:text-foreground"
-                >
-                  <Icon name="sparkle" size={16} className="opacity-70" />
-                  <span className="hidden sm:inline">Planos</span>
-                </Link>
-              )}
               <LangToggle />
               {session ? (
-                <>
-                  <span className="hidden whitespace-nowrap text-xs sm:inline">
-                    {session.name}
-                  </span>
-                  <LogoutButton />
-                </>
+                <UserMenu name={session.name} role={session.role} />
               ) : (
                 <Link
                   href="/login"
@@ -186,14 +194,12 @@ export default async function RootLayout({
                   Entrar
                 </Link>
               )}
-            </nav>
+            </div>
           </div>
         </header>
         <main className="mx-auto w-full max-w-6xl flex-1 px-4 py-8">{children}</main>
         {session?.role === "agency" && <AssistantWidget />}
-        <footer className="border-t border-edge py-4 text-center text-xs text-muted">
-          {brand.name} — {brand.tagline}
-        </footer>
+        <SiteFooter brandName={brand.name} tagline={brand.tagline} />
       </body>
     </html>
   );

@@ -22,11 +22,12 @@ const PUBLIC_EXACT = new Set([
   "/reembolso",
   "/refunds",
   "/cookies",
+  "/cookie-policy",
   "/robots.txt",
   "/sitemap.xml",
   "/favicon.ico",
   "/icon.svg",
-  "/apple-icon",
+  "/apple-icon.png",
   "/opengraph-image",
   "/manifest.webmanifest",
 ]);
