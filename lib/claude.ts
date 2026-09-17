@@ -1,5 +1,7 @@
 import Anthropic from "@anthropic-ai/sdk";
 import { getSettings } from "./settings";
+import { aiBudgetBlock, currentAiContext, recordAiError, recordAiUsage, type AiContext } from "./ai-spend";
+import { mockFromSchema, mockLandingHtml } from "./ai-schema-mock";
 
 // Dois níveis de modelo para controle de custo:
 // - premium: decisões críticas (estratégia, match, análise de arte, landing)
@@ -8,8 +10,12 @@ export const PREMIUM_MODEL = "claude-opus-4-8";
 export const STANDARD_MODEL = "claude-sonnet-5";
 export type ModelTier = "premium" | "standard";
 
+// O modo global (admin) é o teto; o plano de quem paga pode baixar mais.
+const QUALITY_RANK = { economy: 0, balanced: 1, premium: 2 } as const;
 export function pickModel(tier: ModelTier): string {
-  const mode = getSettings().aiMode;
+  const global = getSettings().aiMode;
+  const plan = currentAiContext()?.quality ?? "premium";
+  const mode = QUALITY_RANK[plan] < QUALITY_RANK[global] ? plan : global;
   if (mode === "economy") return STANDARD_MODEL;
   if (mode === "premium") return PREMIUM_MODEL;
   return tier === "standard" ? STANDARD_MODEL : PREMIUM_MODEL;
@@ -17,16 +23,51 @@ export function pickModel(tier: ModelTier): string {
 
 // Cliente por chamada: usa a chave salva nos Settings se existir; senão a do
 // ambiente (.env.local ou perfil)
-function getAnthropicClient(): Anthropic {
+export function getAnthropicClient(): Anthropic {
   const key = getSettings().anthropicApiKey;
   return key ? new Anthropic({ apiKey: key }) : new Anthropic();
 }
 
+// Mensagens mostradas a quem usa: neutras e curtas (o dicionário da interface
+// traduz para inglês). O detalhe técnico vai para o log e para o admin.
+export const AI_UNAVAILABLE = "A IA está indisponível no momento. Tente de novo em alguns minutos.";
+export const AI_BUSY = "A IA está com muita procura agora. Tente de novo em instantes.";
+export const AI_PAUSED = "A IA está pausada por hoje. Volte amanhã ou fale com o suporte.";
+export const AI_FREE_PAUSED = "A IA do plano grátis chegou ao limite de hoje. Volte amanhã ou escolha um plano para seguir agora.";
+export const AI_ACCOUNT_PAUSED = "Sua conta chegou ao limite de uso de IA de hoje. Volte amanhã ou fale com o suporte.";
+export const AI_BAD_OUTPUT = "A IA não conseguiu concluir desta vez. Tente de novo.";
+export const AI_REFUSED = "A IA não pode atender este pedido. Ajuste o briefing e tente de novo.";
+
 export class GenerationError extends Error {
   status: number;
-  constructor(message: string, status = 500) {
+  detail: string;
+  constructor(message: string, status = 500, detail = "") {
     super(message);
     this.status = status;
+    this.detail = detail;
+  }
+}
+
+export function aiMockEnabled(): boolean {
+  return process.env.AI_MOCK === "1";
+}
+
+// Disjuntores de gasto (global, bolso do grátis, teto da conta): passou de
+// um deles, a chamada não sai. Sem `ctx`, usa o contexto da execução atual.
+export function assertAiAvailable(ctx?: AiContext): void {
+  const context = ctx ?? currentAiContext();
+  const block = aiBudgetBlock(context);
+  if (block === "global") {
+    recordAiError("daily_ceiling", "teto diário global de gasto de IA atingido", context);
+    throw new GenerationError(AI_PAUSED, 503, "daily_ceiling");
+  }
+  if (block === "free_pool") {
+    recordAiError("free_daily_ceiling", "teto diário do plano grátis atingido", context);
+    throw new GenerationError(AI_FREE_PAUSED, 503, "free_daily_ceiling");
+  }
+  if (block === "account") {
+    recordAiError("account_daily_ceiling", "teto diário de gasto da conta atingido", context);
+    throw new GenerationError(AI_ACCOUNT_PAUSED, 429, "account_daily_ceiling");
   }
 }
 
@@ -38,41 +79,39 @@ export const WEB_SEARCH_TOOL = {
 
 function extractText(message: Anthropic.Message): string {
   if (message.stop_reason === "refusal") {
-    throw new GenerationError(
-      "A IA recusou esta solicitação. Ajuste o briefing ou os parâmetros e tente novamente.",
-      422
-    );
+    throw new GenerationError(AI_REFUSED, 422, "refusal");
   }
   const text = message.content
     .filter((block): block is Anthropic.TextBlock => block.type === "text")
     .map((block) => block.text)
     .join("");
   if (!text.trim()) {
-    throw new GenerationError("A IA retornou uma resposta vazia. Tente novamente.");
+    throw new GenerationError(AI_BAD_OUTPUT, 502, "empty response");
   }
   return text;
 }
 
-function translateError(error: unknown): never {
-  if (error instanceof GenerationError) throw error;
-  if (error instanceof Anthropic.AuthenticationError) {
-    throw new GenerationError(
-      "Chave da API inválida ou ausente. Defina ANTHROPIC_API_KEY em .env.local (veja .env.example).",
-      401
-    );
+export function translateError(error: unknown): never {
+  if (error instanceof GenerationError) {
+    if (error.detail !== "daily_ceiling") recordAiError("generation", error.detail || error.message);
+    throw error;
+  }
+  if (error instanceof Anthropic.AuthenticationError || error instanceof Anthropic.PermissionDeniedError) {
+    recordAiError("auth", `chave da Anthropic inválida ou sem permissão: ${error.message}`);
+    throw new GenerationError(AI_UNAVAILABLE, 503, "auth");
   }
   if (error instanceof Anthropic.RateLimitError) {
-    throw new GenerationError(
-      "Limite de requisições da API atingido. Aguarde alguns instantes e tente novamente.",
-      429
-    );
+    recordAiError("rate_limit", error.message);
+    throw new GenerationError(AI_BUSY, 429, "rate_limit");
   }
   if (error instanceof Anthropic.APIError) {
-    throw new GenerationError(`Erro na API da Claude: ${error.message}`);
+    recordAiError(`api_${error.status ?? "?"}`, error.message);
+    throw new GenerationError(AI_UNAVAILABLE, 502, error.message);
   }
-  throw new GenerationError(
-    error instanceof Error ? error.message : "Erro inesperado ao gerar conteúdo."
-  );
+  const detail = error instanceof Error ? error.message : String(error);
+  // Sem chave configurada o SDK falha antes de chamar a API.
+  recordAiError(/api[_ ]?key|apiKey|authentication/i.test(detail) ? "auth" : "unexpected", detail);
+  throw new GenerationError(AI_UNAVAILABLE, 503, detail);
 }
 
 type RequestOptions = {
@@ -115,9 +154,11 @@ async function runMessage(options: RequestOptions): Promise<Anthropic.Message> {
   }
   let messages: Anthropic.MessageParam[] = [{ role: "user", content }];
 
+  const model = pickModel(options.tier ?? "premium");
   for (let attempt = 0; attempt < 6; attempt++) {
+    assertAiAvailable();
     const message = await streamWithRetry({
-      model: pickModel(options.tier ?? "premium"),
+      model,
       max_tokens: options.maxTokens,
       thinking: { type: "adaptive" },
       system: options.system,
@@ -133,12 +174,15 @@ async function runMessage(options: RequestOptions): Promise<Anthropic.Message> {
           }
         : {}),
     });
+    try {
+      recordAiUsage(model, message.usage);
+    } catch (error) {
+      console.error("[ai] falha ao registrar uso:", error);
+    }
     if (message.stop_reason !== "pause_turn") return message;
     messages = [...messages, { role: "assistant", content: message.content }];
   }
-  throw new GenerationError(
-    "A pesquisa de mercado excedeu o limite de iterações. Tente novamente."
-  );
+  throw new GenerationError(AI_BAD_OUTPUT, 502, "pause_turn loop exceeded");
 }
 
 const sleep = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms));
@@ -182,6 +226,7 @@ export async function generateStructured<T>(options: {
   images?: RequestOptions["images"];
   tier?: ModelTier;
 }): Promise<T> {
+  if (aiMockEnabled()) return mockFromSchema(options.schema) as T;
   try {
     const message = await runMessage({
       system: options.system,
@@ -208,7 +253,7 @@ function extractJson<T>(message: Anthropic.Message): T {
     .map((block) => block.text.trim())
     .filter(Boolean);
   if (blocks.length === 0) {
-    throw new GenerationError("A IA retornou uma resposta vazia. Tente novamente.");
+    throw new GenerationError(AI_BAD_OUTPUT, 502, "empty structured response");
   }
   const candidates = [...blocks].reverse().concat(blocks.join(""));
   for (const candidate of candidates) {
@@ -219,9 +264,7 @@ function extractJson<T>(message: Anthropic.Message): T {
       // tenta o próximo bloco
     }
   }
-  throw new GenerationError(
-    "A IA respondeu fora do formato esperado. Tente novamente."
-  );
+  throw new GenerationError(AI_BAD_OUTPUT, 502, "structured output did not parse");
 }
 
 export async function generateHtml(options: {
@@ -230,6 +273,7 @@ export async function generateHtml(options: {
   maxTokens?: number;
   tier?: ModelTier;
 }): Promise<string> {
+  if (aiMockEnabled()) return mockLandingHtml();
   try {
     const message = await runMessage({
       system: options.system,

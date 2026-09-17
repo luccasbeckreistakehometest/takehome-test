@@ -1,19 +1,21 @@
 import { NextResponse } from "next/server";
 import { getProposalByToken, markProposalViewed } from "@/lib/proposals-db";
 import { proposalState, validityLabel } from "@/lib/proposal-rules";
-import { getSettings } from "@/lib/settings";
+import { getAgency } from "@/lib/agencies";
+import { agencyLogoUrl } from "@/lib/branding";
 
 type Context = { params: Promise<{ token: string }> };
 
-// Leitura pública da proposta pelo token (página /proposta). Registra a
-// primeira abertura. Nunca expõe dados internos além da própria proposta.
+// Leitura pública da proposta pelo token (página /proposta). Só leitura: a
+// primeira abertura é registrada pelo POST (a página chama; pré-visualização
+// de link em apps de mensagem não conta). Nunca expõe dados internos.
 export async function GET(_request: Request, { params }: Context) {
   const { token } = await params;
   const proposal = getProposalByToken(token);
   if (!proposal) return NextResponse.json({ error: "Proposta não encontrada" }, { status: 404 });
   const state = proposalState(proposal);
-  if (state === "open") markProposalViewed(proposal.id);
-  const settings = getSettings();
+  // Marca da agência que enviou a proposta.
+  const agency = getAgency(proposal.agencyId);
   return NextResponse.json({
     state,
     proposal: {
@@ -27,10 +29,19 @@ export async function GET(_request: Request, { params }: Context) {
       createdAt: proposal.createdAt,
     },
     agency: {
-      name: settings.agencyName,
-      tagline: settings.tagline,
-      accentColor: settings.accentColor,
-      hasLogo: Boolean(settings.logoMime),
+      name: agency?.name ?? "",
+      tagline: agency?.tagline ?? "",
+      accentColor: agency?.accentColor ?? "#f76b15",
+      hasLogo: Boolean(agency?.logoMime),
+      logoUrl: agency ? agencyLogoUrl(agency) : "",
     },
   });
+}
+
+export async function POST(_request: Request, { params }: Context) {
+  const { token } = await params;
+  const proposal = getProposalByToken(token);
+  if (!proposal) return NextResponse.json({ error: "Proposta não encontrada" }, { status: 404 });
+  if (proposalState(proposal) === "open") markProposalViewed(proposal.id);
+  return NextResponse.json({ ok: true });
 }

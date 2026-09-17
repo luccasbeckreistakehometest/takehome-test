@@ -7,6 +7,7 @@ import {
   setApplicationStatus,
   updateProject,
 } from "@/lib/marketplace-db";
+import { guardApplication, isDenied } from "@/lib/guard";
 
 type Context = { params: Promise<{ id: string }> };
 
@@ -14,10 +15,9 @@ type Context = { params: Promise<{ id: string }> };
 // e depois definir o preferido no projeto.
 export async function PATCH(request: Request, { params }: Context) {
   const { id } = await params;
-  const application = getApplication(id);
-  if (!application) {
-    return NextResponse.json({ error: "Candidatura não encontrada" }, { status: 404 });
-  }
+  const auth = await guardApplication(id, "workspace");
+  if (isDenied(auth)) return auth;
+  const application = getApplication(id)!;
   const parsed = z
     .object({ status: z.enum(["accepted", "rejected", "pending"]) })
     .safeParse(await request.json().catch(() => null));

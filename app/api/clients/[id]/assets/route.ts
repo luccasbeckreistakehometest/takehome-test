@@ -1,7 +1,8 @@
 import { NextResponse } from "next/server";
 import { getClient } from "@/lib/db";
 import { createClientAsset, listClientAssets } from "@/lib/marketplace-db";
-import { sanitizeExt, saveGenericUpload } from "@/lib/uploads";
+import { sanitizeExt, saveGenericUpload, storedGenericMime } from "@/lib/uploads";
+import { guardClient, isDenied } from "@/lib/guard";
 
 type Context = { params: Promise<{ id: string }> };
 
@@ -9,6 +10,8 @@ const MAX_SIZE = 100 * 1024 * 1024; // 100 MB (PSD/AI são pesados)
 
 export async function GET(_request: Request, { params }: Context) {
   const { id } = await params;
+  const auth = await guardClient(id, "view");
+  if (isDenied(auth)) return auth;
   return NextResponse.json(listClientAssets(id));
 }
 
@@ -16,6 +19,8 @@ export async function GET(_request: Request, { params }: Context) {
 // Illustrator (.ai), PDFs, ZIPs...
 export async function POST(request: Request, { params }: Context) {
   const { id } = await params;
+  const auth = await guardClient(id, "workspace");
+  if (isDenied(auth)) return auth;
   if (!getClient(id)) {
     return NextResponse.json({ error: "Cliente não encontrado" }, { status: 404 });
   }
@@ -33,13 +38,15 @@ export async function POST(request: Request, { params }: Context) {
   if (file.size > MAX_SIZE) {
     return NextResponse.json({ error: "Arquivo acima de 100 MB" }, { status: 400 });
   }
+  const data = Buffer.from(await file.arrayBuffer());
   const asset = createClientAsset({
     clientId: id,
     title: file.name,
     ext: sanitizeExt(file.name),
-    mime: file.type || "application/octet-stream",
+    // imagem só se os bytes provarem; SVG/HTML/desconhecido = download
+    mime: storedGenericMime(file.type, data),
     kind,
   });
-  saveGenericUpload(asset.id, asset.ext, Buffer.from(await file.arrayBuffer()));
+  saveGenericUpload(asset.id, asset.ext, data);
   return NextResponse.json(asset, { status: 201 });
 }

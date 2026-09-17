@@ -1,4 +1,4 @@
-import { db } from "./db";
+import { db, tenantColumn } from "./db";
 
 // Primeiro acesso, salvo no servidor: onde a pessoa parou no tour e o que fez
 // na primeira sessão (linha do tempo). O localStorage do modal era só cache
@@ -22,6 +22,8 @@ db.exec(`
     createdAt TEXT NOT NULL
   );
 `);
+tenantColumn("onboarding");
+tenantColumn("voice_briefings");
 
 export type OnboardingRow = { userId: string; tourCompleted: number; tourStep: number; firstSeenAt: string; completedAt: string | null; events: string };
 export type OnboardingEvent = { at: string; type: string; meta?: Record<string, unknown> };
@@ -29,10 +31,19 @@ export type OnboardingEvent = { at: string; type: string; meta?: Record<string, 
 export function getOnboarding(userId: string): OnboardingRow {
   let row = db.prepare("SELECT * FROM onboarding WHERE userId = ?").get(userId) as OnboardingRow | undefined;
   if (!row) {
-    db.prepare("INSERT INTO onboarding (userId, firstSeenAt) VALUES (?, ?)").run(userId, new Date().toISOString());
+    db.prepare(
+      "INSERT INTO onboarding (userId, agencyId, firstSeenAt) VALUES (?, (SELECT agencyId FROM users WHERE id = ?), ?)"
+    ).run(userId, userId, new Date().toISOString());
     row = db.prepare("SELECT * FROM onboarding WHERE userId = ?").get(userId) as OnboardingRow;
   }
   return row;
+}
+
+// Leitura sem efeito colateral (GET não grava): sem linha ainda = tour não
+// começado. A linha nasce no primeiro POST.
+export function peekOnboarding(userId: string): Pick<OnboardingRow, "tourCompleted" | "tourStep"> & { firstSeenAt: string | null } {
+  const row = db.prepare("SELECT * FROM onboarding WHERE userId = ?").get(userId) as OnboardingRow | undefined;
+  return row ?? { tourCompleted: 0, tourStep: 0, firstSeenAt: null };
 }
 
 export function recordOnboardingEvent(userId: string, type: string, meta?: Record<string, unknown>): void {
@@ -51,11 +62,14 @@ export function setTourProgress(userId: string, step: number, completed: boolean
 }
 
 export function saveVoiceBriefing(input: { id: string; userId: string; lang: string; transcript: string; extracted: unknown }): void {
-  const existing = db.prepare("SELECT transcript FROM voice_briefings WHERE id = ?").get(input.id) as { transcript: string } | undefined;
+  // Só continua um briefing da própria pessoa (id de outra conta é ignorado).
+  const existing = db.prepare("SELECT transcript FROM voice_briefings WHERE id = ? AND userId = ?").get(input.id, input.userId) as { transcript: string } | undefined;
+  if (!existing && db.prepare("SELECT 1 FROM voice_briefings WHERE id = ?").get(input.id)) return;
   const transcript = existing ? `${existing.transcript}\n${input.transcript}` : input.transcript;
-  db.prepare(`INSERT INTO voice_briefings (id,userId,lang,transcript,extracted,createdAt) VALUES (?,?,?,?,?,?)
+  db.prepare(`INSERT INTO voice_briefings (id,userId,agencyId,lang,transcript,extracted,createdAt)
+    VALUES (?,?,(SELECT agencyId FROM users WHERE id = ?),?,?,?,?)
     ON CONFLICT(id) DO UPDATE SET transcript = excluded.transcript, extracted = excluded.extracted`)
-    .run(input.id, input.userId, input.lang, transcript, JSON.stringify(input.extracted), new Date().toISOString());
+    .run(input.id, input.userId, input.userId, input.lang, transcript, JSON.stringify(input.extracted), new Date().toISOString());
 }
 
 export function onboardingStats() {

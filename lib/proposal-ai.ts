@@ -1,8 +1,14 @@
 import { generateStructured } from "./claude";
 import { isAiMock } from "./ai-mock";
-import { getSettings } from "./settings";
+import { currentAgencyProfile } from "./agencies";
 import type { Prospect } from "./marketplace-types";
 import { mockProposalContent, type ProposalContent } from "./proposal-rules";
+
+// Nome e estilo da casa da agência em nome de quem a IA roda.
+function agencyPromptProfile(): { agencyName: string; houseStyle: string } {
+  const profile = currentAgencyProfile();
+  return { agencyName: profile.name, houseStyle: profile.houseStyle };
+}
 
 const str = { type: "string" } as const;
 const strArray = { type: "array", items: str } as const;
@@ -45,7 +51,7 @@ export async function generateProposalContent(input: {
   lang: "pt-BR" | "en";
   currency: string;
 }): Promise<ProposalContent> {
-  const settings = getSettings();
+  const settings = agencyPromptProfile();
   if (isAiMock()) {
     return mockProposalContent({
       prospectName: input.prospect.name,

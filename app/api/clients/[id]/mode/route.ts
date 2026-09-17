@@ -1,16 +1,17 @@
 import { NextResponse } from "next/server";
 import { z } from "zod";
-import { getClient, setClientSelfServe } from "@/lib/db";
-import { getSession } from "@/lib/session";
-import { homeForUser } from "@/lib/auth";
-import { SESSION_COOKIE, signSession } from "@/lib/auth-shared";
+import { clientAgencyId, getClient, setClientSelfServe } from "@/lib/db";
+import { getSession, reissueSession } from "@/lib/session";
+import { getUserById, homeForUser } from "@/lib/auth";
+import { brandOwnsItsWorkspace } from "@/lib/tenancy-rules";
 
 type Context = { params: Promise<{ id: string }> };
 
 // Define como a marca quer trabalhar:
 //  - selfServe: true  → autônoma (workspace próprio)
 //  - selfServe: false → gerenciada por uma agência (portal read-only)
-// A própria marca decide; agência/admin também podem alternar por ela.
+// A marca que se cadastrou sozinha decide; marca de uma agência (criada,
+// convidada ou fechada por proposta) só muda pela agência. Admin sempre.
 // Quando é a própria marca, reemite a sessão para o middleware/rotas passarem a
 // enxergar o novo modo sem precisar relogar.
 export async function POST(request: Request, { params }: Context) {
@@ -19,10 +20,21 @@ export async function POST(request: Request, { params }: Context) {
   if (!session) {
     return NextResponse.json({ error: "Não autenticado" }, { status: 401 });
   }
-  const isOwner = session.role === "client" && session.refId === id;
-  const isManager = session.role === "agency" || session.role === "admin";
+  const client0 = session.role === "client" && session.refId === id ? getClient(id) : null;
+  const isOwner = Boolean(
+    client0 &&
+      brandOwnsItsWorkspace({
+        source: client0.source,
+        brandSource: getUserById(session.userId)?.brandSource,
+        agencyId: client0.agencyId,
+      })
+  );
+  // Agência só troca o modo de marca dela.
+  const isManager =
+    session.role === "admin" || (session.role === "agency" && clientAgencyId(id) === session.agencyId);
   if (!isOwner && !isManager) {
-    return NextResponse.json({ error: "Acesso negado" }, { status: 403 });
+    const error = session.role === "client" ? "Quem muda o modo da sua marca é a sua agência." : "Acesso negado";
+    return NextResponse.json({ error }, { status: 403 });
   }
   const parsed = z
     .object({ selfServe: z.boolean() })
@@ -43,20 +55,7 @@ export async function POST(request: Request, { params }: Context) {
 
   // Só reemite a sessão quando quem troca é a própria marca.
   if (isOwner) {
-    const token = await signSession({
-      userId: session.userId,
-      role: session.role,
-      refId: session.refId,
-      name: session.name,
-      brandSource: session.brandSource,
-      selfServe: parsed.data.selfServe,
-    });
-    response.cookies.set(SESSION_COOKIE, token, {
-      httpOnly: true,
-      sameSite: "lax",
-      path: "/",
-      maxAge: 60 * 60 * 24 * 30,
-    });
+    await reissueSession(response, session, { selfServe: parsed.data.selfServe });
   }
   return response;
 }

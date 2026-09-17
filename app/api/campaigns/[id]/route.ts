@@ -24,7 +24,7 @@ export async function PATCH(request: Request, { params }: Context) {
   const { id } = await params;
   const campaign = getCampaign(id);
   if (!campaign) return NextResponse.json({ error: "Campanha não encontrada" }, { status: 404 });
-  const auth = await guard(["agency", "admin", "client"], { clientId: campaign.clientId });
+  const auth = await guard(["agency", "admin", "client"], { clientId: campaign.clientId, selfServe: true });
   if (isDenied(auth)) return auth;
   const parsed = schema.safeParse(await request.json().catch(() => null));
   if (!parsed.success) return NextResponse.json({ error: "Dados inválidos" }, { status: 400 });

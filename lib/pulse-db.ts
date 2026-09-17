@@ -1,8 +1,9 @@
 import { randomUUID } from "crypto";
-import { db, listClients } from "./db";
+import { db, listClients, tenantColumn } from "./db";
+import type { TenantScope } from "./tenancy-rules";
 // approval_events / account_messages precisam existir para a última atividade
 import { listApprovalEvents } from "./approvals-db";
-import { listDeliverables, listProjects, logActivity } from "./marketplace-db";
+import { listClientProjects, listDeliverables, logActivity } from "./marketplace-db";
 import {
   assessRisk,
   duePrompts,
@@ -34,6 +35,7 @@ db.exec(`
   );
   CREATE INDEX IF NOT EXISTS idx_pulses_client ON client_pulses(clientId, createdAt);
 `);
+tenantColumn("client_pulses");
 
 export function listPulses(clientId: string, limit = 200): PulseEntry[] {
   return db
@@ -44,7 +46,7 @@ export function listPulses(clientId: string, limit = 200): PulseEntry[] {
 // Entregas aprovadas (com data) do cliente — base dos prompts "como foi essa entrega?".
 export function listApprovedDeliverables(clientId: string): { deliverableId: string; title: string; approvedAt: string }[] {
   const out: { deliverableId: string; title: string; approvedAt: string }[] = [];
-  for (const project of listProjects({ clientId })) {
+  for (const project of listClientProjects(clientId)) {
     for (const d of listDeliverables(project.id)) {
       if (d.kind === "delivery" && d.approvalStatus === "approved" && d.approvedAt) {
         out.push({ deliverableId: d.id, title: d.title, approvedAt: d.approvedAt });
@@ -108,8 +110,8 @@ export function recordPulse(input: {
     createdAt: at.toISOString(),
   };
   db.prepare(
-    `INSERT INTO client_pulses (id, clientId, kind, score, comment, context, userId, createdAt)
-     VALUES (@id, @clientId, @kind, @score, @comment, @context, @userId, @createdAt)`
+    `INSERT INTO client_pulses (id, agencyId, clientId, kind, score, comment, context, userId, createdAt)
+     VALUES (@id, (SELECT agencyId FROM clients WHERE id = @clientId), @clientId, @kind, @score, @comment, @context, @userId, @createdAt)`
   ).run(pulse);
   return { ok: true, pulse };
 }
@@ -148,9 +150,9 @@ export type PulseOverviewRow = {
 };
 
 // Visão da agência: cada cliente com tendência e risco; os em risco primeiro.
-export function pulseOverview(at: Date = new Date()): { clients: PulseOverviewRow[]; atRisk: PulseOverviewRow[]; answered: number } {
+export function pulseOverview(scope: TenantScope, at: Date = new Date()): { clients: PulseOverviewRow[]; atRisk: PulseOverviewRow[]; answered: number } {
   const order: Record<string, number> = { risk: 0, watch: 1, ok: 2 };
-  const clients = listClients()
+  const clients = listClients(scope)
     .map((client) => {
       const pulses = listPulses(client.id);
       const lastActivityAt = lastClientActivityAt(client.id);

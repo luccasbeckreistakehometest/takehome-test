@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { getConnection, latestSnapshots, listConnections } from "@/lib/integrations-db";
 import { syncConnection } from "@/lib/integrations/sync";
+import { guardClient, isDenied } from "@/lib/guard";
 
 export const maxDuration = 120;
 type Context = { params: Promise<{ id: string }> };
@@ -8,6 +9,8 @@ type Context = { params: Promise<{ id: string }> };
 // Puxa métricas de todas as conexões com token (ou de uma específica).
 export async function POST(request: Request, { params }: Context) {
   const { id } = await params;
+  const auth = await guardClient(id, "workspace");
+  if (isDenied(auth)) return auth;
   const only = new URL(request.url).searchParams.get("platform");
   const targets = only
     ? [getConnection(id, only as never)].filter(Boolean)
@@ -29,5 +32,7 @@ export async function POST(request: Request, { params }: Context) {
 
 export async function GET(_request: Request, { params }: Context) {
   const { id } = await params;
+  const auth = await guardClient(id, "view");
+  if (isDenied(auth)) return auth;
   return NextResponse.json({ snapshots: latestSnapshots(id) });
 }

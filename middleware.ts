@@ -1,55 +1,145 @@
 import { NextResponse, type NextRequest } from "next/server";
-import { SESSION_COOKIE, verifySession } from "@/lib/auth-shared";
+import { SESSION_COOKIE, verifySession, type SessionPayload } from "@/lib/auth-shared";
 
-// Páginas públicas (sem login).
-const PUBLIC_PAGES = [
+// Porteiro de borda (edge, sem banco): assinatura + validade da sessão e
+// roteamento por papel. A revogação (versão da sessão, conta desativada) e a
+// posse de cada recurso são checadas nas rotas (lib/session.ts, lib/guard.ts).
+
+// Páginas públicas (sem login). Tudo o que não for público nem privado
+// conhecido segue adiante e, se não existir, vira 404 (não redireciona).
+const PUBLIC_EXACT = new Set([
+  "/",
   "/login",
-  "/_next",
-  "/favicon",
   "/cadastro",
   "/criar-conta",
-  "/convite",
-  "/print",
-  "/proposta", // proposta comercial pública por token
-  "/para-", // landings de funil públicas (/para-agencias, /para-marcas, ...)
-  "/a/", // página pública da agência (/a/[slug]) — com a barra: /agenda, /admin continuam protegidos
+  "/pedir-acesso",
+  "/contato",
+  "/contact",
+  "/termos",
+  "/terms",
+  "/privacidade",
+  "/privacy",
+  "/reembolso",
+  "/refunds",
+  "/cookies",
+  "/cookie-policy",
+  "/robots.txt",
+  "/sitemap.xml",
+  "/favicon.ico",
+  "/icon.svg",
+  "/apple-icon.png",
+  "/opengraph-image",
+  "/manifest.webmanifest",
+]);
+const PUBLIC_PREFIXES = [
+  "/_next",
+  "/convite/",
+  "/proposta/",
+  "/print/report/",
+  "/para-", // landings de funil (/para-agencias, /para-marcas, ...)
+  "/a/", // página pública da agência (/a/[slug])
+  "/opengraph-image",
+  "/legal/",
 ];
 
+// Áreas logadas: sem sessão → /login.
+const PRIVATE_PREFIXES = [
+  "/admin",
+  "/agenda",
+  "/assistant",
+  "/calendar",
+  "/clients",
+  "/conta",
+  "/finance",
+  "/ideas",
+  "/insights",
+  "/messages",
+  "/plans",
+  "/portal",
+  "/print",
+  "/production",
+  "/professionals",
+  "/prospecting",
+  "/settings",
+  "/treinamento",
+];
+
+function matchesPrefix(pathname: string, prefix: string): boolean {
+  return pathname === prefix || pathname.startsWith(prefix.endsWith("/") || prefix.endsWith("-") ? prefix : `${prefix}/`);
+}
+
+function isPublicPage(pathname: string): boolean {
+  return PUBLIC_EXACT.has(pathname) || PUBLIC_PREFIXES.some((p) => pathname.startsWith(p));
+}
+
 // Rotas de API públicas (chamadas antes do login ou por sistemas externos).
-// Tudo o que NÃO estiver aqui exige sessão válida.
-function isPublicApi(pathname: string, method: string): boolean {
-  // Webhooks externos (Meta, vendas) — chamados por terceiros, sem sessão.
-  if (pathname.startsWith("/api/webhooks/")) return true;
-  // Login / cadastro / logout / checagem de sessão.
+export function isPublicApi(pathname: string, method: string): boolean {
+  if (pathname.startsWith("/api/webhooks/")) return true; // cada webhook se autentica
+  if (pathname === "/api/health" && method === "GET") return true;
+  if (pathname === "/api/contact" && method === "POST") return true; // limite + honeypot na rota
   if (pathname === "/api/auth/login" && method === "POST") return true;
   if (pathname === "/api/auth/register" && method === "POST") return true;
   if (pathname === "/api/auth/logout" && method === "POST") return true;
   if (pathname === "/api/auth/me" && method === "GET") return true;
-  // Logo whitelabel exibido em telas públicas (só leitura).
   if (pathname === "/api/settings/logo" && method === "GET") return true;
-  // Lista de contas do login = conveniência só de desenvolvimento (em produção
-  // fica protegida para não expor usernames).
-  if (
-    pathname === "/api/auth/users" &&
-    method === "GET" &&
-    process.env.NODE_ENV !== "production"
-  )
-    return true;
-  // Consulta pública de um convite pelo token (página /convite). O caminho tem
-  // um segmento de token depois de /api/invites/ ; criar/listar/revogar (sem
-  // token, em /api/invites) continua protegido.
+  // Lista de contas do login: só em desenvolvimento.
+  if (pathname === "/api/auth/users" && method === "GET" && process.env.NODE_ENV !== "production") return true;
   if (method === "GET" && /^\/api\/invites\/[^/]+$/.test(pathname)) return true;
-  // Relatório mensal por token (link imprimível/compartilhável) — só leitura.
   if (method === "GET" && /^\/api\/reports\/[^/]+$/.test(pathname)) return true;
-  // Proposta pública: leitura pelo token e aceite (o token é o segredo).
-  if (method === "GET" && /^\/api\/proposals\/[^/]+$/.test(pathname)) return true;
+  if ((method === "GET" || method === "POST") && /^\/api\/proposals\/[^/]+$/.test(pathname)) return true;
   if (method === "POST" && /^\/api\/proposals\/[^/]+\/accept$/.test(pathname)) return true;
-  // Página pública da agência: imagens do portfólio/logos (GET) e o formulário
-  // de lead (POST, com limite por IP e honeypot na própria rota).
   if (method === "GET" && /^\/api\/a\/[^/]+\/(work|logo)\/[^/]+$/.test(pathname)) return true;
   if (method === "POST" && /^\/api\/a\/[^/]+\/lead$/.test(pathname)) return true;
   return false;
 }
+
+// Negação por padrão para marca e profissional: só as rotas que os portais
+// usam. Cada rota ainda checa posse (a marca só enxerga o que é dela).
+const SHARED_PORTAL_API = [
+  /^\/api\/auth\//,
+  /^\/api\/account(\/.*)?$/,
+  /^\/api\/activities$/,
+  /^\/api\/onboarding$/,
+  /^\/api\/jobs$/,
+  /^\/api\/settings$/,
+  /^\/api\/billing(\/(checkout|subscribe))?$/,
+  /^\/api\/contact$/,
+];
+const CLIENT_API = [
+  /^\/api\/generate$/,
+  /^\/api\/generations(\/[^/]+(\/html)?)?$/,
+  /^\/api\/projects(\/.*)?$/,
+  /^\/api\/deliverables\/[^/]+(\/(annotations|approval|comments|review))?$/,
+  /^\/api\/annotations\/[^/]+$/,
+  /^\/api\/applications\/[^/]+$/,
+  /^\/api\/meetings\/[^/]+$/,
+  /^\/api\/files\/[^/]+$/,
+  /^\/api\/assets\/[^/]+$/,
+  /^\/api\/scheduled-posts(\/[^/]+)?$/,
+  /^\/api\/campaigns\/[^/]+$/,
+  /^\/api\/voice\/(briefing|speak)$/,
+];
+const PROFESSIONAL_API = [/^\/api\/professional-assets\/[^/]+$/, /^\/api\/projects\/[^/]+\/applications$/];
+
+export function portalApiAllowed(session: Pick<SessionPayload, "role" | "refId">, pathname: string): boolean {
+  if (session.role === "admin" || session.role === "agency") return true;
+  if (SHARED_PORTAL_API.some((re) => re.test(pathname))) return true;
+  const own = session.refId ?? "";
+  if (session.role === "client") {
+    const m = pathname.match(/^\/api\/clients\/([^/]+)(\/.*)?$/);
+    if (m) return m[1] === own;
+    return CLIENT_API.some((re) => re.test(pathname));
+  }
+  if (session.role === "professional") {
+    const m = pathname.match(/^\/api\/professionals\/([^/]+)(\/.*)?$/);
+    if (m) return m[1] === own;
+    return PROFESSIONAL_API.some((re) => re.test(pathname));
+  }
+  return false;
+}
+
+const deny = (status: 401 | 403) =>
+  NextResponse.json({ error: status === 401 ? "Não autenticado" : "Acesso negado" }, { status });
 
 export async function middleware(request: NextRequest) {
   const { pathname } = request.nextUrl;
@@ -59,75 +149,66 @@ export async function middleware(request: NextRequest) {
   if (pathname.startsWith("/api")) {
     if (isPublicApi(pathname, method)) return NextResponse.next();
     const session = await verifySession(request.cookies.get(SESSION_COOKIE)?.value);
-    if (!session) {
-      return NextResponse.json({ error: "Não autenticado" }, { status: 401 });
-    }
-    // Isolamento básico: uma marca só acessa a API do próprio cliente. Bloqueia
-    // /api/clients/<outroId>...; a rota do seu próprio id continua liberada.
-    if (session.role === "client") {
-      const m = pathname.match(/^\/api\/clients\/([^/]+)/);
-      if (m && m[1] !== session.refId) {
-        return NextResponse.json({ error: "Acesso negado" }, { status: 403 });
-      }
-    }
+    if (!session) return deny(401);
+    if (!portalApiAllowed(session, pathname)) return deny(403);
     return NextResponse.next();
   }
 
-  // Landing pública na raiz (a própria página decide: landing p/ anônimo,
-  // painel p/ logado). Match exato — não usar startsWith com "/".
-  if (pathname === "/") {
-    return NextResponse.next();
+  if (isPublicPage(pathname)) {
+    const response = NextResponse.next();
+    // Páginas com token nunca vão para buscadores.
+    if (/^\/(convite|proposta|print)\//.test(pathname)) response.headers.set("X-Robots-Tag", "noindex, nofollow");
+    return response;
   }
 
-  // ---------- Páginas públicas ----------
-  if (PUBLIC_PAGES.some((prefix) => pathname.startsWith(prefix))) {
-    return NextResponse.next();
-  }
+  const isPrivate = PRIVATE_PREFIXES.some((p) => matchesPrefix(pathname, p));
+  if (!isPrivate) return NextResponse.next(); // página desconhecida → 404 do app
 
   // ---------- Páginas protegidas ----------
   const session = await verifySession(request.cookies.get(SESSION_COOKIE)?.value);
   if (!session) {
     const url = request.nextUrl.clone();
     url.pathname = "/login";
+    url.search = "";
     return NextResponse.redirect(url);
   }
+  const response = NextResponse.next();
+  response.headers.set("X-Robots-Tag", "noindex, nofollow");
   // /admin é exclusivo do admin da plataforma
   if (pathname.startsWith("/admin") && session.role !== "admin") {
     const url = request.nextUrl.clone();
     url.pathname = "/";
     return NextResponse.redirect(url);
   }
-  // Admin e agência circulam livremente (admin vê tudo)
-  if (session.role === "admin") {
-    return NextResponse.next();
-  }
-  // Páginas de billing são acessíveis a qualquer conta logada
-  if (pathname.startsWith("/plans")) {
-    return NextResponse.next();
-  }
+  if (session.role === "admin" || session.role === "agency") return response;
+  // Planos e conta: qualquer papel logado.
+  if (matchesPrefix(pathname, "/plans") || matchesPrefix(pathname, "/conta")) return response;
   if (session.role === "client") {
-    // A marca circula no próprio portal e — se autônoma — no próprio workspace
-    // (/clients/<seuId>). Qualquer outra rota volta pra home dela.
+    // A marca circula no próprio portal, no próprio workspace (/clients/<seuId>;
+    // as ações de lá exigem marca autônoma, checado nas rotas com o valor atual
+    // do banco) e na impressão dos próprios entregáveis.
     const portal = `/portal/client/${session.refId}`;
     const workspace = `/clients/${session.refId}`;
-    const canWorkspace =
-      pathname === workspace || pathname.startsWith(`${workspace}/`);
-    if (!pathname.startsWith(portal) && !canWorkspace) {
+    const allowed =
+      matchesPrefix(pathname, portal) || matchesPrefix(pathname, workspace) || pathname.startsWith("/print/");
+    if (!allowed) {
       const url = request.nextUrl.clone();
       url.pathname = session.selfServe ? workspace : portal;
       url.search = "";
       return NextResponse.redirect(url);
     }
+    return response;
   }
   if (session.role === "professional") {
-    const allowed = `/professionals/${session.refId}`;
-    if (!pathname.startsWith(allowed)) {
+    const own = `/professionals/${session.refId}`;
+    if (!matchesPrefix(pathname, own)) {
       const url = request.nextUrl.clone();
-      url.pathname = allowed;
+      url.pathname = own;
+      url.search = "";
       return NextResponse.redirect(url);
     }
   }
-  return NextResponse.next();
+  return response;
 }
 
 export const config = {

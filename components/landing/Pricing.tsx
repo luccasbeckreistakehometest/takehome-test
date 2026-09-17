@@ -7,7 +7,7 @@ import {
   COIN_PACKS,
   PERIOD_DISCOUNT,
   periodPrice,
-  plansFor,
+  listedPlansFor,
   type AccountType,
   type BillingPeriod,
 } from "@/lib/plans";
@@ -18,37 +18,39 @@ type Lang = "pt" | "en";
 const L = {
   pt: {
     title: "Planos e preços",
-    sub: "Comece grátis. Sem cartão para começar. Evolua quando crescer.",
+    sub: "Comece grátis, sem cartão. Planos pré-pagos: você paga o período escolhido e ele não renova sozinho.",
+    prepaid: "Preços em reais (R$). Pré-pago, sem renovação automática; no fim do período a conta volta para o plano grátis. Arrependimento em 7 dias.",
     per: (m: number) => (m === 1 ? "/mês" : `/${m} meses`),
     free: "Grátis",
     current: "Selecionar",
-    subscribe: "Assinar",
+    subscribe: "Contratar",
     recommended: "MAIS ESCOLHIDO",
     coinsTitle: "Prefere pagar só pelo uso?",
-    coinsSub: "Compre créditos avulsos e gaste quando quiser — sem assinatura.",
+    coinsSub: "Compre coins avulsos e gaste quando quiser. Coins comprados não expiram.",
     coins: "coins",
     bonus: "com bônus",
     buy: "Comprar",
     pay: "Pagamento seguro via",
     quality: { economy: "IA econômica", balanced: "IA balanceada", premium: "IA premium (Opus)" } as Record<string, string>,
-    unlimited: "IA ilimitada",
+    unlimited: "IA sem cota (uso justo)",
   },
   en: {
     title: "Plans & pricing",
-    sub: "Start free. No card to begin. Grow when you grow.",
+    sub: "Start free, no card. Prepaid plans: you pay for the period you choose and it never renews on its own.",
+    prepaid: "Prices in Brazilian reais (BRL, R$), charged in BRL. Prepaid, no auto-renewal; when the period ends the account returns to the free plan. 7-day refund window.",
     per: (m: number) => (m === 1 ? "/mo" : `/${m} mo`),
     free: "Free",
     current: "Select",
-    subscribe: "Subscribe",
+    subscribe: "Get this plan",
     recommended: "MOST POPULAR",
     coinsTitle: "Prefer pay-as-you-go?",
-    coinsSub: "Buy credits and spend whenever you want — no subscription.",
+    coinsSub: "Buy coins and spend them whenever you want. Purchased coins do not expire.",
     coins: "coins",
     bonus: "with bonus",
     buy: "Buy",
     pay: "Secure payment via",
     quality: { economy: "Economy AI", balanced: "Balanced AI", premium: "Premium AI (Opus)" } as Record<string, string>,
-    unlimited: "Unlimited AI",
+    unlimited: "No coin quota (fair use)",
   },
 };
 
@@ -62,7 +64,8 @@ export default function Pricing({
   const [period, setPeriod] = useState<BillingPeriod>("monthly");
   const t = L[lang];
   const brl = (n: number) => fmtMoney(n, lang);
-  const plans = plansFor(accountType);
+  const plans = listedPlansFor(accountType);
+  const hasPaid = plans.some((p) => p.monthlyPrice > 0);
 
   return (
     <section className="border-t border-edge px-4 py-24" id="planos">
@@ -74,8 +77,8 @@ export default function Pricing({
           <p className="mt-4 text-muted">{t.sub}</p>
         </div>
 
-        {/* Toggle de período */}
-        <div className="reveal mt-8 flex justify-center">
+        {/* Toggle de período (só faz sentido com plano pago) */}
+        <div className={`reveal mt-8 flex justify-center ${hasPaid ? "" : "hidden"}`}>
           <div className="inline-flex flex-wrap justify-center gap-1 rounded-full border border-edge bg-surface-2 p-1">
             {(Object.keys(PERIOD_DISCOUNT) as BillingPeriod[]).map((p) => (
               <button
@@ -133,7 +136,12 @@ export default function Pricing({
                   ))}
                 </ul>
                 <Link
-                  href={`/criar-conta?type=${accountType}`}
+                  href={
+                    plan.monthlyPrice === 0
+                      ? `/criar-conta?type=${accountType}`
+                      : `/criar-conta?type=${accountType}&plan=${plan.id}&period=${period}`
+                  }
+                  data-testid={`pricing-cta-${plan.id}`}
                   className={`mt-6 inline-flex items-center justify-center gap-1.5 rounded-xl px-5 py-3 font-semibold transition-transform hover:-translate-y-0.5 ${
                     plan.recommended
                       ? "bg-accent text-accent-ink shadow-lg shadow-accent/20"
@@ -177,6 +185,8 @@ export default function Pricing({
             ))}
           </div>
         </div>
+
+        <p className="reveal mx-auto mt-6 max-w-2xl text-center text-xs text-muted">{t.prepaid}</p>
 
         {/* Métodos de pagamento (confiança) */}
         <div className="reveal mt-8 flex flex-wrap items-center justify-center gap-x-6 gap-y-2 text-sm text-muted">

@@ -1,7 +1,7 @@
 import { createHash } from "crypto";
-import { db } from "./db";
+import { db, tenantColumn } from "./db";
 // listScheduledPosts/listSales também garantem scheduled_posts e metric_snapshots
-import { listScheduledPosts } from "./marketplace-db";
+import { listClientScheduledPosts } from "./marketplace-db";
 import { listSales } from "./integrations-db";
 import { computeLearnings, type Learnings, type LearningSnapshot, type LearningsReading } from "./learnings-rules";
 
@@ -19,6 +19,7 @@ db.exec(`
     PRIMARY KEY (clientId, month)
   );
 `);
+tenantColumn("client_learnings");
 
 export function learningsHash(l: Learnings): string {
   return createHash("sha256")
@@ -27,7 +28,7 @@ export function learningsHash(l: Learnings): string {
 }
 
 export function loadLearnings(clientId: string, month: string): Learnings {
-  const posts = listScheduledPosts(clientId).map((p) => ({
+  const posts = listClientScheduledPosts(clientId).map((p) => ({
     id: p.id,
     channel: p.channel,
     status: p.status,
@@ -59,7 +60,8 @@ export function getFreshReading(clientId: string, month: string, l: Learnings): 
 
 export function saveReading(clientId: string, month: string, hash: string, reading: LearningsReading): void {
   db.prepare(
-    `INSERT INTO client_learnings (clientId, month, dataHash, reading, createdAt) VALUES (?, ?, ?, ?, ?)
+    `INSERT INTO client_learnings (clientId, agencyId, month, dataHash, reading, createdAt)
+     VALUES (?, (SELECT agencyId FROM clients WHERE id = ?), ?, ?, ?, ?)
      ON CONFLICT(clientId, month) DO UPDATE SET dataHash = excluded.dataHash, reading = excluded.reading, createdAt = excluded.createdAt`
-  ).run(clientId, month, hash, JSON.stringify(reading), new Date().toISOString());
+  ).run(clientId, clientId, month, hash, JSON.stringify(reading), new Date().toISOString());
 }

@@ -11,17 +11,14 @@ const schema = z.object({
   reply: z.string().trim().max(2000).optional(),
 });
 
-// Rascunho do atendente: a agência (ou a própria marca) aprova — podendo
-// editar o texto — ou descarta.
+// Rascunho do atendente: a agência aprova — podendo editar o texto — ou descarta.
 export async function POST(request: Request, { params }: Context) {
   const { id } = await params;
-  const auth = await guard(["agency", "admin", "client"]);
-  if (isDenied(auth)) return auth;
+  // O atendente usa o WhatsApp da agência: só ela aprova ou descarta.
   const reply = getReply(id);
   if (!reply) return NextResponse.json({ error: "Resposta não encontrada" }, { status: 404 });
-  if (auth.role === "client" && auth.refId !== reply.clientId) {
-    return NextResponse.json({ error: "Acesso negado" }, { status: 403 });
-  }
+  const auth = await guard(["agency", "admin"], { clientId: reply.clientId });
+  if (isDenied(auth)) return auth;
   const parsed = schema.safeParse(await request.json().catch(() => null));
   if (!parsed.success) return NextResponse.json({ error: "Dados inválidos" }, { status: 400 });
   if (reply.status !== "draft") {

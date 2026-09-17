@@ -3,25 +3,32 @@ import { z } from "zod";
 import { GenerationError, generateStructured } from "@/lib/claude";
 import { createJob, createProspect, createProspectSearch, finishJob, latestProspectSearch, listProspects } from "@/lib/marketplace-db";
 import { prospectingSchema, type ProspectingResult } from "@/lib/marketplace-schemas";
+import { aiErrorResponse, beginAi } from "@/lib/metering";
+import { actingAgencyId, agencyOnly, isDenied, tenantOf } from "@/lib/guard";
 
 export const maxDuration = 300;
 
 const searchSchema = z.object({
-  niche: z.string().trim().min(1, "Informe o nicho"),
-  region: z.string().trim().min(1, "Informe a região"),
-  notes: z.string().trim().default(""),
+  niche: z.string().trim().min(1, "Informe o nicho").max(200),
+  region: z.string().trim().min(1, "Informe a região").max(200),
+  notes: z.string().trim().max(2000).default(""),
 });
 
-export async function GET() {
+export async function GET(request: Request) {
+  const auth = await agencyOnly();
+  if (isDenied(auth)) return auth;
+  const scope = tenantOf(auth, request);
   return NextResponse.json({
-    prospects: listProspects(),
-    lastSearch: latestProspectSearch(),
+    prospects: listProspects(scope),
+    lastSearch: latestProspectSearch(scope),
   });
 }
 
 // Prospecção ativa: a IA pesquisa na web negócios reais do nicho/região que
 // são potenciais clientes da agência — mesmo sem cadastro na plataforma.
 export async function POST(request: Request) {
+  const auth = await agencyOnly();
+  if (isDenied(auth)) return auth;
   const parsed = searchSchema.safeParse(await request.json().catch(() => null));
   if (!parsed.success) {
     return NextResponse.json(
@@ -30,9 +37,12 @@ export async function POST(request: Request) {
     );
   }
   const { niche, region, notes } = parsed.data;
-  const job = createJob({ kind: "prospecting", label: `Prospecção: ${niche} — ${region}` });
-
+  const agencyId = actingAgencyId(auth, request);
+  const ticket = await beginAi(request, auth, "prospecting", { agencyId });
+  if (isDenied(ticket)) return ticket;
+  const job = createJob({ kind: "prospecting", label: `Prospecção: ${niche} — ${region}`, agencyId });
   try {
+    return await ticket.run(async () => {
     const result = await generateStructured<ProspectingResult>({
       system:
         "Você é o head de novos negócios de uma agência de marketing. Você encontra empresas REAIS pesquisando na web e qualifica cada lead com critério. Nunca invente empresas: liste apenas negócios que você encontrou na pesquisa, com os dados que conseguiu confirmar (deixe campos vazios quando não encontrar). Responda em português do Brasil.",
@@ -55,21 +65,21 @@ Priorize empresas com maior probabilidade de fechar: dor visível + capacidade d
 
     const searchQuery = `${niche} — ${region}`;
     const saved = result.prospects.map((prospect) =>
-      createProspect({ ...prospect, searchQuery })
+      createProspect({ ...prospect, searchQuery }, agencyId)
     );
     // Resumo persistente: sobrevive a refresh e explica buscas vazias
     createProspectSearch({
+      agencyId,
       query: searchQuery,
       summary: result.summary,
       resultCount: saved.length,
     });
     finishJob(job.id, "done");
     return NextResponse.json({ summary: result.summary, prospects: saved }, { status: 201 });
+    });
   } catch (error) {
+    ticket.refund();
     finishJob(job.id, "error", error instanceof GenerationError ? error.message : "erro");
-    if (error instanceof GenerationError) {
-      return NextResponse.json({ error: error.message }, { status: error.status });
-    }
-    return NextResponse.json({ error: "Erro inesperado na prospecção." }, { status: 500 });
+    return aiErrorResponse(error);
   }
 }

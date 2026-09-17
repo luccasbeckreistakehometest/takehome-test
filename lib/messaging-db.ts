@@ -1,5 +1,7 @@
 import { randomUUID } from "crypto";
-import { addColumnIfMissing, db } from "./db";
+import { addColumnIfMissing, db, tenantColumn } from "./db";
+import { CHANNEL_CONNECTIONS_SCHEMA } from "./tenancy-migration";
+import { scopeWhere, type TenantScope } from "./tenancy-rules";
 
 // Central de mensagens: contatos, listas de transmissão, fila de envio
 // (outbox) e conexões por canal. WhatsApp e Instagram, via API oficial ou
@@ -11,6 +13,7 @@ export type OutboxStatus = "queued" | "scheduled" | "sending" | "sent" | "failed
 
 export type Contact = {
   id: string;
+  agencyId: string;
   name: string;
   phone: string; // E.164 sem "+", ex 5522999999999
   instagram: string; // @handle ou user id
@@ -22,6 +25,7 @@ export type Contact = {
 
 export type BroadcastList = {
   id: string;
+  agencyId: string;
   name: string;
   channel: MessageChannel;
   contactIds: string[];
@@ -30,6 +34,7 @@ export type BroadcastList = {
 
 export type OutboxMessage = {
   id: string;
+  agencyId: string;
   channel: MessageChannel;
   mode: SendMode;
   contactId: string | null;
@@ -47,6 +52,7 @@ export type OutboxMessage = {
 };
 
 export type ChannelConnection = {
+  agencyId: string;
   channel: MessageChannel;
   mode: SendMode;
   // API: token/phoneNumberId (WhatsApp Cloud) ou pageToken/igId (Instagram)
@@ -90,15 +96,6 @@ db.exec(`
     createdAt TEXT NOT NULL
   );
   CREATE INDEX IF NOT EXISTS idx_outbox_status ON message_outbox(status, scheduledFor);
-  CREATE TABLE IF NOT EXISTS channel_connections (
-    channel TEXT NOT NULL,
-    mode TEXT NOT NULL,
-    apiToken TEXT NOT NULL DEFAULT '',
-    apiAccountId TEXT NOT NULL DEFAULT '',
-    sessionReady INTEGER NOT NULL DEFAULT 0,
-    updatedAt TEXT NOT NULL,
-    PRIMARY KEY (channel)
-  );
   CREATE TABLE IF NOT EXISTS inbound_messages (
     id TEXT PRIMARY KEY,
     channel TEXT NOT NULL,
@@ -116,32 +113,36 @@ db.exec(`
 addColumnIfMissing("inbound_messages", "clientId", "TEXT");
 addColumnIfMissing("inbound_messages", "phoneNumberId", "TEXT NOT NULL DEFAULT ''");
 addColumnIfMissing("message_outbox", "clientId", "TEXT");
+// Conexões por agência: chave (agencyId, channel). Banco antigo é convertido
+// pela migração de tenancy (lib/tenancy-migration.ts).
+db.exec(CHANNEL_CONNECTIONS_SCHEMA);
+for (const table of ["contacts", "broadcast_lists", "message_outbox", "inbound_messages"]) tenantColumn(table);
 
 const now = () => new Date().toISOString();
 
 // ---------- Contatos ----------
-export function listContacts(clientId?: string): Contact[] {
-  const rows = clientId
-    ? (db
-        .prepare("SELECT * FROM contacts WHERE clientId = ? ORDER BY name ASC")
-        .all(clientId) as Contact[])
-    : (db.prepare("SELECT * FROM contacts ORDER BY name ASC").all() as Contact[]);
-  return rows;
+export function listContacts(scope: TenantScope, clientId?: string): Contact[] {
+  const where = scopeWhere(scope);
+  const byClient = clientId ? "AND clientId = ?" : "";
+  return db
+    .prepare(`SELECT * FROM contacts WHERE ${where.sql} ${byClient} ORDER BY name ASC`)
+    .all(...where.params, ...(clientId ? [clientId] : [])) as Contact[];
 }
 
-export function createContact(
-  input: Omit<Contact, "id" | "createdAt">
-): Contact {
+export function createContact(input: Omit<Contact, "id" | "createdAt">): Contact {
+  if (!input.agencyId) throw new Error("createContact: agência obrigatória");
   const contact: Contact = { ...input, id: randomUUID(), createdAt: now() };
   db.prepare(
-    `INSERT INTO contacts (id, name, phone, instagram, clientId, tags, notes, createdAt)
-     VALUES (@id, @name, @phone, @instagram, @clientId, @tags, @notes, @createdAt)`
+    `INSERT INTO contacts (id, agencyId, name, phone, instagram, clientId, tags, notes, createdAt)
+     VALUES (@id, @agencyId, @name, @phone, @instagram, @clientId, @tags, @notes, @createdAt)`
   ).run(contact);
   return contact;
 }
 
-export function deleteContact(id: string): void {
-  db.prepare("DELETE FROM contacts WHERE id = ?").run(id);
+// Apaga só dentro do escopo (id de outra agência = nada acontece).
+export function deleteContact(scope: TenantScope, id: string): boolean {
+  const where = scopeWhere(scope);
+  return db.prepare(`DELETE FROM contacts WHERE id = ? AND ${where.sql}`).run(id, ...where.params).changes > 0;
 }
 
 export function getContact(id: string): Contact | undefined {
@@ -157,9 +158,10 @@ function toList(row: ListRow): BroadcastList {
   return { ...row, contactIds: JSON.parse(row.contactIds) };
 }
 
-export function listBroadcastLists(): BroadcastList[] {
+export function listBroadcastLists(scope: TenantScope): BroadcastList[] {
+  const where = scopeWhere(scope);
   return (
-    db.prepare("SELECT * FROM broadcast_lists ORDER BY createdAt DESC").all() as ListRow[]
+    db.prepare(`SELECT * FROM broadcast_lists WHERE ${where.sql} ORDER BY createdAt DESC`).all(...where.params) as ListRow[]
   ).map(toList);
 }
 
@@ -170,27 +172,32 @@ export function getBroadcastList(id: string): BroadcastList | undefined {
   return row ? toList(row) : undefined;
 }
 
+// Só entram contatos da mesma agência.
 export function createBroadcastList(input: {
+  agencyId: string;
   name: string;
   channel: MessageChannel;
   contactIds: string[];
 }): BroadcastList {
-  const list: BroadcastList = { ...input, id: randomUUID(), createdAt: now() };
+  const own = input.contactIds.filter((id) => getContact(id)?.agencyId === input.agencyId);
+  const list: BroadcastList = { ...input, contactIds: own, id: randomUUID(), createdAt: now() };
   db.prepare(
-    "INSERT INTO broadcast_lists (id, name, channel, contactIds, createdAt) VALUES (?, ?, ?, ?, ?)"
-  ).run(list.id, list.name, list.channel, JSON.stringify(list.contactIds), list.createdAt);
+    "INSERT INTO broadcast_lists (id, agencyId, name, channel, contactIds, createdAt) VALUES (?, ?, ?, ?, ?, ?)"
+  ).run(list.id, list.agencyId, list.name, list.channel, JSON.stringify(list.contactIds), list.createdAt);
   return list;
 }
 
-export function deleteBroadcastList(id: string): void {
-  db.prepare("DELETE FROM broadcast_lists WHERE id = ?").run(id);
+export function deleteBroadcastList(scope: TenantScope, id: string): boolean {
+  const where = scopeWhere(scope);
+  return db.prepare(`DELETE FROM broadcast_lists WHERE id = ? AND ${where.sql}`).run(id, ...where.params).changes > 0;
 }
 
 // ---------- Outbox (fila de envio) ----------
-export function listOutbox(limit = 100): OutboxMessage[] {
+export function listOutbox(scope: TenantScope, limit = 100): OutboxMessage[] {
+  const where = scopeWhere(scope);
   return db
-    .prepare("SELECT * FROM message_outbox ORDER BY createdAt DESC LIMIT ?")
-    .all(limit) as OutboxMessage[];
+    .prepare(`SELECT * FROM message_outbox WHERE ${where.sql} ORDER BY createdAt DESC LIMIT ?`)
+    .all(...where.params, limit) as OutboxMessage[];
 }
 
 function insertOutbox(
@@ -206,8 +213,8 @@ function insertOutbox(
     createdAt: now(),
   };
   db.prepare(
-    `INSERT INTO message_outbox (id, channel, mode, contactId, listId, clientId, toAddress, body, status, scheduledFor, sentAt, error, createdAt)
-     VALUES (@id, @channel, @mode, @contactId, @listId, @clientId, @toAddress, @body, @status, @scheduledFor, @sentAt, @error, @createdAt)`
+    `INSERT INTO message_outbox (id, agencyId, channel, mode, contactId, listId, clientId, toAddress, body, status, scheduledFor, sentAt, error, createdAt)
+     VALUES (@id, @agencyId, @channel, @mode, @contactId, @listId, @clientId, @toAddress, @body, @status, @scheduledFor, @sentAt, @error, @createdAt)`
   ).run(full);
   return full;
 }
@@ -215,6 +222,7 @@ function insertOutbox(
 // Enfileira uma mensagem individual ou uma transmissão (expande a lista em N
 // mensagens, uma por contato, resolvendo o endereço de cada um no canal).
 export function enqueueMessages(input: {
+  agencyId: string;
   channel: MessageChannel;
   mode: SendMode;
   body: string;
@@ -226,13 +234,14 @@ export function enqueueMessages(input: {
   const created: OutboxMessage[] = [];
   for (const contactId of input.contactIds) {
     const contact = getContact(contactId);
-    if (!contact) continue;
+    if (!contact || contact.agencyId !== input.agencyId) continue; // contato de outra agência: ignora
     const toAddress = input.channel === "whatsapp" ? contact.phone : contact.instagram;
     if (!toAddress) continue; // contato sem endereço para o canal escolhido
     // Personalização simples: {nome} vira o primeiro nome do contato
     const body = input.body.replace(/\{nome\}/gi, contact.name.split(" ")[0] ?? contact.name);
     created.push(
       insertOutbox({
+        agencyId: input.agencyId,
         channel: input.channel,
         mode: input.mode,
         contactId,
@@ -250,6 +259,7 @@ export function enqueueMessages(input: {
 // Enfileira UMA mensagem por endereço cru (sem exigir contato cadastrado).
 // Usado pelo teste de conexão da UI.
 export function enqueueDirect(input: {
+  agencyId: string;
   channel: MessageChannel;
   mode: SendMode;
   toAddress: string;
@@ -257,6 +267,7 @@ export function enqueueDirect(input: {
   clientId?: string | null;
 }): OutboxMessage {
   return insertOutbox({
+    agencyId: input.agencyId,
     channel: input.channel,
     mode: input.mode,
     contactId: null,
@@ -280,32 +291,34 @@ export function updateOutboxStatus(
 }
 
 // Mensagens prontas para envio agora (fila + agendadas cujo horário chegou).
-export function dueOutbox(channel?: MessageChannel): OutboxMessage[] {
+// Sem agencyId = todas (o scheduler); com agencyId = só as da agência.
+export function dueOutbox(channel?: MessageChannel, agencyId?: string): OutboxMessage[] {
   const nowIso = now();
   const rows = db
     .prepare(
       `SELECT * FROM message_outbox
        WHERE (status = 'queued' OR (status = 'scheduled' AND scheduledFor <= ?))
        ${channel ? "AND channel = ?" : ""}
+       ${agencyId ? "AND agencyId = ?" : ""}
        ORDER BY createdAt ASC`
     )
-    .all(...(channel ? [nowIso, channel] : [nowIso])) as OutboxMessage[];
+    .all(nowIso, ...(channel ? [channel] : []), ...(agencyId ? [agencyId] : [])) as OutboxMessage[];
   return rows;
 }
 
 // ---------- Conexões por canal ----------
-export function listConnections(): ChannelConnection[] {
-  const rows = db.prepare("SELECT * FROM channel_connections").all() as (Omit<
+export function listConnections(agencyId: string): ChannelConnection[] {
+  const rows = db.prepare("SELECT * FROM channel_connections WHERE agencyId = ?").all(agencyId) as (Omit<
     ChannelConnection,
     "sessionReady"
   > & { sessionReady: number })[];
   return rows.map((r) => ({ ...r, sessionReady: r.sessionReady === 1 }));
 }
 
-export function getConnection(channel: MessageChannel): ChannelConnection | undefined {
+export function getConnection(agencyId: string, channel: MessageChannel): ChannelConnection | undefined {
   const row = db
-    .prepare("SELECT * FROM channel_connections WHERE channel = ?")
-    .get(channel) as
+    .prepare("SELECT * FROM channel_connections WHERE agencyId = ? AND channel = ?")
+    .get(agencyId, channel) as
     | (Omit<ChannelConnection, "sessionReady"> & { sessionReady: number })
     | undefined;
   return row ? { ...row, sessionReady: row.sessionReady === 1 } : undefined;
@@ -314,6 +327,7 @@ export function getConnection(channel: MessageChannel): ChannelConnection | unde
 // ---------- Mensagens recebidas (inbound via webhook) ----------
 export type InboundMessage = {
   id: string;
+  agencyId: string | null;
   channel: MessageChannel;
   fromAddress: string;
   fromName: string;
@@ -326,7 +340,10 @@ export type InboundMessage = {
   readAt: string | null;
 };
 
+// agencyId: dona do número que recebeu (roteado pelo phone_number_id).
+// null = número desconhecido (fica só para o admin).
 export function saveInbound(input: {
+  agencyId: string | null;
   channel: MessageChannel;
   fromAddress: string;
   fromName?: string;
@@ -336,6 +353,7 @@ export function saveInbound(input: {
 }): InboundMessage {
   const msg: InboundMessage = {
     id: randomUUID(),
+    agencyId: input.agencyId,
     channel: input.channel,
     fromAddress: input.fromAddress,
     fromName: input.fromName ?? "",
@@ -346,8 +364,8 @@ export function saveInbound(input: {
     readAt: null,
   };
   db.prepare(
-    `INSERT INTO inbound_messages (id, channel, fromAddress, fromName, body, clientId, phoneNumberId, receivedAt, readAt)
-     VALUES (@id, @channel, @fromAddress, @fromName, @body, @clientId, @phoneNumberId, @receivedAt, @readAt)`
+    `INSERT INTO inbound_messages (id, agencyId, channel, fromAddress, fromName, body, clientId, phoneNumberId, receivedAt, readAt)
+     VALUES (@id, @agencyId, @channel, @fromAddress, @fromName, @body, @clientId, @phoneNumberId, @receivedAt, @readAt)`
   ).run(msg);
   return msg;
 }
@@ -358,15 +376,17 @@ export function getInbound(id: string): InboundMessage | undefined {
 
 export type InboundWithClient = InboundMessage & { clientName: string | null };
 
-export function listInbound(limit = 100, clientId?: string): InboundWithClient[] {
-  const where = clientId ? "WHERE m.clientId = ?" : "";
+export function listInbound(scope: TenantScope, limit = 100, clientId?: string): InboundWithClient[] {
+  const tenant = scopeWhere(scope, "m.agencyId");
+  const byClient = clientId ? "AND m.clientId = ?" : "";
   return db
     .prepare(
       `SELECT m.*, c.name AS clientName FROM inbound_messages m
-       LEFT JOIN clients c ON c.id = m.clientId ${where}
+       LEFT JOIN clients c ON c.id = m.clientId
+       WHERE ${tenant.sql} ${byClient}
        ORDER BY m.receivedAt DESC LIMIT ?`
     )
-    .all(...(clientId ? [clientId, limit] : [limit])) as InboundWithClient[];
+    .all(...tenant.params, ...(clientId ? [clientId] : []), limit) as InboundWithClient[];
 }
 
 // Histórico curto da conversa com um contato (para a IA responder no contexto).
@@ -378,11 +398,24 @@ export function listInboundFrom(clientId: string, fromAddress: string, limit = 6
     .all(clientId, fromAddress, limit) as InboundMessage[];
 }
 
-export function markInboundRead(): void {
-  db.prepare("UPDATE inbound_messages SET readAt = ? WHERE readAt IS NULL").run(now());
+export function markInboundRead(scope: TenantScope): void {
+  const where = scopeWhere(scope);
+  db.prepare(`UPDATE inbound_messages SET readAt = ? WHERE readAt IS NULL AND ${where.sql}`).run(now(), ...where.params);
+}
+
+// Agência dona de um número de WhatsApp/conta do Instagram conectado. Id em
+// mais de uma agência (dado antigo, antes da checagem de posse) = ninguém:
+// a mensagem fica sem agência (só o admin vê) em vez de ir para a errada.
+export function findAgencyByAccountId(channel: MessageChannel, accountId: string): string | null {
+  if (!accountId) return null;
+  const rows = db
+    .prepare("SELECT DISTINCT agencyId FROM channel_connections WHERE channel = ? AND apiAccountId = ? AND apiAccountId != '' LIMIT 2")
+    .all(channel, accountId) as { agencyId: string }[];
+  return rows.length === 1 ? rows[0].agencyId : null;
 }
 
 export function saveConnection(input: {
+  agencyId: string;
   channel: MessageChannel;
   mode: SendMode;
   apiToken: string;
@@ -395,9 +428,9 @@ export function saveConnection(input: {
     updatedAt: now(),
   };
   db.prepare(
-    `INSERT INTO channel_connections (channel, mode, apiToken, apiAccountId, sessionReady, updatedAt)
-     VALUES (@channel, @mode, @apiToken, @apiAccountId, @sessionReady, @updatedAt)
-     ON CONFLICT(channel) DO UPDATE SET mode=@mode, apiToken=@apiToken, apiAccountId=@apiAccountId,
+    `INSERT INTO channel_connections (agencyId, channel, mode, apiToken, apiAccountId, sessionReady, updatedAt)
+     VALUES (@agencyId, @channel, @mode, @apiToken, @apiAccountId, @sessionReady, @updatedAt)
+     ON CONFLICT(agencyId, channel) DO UPDATE SET mode=@mode, apiToken=@apiToken, apiAccountId=@apiAccountId,
        sessionReady=@sessionReady, updatedAt=@updatedAt`
   ).run({ ...conn, sessionReady: conn.sessionReady ? 1 : 0 });
   return conn;

@@ -5,6 +5,7 @@ import { api } from "@/lib/api";
 import type { AgencySettings } from "@/lib/settings";
 
 type SettingsView = AgencySettings & {
+  canManagePlatform?: boolean;
   hasAnthropicKey?: boolean;
   hasGoogleAiKey?: boolean;
   hasTogetherKey?: boolean;
@@ -22,7 +23,7 @@ const INTEGRATIONS: {
   status: IntegrationStatus;
   where?: string;
 }[] = [
-  { name: "WhatsApp (API + sessão)", area: "Mensageria", status: "live", where: "Mensagens → Conexões" },
+  { name: "WhatsApp (API oficial da Meta)", area: "Mensageria", status: "live", where: "Mensagens → Conexões" },
   { name: "Instagram DM (API)", area: "Mensageria", status: "live", where: "Mensagens → Conexões" },
   { name: "Google Analytics 4", area: "Dados & métricas", status: "live", where: "Cliente → Vendas & Dados" },
   { name: "Meta Ads (Facebook/Instagram)", area: "Mídia paga", status: "live", where: "Cliente → Vendas & Dados" },
@@ -32,7 +33,7 @@ const INTEGRATIONS: {
   { name: "Instagram Publishing", area: "Publicação social", status: "beta", where: "posts agendados na Agenda" },
   { name: "Google Calendar / Meet", area: "Reuniões", status: "beta", where: "links de calendário na Agenda" },
   { name: "Canva / Figma", area: "Design", status: "soon" },
-  { name: "Stripe / Mercado Pago", area: "Pagamentos & escrow", status: "soon" },
+  { name: "Stripe / Mercado Pago", area: "Pagamentos entre agência e profissional", status: "soon" },
   { name: "RD Station / HubSpot", area: "CRM & leads", status: "soon" },
 ];
 
@@ -164,6 +165,12 @@ export default function SettingsPage() {
             </div>
           </div>
         </div>
+        {!settings.canManagePlatform && (
+          <p className="border-t border-edge pt-4 text-xs text-muted">
+            O modo de IA, as landing pages e as chaves de API são definidos pelo admin da plataforma.
+          </p>
+        )}
+        {settings.canManagePlatform && (
         <div className="space-y-2 border-t border-edge pt-4">
           <p className="text-xs font-semibold uppercase tracking-wider text-muted">
             Custo & features de IA
@@ -226,6 +233,7 @@ export default function SettingsPage() {
             </span>
           </label>
         </div>
+        )}
         <div className="border-t border-edge pt-4">
           <Label>Estilo da casa (injetado em todas as gerações de IA)</Label>
           <textarea
@@ -235,6 +243,7 @@ export default function SettingsPage() {
             className="min-h-20 w-full rounded-md border border-edge bg-surface-2 px-3 py-2 text-sm outline-none focus:border-accent"
           />
         </div>
+        {settings.canManagePlatform && (
         <div className="space-y-2 border-t border-edge pt-4">
           <p className="text-xs font-semibold uppercase tracking-wider text-muted">
             Chaves de API
@@ -351,6 +360,7 @@ export default function SettingsPage() {
             </div>
           </div>
         </div>
+        )}
         {error && <ErrorBox message={error} />}
         <div className="flex items-center gap-3">
           <Button onClick={save} disabled={saving}>
@@ -360,11 +370,15 @@ export default function SettingsPage() {
         </div>
       </Card>
 
-      <AgencyPageCard origin={origin} />
+      <div id="pagina-publica" className="scroll-mt-20">
+        <AgencyPageCard origin={origin} />
+      </div>
 
       <ApprovalRulesCard />
 
-      <InviteGenerator origin={origin} />
+      <div id="convites" className="scroll-mt-20">
+        <InviteGenerator origin={origin} />
+      </div>
 
       <Card className="space-y-3">
         <SectionTitle>Integrações</SectionTitle>

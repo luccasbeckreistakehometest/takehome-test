@@ -1,8 +1,11 @@
 import { NextResponse } from "next/server";
-import { listUsers } from "@/lib/auth";
+import { listLoginHints } from "@/lib/auth";
 
-// Lista de logins para a tela de login (app local — facilita o acesso;
-// remove-se quando houver cadastro de senha individual)
+// Lista de logins para a tela de login — só em desenvolvimento local. Em
+// produção não expõe usernames (o middleware também não libera a rota).
 export async function GET() {
-  return NextResponse.json(listUsers());
+  if (process.env.NODE_ENV === "production") {
+    return NextResponse.json([], { status: 404 });
+  }
+  return NextResponse.json(listLoginHints());
 }

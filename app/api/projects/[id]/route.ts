@@ -9,24 +9,31 @@ import {
   listMeetings,
   listMessages,
   logActivity,
+  professionalWorkedWith,
   updateProject,
 } from "@/lib/marketplace-db";
+import { professionalVisibleTo, agencyScope } from "@/lib/tenancy-rules";
 import { projectPatchSchema } from "@/lib/validation";
 import { decideDeliverable, listApprovalEvents } from "@/lib/approvals-db";
-import { getSession } from "@/lib/session";
+import { guardProject, isDenied } from "@/lib/guard";
+import { professionalForViewer } from "@/lib/marketplace-privacy";
 
 type Context = { params: Promise<{ id: string }> };
 
 export async function GET(_request: Request, { params }: Context) {
   const { id } = await params;
-  const project = getProject(id);
-  if (!project) {
-    return NextResponse.json({ error: "Demanda não encontrada" }, { status: 404 });
-  }
+  const auth = await guardProject(id, "view");
+  if (isDenied(auth)) return auth;
+  const project = auth.project;
   return NextResponse.json({
     ...project,
+    // escalado nesta demanda = trabalhou com a agência (contato liberado;
+    // custo/hora só para a agência dona do profissional)
     professional: project.professionalId
-      ? getProfessional(project.professionalId)
+      ? (() => {
+          const professional = getProfessional(project.professionalId);
+          return professional ? professionalForViewer(professional, auth.session, true) : null;
+        })()
       : null,
     messages: listMessages(id),
     deliverables: listDeliverables(id),
@@ -39,9 +46,34 @@ export async function GET(_request: Request, { params }: Context) {
 
 export async function PATCH(request: Request, { params }: Context) {
   const { id } = await params;
+  const auth = await guardProject(id, "portal");
+  if (isDenied(auth)) return auth;
+  const session = auth.session;
   const parsed = projectPatchSchema.safeParse(await request.json().catch(() => null));
   if (!parsed.success) {
     return NextResponse.json({ error: "Dados inválidos" }, { status: 400 });
+  }
+  // Marca gerenciada (portal): só aprova ou pede ajuste de uma entrega que
+  // está aguardando a aprovação dela. O resto é com a agência.
+  if (session.role === "client" && !session.selfServe) {
+    const keys = Object.keys(parsed.data);
+    const allowed =
+      auth.project.status === "client_approval" &&
+      keys.every((key) => key === "status") &&
+      (parsed.data.status === "approved" || parsed.data.status === "in_progress");
+    if (!allowed) return NextResponse.json({ error: "Acesso negado" }, { status: 403 });
+  }
+  // Profissional escalado precisa ser visível para a agência da demanda.
+  if (parsed.data.professionalId) {
+    const professional = getProfessional(parsed.data.professionalId);
+    const visible =
+      professional &&
+      professionalVisibleTo(
+        agencyScope(auth.project.agencyId),
+        professional,
+        professionalWorkedWith(professional.id, auth.project.agencyId)
+      );
+    if (!visible) return NextResponse.json({ error: "Profissional não encontrado" }, { status: 404 });
   }
   const before = getProject(id);
   const updated = updateProject(id, parsed.data);
@@ -51,8 +83,7 @@ export async function PATCH(request: Request, { params }: Context) {
   // Aprovar a demanda inteira aprova cada entrega pendente — e cada uma
   // dispara as automações (rascunho de post, aviso) como no portal.
   if (parsed.data.status === "approved" && before.status !== "approved") {
-    const session = await getSession();
-    const actor = session?.role === "client" ? "client" : "agency";
+    const actor = session.role === "client" ? "client" : "agency";
     for (const deliverable of listDeliverables(id)) {
       if (deliverable.kind !== "reference" && deliverable.approvalStatus !== "approved") {
         decideDeliverable({ deliverableId: deliverable.id, actor, decision: "approved" });
@@ -92,6 +123,8 @@ export async function PATCH(request: Request, { params }: Context) {
 
 export async function DELETE(_request: Request, { params }: Context) {
   const { id } = await params;
+  const auth = await guardProject(id, "workspace");
+  if (isDenied(auth)) return auth;
   if (!deleteProject(id)) {
     return NextResponse.json({ error: "Demanda não encontrada" }, { status: 404 });
   }

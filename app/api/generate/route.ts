@@ -4,11 +4,15 @@ import { createGeneration, getClient, listGenerations } from "@/lib/db";
 import { createJob, finishJob, getPlatformSnapshot, logActivity } from "@/lib/marketplace-db";
 import { buildGenerationSpec } from "@/lib/prompts";
 import { generateSchema } from "@/lib/validation";
-import { chargeUsage } from "@/lib/billing-db";
+import { getSettings } from "@/lib/settings";
+import { guardClient, isDenied } from "@/lib/guard";
+import { aiErrorResponse, beginAi } from "@/lib/metering";
 
 // Gerações com pesquisa web e landing pages podem levar alguns minutos
 export const maxDuration = 300;
 
+// Gera um entregável do kit. Quem paga: a agência (pelos clientes que atende)
+// ou a marca autônoma. Cobra antes, estorna se a geração falhar.
 export async function POST(request: Request) {
   const parsed = generateSchema.safeParse(await request.json().catch(() => null));
   if (!parsed.success) {
@@ -16,20 +20,18 @@ export async function POST(request: Request) {
   }
 
   const { clientId, type, params } = parsed.data;
+  const auth = await guardClient(clientId, "workspace");
+  if (isDenied(auth)) return auth;
   const client = getClient(clientId);
   if (!client) {
     return NextResponse.json({ error: "Cliente não encontrado" }, { status: 404 });
   }
-
-  // Metering de IA: cobra coins da conta do cliente. Só bloqueia se o
-  // enforcement estiver ligado (default OFF) — senão apenas registra o uso.
-  const charge = chargeUsage({ accountType: "client", accountId: clientId, action: type });
-  if (!charge.ok) {
-    return NextResponse.json(
-      { error: charge.reason ?? "Sem créditos de IA. Assine um plano ou compre coins." },
-      { status: 402 }
-    );
+  if (type === "landing_page" && !getSettings().landingPagesEnabled) {
+    return NextResponse.json({ error: "Landing pages estão desativadas nesta plataforma." }, { status: 403 });
   }
+
+  const ticket = await beginAi(request, auth, type, { agencyId: client.agencyId });
+  if (isDenied(ticket)) return ticket;
 
   // A análise estratégica mais recente alimenta os demais entregáveis,
   // então as recomendações evoluem junto com o mercado.
@@ -43,17 +45,13 @@ export async function POST(request: Request) {
     strategy: latestStrategy?.content.slice(0, 8000),
   });
 
-  const job = createJob({ kind: type, label: `${spec.title} — ${client.name}`, clientId });
+  const job = createJob({ kind: type, label: `${spec.title} — ${client.name}`, clientId, agencyId: client.agencyId });
   try {
-    const content =
+    const content = await ticket.run(async () =>
       type === "landing_page"
         ? await generateHtml(spec)
-        : JSON.stringify(
-            await generateStructured({
-              ...spec,
-              schema: spec.schema!,
-            })
-          );
+        : JSON.stringify(await generateStructured({ ...spec, schema: spec.schema! }))
+    );
 
     const generation = createGeneration({
       clientId,
@@ -71,12 +69,8 @@ export async function POST(request: Request) {
     finishJob(job.id, "done");
     return NextResponse.json(generation, { status: 201 });
   } catch (error) {
-    const message =
-      error instanceof GenerationError ? error.message : "Erro inesperado ao gerar conteúdo.";
-    finishJob(job.id, "error", message);
-    if (error instanceof GenerationError) {
-      return NextResponse.json({ error: error.message }, { status: error.status });
-    }
-    return NextResponse.json({ error: message }, { status: 500 });
+    ticket.refund();
+    finishJob(job.id, "error", error instanceof GenerationError ? error.message : "erro");
+    return aiErrorResponse(error);
   }
 }

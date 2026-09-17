@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 import { z } from "zod";
+import { guardClient, isDenied } from "@/lib/guard";
 import { deleteConnection, listConnections, upsertConnection, type ConnectorPlatform } from "@/lib/integrations-db";
 
 type Context = { params: Promise<{ id: string }> };
@@ -7,6 +8,8 @@ type Context = { params: Promise<{ id: string }> };
 // Nunca devolve o token; só se está configurado.
 export async function GET(_request: Request, { params }: Context) {
   const { id } = await params;
+  const auth = await guardClient(id, "workspace");
+  if (isDenied(auth)) return auth;
   const connections = listConnections(id).map((c) => ({
     platform: c.platform,
     accountId: c.accountId,
@@ -30,6 +33,8 @@ const schema = z.object({
 
 export async function POST(request: Request, { params }: Context) {
   const { id } = await params;
+  const auth = await guardClient(id, "workspace");
+  if (isDenied(auth)) return auth;
   const parsed = schema.safeParse(await request.json().catch(() => null));
   if (!parsed.success) {
     return NextResponse.json({ error: parsed.error.issues[0]?.message ?? "Dados inválidos" }, { status: 400 });
@@ -40,6 +45,8 @@ export async function POST(request: Request, { params }: Context) {
 
 export async function DELETE(request: Request, { params }: Context) {
   const { id } = await params;
+  const auth = await guardClient(id, "workspace");
+  if (isDenied(auth)) return auth;
   const platform = new URL(request.url).searchParams.get("platform") as ConnectorPlatform | null;
   if (!platform) return NextResponse.json({ error: "platform ausente" }, { status: 400 });
   deleteConnection(id, platform);

@@ -1,9 +1,10 @@
-import { cookies } from "next/headers";
 import { NextResponse } from "next/server";
-import { SESSION_COOKIE, verifySession } from "@/lib/auth-shared";
+import { getSession } from "@/lib/session";
 
+// Sessão atual (já checada contra revogação e conta desativada).
 export async function GET() {
-  const token = (await cookies()).get(SESSION_COOKIE)?.value;
-  const session = await verifySession(token);
-  return NextResponse.json(session ?? { role: null });
+  const session = await getSession();
+  if (!session) return NextResponse.json({ role: null });
+  const { userId, role, refId, name, brandSource, selfServe } = session;
+  return NextResponse.json({ userId, role, refId, name, brandSource, selfServe });
 }

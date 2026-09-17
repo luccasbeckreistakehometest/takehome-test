@@ -2,6 +2,8 @@ export type ClientLanguage = "pt-BR" | "en";
 
 export type Client = {
   id: string;
+  // agência dona (tenant). Nunca vem do formulário: definido na criação.
+  agencyId: string;
   name: string;
   industry: string;
   description: string;
@@ -25,7 +27,7 @@ export type Client = {
   createdAt: string;
 };
 
-export type ClientInput = Omit<Client, "id" | "createdAt">;
+export type ClientInput = Omit<Client, "id" | "createdAt" | "agencyId">;
 
 export const GENERATION_TYPES = [
   "strategy_analysis",

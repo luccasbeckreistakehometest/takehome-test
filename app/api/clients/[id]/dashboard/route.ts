@@ -3,15 +3,18 @@ import { getClient, listGenerations } from "@/lib/db";
 import {
   getClientStats,
   listClientMeetings,
-  listProjects,
+  listClientProjects,
 } from "@/lib/marketplace-db";
 import { clientTier } from "@/lib/ranking";
 import { GENERATION_TYPES } from "@/lib/types";
+import { guardClient, isDenied } from "@/lib/guard";
 
 type Context = { params: Promise<{ id: string }> };
 
 export async function GET(_request: Request, { params }: Context) {
   const { id } = await params;
+  const auth = await guardClient(id, "view");
+  if (isDenied(auth)) return auth;
   const client = getClient(id);
   if (!client) {
     return NextResponse.json({ error: "Cliente não encontrado" }, { status: 404 });
@@ -33,7 +36,7 @@ export async function GET(_request: Request, { params }: Context) {
     })
   );
 
-  const projects = listProjects({ clientId: id });
+  const projects = listClientProjects(id);
   const stats = getClientStats(id);
   const upcoming = listClientMeetings(id).filter(
     (meeting) => new Date(meeting.scheduledAt) > new Date()

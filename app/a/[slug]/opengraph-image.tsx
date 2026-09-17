@@ -1,7 +1,8 @@
 import { ImageResponse } from "next/og";
-import { getAgencyPage } from "@/lib/agency-page-db";
-import { isPageLive } from "@/lib/agency-page-rules";
-import { getSettings } from "@/lib/settings";
+import { findPublishedPage } from "@/lib/agency-page-db";
+import { getAgency } from "@/lib/agencies";
+import { DEFAULT_AGENCY_PAGE } from "@/lib/agency-page-rules";
+import { agencyLogoUploadId } from "@/lib/tenancy-rules";
 import { readUpload } from "@/lib/uploads";
 
 export const dynamic = "force-dynamic";
@@ -13,10 +14,17 @@ export const contentType = "image/png";
 // Satori: toda div com mais de um filho precisa de display:flex.
 export default async function Image({ params }: { params: Promise<{ slug: string }> }) {
   const { slug } = await params;
-  const config = getAgencyPage();
-  const settings = getSettings();
-  const live = isPageLive(config, slug);
-  const logo = settings.logoMime ? readUpload("agency-logo", settings.logoMime) : null;
+  const page = findPublishedPage(slug);
+  const agency = page ? getAgency(page.agencyId) : null;
+  const live = Boolean(page && agency);
+  const config = page?.config ?? DEFAULT_AGENCY_PAGE;
+  const settings = {
+    agencyName: agency?.name ?? "Marqa",
+    tagline: agency?.tagline ?? "",
+    accentColor: agency?.accentColor ?? "#f76b15",
+    logoMime: agency?.logoMime ?? "",
+  };
+  const logo = agency && settings.logoMime ? readUpload(agencyLogoUploadId(agency.id), settings.logoMime) : null;
   const logoSrc = logo ? `data:${settings.logoMime};base64,${logo.toString("base64")}` : null;
   const accent = settings.accentColor || "#f76b15";
   const headline = live ? config.headline || settings.tagline : "Página não encontrada";

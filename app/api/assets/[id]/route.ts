@@ -1,30 +1,34 @@
 import { NextResponse } from "next/server";
-import { deleteClientAsset, getClientAsset } from "@/lib/marketplace-db";
-import { deleteGenericUpload, readGenericUpload } from "@/lib/uploads";
+import { deleteClientAsset } from "@/lib/marketplace-db";
+import { deleteGenericUpload, FILE_RESPONSE_HEADERS, isInlineImageMime, readGenericUpload } from "@/lib/uploads";
+import { guardClientAsset, isDenied } from "@/lib/guard";
 
 type Context = { params: Promise<{ id: string }> };
 
 export async function GET(_request: Request, { params }: Context) {
   const { id } = await params;
-  const asset = getClientAsset(id);
-  if (!asset) return new Response("Não encontrado", { status: 404 });
+  const auth = await guardClientAsset(id, "view");
+  if (isDenied(auth)) return auth;
+  const asset = auth.asset;
   const data = readGenericUpload(asset.id, asset.ext);
   if (!data) return new Response("Arquivo indisponível", { status: 404 });
   const safe = asset.title.replace(/[^\p{L}\p{N} ._-]/gu, "").trim() || `arquivo.${asset.ext}`;
   return new Response(new Uint8Array(data), {
     headers: {
-      "Content-Type": asset.mime,
+      ...FILE_RESPONSE_HEADERS,
+      // tipo declarado só para imagens raster; o resto é download genérico
+      "Content-Type": isInlineImageMime(asset.mime) ? asset.mime : "application/octet-stream",
       "Content-Disposition": `attachment; filename="${safe}"`,
+      "Cache-Control": "private, no-store",
     },
   });
 }
 
 export async function DELETE(_request: Request, { params }: Context) {
   const { id } = await params;
-  const asset = getClientAsset(id);
-  if (!asset) {
-    return NextResponse.json({ error: "Arquivo não encontrado" }, { status: 404 });
-  }
+  const auth = await guardClientAsset(id, "workspace");
+  if (isDenied(auth)) return auth;
+  const asset = auth.asset;
   deleteClientAsset(id);
   deleteGenericUpload(asset.id, asset.ext);
   return NextResponse.json({ ok: true });

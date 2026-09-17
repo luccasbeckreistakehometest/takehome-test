@@ -1,5 +1,6 @@
 import { randomUUID } from "crypto";
-import { db, getClient } from "./db";
+import { db, getClient, tenantColumn } from "./db";
+import { kvKeyFor } from "./tenancy-rules";
 import {
   createScheduledPost,
   getDeliverable,
@@ -58,33 +59,35 @@ db.exec(`
   );
   CREATE INDEX IF NOT EXISTS idx_approval_events_project ON approval_events(projectId, createdAt);
 `);
+tenantColumn("approval_events");
 
 const RULES_KEY = "approval_rules";
 
-export function getApprovalRules(): ApprovalRules {
-  return sanitizeApprovalRules(getKv<ApprovalRules>(RULES_KEY, DEFAULT_APPROVAL_RULES));
+// Regras de automação: por agência.
+export function getApprovalRules(agencyId: string): ApprovalRules {
+  return sanitizeApprovalRules(getKv<ApprovalRules>(kvKeyFor(RULES_KEY, agencyId), DEFAULT_APPROVAL_RULES));
 }
 
-export function saveApprovalRules(input: Partial<ApprovalRules>): ApprovalRules {
-  return setKv(RULES_KEY, sanitizeApprovalRules({ ...getApprovalRules(), ...input }));
+export function saveApprovalRules(agencyId: string, input: Partial<ApprovalRules>): ApprovalRules {
+  return setKv(kvKeyFor(RULES_KEY, agencyId), sanitizeApprovalRules({ ...getApprovalRules(agencyId), ...input }));
 }
 
 // Canal de WhatsApp da agência pronto para enviar: API com credenciais ou
 // sessão logada no worker.
-export function whatsappConnected(): boolean {
-  const conn = getConnection("whatsapp");
+export function whatsappConnected(agencyId: string): boolean {
+  const conn = getConnection(agencyId, "whatsapp");
   if (!conn) return false;
   if (conn.mode === "api") return Boolean(conn.apiToken && conn.apiAccountId);
   return conn.sessionReady;
 }
 
 // Enfileira um aviso para o WhatsApp da agência (regras + canal permitindo).
-export function queueAgencyWhatsapp(body: string): { outboxId: string; to: string } | null {
-  const rules = getApprovalRules();
+export function queueAgencyWhatsapp(agencyId: string, body: string): { outboxId: string; to: string } | null {
+  const rules = getApprovalRules(agencyId);
   const to = rules.notifyPhone.replace(/\D/g, "");
-  if (!rules.notifyWhatsapp || !to || !whatsappConnected()) return null;
-  const conn = getConnection("whatsapp")!;
-  const msg = enqueueDirect({ channel: "whatsapp", mode: conn.mode, toAddress: to, body });
+  if (!rules.notifyWhatsapp || !to || !whatsappConnected(agencyId)) return null;
+  const conn = getConnection(agencyId, "whatsapp")!;
+  const msg = enqueueDirect({ agencyId, channel: "whatsapp", mode: conn.mode, toAddress: to, body });
   return { outboxId: msg.id, to };
 }
 
@@ -122,8 +125,8 @@ export function listApprovalEvents(filter: {
 function recordEvent(input: Omit<ApprovalEvent, "id" | "createdAt">): ApprovalEvent {
   const event: ApprovalEvent = { ...input, id: randomUUID(), createdAt: new Date().toISOString() };
   db.prepare(
-    `INSERT INTO approval_events (id, deliverableId, projectId, clientId, actor, decision, note, actions, createdAt)
-     VALUES (@id, @deliverableId, @projectId, @clientId, @actor, @decision, @note, @actions, @createdAt)`
+    `INSERT INTO approval_events (id, agencyId, deliverableId, projectId, clientId, actor, decision, note, actions, createdAt)
+     VALUES (@id, (SELECT agencyId FROM clients WHERE id = @clientId), @deliverableId, @projectId, @clientId, @actor, @decision, @note, @actions, @createdAt)`
   ).run({ ...event, actions: JSON.stringify(event.actions) });
   return event;
 }
@@ -202,9 +205,9 @@ export function decideDeliverable(input: {
     deliverable,
     project,
     client,
-    rules: getApprovalRules(),
+    rules: getApprovalRules(client.agencyId),
     actor: input.actor,
-    whatsappConnected: whatsappConnected(),
+    whatsappConnected: whatsappConnected(client.agencyId),
     link,
   });
 
@@ -223,8 +226,14 @@ export function decideDeliverable(input: {
       });
       actions.push({ type: "post_draft", postId: post.id, channel: post.channel, scheduledFor: post.scheduledFor });
     } else if (action.type === "whatsapp") {
-      const conn = getConnection("whatsapp")!;
-      const msg = enqueueDirect({ channel: "whatsapp", mode: conn.mode, toAddress: action.to, body: action.body });
+      const conn = getConnection(client.agencyId, "whatsapp")!;
+      const msg = enqueueDirect({
+        agencyId: client.agencyId,
+        channel: "whatsapp",
+        mode: conn.mode,
+        toAddress: action.to,
+        body: action.body,
+      });
       actions.push({ type: "whatsapp", to: action.to, outboxId: msg.id });
     } else {
       actions.push({ type: "activity", reason: action.reason });

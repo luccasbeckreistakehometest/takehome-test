@@ -2,23 +2,31 @@ import { NextResponse } from "next/server";
 import { getClient } from "@/lib/db";
 import { createProject, listProjects } from "@/lib/marketplace-db";
 import { projectSchema } from "@/lib/validation";
+import { guard, isDenied, tenantOf } from "@/lib/guard";
 
+// Demandas. A agência lista as dela (admin: todas, ou ?agency=); a marca só
+// as dela (o clientId vem da sessão, não da URL).
 export async function GET(request: Request) {
+  const auth = await guard(["agency", "admin", "client"]);
+  if (isDenied(auth)) return auth;
   const url = new URL(request.url);
+  const openOnly = url.searchParams.get("open") === "1";
+  if (auth.role === "client") {
+    return NextResponse.json(listProjects({ scope: tenantOf(auth), clientId: auth.refId ?? "-", openOnly }));
+  }
   const clientId = url.searchParams.get("clientId") ?? undefined;
   const professionalId = url.searchParams.get("professionalId") ?? undefined;
-  const openOnly = url.searchParams.get("open") === "1";
-  return NextResponse.json(listProjects({ clientId, professionalId, openOnly }));
+  return NextResponse.json(listProjects({ scope: tenantOf(auth, request), clientId, professionalId, openOnly }));
 }
 
+// A marca pode abrir pedidos da própria conta (portal e workspace).
 export async function POST(request: Request) {
   const parsed = projectSchema.safeParse(await request.json().catch(() => null));
   if (!parsed.success) {
-    return NextResponse.json(
-      { error: parsed.error.issues[0]?.message ?? "Dados inválidos" },
-      { status: 400 }
-    );
+    return NextResponse.json({ error: parsed.error.issues[0]?.message ?? "Dados inválidos" }, { status: 400 });
   }
+  const auth = await guard(["agency", "admin", "client"], { clientId: parsed.data.clientId });
+  if (isDenied(auth)) return auth;
   if (!getClient(parsed.data.clientId)) {
     return NextResponse.json({ error: "Cliente não encontrado" }, { status: 404 });
   }

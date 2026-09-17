@@ -1,6 +1,6 @@
 import { randomUUID } from "crypto";
-import { db } from "./db";
-import { createScheduledPost, deleteScheduledPost, listScheduledPosts, updateScheduledPost, type ScheduledPost } from "./marketplace-db";
+import { db, tenantColumn } from "./db";
+import { createScheduledPost, deleteScheduledPost, listClientScheduledPosts, updateScheduledPost, type ScheduledPost } from "./marketplace-db";
 import { scheduleCampaign, type CampaignInput, type CampaignPlan } from "./campaign-rules";
 
 // Campanha de 30 dias: o plano gerado + os posts inseridos como rascunho no
@@ -41,6 +41,7 @@ db.exec(`
   );
   CREATE INDEX IF NOT EXISTS idx_campaigns_client ON campaigns(clientId, createdAt);
 `);
+tenantColumn("campaigns");
 
 type Row = Omit<Campaign, "channels" | "weeks" | "demo"> & { channels: string; weeks: string; demo: number };
 const toCampaign = (row: Row): Campaign => ({
@@ -54,7 +55,7 @@ const toCampaign = (row: Row): Campaign => ({
 // Materializa o plano: encaixa nos buracos do calendário do cliente e insere
 // cada post como rascunho ligado à campanha.
 export function createCampaignFromPlan(input: { clientId: string; input: CampaignInput; plan: CampaignPlan; demo: boolean }): { campaign: Campaign; posts: ScheduledPost[] } {
-  const existing = listScheduledPosts(input.clientId).map((p) => ({ id: p.id, scheduledFor: p.scheduledFor, status: p.status, channel: p.channel }));
+  const existing = listClientScheduledPosts(input.clientId).map((p) => ({ id: p.id, scheduledFor: p.scheduledFor, status: p.status, channel: p.channel }));
   const slots = scheduleCampaign({ plan: input.plan, startDate: input.input.startDate, days: input.input.days, existing });
   const campaign: Campaign = {
     id: randomUUID(),
@@ -74,8 +75,8 @@ export function createCampaignFromPlan(input: { clientId: string; input: Campaig
   const posts: ScheduledPost[] = [];
   const tx = db.transaction(() => {
     db.prepare(
-      `INSERT INTO campaigns (id, clientId, goal, channels, startDate, days, postsPerWeek, theme, summary, weeks, status, demo, createdAt)
-       VALUES (@id, @clientId, @goal, @channels, @startDate, @days, @postsPerWeek, @theme, @summary, @weeks, @status, @demo, @createdAt)`
+      `INSERT INTO campaigns (id, agencyId, clientId, goal, channels, startDate, days, postsPerWeek, theme, summary, weeks, status, demo, createdAt)
+       VALUES (@id, (SELECT agencyId FROM clients WHERE id = @clientId), @clientId, @goal, @channels, @startDate, @days, @postsPerWeek, @theme, @summary, @weeks, @status, @demo, @createdAt)`
     ).run({ ...campaign, channels: JSON.stringify(campaign.channels), weeks: JSON.stringify(campaign.weeks), demo: campaign.demo ? 1 : 0 });
     for (const slot of slots) {
       posts.push(

@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server";
 import Anthropic from "@anthropic-ai/sdk";
 import { z } from "zod";
-import { pickModel } from "@/lib/claude";
+import { aiMockEnabled, assertAiAvailable, getAnthropicClient, pickModel, translateError } from "@/lib/claude";
 import { getClient, listClients } from "@/lib/db";
 import {
   createMeeting,
@@ -11,7 +11,10 @@ import {
   listProjects,
   logActivity,
 } from "@/lib/marketplace-db";
-import { getSettings } from "@/lib/settings";
+import { recordAiUsage } from "@/lib/ai-spend";
+import { meterAi } from "@/lib/metering";
+import { actingAgencyId, agencyOnly, isDenied } from "@/lib/guard";
+import { agencyScope } from "@/lib/tenancy-rules";
 
 export const maxDuration = 300;
 
@@ -77,16 +80,24 @@ const TOOLS: Anthropic.Tool[] = [
   },
 ];
 
-function runTool(name: string, input: Record<string, string>): string {
+// As tools só enxergam e mexem na agência em nome de quem o assistente roda.
+type ToolTenant = { agencyId: string };
+
+function ownClient(tenant: ToolTenant, clientId: string | undefined): boolean {
+  return Boolean(clientId) && getClient(clientId!)?.agencyId === tenant.agencyId;
+}
+
+function runTool(name: string, input: Record<string, string>, tenant: ToolTenant): string {
+  const scope = agencyScope(tenant.agencyId);
   switch (name) {
     case "get_context": {
-      const clients = listClients().map((c) => ({ id: c.id, name: c.name, industry: c.industry }));
-      const professionals = listProfessionals().map((p) => ({ id: p.id, name: p.name, role: p.role }));
-      const projects = listProjects({}).map((p) => ({ id: p.id, clientId: p.clientId, title: p.title, status: p.status }));
+      const clients = listClients(scope).map((c) => ({ id: c.id, name: c.name, industry: c.industry }));
+      const professionals = listProfessionals(scope).map((p) => ({ id: p.id, name: p.name, role: p.role }));
+      const projects = listProjects({ scope }).map((p) => ({ id: p.id, clientId: p.clientId, title: p.title, status: p.status }));
       return JSON.stringify({ clients, professionals, projects, today: new Date().toISOString().slice(0, 16) });
     }
     case "create_demand": {
-      if (!getClient(input.clientId)) return JSON.stringify({ error: "clientId inexistente — chame get_context" });
+      if (!ownClient(tenant, input.clientId)) return JSON.stringify({ error: "clientId inexistente — chame get_context" });
       const project = createProject({
         clientId: input.clientId,
         title: input.title,
@@ -101,7 +112,11 @@ function runTool(name: string, input: Record<string, string>): string {
       return JSON.stringify({ ok: true, projectId: project.id, href: `/clients/${input.clientId}?project=${project.id}` });
     }
     case "schedule_meeting": {
+      if (input.clientId && !ownClient(tenant, input.clientId)) {
+        return JSON.stringify({ error: "clientId inexistente — chame get_context" });
+      }
       const meeting = createMeeting({
+        agencyId: tenant.agencyId,
         clientId: input.clientId || null,
         projectId: null,
         title: input.title,
@@ -113,7 +128,7 @@ function runTool(name: string, input: Record<string, string>): string {
       return JSON.stringify({ ok: true, meetingId: meeting.id });
     }
     case "schedule_post": {
-      if (!getClient(input.clientId)) return JSON.stringify({ error: "clientId inexistente — chame get_context" });
+      if (!ownClient(tenant, input.clientId)) return JSON.stringify({ error: "clientId inexistente — chame get_context" });
       const post = createScheduledPost({
         clientId: input.clientId,
         title: input.title,
@@ -130,32 +145,45 @@ function runTool(name: string, input: Record<string, string>): string {
 }
 
 export async function POST(request: Request) {
+  const auth = await agencyOnly();
+  if (isDenied(auth)) return auth;
   const parsed = z
     .object({
-      messages: z.array(
-        z.object({ role: z.enum(["user", "assistant"]), content: z.string() })
-      ),
+      messages: z
+        .array(z.object({ role: z.enum(["user", "assistant"]), content: z.string().min(1).max(4000) }))
+        .min(1)
+        .max(30),
     })
     .safeParse(await request.json().catch(() => null));
   if (!parsed.success) {
     return NextResponse.json({ error: "Requisição inválida" }, { status: 400 });
   }
 
-  const key = getSettings().anthropicApiKey;
-  const client = key ? new Anthropic({ apiKey: key }) : new Anthropic();
-  let messages: Anthropic.MessageParam[] = parsed.data.messages;
-  const actions: string[] = [];
-
-  try {
+  const tenant: ToolTenant = { agencyId: actingAgencyId(auth, request) };
+  return meterAi(request, auth, "assistant", async () => {
+    if (aiMockEnabled()) {
+      return NextResponse.json({ reply: "Modo de teste: nenhuma ação executada.", actions: [] });
+    }
+    const client = getAnthropicClient();
+    let messages: Anthropic.MessageParam[] = parsed.data.messages;
+    const actions: string[] = [];
+    const model = pickModel("standard");
     for (let i = 0; i < 6; i++) {
-      const response = await client.messages.create({
-        model: pickModel("standard"),
-        max_tokens: 4000,
-        system:
-          "Você é o assistente operacional de uma plataforma de agência de marketing. Você EXECUTA ações via tools (criar demandas, agendar reuniões e posts) e responde em português do Brasil, direto e humano. Sempre chame get_context antes de usar ids. Datas relativas ('sábado', 'amanhã'): calcule a partir do campo today do contexto. Ao final, resuma o que fez com links quando houver.",
-        tools: TOOLS,
-        messages,
-      });
+      assertAiAvailable();
+      let response: Anthropic.Message;
+      try {
+        response = await client.messages.create({
+          model,
+          max_tokens: 4000,
+          system:
+            "Você é o assistente operacional de uma plataforma de agência de marketing. Você EXECUTA ações via tools (criar demandas, agendar reuniões e posts) e responde em português do Brasil, direto e humano. Sempre chame get_context antes de usar ids. Datas relativas ('sábado', 'amanhã'): calcule a partir do campo today do contexto. Ao final, resuma o que fez com links quando houver.",
+          tools: TOOLS,
+          messages,
+        });
+      } catch (error) {
+        translateError(error);
+      }
+      recordAiUsage(model, response.usage);
       if (response.stop_reason !== "tool_use") {
         const text = response.content
           .filter((block): block is Anthropic.TextBlock => block.type === "text")
@@ -167,14 +195,12 @@ export async function POST(request: Request) {
       const results: Anthropic.ToolResultBlockParam[] = [];
       for (const block of response.content) {
         if (block.type !== "tool_use") continue;
-        const output = runTool(block.name, block.input as Record<string, string>);
+        const output = runTool(block.name, block.input as Record<string, string>, tenant);
         if (block.name !== "get_context") actions.push(block.name);
         results.push({ type: "tool_result", tool_use_id: block.id, content: output });
       }
       messages = [...messages, { role: "user", content: results }];
     }
     return NextResponse.json({ reply: "Cheguei ao limite de passos — tente dividir o pedido.", actions });
-  } catch {
-    return NextResponse.json({ error: "Erro no assistente. Verifique a chave da API." }, { status: 500 });
-  }
+  }, { agencyId: tenant.agencyId });
 }

@@ -4,17 +4,25 @@ import { getAgencyStats, getClientStats } from "@/lib/marketplace-db";
 import { agencySalesTotal } from "@/lib/integrations-db";
 import { agencyTier, clientTier } from "@/lib/ranking";
 import { PROJECT_STATUSES, type ProjectStatus } from "@/lib/marketplace-types";
+import { agencyOnly, isDenied, tenantOf } from "@/lib/guard";
+import { scopeWhere } from "@/lib/tenancy-rules";
 
 // Insights: painel de andamento geral. Agrega demandas por status (funil),
 // carteira de clientes, campanhas e sinais de produção — tudo em uma request.
-export async function GET() {
+// Só a agência da sessão (admin: todas, ou ?agency=).
+export async function GET(request: Request) {
+  const auth = await agencyOnly();
+  if (isDenied(auth)) return auth;
+  const scope = tenantOf(auth, request);
+  const tenant = scopeWhere(scope);
+  const tenantOn = (alias: string) => scopeWhere(scope, `${alias}.agencyId`);
   const count = (sql: string, ...p: unknown[]) =>
-    (db.prepare(sql).get(...p) as { c: number }).c;
+    (db.prepare(sql).get(...p, ...tenant.params) as { c: number }).c;
 
   // Funil de demandas por status
   const rows = db
-    .prepare("SELECT status, COUNT(*) as c FROM projects GROUP BY status")
-    .all() as { status: ProjectStatus; c: number }[];
+    .prepare(`SELECT status, COUNT(*) as c FROM projects WHERE ${tenant.sql} GROUP BY status`)
+    .all(...tenant.params) as { status: ProjectStatus; c: number }[];
   const byStatus = Object.fromEntries(
     PROJECT_STATUSES.map((s) => [s, 0])
   ) as Record<ProjectStatus, number>;
@@ -23,10 +31,8 @@ export async function GET() {
 
   // Entregáveis (campanhas etc.) por tipo
   const byType = db
-    .prepare(
-      "SELECT type, COUNT(*) as c FROM generations GROUP BY type ORDER BY c DESC"
-    )
-    .all() as { type: string; c: number }[];
+    .prepare(`SELECT type, COUNT(*) as c FROM generations WHERE ${tenant.sql} GROUP BY type ORDER BY c DESC`)
+    .all(...tenant.params) as { type: string; c: number }[];
 
   // Produção recente e gargalos
   const now = new Date().toISOString();
@@ -34,13 +40,13 @@ export async function GET() {
     .prepare(
       `SELECT p.id, p.title, p.deadline, c.name AS clientName FROM projects p
        JOIN clients c ON c.id = p.clientId
-       WHERE p.deadline != '' AND p.deadline < ? AND p.status NOT IN ('approved','paid')
+       WHERE p.deadline != '' AND p.deadline < ? AND p.status NOT IN ('approved','paid') AND ${tenantOn("p").sql}
        ORDER BY p.deadline ASC LIMIT 8`
     )
-    .all(now.slice(0, 10));
+    .all(now.slice(0, 10), ...tenant.params);
 
   // Ranking de clientes por elo + atividade
-  const clients = listClients()
+  const clients = listClients(scope)
     .map((client) => {
       const stats = getClientStats(client.id);
       return {
@@ -55,27 +61,38 @@ export async function GET() {
     .sort((a, b) => b.tier.progress + b.paidProjects * 10 - (a.tier.progress + a.paidProjects * 10));
 
   // Top profissionais por entregas concluídas
+  // (entregas feitas PARA esta agência; só aparece quem tem pelo menos uma)
   const topProfessionals = db
     .prepare(
-      `SELECT pr.id, pr.name, pr.role,
-        (SELECT COUNT(*) FROM projects WHERE professionalId = pr.id AND status IN ('approved','paid')) AS completed,
-        (SELECT AVG(r.score) FROM art_reviews r JOIN deliverables d ON d.id = r.deliverableId JOIN projects p ON p.id = d.projectId WHERE p.professionalId = pr.id) AS avgScore
-       FROM professionals pr ORDER BY completed DESC, avgScore DESC LIMIT 6`
+      `SELECT * FROM (SELECT pr.id, pr.name, pr.role,
+        (SELECT COUNT(*) FROM projects p WHERE p.professionalId = pr.id AND p.status IN ('approved','paid') AND ${tenantOn("p").sql}) AS completed,
+        (SELECT AVG(r.score) FROM art_reviews r JOIN deliverables d ON d.id = r.deliverableId JOIN projects p ON p.id = d.projectId
+          WHERE p.professionalId = pr.id AND ${tenantOn("p").sql}) AS avgScore,
+        pr.agencyId AS agencyId
+       FROM professionals pr)
+       WHERE completed > 0 OR ${scope.agencyId === null ? "1=1" : "agencyId = ?"}
+       ORDER BY completed DESC, avgScore DESC LIMIT 6`
     )
-    .all() as { id: string; name: string; role: string; completed: number; avgScore: number | null }[];
+    .all(...tenant.params, ...tenant.params, ...tenant.params) as {
+    id: string;
+    name: string;
+    role: string;
+    completed: number;
+    avgScore: number | null;
+  }[];
 
-  const agencyStats = getAgencyStats();
+  const agencyStats = getAgencyStats(scope);
 
   // Ritmo semanal (atividades por dia dos últimos 7 dias)
   const weekAgo = new Date(Date.now() - 6 * 24 * 60 * 60 * 1000).toISOString().slice(0, 10);
   const activityByDay = db
     .prepare(
       `SELECT substr(createdAt,1,10) AS day, COUNT(*) AS c FROM activities
-       WHERE substr(createdAt,1,10) >= ? GROUP BY day ORDER BY day ASC`
+       WHERE substr(createdAt,1,10) >= ? AND ${tenant.sql} GROUP BY day ORDER BY day ASC`
     )
-    .all(weekAgo) as { day: string; c: number }[];
+    .all(weekAgo, ...tenant.params) as { day: string; c: number }[];
 
-  const sales = agencySalesTotal();
+  const sales = agencySalesTotal(scope);
 
   return NextResponse.json({
     agency: { tier: agencyTier(agencyStats), stats: agencyStats },
@@ -96,8 +113,8 @@ export async function GET() {
       openDemands: byStatus.open,
       inProduction: byStatus.in_progress + byStatus.in_review,
       awaitingApproval: byStatus.client_approval,
-      meetingsUpcoming: count("SELECT COUNT(*) as c FROM meetings WHERE scheduledAt >= ?", now),
-      scheduledPosts: count("SELECT COUNT(*) as c FROM scheduled_posts WHERE status = 'scheduled'"),
+      meetingsUpcoming: count(`SELECT COUNT(*) as c FROM meetings WHERE scheduledAt >= ? AND ${tenant.sql}`, now),
+      scheduledPosts: count(`SELECT COUNT(*) as c FROM scheduled_posts WHERE status = 'scheduled' AND ${tenant.sql}`),
     },
   });
 }

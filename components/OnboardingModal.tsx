@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { Icon, type IconName } from "./icons";
+import WelcomeLogin from "./WelcomeLogin";
 
 type Role = "agency" | "client" | "professional";
 
@@ -46,6 +47,7 @@ export default function OnboardingModal({
 }) {
   const [open, setOpen] = useState(false);
   const [step, setStep] = useState(0);
+  const [showLogin, setShowLogin] = useState(false);
 
   useEffect(() => {
     const key = `onboarded_${role}`;
@@ -58,6 +60,7 @@ export default function OnboardingModal({
       if (cancelled || j.tourCompleted) return;
       if (welcome === "1" || (!welcomeOnly && !localStorage.getItem(key))) {
         setOpen(true);
+        setShowLogin(welcome === "1");
         fetch("/api/onboarding", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ event: "welcome_open", meta: { role } }) }).catch(() => {});
       }
     }).catch(() => {});
@@ -91,10 +94,12 @@ export default function OnboardingModal({
       <div className="w-full max-w-lg animate-pop-in rounded-2xl border border-edge bg-surface p-6 shadow-2xl [transform-origin:center]">
         <div className="mb-4 flex items-center justify-between">
           <p className="text-xs font-semibold uppercase tracking-widest text-accent">{flow.title}</p>
-          <button onClick={() => close("skip")} className="text-muted transition-colors hover:text-foreground">
+          <button onClick={() => close("skip")} aria-label="Fechar" className="text-muted transition-colors hover:text-foreground">
             <Icon name="x" size={18} />
           </button>
         </div>
+
+        {showLogin && <WelcomeLogin />}
 
         <div className="flex gap-4">
           <span className="grid size-12 shrink-0 place-items-center rounded-xl bg-accent/10 text-accent">

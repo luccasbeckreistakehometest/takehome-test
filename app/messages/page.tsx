@@ -58,6 +58,7 @@ export default function MessagesPage() {
   const [lists, setLists] = useState<BroadcastList[]>([]);
   const [outbox, setOutbox] = useState<OutboxMessage[]>([]);
   const [connections, setConnections] = useState<Connection[]>([]);
+  const [sessionAvailable, setSessionAvailable] = useState(false);
 
   const loadContacts = useCallback(() => {
     api<{ contacts: Contact[] }>("/api/messaging/contacts").then((r) => setContacts(r.contacts));
@@ -69,7 +70,10 @@ export default function MessagesPage() {
     api<{ outbox: OutboxMessage[] }>("/api/messaging/outbox").then((r) => setOutbox(r.outbox));
   }, []);
   const loadConnections = useCallback(() => {
-    api<{ connections: Connection[] }>("/api/messaging/connections").then((r) => setConnections(r.connections));
+    api<{ connections: Connection[]; sessionModeAvailable?: boolean }>("/api/messaging/connections").then((r) => {
+      setConnections(r.connections);
+      setSessionAvailable(Boolean(r.sessionModeAvailable));
+    });
   }, []);
 
   useEffect(() => {
@@ -121,7 +125,7 @@ export default function MessagesPage() {
         )}
         {tab === "outbox" && <Outbox outbox={outbox} onRefresh={loadOutbox} />}
         {tab === "connections" && (
-          <Connections connections={connections} onChange={loadConnections} />
+          <Connections connections={connections} sessionAvailable={sessionAvailable} onChange={loadConnections} />
         )}
       </div>
     </div>
@@ -650,9 +654,11 @@ function Outbox({ outbox, onRefresh }: { outbox: OutboxMessage[]; onRefresh: () 
 
 function Connections({
   connections,
+  sessionAvailable,
   onChange,
 }: {
   connections: Connection[];
+  sessionAvailable: boolean;
   onChange: () => void;
 }) {
   return (
@@ -662,6 +668,7 @@ function Connections({
           key={channel}
           channel={channel}
           conn={connections.find((c) => c.channel === channel)}
+          sessionAvailable={sessionAvailable}
           onChange={onChange}
         />
       ))}
@@ -672,18 +679,24 @@ function Connections({
 function ConnectionCard({
   channel,
   conn,
+  sessionAvailable,
   onChange,
 }: {
   channel: Channel;
   conn?: Connection;
+  sessionAvailable: boolean;
   onChange: () => void;
 }) {
-  const [mode, setMode] = useState<string>(conn?.mode ?? "session");
+  // API oficial é o padrão; o modo sessão só aparece onde o worker roda.
+  const [mode, setMode] = useState<string>(conn?.mode === "session" && sessionAvailable ? "session" : "api");
   const [apiToken, setApiToken] = useState("");
   const [apiAccountId, setApiAccountId] = useState(conn?.apiAccountId ?? "");
   const [saved, setSaved] = useState(false);
 
+  const [saveError, setSaveError] = useState("");
   async function save() {
+    setSaveError("");
+    try {
     await api("/api/messaging/connections", {
       method: "POST",
       body: JSON.stringify({ channel, mode, apiToken, apiAccountId }),
@@ -692,10 +705,13 @@ function ConnectionCard({
     setSaved(true);
     setTimeout(() => setSaved(false), 1500);
     onChange();
+    } catch (e) {
+      setSaveError(e instanceof Error ? e.message : "Erro ao salvar");
+    }
   }
 
   const isWa = channel === "whatsapp";
-  const showSessionControls = isWa && mode === "session";
+  const showSessionControls = isWa && mode === "session" && sessionAvailable;
   return (
     <Card>
       <SectionTitle>
@@ -709,7 +725,7 @@ function ConnectionCard({
           <Label>Modo de envio</Label>
           <Select value={mode} onChange={(e) => setMode(e.target.value)}>
             <option value="api">API oficial ({isWa ? "WhatsApp Cloud API" : "Instagram Graph"})</option>
-            <option value="session">Minha sessão logada (worker Playwright)</option>
+            {isWa && sessionAvailable && <option value="session">Minha sessão logada (worker local)</option>}
           </Select>
         </div>
         {mode === "api" ? (
@@ -743,6 +759,13 @@ function ConnectionCard({
             Instagram por sessão não é suportado — use a <strong className="text-foreground">API oficial</strong>.
           </p>
         )}
+        {conn?.mode === "session" && !sessionAvailable && (
+          <p role="alert" className="rounded-md border border-amber-500/50 bg-amber-500/10 p-3 text-xs">
+            Esta conexão estava no modo sessão, que não funciona neste servidor. Configure a API oficial e salve para as
+            mensagens da fila saírem.
+          </p>
+        )}
+        {saveError && <ErrorBox message={saveError} />}
         <Button onClick={save}>{saved ? "Salvo ✓" : "Salvar conexão"}</Button>
         {showSessionControls && <SessionWorker onSavedConnection={save} />}
       </div>

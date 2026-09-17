@@ -6,6 +6,7 @@ import {
   type OutboxMessage,
 } from "../messaging-db";
 import { getAttendant } from "../attendant-db";
+import { clientAgencyId } from "../db";
 
 // Envio por API OFICIAL das plataformas (o caminho suportado e estável):
 // - WhatsApp Cloud API (graph.facebook.com/{phoneNumberId}/messages)
@@ -69,14 +70,14 @@ async function sendInstagramApi(
 async function sendApi(msg: OutboxMessage): Promise<void> {
   // Atendente por cliente com número próprio: sai pelas credenciais dele
   // (WhatsApp Cloud), não pelo canal da agência.
-  if (msg.channel === "whatsapp" && msg.clientId) {
+  if (msg.channel === "whatsapp" && msg.clientId && clientAgencyId(msg.clientId) === msg.agencyId) {
     const attendant = getAttendant(msg.clientId);
     if (attendant?.phoneNumberId && attendant.apiToken) {
       await sendWhatsAppApi(msg.toAddress, msg.body, attendant.apiToken, attendant.phoneNumberId);
       return;
     }
   }
-  const conn = getConnection(msg.channel);
+  const conn = getConnection(msg.agencyId, msg.channel);
   if (!conn || !conn.apiToken || !conn.apiAccountId) {
     throw new Error(
       `Canal ${msg.channel} sem credenciais de API. Configure em Mensagens → Conexões.`
@@ -91,12 +92,12 @@ async function sendApi(msg: OutboxMessage): Promise<void> {
 
 // Drena a fila de mensagens em modo API cujo horário chegou. Retorna um resumo
 // para a UI. Mensagens em modo "session" são deixadas para o worker Playwright.
-export async function processApiOutbox(channel?: MessageChannel): Promise<{
+export async function processApiOutbox(channel?: MessageChannel, agencyId?: string): Promise<{
   sent: number;
   failed: number;
   skippedSession: number;
 }> {
-  const due = dueOutbox(channel);
+  const due = dueOutbox(channel, agencyId);
   let sent = 0;
   let failed = 0;
   let skippedSession = 0;

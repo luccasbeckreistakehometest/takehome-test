@@ -1,16 +1,16 @@
 import { NextResponse } from "next/server";
-import { GenerationError, generateStructured } from "@/lib/claude";
+import { generateStructured } from "@/lib/claude";
 import { getClient, listGenerations } from "@/lib/db";
 import {
   createArtReview,
-  getDeliverable,
-  getProject,
   listAnnotations,
   listArtReviews,
 } from "@/lib/marketplace-db";
 import { artReviewSchema, type ArtReviewContent } from "@/lib/marketplace-schemas";
 import { clientContext } from "@/lib/prompts";
 import { readUpload, type AllowedImageMime } from "@/lib/uploads";
+import { aiErrorResponse, beginAi } from "@/lib/metering";
+import { guardDeliverable, isDenied } from "@/lib/guard";
 
 export const maxDuration = 300;
 
@@ -18,21 +18,21 @@ type Context = { params: Promise<{ id: string }> };
 
 export async function GET(_request: Request, { params }: Context) {
   const { id } = await params;
+  const auth = await guardDeliverable(id, "view");
+  if (isDenied(auth)) return auth;
   return NextResponse.json(listArtReviews(id));
 }
 
 // Análise de qualidade da arte/foto por IA: nota 0-100 fundamentada em
 // critérios profissionais, avaliando a peça individualmente E no contexto
 // da campanha/briefing do cliente.
-export async function POST(_request: Request, { params }: Context) {
+export async function POST(request: Request, { params }: Context) {
   const { id } = await params;
-  const deliverable = getDeliverable(id);
-  if (!deliverable) {
-    return NextResponse.json({ error: "Entrega não encontrada" }, { status: 404 });
-  }
-  const project = getProject(deliverable.projectId);
-  const client = project ? getClient(project.clientId) : null;
-  if (!project || !client) {
+  const auth = await guardDeliverable(id, "workspace");
+  if (isDenied(auth)) return auth;
+  const { deliverable, project } = auth;
+  const client = getClient(project.clientId);
+  if (!client) {
     return NextResponse.json({ error: "Demanda/cliente não encontrado" }, { status: 404 });
   }
   const image = readUpload(deliverable.id, deliverable.mime);
@@ -44,7 +44,10 @@ export async function POST(_request: Request, { params }: Context) {
   const latestIdentity = listGenerations(project.clientId, "visual_identity")[0];
   const annotations = listAnnotations(id);
 
+  const ticket = await beginAi(request, auth.session, "art_review");
+  if (isDenied(ticket)) return ticket;
   try {
+    return await ticket.run(async () => {
     const content = await generateStructured<ArtReviewContent>({
       system:
         "Você é diretor(a) de criação sênior de uma agência, com olhar técnico de fotografia e design e foco em performance de marketing. Avalie com rigor profissional e notas realistas — 90+ é raro e reservado para trabalho excepcional. Responda em português do Brasil.",
@@ -84,10 +87,9 @@ Requisitos:
       content: JSON.stringify(content),
     });
     return NextResponse.json(review, { status: 201 });
+    });
   } catch (error) {
-    if (error instanceof GenerationError) {
-      return NextResponse.json({ error: error.message }, { status: error.status });
-    }
-    return NextResponse.json({ error: "Erro inesperado na análise." }, { status: 500 });
+    ticket.refund();
+    return aiErrorResponse(error);
   }
 }

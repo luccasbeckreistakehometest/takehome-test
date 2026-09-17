@@ -1,17 +1,19 @@
 import { NextResponse } from "next/server";
 import { z } from "zod";
-import { GenerationError, generateStructured } from "@/lib/claude";
+import { generateStructured } from "@/lib/claude";
 import { getClient } from "@/lib/db";
 import { clientContext } from "@/lib/prompts";
-import { getSettings } from "@/lib/settings";
+import { currentAgencyProfile } from "@/lib/agencies";
+import { aiErrorResponse, beginAi } from "@/lib/metering";
+import { agencyOnly, guard, isDenied } from "@/lib/guard";
 
 export const maxDuration = 120;
 
 const schema = z.object({
   channel: z.enum(["whatsapp", "instagram"]),
-  goal: z.string().trim().min(1, "Diga o objetivo da mensagem"),
+  goal: z.string().trim().min(1, "Diga o objetivo da mensagem").max(2000),
   clientId: z.string().nullable().default(null),
-  audience: z.string().trim().default(""),
+  audience: z.string().trim().max(1000).default(""),
 });
 
 const draftSchema = {
@@ -31,12 +33,17 @@ const draftSchema = {
 // Redige mensagens de WhatsApp/Instagram no tom da marca. Usa {nome} como
 // placeholder do primeiro nome (a fila substitui por contato).
 export async function POST(request: Request) {
+  const auth = await agencyOnly();
+  if (isDenied(auth)) return auth;
   const parsed = schema.safeParse(await request.json().catch(() => null));
   if (!parsed.success) {
     return NextResponse.json({ error: parsed.error.issues[0]?.message ?? "Dados inválidos" }, { status: 400 });
   }
   const { channel, goal, clientId, audience } = parsed.data;
-  const settings = getSettings();
+  if (clientId) {
+    const owner = await guard(["agency", "admin"], { clientId });
+    if (isDenied(owner)) return owner;
+  }
   const client = clientId ? getClient(clientId) : null;
 
   const channelRules =
@@ -44,10 +51,13 @@ export async function POST(request: Request) {
       ? "WhatsApp: tom próximo e direto, 1 a 4 frases, no máximo 1 emoji, uma única chamada para ação clara. Nada de parecer robô ou spam."
       : "Instagram DM: tom leve e conversacional, curto, pode abrir com algo pessoal sobre o perfil; 1 emoji no máximo.";
 
+  const ticket = await beginAi(request, auth, "message_draft", { agencyId: client?.agencyId });
+  if (isDenied(ticket)) return ticket;
   try {
+    return await ticket.run(async () => {
     const result = await generateStructured<{ message: string; variants: string[] }>({
       system:
-        `Você escreve mensagens de relacionamento e prospecção para uma agência de marketing. Escreve como uma pessoa real, calorosa e profissional — nunca como IA. ${settings.houseStyle ? `Estilo da casa: ${settings.houseStyle}.` : ""} Responda em português do Brasil.`,
+        `Você escreve mensagens de relacionamento e prospecção para uma agência de marketing. Escreve como uma pessoa real, calorosa e profissional — nunca como IA. ${currentAgencyProfile().houseStyle ? `Estilo da casa: ${currentAgencyProfile().houseStyle}.` : ""} Responda em português do Brasil.`,
       prompt: `Escreva uma mensagem de ${channel === "whatsapp" ? "WhatsApp" : "Instagram"} com este objetivo: "${goal}".
 ${channelRules}
 Use {nome} onde entraria o primeiro nome da pessoa.
@@ -60,10 +70,9 @@ Entregue a mensagem principal e 2 variações com ângulos diferentes.`,
       maxTokens: 2000,
     });
     return NextResponse.json(result);
+    });
   } catch (error) {
-    if (error instanceof GenerationError) {
-      return NextResponse.json({ error: error.message }, { status: error.status });
-    }
-    return NextResponse.json({ error: "Erro ao redigir a mensagem." }, { status: 500 });
+    ticket.refund();
+    return aiErrorResponse(error);
   }
 }

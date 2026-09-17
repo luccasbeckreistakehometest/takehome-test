@@ -18,7 +18,7 @@ type Payload = {
     acceptedPackage: string;
     createdAt: string;
   };
-  agency: { name: string; tagline: string; accentColor: string; hasLogo: boolean };
+  agency: { name: string; tagline: string; accentColor: string; hasLogo: boolean; logoUrl: string };
 };
 
 type Accepted = { clientId: string; login: { username: string; password: string } | null; portalUrl: string };
@@ -41,6 +41,8 @@ export default function PublicProposalPage({ params }: { params: Promise<{ token
     api<Payload>(`/api/proposals/${token}`)
       .then((p) => {
         setData(p);
+        // registra a primeira abertura (o GET não grava nada)
+        if (p.state === "open") fetch(`/api/proposals/${token}`, { method: "POST" }).catch(() => {});
         const recommended = p.proposal.content.packages.find((x) => x.recommended) ?? p.proposal.content.packages[0];
         if (recommended) setSelected(recommended.name);
       })
@@ -87,9 +89,9 @@ export default function PublicProposalPage({ params }: { params: Promise<{ token
   return (
     <div className="mx-auto max-w-3xl space-y-8 py-6" style={{ ["--accent" as string]: agency.accentColor }} data-testid="proposal-page">
       <div className="flex items-center gap-3">
-        {agency.hasLogo ? (
+        {agency.hasLogo && agency.logoUrl ? (
           // eslint-disable-next-line @next/next/no-img-element
-          <img src="/api/settings/logo" alt={agency.name} className="size-10 rounded-md object-contain" />
+          <img src={agency.logoUrl} alt={agency.name} className="size-10 rounded-md object-contain" />
         ) : (
           <span className="grid size-10 place-items-center rounded-md bg-accent font-[family-name:var(--font-display)] text-lg font-bold text-accent-ink">
             {agency.name.charAt(0).toUpperCase()}

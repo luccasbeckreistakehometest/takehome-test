@@ -1,13 +1,14 @@
 import { NextResponse } from "next/server";
-import { saveInbound } from "@/lib/messaging-db";
+import { findAgencyByAccountId, saveInbound } from "@/lib/messaging-db";
 import { findClientByPhoneNumberId } from "@/lib/attendant-db";
 import { handleInbound } from "@/lib/attendant";
+import { metaVerifyToken, safeEqual, verifyMetaSignature } from "@/lib/webhook-auth";
+import { checkLimits, clientIp } from "@/lib/rate-limit";
 
 // Webhook da Meta (WhatsApp Cloud / Instagram / Messenger). Recebe mensagens
 // que os contatos ENVIAM de volta e as guarda na plataforma (inbox).
 // Configure na Meta: Callback URL = <sua-url>/api/webhooks/meta, Verify Token
-// = o valor abaixo. (Em produção mova para variável de ambiente.)
-const VERIFY_TOKEN = process.env.META_VERIFY_TOKEN || "agencyhub-verify";
+// = META_VERIFY_TOKEN; o App Secret (META_APP_SECRET) valida cada POST.
 
 // Handshake de verificação da Meta.
 export async function GET(request: Request) {
@@ -15,7 +16,8 @@ export async function GET(request: Request) {
   const mode = url.searchParams.get("hub.mode");
   const token = url.searchParams.get("hub.verify_token");
   const challenge = url.searchParams.get("hub.challenge");
-  if (mode === "subscribe" && token === VERIFY_TOKEN) {
+  const expected = metaVerifyToken();
+  if (mode === "subscribe" && expected && token && safeEqual(token, expected)) {
     return new NextResponse(challenge ?? "", { status: 200 });
   }
   return NextResponse.json({ error: "verificação falhou" }, { status: 403 });
@@ -23,7 +25,21 @@ export async function GET(request: Request) {
 
 // Recebe eventos. Parseia os dois formatos comuns (WhatsApp Cloud e IG/Messenger).
 export async function POST(request: Request) {
-  const payload = await request.json().catch(() => null);
+  if (!checkLimits([["webhookPerIp", clientIp(request)]]).ok) {
+    return NextResponse.json({ error: "rate limited" }, { status: 429 });
+  }
+  // Corpo cru: a assinatura é calculada sobre os bytes exatos.
+  const raw = await request.text();
+  if (!verifyMetaSignature(raw, request.headers.get("x-hub-signature-256"))) {
+    if (!process.env.META_APP_SECRET) console.error("[meta] POST recusado: META_APP_SECRET não configurado");
+    return NextResponse.json({ error: "assinatura inválida" }, { status: 401 });
+  }
+  let payload;
+  try {
+    payload = JSON.parse(raw);
+  } catch {
+    return NextResponse.json({ ok: true });
+  }
   if (!payload) return NextResponse.json({ ok: true });
   try {
     for (const entry of payload.entry ?? []) {
@@ -33,10 +49,15 @@ export async function POST(request: Request) {
         const contacts = value.contacts ?? [];
         // Número que recebeu: se for o número próprio de um cliente (atendente
         // por cliente), a mensagem entra na conta dele e o atendente responde.
+        // Senão, é o número de uma agência (Conexões). Número desconhecido
+        // fica sem agência (só o admin vê).
         const phoneNumberId = String(value.metadata?.phone_number_id ?? "");
-        const clientId = findClientByPhoneNumberId(phoneNumberId);
+        const owner = findClientByPhoneNumberId(phoneNumberId);
+        const clientId = owner?.clientId ?? null;
+        const agencyId = owner?.agencyId ?? findAgencyByAccountId("whatsapp", phoneNumberId);
         for (const m of value.messages ?? []) {
           const inbound = saveInbound({
+            agencyId,
             channel: "whatsapp",
             fromAddress: m.from ?? "",
             fromName: contacts[0]?.profile?.name ?? "",
@@ -44,13 +65,17 @@ export async function POST(request: Request) {
             clientId,
             phoneNumberId,
           });
-          if (clientId) await handleInbound(inbound).catch(() => null);
+          if (clientId) {
+            await handleInbound(inbound).catch((error) => console.error("[meta] atendente falhou:", error));
+          }
         }
       }
-      // Instagram / Messenger: entry.messaging[]
+      // Instagram / Messenger: entry.messaging[] (entry.id = conta que recebeu)
+      const igAgency = findAgencyByAccountId("instagram", String(entry.id ?? ""));
       for (const evt of entry.messaging ?? []) {
         if (evt.message?.text) {
           saveInbound({
+            agencyId: igAgency,
             channel: "instagram",
             fromAddress: evt.sender?.id ?? "",
             body: evt.message.text,
@@ -58,8 +83,9 @@ export async function POST(request: Request) {
         }
       }
     }
-  } catch {
-    // nunca falha o webhook (a Meta re-tenta e pode desativar em caso de erro)
+  } catch (error) {
+    // não falha o webhook (a Meta re-tenta e pode desativar em caso de erro)
+    console.error("[meta] falha ao processar evento:", error);
   }
   return NextResponse.json({ ok: true });
 }

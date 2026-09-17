@@ -31,7 +31,7 @@ const bodySchema = z.union([z.object({ rows: z.array(saleSchema).min(1).max(5000
 
 export async function POST(request: Request, { params }: Context) {
   const { id } = await params;
-  const auth = await guard(["agency", "admin", "client"], { clientId: id });
+  const auth = await guard(["agency", "admin", "client"], { clientId: id, selfServe: true });
   if (isDenied(auth)) return auth;
   const parsed = bodySchema.safeParse(await request.json().catch(() => null));
   if (!parsed.success) {
@@ -44,7 +44,7 @@ export async function POST(request: Request, { params }: Context) {
 
 export async function DELETE(request: Request, { params }: Context) {
   const { id } = await params;
-  const auth = await guard(["agency", "admin", "client"], { clientId: id });
+  const auth = await guard(["agency", "admin", "client"], { clientId: id, selfServe: true });
   if (isDenied(auth)) return auth;
   const saleId = new URL(request.url).searchParams.get("saleId");
   if (!saleId) return NextResponse.json({ error: "saleId ausente" }, { status: 400 });

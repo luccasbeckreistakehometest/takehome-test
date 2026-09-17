@@ -3,7 +3,7 @@ import { z } from "zod";
 import { getClient } from "@/lib/db";
 import { guard, isDenied } from "@/lib/guard";
 import { GenerationError } from "@/lib/claude";
-import { chargeUsage } from "@/lib/billing-db";
+import { aiErrorResponse, beginAi } from "@/lib/metering";
 import { createJob, finishJob, logActivity } from "@/lib/marketplace-db";
 import { currentMonth, isValidMonth } from "@/lib/report-aggregate";
 import { buildMonthData, getMonthlyReport, listMonthlyReports, saveMonthlyReport } from "@/lib/reports-db";
@@ -49,14 +49,16 @@ export async function POST(request: Request, { params }: Context) {
   if (!parsed.success) {
     return NextResponse.json({ error: parsed.error.issues[0]?.message ?? "Dados inválidos" }, { status: 400 });
   }
-  const charge = chargeUsage({ accountType: "client", accountId: id, action: "monthly_report" });
-  if (!charge.ok) return NextResponse.json({ error: charge.reason }, { status: 402 });
+  const ticket = await beginAi(request, auth, "monthly_report", { agencyId: client.agencyId });
+  if (isDenied(ticket)) return ticket;
 
   const { month } = parsed.data;
   const data = buildMonthData(id, month);
-  const job = createJob({ kind: "monthly_report", label: `Relatório mensal ${month} — ${client.name}`, clientId: id });
+  const job = createJob({ kind: "monthly_report", label: `Relatório mensal ${month} — ${client.name}`, clientId: id, agencyId: client.agencyId });
   try {
-    const summary = await generateReportSummary(client, data);
+    const summary = await ticket.run(() => generateReportSummary(client, data));
+    // Sem chave de IA o resumo sai de exemplo: ninguém paga por isso.
+    if (summary.demo && process.env.AI_MOCK !== "1") ticket.refund();
     const report = saveMonthlyReport({ clientId: id, month, lang: client.language, data, summary });
     finishJob(job.id, "done");
     logActivity({
@@ -67,8 +69,8 @@ export async function POST(request: Request, { params }: Context) {
     });
     return NextResponse.json({ report }, { status: 201 });
   } catch (error) {
-    const message = error instanceof GenerationError ? error.message : "Erro ao gerar o relatório.";
-    finishJob(job.id, "error", message);
-    return NextResponse.json({ error: message }, { status: error instanceof GenerationError ? error.status : 500 });
+    ticket.refund();
+    finishJob(job.id, "error", error instanceof GenerationError ? error.message : "erro");
+    return aiErrorResponse(error);
   }
 }

@@ -189,9 +189,10 @@ async function main() {
   const markSession = (ready) => {
     try {
       db.prepare(
-        `INSERT INTO channel_connections (channel, mode, apiToken, apiAccountId, sessionReady, updatedAt)
-         VALUES ('whatsapp', 'session', '', '', ?, ?)
-         ON CONFLICT(channel) DO UPDATE SET sessionReady = ?, updatedAt = ?`
+        // O worker é UMA sessão física de WhatsApp: só atende a agência da casa.
+        `INSERT INTO channel_connections (agencyId, channel, mode, apiToken, apiAccountId, sessionReady, updatedAt)
+         VALUES ('agency', 'whatsapp', 'session', '', '', ?, ?)
+         ON CONFLICT(agencyId, channel) DO UPDATE SET sessionReady = ?, updatedAt = ?`
       ).run(ready ? 1 : 0, nowIso(), ready ? 1 : 0, nowIso());
     } catch {
       /* tabela pode não existir */
@@ -224,7 +225,7 @@ async function main() {
     db
       .prepare(
         `SELECT * FROM message_outbox
-         WHERE channel = 'whatsapp' AND mode = 'session'
+         WHERE channel = 'whatsapp' AND mode = 'session' AND agencyId = 'agency'
            AND (status = 'queued' OR (status = 'scheduled' AND scheduledFor <= ?))
          ORDER BY createdAt ASC`
       )

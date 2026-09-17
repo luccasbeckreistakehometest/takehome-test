@@ -1,10 +1,12 @@
 import { NextResponse } from "next/server";
-import { GenerationError, generateStructured } from "@/lib/claude";
+import { generateStructured } from "@/lib/claude";
 import { getClient, listGenerations } from "@/lib/db";
-import { createSketch, getProject, listDeliverables, updateProject } from "@/lib/marketplace-db";
+import { createSketch, listDeliverables, updateProject } from "@/lib/marketplace-db";
 import { sketchSchema, type SketchResult } from "@/lib/marketplace-schemas";
 import { clientContext } from "@/lib/prompts";
 import { readUpload, type AllowedImageMime } from "@/lib/uploads";
+import { aiErrorResponse, beginAi } from "@/lib/metering";
+import { guardProject, isDenied } from "@/lib/guard";
 
 export const maxDuration = 300;
 
@@ -14,12 +16,11 @@ type Context = { params: Promise<{ id: string }> };
 // Quando a demanda tem fotos de referência (modelo, produto, equipe...), a IA
 // as analisa e desenha o sketch EM CIMA delas — pose real, forma real da peça,
 // cena real — e recomenda quais referências ainda faltam.
-export async function POST(_request: Request, { params }: Context) {
+export async function POST(request: Request, { params }: Context) {
   const { id } = await params;
-  const project = getProject(id);
-  if (!project) {
-    return NextResponse.json({ error: "Demanda não encontrada" }, { status: 404 });
-  }
+  const auth = await guardProject(id, "workspace");
+  if (isDenied(auth)) return auth;
+  const project = auth.project;
   const client = getClient(project.clientId);
   if (!client) {
     return NextResponse.json({ error: "Cliente não encontrado" }, { status: 404 });
@@ -53,7 +54,10 @@ export async function POST(_request: Request, { params }: Context) {
 - No campo "neededReferences": liste apenas o que AINDA faltaria para um sketch mais fiel (vazio se as referências bastam).`
     : `Nenhuma foto de referência foi enviada ainda. Desenhe o sketch com figuras genéricas E, no campo "neededReferences", liste objetivamente quais fotos a agência deve subir na seção Referências da demanda para o próximo sketch sair fiel (ex.: "foto da peça em fundo neutro, frente e costas", "foto da modelo de corpo inteiro", "foto do local/quadra"). Seja específico para ESTA demanda.`;
 
+  const ticket = await beginAi(request, auth.session, "sketch");
+  if (isDenied(ticket)) return ticket;
   try {
+    return await ticket.run(async () => {
     const result = await generateStructured<SketchResult>({
       system:
         "Você é diretor(a) de arte sênior de uma agência. Você desenha rafes/sketches de composição que comunicam exatamente o que o profissional deve produzir — enquadramento, hierarquia, posição dos elementos — sem pretensão de arte final. Quando há fotos de referência, seu sketch é fiel a elas. Responda em português do Brasil.",
@@ -91,10 +95,9 @@ Regras do sketch:
       neededReferences: result.neededReferences ?? [],
     });
     return NextResponse.json(result, { status: 201 });
+    });
   } catch (error) {
-    if (error instanceof GenerationError) {
-      return NextResponse.json({ error: error.message }, { status: error.status });
-    }
-    return NextResponse.json({ error: "Erro ao gerar o sketch." }, { status: 500 });
+    ticket.refund();
+    return aiErrorResponse(error);
   }
 }

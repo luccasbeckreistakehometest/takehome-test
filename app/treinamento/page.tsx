@@ -11,7 +11,7 @@ const TRACKS = [
       "Use o ✦ Kit completo para gerar estratégia → campanha → ROI → identidade → social → landing page em um clique.",
       "Rode o Radar de mercado com frequência (ideal: diário) — as próximas gerações se adaptam ao que mudou.",
       "Crie Demandas para produções (foto/design), rode o Match por IA e vincule o profissional com melhor fit.",
-      "Reserve o pagamento (escrow) antes da produção — é a garantia das duas pontas.",
+      "Combine o pagamento com o profissional antes da produção e marque na demanda — a plataforma registra o status, o dinheiro passa direto entre vocês.",
       "Revise entregas clicando na imagem para marcar ajustes e rode a análise de qualidade da IA (0-100).",
       "Aprove, libere o pagamento e gere o Relatório executivo para enviar ao cliente.",
       "Use a Prospecção para descobrir novos clientes reais e o Motor de ideias para nunca ficar sem próxima jogada.",
@@ -32,7 +32,7 @@ const TRACKS = [
       "Acompanhe as Oportunidades abertas no seu portal e o chat de cada demanda vinculada.",
       "Envie entregas pela demanda; a revisão vem com marcações na imagem e notas objetivas da IA.",
       "Seu elo (Bronze → Prata → Ouro → Platina) sobe com demandas concluídas e nota média das entregas — quem entrega qualidade recebe mais matches.",
-      "O pagamento fica reservado (escrow) antes de você produzir e é liberado na aprovação.",
+      "O pagamento é combinado com quem contratou antes de você produzir; a demanda mostra quando ele foi marcado como feito.",
     ],
   },
 ];

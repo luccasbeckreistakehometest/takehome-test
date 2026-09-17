@@ -1,9 +1,15 @@
 import { generateStructured } from "./claude";
 import { isAiMock } from "./ai-mock";
 import { clientContext } from "./prompts";
-import { getSettings } from "./settings";
+import { currentAgencyProfile } from "./agencies";
 import type { Client } from "./types";
 import type { AiDraft, AttendantConfig } from "./attendant-rules";
+
+// Nome e estilo da casa da agência em nome de quem a IA roda.
+function agencyPromptProfile(): { agencyName: string; houseStyle: string } {
+  const profile = currentAgencyProfile();
+  return { agencyName: profile.name, houseStyle: profile.houseStyle };
+}
 
 const SCHEMA = {
   type: "object",
@@ -73,7 +79,7 @@ export async function draftAttendantReply(input: {
 }): Promise<AiDraft> {
   if (isAiMock()) return mockAttendantDraft(input.client, input.text);
   const language = input.client.language === "en" ? "English (US)" : "Brazilian Portuguese";
-  const settings = getSettings();
+  const settings = agencyPromptProfile();
   return generateStructured<AiDraft>({
     tier: "standard",
     maxTokens: 1200,

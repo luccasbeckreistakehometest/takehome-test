@@ -1,7 +1,8 @@
 import { NextResponse } from "next/server";
 import { z } from "zod";
 import { createClient } from "@/lib/db";
-import { deleteProspect, getProspect, updateProspect } from "@/lib/marketplace-db";
+import { deleteProspect, updateProspect } from "@/lib/marketplace-db";
+import { guardProspect, isDenied } from "@/lib/guard";
 
 type Context = { params: Promise<{ id: string }> };
 
@@ -11,10 +12,9 @@ const patchSchema = z.object({
 
 export async function PATCH(request: Request, { params }: Context) {
   const { id } = await params;
-  const prospect = getProspect(id);
-  if (!prospect) {
-    return NextResponse.json({ error: "Prospect não encontrado" }, { status: 404 });
-  }
+  const guarded = await guardProspect(id);
+  if (isDenied(guarded)) return guarded;
+  const { prospect } = guarded;
   const parsed = patchSchema.safeParse(await request.json().catch(() => null));
   if (!parsed.success) {
     return NextResponse.json({ error: "Dados inválidos" }, { status: 400 });
@@ -42,7 +42,7 @@ export async function PATCH(request: Request, { params }: Context) {
       source: "agency",
       country: "Brasil",
       selfServe: false,
-    });
+    }, prospect.agencyId);
     const updated = updateProspect(id, { status: "converted", clientId: client.id });
     return NextResponse.json({ prospect: updated, clientId: client.id });
   }
@@ -53,6 +53,8 @@ export async function PATCH(request: Request, { params }: Context) {
 
 export async function DELETE(_request: Request, { params }: Context) {
   const { id } = await params;
+  const guarded = await guardProspect(id);
+  if (isDenied(guarded)) return guarded;
   if (!deleteProspect(id)) {
     return NextResponse.json({ error: "Prospect não encontrado" }, { status: 404 });
   }

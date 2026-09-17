@@ -1,5 +1,5 @@
 import { NextResponse } from "next/server";
-import { GenerationError, generateStructured } from "@/lib/claude";
+import { generateStructured } from "@/lib/claude";
 import { listClients, listGenerations } from "@/lib/db";
 import {
   getProfessional,
@@ -7,13 +7,18 @@ import {
   listProjects,
 } from "@/lib/marketplace-db";
 import { meetingRecsSchema, type MeetingRecs } from "@/lib/marketplace-schemas";
+import { aiErrorResponse, beginAi } from "@/lib/metering";
+import { agencyOnly, isDenied, tenantOf } from "@/lib/guard";
 
 export const maxDuration = 300;
 
 // Agenda inteligente: a IA olha o estado real de todas as contas e demandas
 // e recomenda as reuniões da semana — cada uma com o porquê (reasoning).
-export async function POST() {
-  const clients = listClients();
+export async function POST(request: Request) {
+  const auth = await agencyOnly();
+  if (isDenied(auth)) return auth;
+  const scope = tenantOf(auth, request);
+  const clients = listClients(scope);
   if (clients.length === 0) {
     return NextResponse.json({ error: "Nenhum cliente cadastrado ainda." }, { status: 400 });
   }
@@ -21,7 +26,7 @@ export async function POST() {
   const lines: string[] = [];
   for (const client of clients) {
     const generations = listGenerations(client.id).slice(0, 6);
-    const projects = listProjects({ clientId: client.id });
+    const projects = listProjects({ scope, clientId: client.id });
     lines.push(`Cliente "${client.name}" (clientId: ${client.id}, segmento: ${client.industry || "n/d"}):`);
     lines.push(
       `  Últimos entregáveis: ${generations.map((g) => `${g.type} em ${g.createdAt.slice(0, 10)}`).join("; ") || "nenhum"}`
@@ -35,12 +40,15 @@ export async function POST() {
       );
     }
   }
-  const existing = listAllMeetings()
+  const existing = listAllMeetings(scope)
     .filter((meeting) => new Date(meeting.scheduledAt) > new Date())
     .map((meeting) => `- ${meeting.scheduledAt} · ${meeting.title} (${meeting.clientName ?? "geral"})`)
     .join("\n");
 
+  const ticket = await beginAi(request, auth, "meeting_recs", { agencyId: scope.agencyId });
+  if (isDenied(ticket)) return ticket;
   try {
+    return await ticket.run(async () => {
     const result = await generateStructured<MeetingRecs>({
       system:
         "Você é o gerente de contas sênior de uma agência de marketing. Você decide quais reuniões realmente valem ser feitas — poucas, com objetivo claro. Escreva como um profissional humano, direto. Responda em português do Brasil.",
@@ -62,10 +70,9 @@ Para cada uma: clientId EXATO da lista; projectId EXATO se for sobre uma demanda
       maxTokens: 8000,
     });
     return NextResponse.json(result);
+    });
   } catch (error) {
-    if (error instanceof GenerationError) {
-      return NextResponse.json({ error: error.message }, { status: error.status });
-    }
-    return NextResponse.json({ error: "Erro ao recomendar reuniões." }, { status: 500 });
+    ticket.refund();
+    return aiErrorResponse(error);
   }
 }

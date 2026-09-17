@@ -1,6 +1,7 @@
 import { spawn } from "child_process";
 import fs from "fs";
 import path from "path";
+import { HOUSE_AGENCY_ID } from "../tenancy-rules";
 
 // Gerencia o processo do worker de sessão (WhatsApp Web) a partir do servidor,
 // para o usuário controlar tudo por BOTÃO — sem terminal. Como o app roda na
@@ -11,6 +12,22 @@ const root = process.cwd();
 const statusFile = path.join(root, "data", "messaging-worker-status.json");
 const logFile = path.join(root, "data", "messaging-worker.log");
 const scriptPath = path.join(root, "scripts", "messaging-worker.mjs");
+
+// O modo "sessão" (WhatsApp Web dirigido pelo Playwright) só roda onde o
+// worker e um navegador existem — a máquina local do dono. A imagem de
+// produção não leva o script nem o Chromium: lá só a API oficial funciona.
+// MESSAGING_SESSION_MODE=true força a liberação (servidor preparado para isso).
+export function sessionModeAvailable(): boolean {
+  if (!fs.existsSync(scriptPath)) return false;
+  if (process.env.MESSAGING_SESSION_MODE === "true") return true;
+  return process.env.NODE_ENV !== "production";
+}
+
+// O worker é uma única sessão física (o WhatsApp do dono da máquina): só a
+// agência da casa pode usá-lo. As demais agências usam a API oficial.
+export function sessionModeAvailableFor(agencyId: string | null | undefined): boolean {
+  return agencyId === HOUSE_AGENCY_ID && sessionModeAvailable();
+}
 
 export type WorkerState =
   | "idle"

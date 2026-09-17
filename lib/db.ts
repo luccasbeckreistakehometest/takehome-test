@@ -3,23 +3,18 @@ import fs from "fs";
 import path from "path";
 import { randomUUID } from "crypto";
 import type { Client, ClientInput, Generation, GenerationType } from "./types";
+import { addColumn, createIndex, enableWal } from "./sqlite-migrate";
+import { migrateTenancy } from "./tenancy-migration";
+import { scopeWhere, type TenantScope } from "./tenancy-rules";
 
-export function addColumn(database: Pick<Database.Database, "prepare" | "exec">, table: string, column: string, definition: string): void {
-  const columns = (database.prepare(`PRAGMA table_info(${table})`).all() as { name: string }[]).map((c) => c.name);
-  // Tabela inexistente: quem a cria ainda não carregou; a migração roda quando carregar.
-  if (columns.length === 0 || columns.includes(column)) return;
-  try {
-    database.exec(`ALTER TABLE ${table} ADD COLUMN ${column} ${definition}`);
-  } catch (error) {
-    if (!(error instanceof Error && /duplicate column name/i.test(error.message))) throw error;
-  }
-}
+export { addColumn };
 
 function createDb() {
   const dataDir = process.env.DATA_DIR ?? path.join(process.cwd(), "data");
   fs.mkdirSync(dataDir, { recursive: true });
-  const db = new Database(path.join(dataDir, "agencyhub.db"));
-  db.pragma("journal_mode = WAL");
+  // timeout: workers paralelos do build esperam o lock da migração.
+  const db = new Database(path.join(dataDir, "agencyhub.db"), { timeout: 15_000 });
+  enableWal(db);
   db.exec(`
     CREATE TABLE IF NOT EXISTS clients (
       id TEXT PRIMARY KEY,
@@ -66,6 +61,9 @@ function createDb() {
   addColumn(db, "clients", "selfServe", "INTEGER NOT NULL DEFAULT 0");
   addColumn(db, "generations", "actuals", "TEXT NOT NULL DEFAULT '{}'");
 
+  // Multi-tenant: agências + agencyId em toda tabela que já existe (uma vez).
+  migrateTenancy(db);
+
   return db;
 }
 
@@ -85,6 +83,16 @@ export function addColumnIfMissing(table: string, column: string, definition: st
   addColumn(db, table, column, definition);
 }
 
+// Coluna de tenant (agencyId) + índice, para tabelas criadas depois da
+// migração inicial (banco novo). Chamar logo após o CREATE TABLE do módulo.
+export function tenantColumn(table: string): void {
+  addColumn(db, table, "agencyId", "TEXT");
+  createIndex(db, `CREATE INDEX IF NOT EXISTS idx_${table}_agency ON ${table}(agencyId)`);
+}
+
+tenantColumn("clients");
+tenantColumn("generations");
+
 type ClientRow = Omit<Client, "channels" | "selfServe"> & {
   channels: string;
   selfServe: number;
@@ -97,6 +105,7 @@ type GenerationRow = Omit<Generation, "params" | "actuals"> & {
 function toClient(row: ClientRow): Client {
   return {
     ...row,
+    agencyId: row.agencyId ?? "",
     channels: JSON.parse(row.channels),
     language: row.language === "en" ? "en" : "pt-BR",
     source: row.source === "self" ? "self" : "agency",
@@ -136,11 +145,18 @@ export function updateGenerationActuals(
   return result.changes > 0 ? getGeneration(id) : null;
 }
 
-export function listClients(): Client[] {
+export function listClients(scope: TenantScope): Client[] {
+  const where = scopeWhere(scope);
   const rows = db
-    .prepare("SELECT * FROM clients ORDER BY createdAt DESC")
-    .all() as ClientRow[];
+    .prepare(`SELECT * FROM clients WHERE ${where.sql} ORDER BY createdAt DESC`)
+    .all(...where.params) as ClientRow[];
   return rows.map(toClient);
+}
+
+// Agência dona do cliente (null = cliente inexistente).
+export function clientAgencyId(clientId: string): string | null {
+  const row = db.prepare("SELECT agencyId FROM clients WHERE id = ?").get(clientId) as { agencyId: string | null } | undefined;
+  return row ? (row.agencyId ?? null) : null;
 }
 
 export function getClient(id: string): Client | null {
@@ -159,15 +175,17 @@ export function setClientSelfServe(id: string, selfServe: boolean): Client | nul
   return getClient(id);
 }
 
-export function createClient(input: ClientInput): Client {
+export function createClient(input: ClientInput, agencyId: string): Client {
+  if (!agencyId) throw new Error("createClient: agência obrigatória");
   const client: Client = {
     ...input,
+    agencyId,
     id: randomUUID(),
     createdAt: new Date().toISOString(),
   };
   db.prepare(
-    `INSERT INTO clients (id, name, industry, description, audience, tone, goals, budget, channels, differentials, competitors, brandColors, website, instagram, notes, capabilities, language, source, country, selfServe, createdAt)
-     VALUES (@id, @name, @industry, @description, @audience, @tone, @goals, @budget, @channels, @differentials, @competitors, @brandColors, @website, @instagram, @notes, @capabilities, @language, @source, @country, @selfServe, @createdAt)`
+    `INSERT INTO clients (id, agencyId, name, industry, description, audience, tone, goals, budget, channels, differentials, competitors, brandColors, website, instagram, notes, capabilities, language, source, country, selfServe, createdAt)
+     VALUES (@id, @agencyId, @name, @industry, @description, @audience, @tone, @goals, @budget, @channels, @differentials, @competitors, @brandColors, @website, @instagram, @notes, @capabilities, @language, @source, @country, @selfServe, @createdAt)`
   ).run({
     ...client,
     channels: JSON.stringify(client.channels),
@@ -232,8 +250,8 @@ export function createGeneration(input: {
     createdAt: new Date().toISOString(),
   };
   db.prepare(
-    `INSERT INTO generations (id, clientId, type, title, params, content, actuals, createdAt)
-     VALUES (@id, @clientId, @type, @title, @params, @content, @actuals, @createdAt)`
+    `INSERT INTO generations (id, agencyId, clientId, type, title, params, content, actuals, createdAt)
+     VALUES (@id, (SELECT agencyId FROM clients WHERE id = @clientId), @clientId, @type, @title, @params, @content, @actuals, @createdAt)`
   ).run({ ...generation, params: JSON.stringify(generation.params), actuals: "{}" });
   return generation;
 }

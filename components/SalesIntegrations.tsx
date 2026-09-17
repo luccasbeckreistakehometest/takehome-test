@@ -4,6 +4,7 @@ import { useCallback, useEffect, useState } from "react";
 import { api } from "@/lib/api";
 import { Button, Card, ErrorBox, Input, Label, SectionTitle, Select, Tag } from "./ui";
 import { Icon } from "./icons";
+import SalesWebhookCard from "./SalesWebhookCard";
 import { fmtCurrency, fmtNum, useUiLang } from "@/lib/i18n";
 
 type Sale = {
@@ -153,6 +154,7 @@ export default function SalesIntegrations({ clientId }: { clientId: string }) {
 
   return (
     <div className="space-y-6">
+      <SalesWebhookCard clientId={clientId} />
       {/* Totais */}
       {totals && (
         <div className="grid gap-3 sm:grid-cols-3">

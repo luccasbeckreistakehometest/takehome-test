@@ -76,6 +76,8 @@ export default function AgencyHome() {
         </Link>
       </div>
 
+      {data.clients.length === 0 && <FirstSteps />}
+
       <DifferentiatorsStrip />
 
       {data.agency && (
@@ -221,6 +223,9 @@ export default function AgencyHome() {
             Ver todos →
           </Link>
         </div>
+        {data.clients.length === 0 && (
+          <p className="text-sm text-muted">Sua carteira está vazia. O primeiro cliente aparece aqui.</p>
+        )}
         <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
           {data.clients.map((client) => (
             <Link key={client.id} href={`/clients/${client.id}`}>
@@ -236,5 +241,41 @@ export default function AgencyHome() {
         </div>
       </Card>
     </div>
+  );
+}
+
+// Agência recém-criada (workspace vazio): o caminho curto até o primeiro
+// entregável, na ordem em que faz sentido.
+const FIRST_STEPS: { href: string; title: string; text: string }[] = [
+  { href: "/clients/new", title: "Cadastre o primeiro cliente", text: "Digite ou fale o briefing. Dele saem a estratégia, o calendário e os posts." },
+  { href: "/settings", title: "Coloque a sua marca", text: "Nome, cor e logo da agência. É isso que seus clientes veem no portal." },
+  { href: "/settings#pagina-publica", title: "Publique sua página", text: "Um endereço seu para mostrar trabalhos e receber pedidos pelo WhatsApp." },
+  { href: "/settings#convites", title: "Chame o time e os clientes", text: "Gere convites: cada pessoa entra direto no seu espaço." },
+];
+
+function FirstSteps() {
+  return (
+    <Card data-testid="agency-empty-state">
+      <SectionTitle>Primeiros passos</SectionTitle>
+      <p className="-mt-1 mb-3 text-sm text-muted">Seu espaço está pronto e é só seu. Comece por aqui:</p>
+      <ol className="grid gap-3 sm:grid-cols-2">
+        {FIRST_STEPS.map((step, index) => (
+          <li key={step.href}>
+            <Link
+              href={step.href}
+              className="flex h-full gap-3 rounded-lg border border-edge bg-surface-2 p-3 transition-colors hover:border-accent/60"
+            >
+              <span className="grid size-7 shrink-0 place-items-center rounded-full bg-accent text-sm font-bold text-accent-ink">
+                {index + 1}
+              </span>
+              <span>
+                <span className="block font-medium">{step.title}</span>
+                <span className="mt-0.5 block text-xs text-muted">{step.text}</span>
+              </span>
+            </Link>
+          </li>
+        ))}
+      </ol>
+    </Card>
   );
 }

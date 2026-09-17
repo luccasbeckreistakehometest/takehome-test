@@ -37,7 +37,11 @@ test("new client by typing", async ({ page }) => {
   await page.getByPlaceholder("Ex.: cafeteria artesanal").fill("padaria");
   await page.getByPlaceholder(/O que a empresa faz/).fill("Padaria de bairro com pães artesanais e café da manhã.");
   await page.getByTestId("save-client").click();
-  await expect(page).toHaveURL(/\/clients\/[^/]+$/);
+  // O acesso do cliente aparece uma vez, com senha provisória aleatória.
+  await expect(page.getByTestId("one-time-login")).toBeVisible();
+  await expect(page.getByTestId("otp-password")).toHaveText(/^[A-Za-z2-9]{4}-[A-Za-z2-9]{4}-[A-Za-z2-9]{4}$/);
+  await page.getByRole("button", { name: "Abrir o cliente" }).click();
+  await expect(page).toHaveURL(/\/clients\/(?!new$)[^/]+$/);
   await expect(page.locator("h1").first()).toContainText("Padaria do Bairro");
 });
 
@@ -46,7 +50,9 @@ test("self-service brand signup lands in its own workspace", async ({ page }) =>
   await page.getByRole("button", { name: /marca|cliente/i }).first().click();
   await page.getByTestId("reg-name").fill("Loja Sol");
   await page.getByTestId("reg-industry").fill("moda");
+  await page.getByTestId("reg-email").fill("loja.sol@example.com");
   await page.getByTestId("reg-password").fill("senha1234");
+  await page.getByTestId("reg-terms").check();
   await page.getByTestId("reg-submit").click();
-  await expect(page).toHaveURL(/\/(clients|portal)\//, { timeout: 20_000 });
+  await expect(page).toHaveURL(/\/portal\/client\/[^/?]+\?welcome=1&choose=1$/, { timeout: 20_000 });
 });

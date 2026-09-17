@@ -1,15 +1,15 @@
 import { NextResponse } from "next/server";
-import { deleteDeliverable, getDeliverable } from "@/lib/marketplace-db";
+import { deleteDeliverable } from "@/lib/marketplace-db";
 import { deleteUpload } from "@/lib/uploads";
+import { guardDeliverable, isDenied } from "@/lib/guard";
 
 type Context = { params: Promise<{ id: string }> };
 
 export async function DELETE(_request: Request, { params }: Context) {
   const { id } = await params;
-  const deliverable = getDeliverable(id);
-  if (!deliverable) {
-    return NextResponse.json({ error: "Arquivo não encontrado" }, { status: 404 });
-  }
+  const auth = await guardDeliverable(id, "workspace");
+  if (isDenied(auth)) return auth;
+  const deliverable = auth.deliverable;
   deleteDeliverable(id);
   deleteUpload(deliverable.id, deliverable.mime);
   return NextResponse.json({ ok: true });

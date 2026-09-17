@@ -1,6 +1,8 @@
-# AgencyHub em produção: app (Next.js) + Caddy (HTTPS automático).
-# Uso: preencha .env (copie de .env.example), edite o Caddyfile com seu domínio
-# e rode:  docker compose up -d --build
+# Marqa sozinha (app + Caddy) — para testar a imagem num servidor isolado.
+# A produção real (marqa.online) roda pelo repositório `stack`, que junta os
+# três apps num Caddy só: ver docs/DEPLOY.md.
+# Uso aqui: preencha .env (copie de .env.example), edite o Caddyfile com seu
+# domínio e rode:  docker compose up -d --build
 
 services:
   app:

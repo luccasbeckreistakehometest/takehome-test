@@ -1,16 +1,18 @@
 import { NextResponse } from "next/server";
 import { z } from "zod";
-import { GenerationError, generateStructured } from "@/lib/claude";
+import { generateStructured } from "@/lib/claude";
 import { getClient, listGenerations } from "@/lib/db";
 import { demandSuggestionsSchema, type DemandSuggestions } from "@/lib/marketplace-schemas";
 import { SKILL_OPTIONS } from "@/lib/marketplace-types";
 import { clientContext } from "@/lib/prompts";
+import { aiErrorResponse, beginAi } from "@/lib/metering";
+import { guardClient, isDenied } from "@/lib/guard";
 
 export const maxDuration = 300;
 
 const bodySchema = z.object({
   clientId: z.string().min(1),
-  idea: z.string().trim().default(""),
+  idea: z.string().trim().max(2000).default(""),
 });
 
 // Fluidez kit → demandas: a IA lê o que já foi planejado para a conta
@@ -23,6 +25,8 @@ export async function POST(request: Request) {
     return NextResponse.json({ error: "Requisição inválida" }, { status: 400 });
   }
   const { clientId, idea } = parsed.data;
+  const auth = await guardClient(clientId, "workspace");
+  if (isDenied(auth)) return auth;
   const client = getClient(clientId);
   if (!client) {
     return NextResponse.json({ error: "Cliente não encontrado" }, { status: 404 });
@@ -42,7 +46,10 @@ export async function POST(request: Request) {
     .filter(Boolean)
     .join("\n\n");
 
+  const ticket = await beginAi(request, auth, "demand_suggestions");
+  if (isDenied(ticket)) return ticket;
   try {
+    return await ticket.run(async () => {
     const result = await generateStructured<DemandSuggestions>({
       system:
         "Você é o diretor de operações de uma agência de marketing. Você transforma planos em ordens de produção executáveis para fotógrafos e designers, com briefs que dispensam reunião de dúvidas. Escreva como um profissional humano, direto e específico — nunca genérico. Responda em português do Brasil.",
@@ -64,10 +71,9 @@ Use apenas skills desta lista no campo "skillsNeeded": ${SKILL_OPTIONS.join(", "
       maxTokens: 12000,
     });
     return NextResponse.json(result);
+    });
   } catch (error) {
-    if (error instanceof GenerationError) {
-      return NextResponse.json({ error: error.message }, { status: error.status });
-    }
-    return NextResponse.json({ error: "Erro ao sugerir demandas." }, { status: 500 });
+    ticket.refund();
+    return aiErrorResponse(error);
   }
 }

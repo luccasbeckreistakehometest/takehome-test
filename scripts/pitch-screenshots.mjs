@@ -5,6 +5,13 @@ import fs from "fs";
 import { fileURLToPath } from "url";
 import { chromium } from "playwright";
 
+// Senha das contas de demonstração (nunca no código): PITCH_PASSWORD=... node scripts/pitch-screenshots.mjs
+const PASSWORD = process.env.PITCH_PASSWORD ?? "";
+if (!PASSWORD) {
+  console.error("Defina PITCH_PASSWORD com a senha das contas de demonstração.");
+  process.exit(1);
+}
+
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const root = path.join(__dirname, "..");
 const outDir = path.join(root, "pitch", "shots");
@@ -58,7 +65,7 @@ async function run() {
   // ---------- AGÊNCIA (seções globais + workspace do cliente demo) ----------
   console.log("Agência:");
   const agCtx = await makeContext(browser);
-  const ag = await login(agCtx, "agencia", "luccas123");
+  const ag = await login(agCtx, "agencia", PASSWORD);
   // Seções globais
   await shoot(ag, "ag-home", "/", { waitFor: "h1" });
   await shoot(ag, "ag-clients", "/clients");
@@ -89,14 +96,14 @@ async function run() {
   // ---------- CLIENTE (portal do Ateliê) ----------
   console.log("Cliente:");
   const clCtx = await makeContext(browser);
-  const cl = await login(clCtx, "atelie.amora", "luccas123");
+  const cl = await login(clCtx, "atelie.amora", PASSWORD);
   await shoot(cl, "portal-client", `/portal/client/${AMORA}`, { waitFor: "h1" });
   await clCtx.close();
 
   // ---------- PROFISSIONAL ----------
   console.log("Profissional:");
   const prCtx = await makeContext(browser);
-  const pr = await login(prCtx, "luccas.fotografo", "luccas123");
+  const pr = await login(prCtx, "luccas.fotografo", PASSWORD);
   await shoot(pr, "pro-profile", `/professionals/${PRO}`, { waitFor: "h1" });
   await prCtx.close();
 

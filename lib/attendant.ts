@@ -1,4 +1,4 @@
-import { getClient } from "./db";
+import { clientAgencyId, getClient } from "./db";
 import { logActivity } from "./marketplace-db";
 import { enqueueDirect, getConnection, listInboundFrom, type InboundMessage, type SendMode } from "./messaging-db";
 import {
@@ -18,15 +18,21 @@ import {
 } from "./attendant-rules";
 import { draftAttendantReply } from "./attendant-ai";
 import type { Client } from "./types";
+import { chargeUsage, refundUsage } from "./billing-db";
+import { runWithAiContext } from "./ai-spend";
+import { GenerationError } from "./claude";
 
 // Orquestra o atendente para UMA mensagem recebida: guardrails primeiro,
 // IA depois, e o modo do cliente decide se a resposta sai sozinha (auto),
 // espera aprovação (rascunho) ou nem existe (desligado). Tudo vira log.
 
 // Por onde a resposta sai: número próprio do cliente (API) > canal da agência.
-export function resolveSendMode(cfg: AttendantConfig): { ok: true; mode: SendMode } | { ok: false; reason: "no_channel" } {
+export function resolveSendMode(
+  cfg: AttendantConfig,
+  agencyId: string
+): { ok: true; mode: SendMode } | { ok: false; reason: "no_channel" } {
   if (cfg.phoneNumberId && cfg.apiToken) return { ok: true, mode: "api" };
-  const conn = getConnection("whatsapp");
+  const conn = getConnection(agencyId, "whatsapp");
   if (!conn) return { ok: false, reason: "no_channel" };
   if (conn.mode === "api" && conn.apiToken && conn.apiAccountId) return { ok: true, mode: "api" };
   if (conn.mode === "session" && conn.sessionReady) return { ok: true, mode: "session" };
@@ -34,9 +40,11 @@ export function resolveSendMode(cfg: AttendantConfig): { ok: true; mode: SendMod
 }
 
 function sendReply(cfg: AttendantConfig, clientId: string, to: string, body: string): string | null {
-  const route = resolveSendMode(cfg);
+  const agencyId = clientAgencyId(clientId);
+  if (!agencyId) return null;
+  const route = resolveSendMode(cfg, agencyId);
   if (!route.ok) return null;
-  return enqueueDirect({ channel: "whatsapp", mode: route.mode, toAddress: to, body, clientId }).id;
+  return enqueueDirect({ agencyId, channel: "whatsapp", mode: route.mode, toAddress: to, body, clientId }).id;
 }
 
 function attendantHref(clientId: string): string {
@@ -48,7 +56,8 @@ export async function handleInbound(inbound: InboundMessage): Promise<AttendantR
   const cfg = getAttendant(inbound.clientId);
   if (!cfg || cfg.mode === "off") return null;
   const client = getClient(inbound.clientId);
-  if (!client) return null;
+  // Mensagem roteada para a marca de outra agência: ignora (nunca cruza tenant).
+  if (!client || (inbound.agencyId && inbound.agencyId !== client.agencyId)) return null;
   const contact = inbound.fromName || inbound.fromAddress;
   const now = new Date();
   const withinHours = isWithinBusinessHours(now, cfg);
@@ -87,10 +96,23 @@ export async function handleInbound(inbound: InboundMessage): Promise<AttendantR
     return row;
   }
 
-  // 2) Rascunho da IA
+  // 2) Rascunho da IA — pago pela agência (quem opera o atendente); sem
+  // coins com cobrança ligada, a mensagem fica para resposta manual.
+  const payer = { accountType: "agency" as const, accountId: client.agencyId };
+  const charge = chargeUsage({ ...payer, action: "attendant_reply" });
+  if (!charge.ok) {
+    const row = logReply({ ...base, status: "skipped", reply: "", intent: "", confidence: 0, reason: "no_coins" });
+    logActivity({
+      audience: "agency",
+      clientId: client.id,
+      text: `⚠️ Sem coins para o atendente responder ${contact} (${client.name}) — responda manualmente`,
+      href: attendantHref(client.id),
+    });
+    return row;
+  }
   let draft;
   try {
-    draft = await draftAttendantReply({
+    draft = await runWithAiContext({ action: "attendant_reply", ...payer, agencyId: client.agencyId }, () => draftAttendantReply({
       client: client as Client,
       config: cfg,
       text: inbound.body,
@@ -99,15 +121,16 @@ export async function handleInbound(inbound: InboundMessage): Promise<AttendantR
         .filter((m) => m.id !== inbound.id)
         .reverse()
         .map((m) => ({ body: m.body, receivedAt: m.receivedAt })),
-    });
+    }));
   } catch (error) {
+    refundUsage(payer, "attendant_reply", charge);
     const row = logReply({
       ...base,
       status: "skipped",
       reply: "",
       intent: "",
       confidence: 0,
-      reason: `ai_error: ${error instanceof Error ? error.message.slice(0, 160) : "erro"}`,
+      reason: `ai_error: ${error instanceof GenerationError ? error.detail.slice(0, 160) || error.message : error instanceof Error ? error.message.slice(0, 160) : "erro"}`,
     });
     logActivity({
       audience: "agency",

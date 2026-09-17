@@ -1,10 +1,16 @@
 import { generateStructured } from "./claude";
 import { isAiMock } from "./ai-mock";
 import { clientContext } from "./prompts";
-import { getSettings } from "./settings";
+import { currentAgencyProfile } from "./agencies";
 import type { Client } from "./types";
 import { describeMonth, type MonthlyReportData } from "./report-aggregate";
 import type { MonthlyReportSummary } from "./reports-db";
+
+// Nome e estilo da casa da agência em nome de quem a IA roda.
+function agencyPromptProfile(): { agencyName: string; houseStyle: string } {
+  const profile = currentAgencyProfile();
+  return { agencyName: profile.name, houseStyle: profile.houseStyle };
+}
 
 const str = { type: "string" } as const;
 const SCHEMA = {
@@ -87,7 +93,7 @@ export async function generateReportSummary(
 ): Promise<MonthlyReportSummary> {
   if (isAiMock({ orNoKey: true })) return mockReportSummary(client, data);
   const language = client.language === "en" ? "English (US)" : "Brazilian Portuguese";
-  const settings = getSettings();
+  const settings = agencyPromptProfile();
   const result = await generateStructured<MonthlyReportSummary>({
     tier: "standard",
     maxTokens: 3000,

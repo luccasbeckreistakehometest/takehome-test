@@ -3,6 +3,7 @@
 import { useState } from "react";
 import { api } from "@/lib/api";
 import { Icon, type IconName } from "./icons";
+import WelcomeLogin from "./WelcomeLogin";
 
 type Mode = { self: boolean; icon: IconName; title: string; body: string; bullets: string[] };
 
@@ -69,10 +70,11 @@ export default function MarcaModeChoice({
           <p className="text-xs font-semibold uppercase tracking-widest text-accent">
             Como você quer trabalhar?
           </p>
-          <button onClick={onClose} className="text-muted transition-colors hover:text-foreground">
+          <button onClick={onClose} aria-label="Fechar" className="text-muted transition-colors hover:text-foreground">
             <Icon name="x" size={18} />
           </button>
         </div>
+        <WelcomeLogin />
         <p className="mb-5 text-sm text-muted">
           Você pode mudar de ideia depois — é só um clique.
         </p>

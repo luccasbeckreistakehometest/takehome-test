@@ -1,7 +1,7 @@
 import { generateStructured } from "./claude";
 import { isAiMock } from "./ai-mock";
 import { clientContext } from "./prompts";
-import { getSettings } from "./settings";
+import { currentAgencyProfile } from "./agencies";
 import type { Client } from "./types";
 import {
   contentHash,
@@ -15,6 +15,12 @@ import {
   type VoiceCheck,
 } from "./brand-voice-rules";
 import { readCache, writeCache } from "./brand-voice-db";
+
+// Nome e estilo da casa da agência em nome de quem a IA roda.
+function agencyPromptProfile(): { agencyName: string; houseStyle: string } {
+  const profile = currentAgencyProfile();
+  return { agencyName: profile.name, houseStyle: profile.houseStyle };
+}
 
 // Guardião da voz da marca: regras determinísticas + nota de tom da IA
 // (modelo barato, saída estruturada), tudo cacheado por hash do conteúdo.
@@ -59,7 +65,7 @@ export async function checkBrandVoice(input: {
   policy: BrandVoicePolicy;
   text: string;
   kind: CheckKind;
-  charge?: () => { ok: boolean; reason?: string };
+  charge?: () => { ok: boolean; reason?: string; status?: number } | Promise<{ ok: boolean; reason?: string; status?: number }>;
 }): Promise<{ result: CheckResult } | { error: string; status: number }> {
   const text = input.text.trim().slice(0, 4000);
   const issues = ruleChecks(text, input.policy, input.kind);
@@ -67,8 +73,8 @@ export async function checkBrandVoice(input: {
   const cached = readCache<{ ai: AiVoiceAssessment; demo: boolean }>(hash);
   if (cached) return { result: mergeCheck(cached.ai, issues, { cached: true, demo: cached.demo }) };
   if (input.charge) {
-    const charge = input.charge();
-    if (!charge.ok) return { error: charge.reason ?? "Sem créditos de IA.", status: 402 };
+    const charge = await input.charge();
+    if (!charge.ok) return { error: charge.reason ?? "Sem créditos de IA.", status: charge.status ?? 402 };
   }
   let ai: AiVoiceAssessment;
   let demo = false;
@@ -76,7 +82,7 @@ export async function checkBrandVoice(input: {
     ai = mockToneAssessment(text, input.policy, input.client.tone, input.client.language);
     demo = true;
   } else {
-    const settings = getSettings();
+    const settings = agencyPromptProfile();
     ai = await generateStructured<AiVoiceAssessment>({
       tier: "standard",
       maxTokens: 1200,
@@ -106,15 +112,15 @@ export async function rewriteInBrandVoice(input: {
   policy: BrandVoicePolicy;
   text: string;
   kind: CheckKind;
-  charge?: () => { ok: boolean; reason?: string };
+  charge?: () => { ok: boolean; reason?: string; status?: number } | Promise<{ ok: boolean; reason?: string; status?: number }>;
 }): Promise<{ text: string; cached: boolean; demo: boolean } | { error: string; status: number }> {
   const text = input.text.trim().slice(0, 4000);
   const hash = contentHash({ op: "rewrite", clientId: input.client.id, kind: input.kind, text, policy: input.policy, tone: input.client.tone });
   const cached = readCache<{ text: string; demo: boolean }>(hash);
   if (cached) return { text: cached.text, cached: true, demo: cached.demo };
   if (input.charge) {
-    const charge = input.charge();
-    if (!charge.ok) return { error: charge.reason ?? "Sem créditos de IA.", status: 402 };
+    const charge = await input.charge();
+    if (!charge.ok) return { error: charge.reason ?? "Sem créditos de IA.", status: charge.status ?? 402 };
   }
   let out: string;
   let demo = false;
@@ -122,7 +128,7 @@ export async function rewriteInBrandVoice(input: {
     out = mockRewrite(text, input.policy, input.kind, input.client.language);
     demo = true;
   } else {
-    const settings = getSettings();
+    const settings = agencyPromptProfile();
     const result = await generateStructured<{ text: string }>({
       tier: "standard",
       maxTokens: 2000,

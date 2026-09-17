@@ -153,7 +153,7 @@ export default function ProjectsTab({
         <p className="text-sm text-muted">
           Demandas conectam esta conta a fotógrafos e designers da plataforma:
           brief → match por IA → produção → revisão com anotações e nota de
-          qualidade → aprovação → pagamento garantido.
+          qualidade → aprovação → pagamento (combinado e feito por vocês; a plataforma só registra o status).
         </p>
         {!creating ? (
           <div className="space-y-3">
@@ -479,7 +479,7 @@ function ProjectDetail({ projectId, onBack }: { projectId: string; onBack: () =>
   } else {
     if (project.status === "matched" && project.escrow === "none") {
       nextActions.push({
-        label: "Reservar pagamento (escrow) e iniciar produção",
+        label: "Confirmar pagamento combinado e iniciar produção",
         icon: "money",
         body: { escrow: "held", status: "in_progress" },
       });
@@ -495,7 +495,7 @@ function ProjectDetail({ projectId, onBack }: { projectId: string; onBack: () =>
     }
     if (project.status === "approved" && project.escrow === "held") {
       nextActions.push({
-        label: "Liberar pagamento ao profissional",
+        label: "Marcar pagamento feito ao profissional",
         icon: "money",
         body: { escrow: "released", status: "paid" },
       });
@@ -615,7 +615,7 @@ function ProjectDetail({ projectId, onBack }: { projectId: string; onBack: () =>
           <SectionTitle>Execução interna</SectionTitle>
           <p className="text-sm text-muted">
             Demanda gerenciada pelo time interno da agência — sem match de freelas
-            nem escrow. Use o sketch, as referências, o chat e as entregas com
+            nem pagamento externo. Use o sketch, as referências, o chat e as entregas com
             revisão normalmente.
           </p>
         </Card>

@@ -1,5 +1,6 @@
 import { randomUUID } from "crypto";
-import { addColumnIfMissing, db } from "./db";
+import { addColumnIfMissing, db, tenantColumn } from "./db";
+import { scopeWhere, type TenantScope } from "./tenancy-rules";
 
 // Integrações & vendas — propositalmente GENÉRICO para qualquer indústria:
 // e-commerce de produto, serviço, SaaS, agência, imobiliária... Nada de tipo
@@ -111,6 +112,7 @@ db.exec(`
 for (const col of ["refreshToken", "oauthClientId", "oauthClientSecret"]) {
   addColumnIfMissing("client_connections", col, "TEXT NOT NULL DEFAULT ''");
 }
+for (const table of ["client_connections", "metric_snapshots", "sales_entries"]) tenantColumn(table);
 
 const now = () => new Date().toISOString();
 
@@ -177,8 +179,8 @@ export function upsertConnection(input: {
     createdAt: now(),
   };
   db.prepare(
-    `INSERT INTO client_connections (id, clientId, platform, accountId, accessToken, refreshToken, oauthClientId, oauthClientSecret, status, lastSyncAt, lastError, createdAt)
-     VALUES (@id, @clientId, @platform, @accountId, @accessToken, @refreshToken, @oauthClientId, @oauthClientSecret, @status, @lastSyncAt, @lastError, @createdAt)`
+    `INSERT INTO client_connections (id, agencyId, clientId, platform, accountId, accessToken, refreshToken, oauthClientId, oauthClientSecret, status, lastSyncAt, lastError, createdAt)
+     VALUES (@id, (SELECT agencyId FROM clients WHERE id = @clientId), @clientId, @platform, @accountId, @accessToken, @refreshToken, @oauthClientId, @oauthClientSecret, @status, @lastSyncAt, @lastError, @createdAt)`
   ).run(conn);
   return conn;
 }
@@ -209,8 +211,8 @@ export function deleteConnection(clientId: string, platform: ConnectorPlatform):
 export function saveSnapshot(input: Omit<MetricSnapshot, "id" | "createdAt">): MetricSnapshot {
   const snap: MetricSnapshot = { ...input, id: randomUUID(), createdAt: now() };
   db.prepare(
-    `INSERT INTO metric_snapshots (id, clientId, platform, periodStart, periodEnd, spend, impressions, clicks, conversions, revenue, createdAt)
-     VALUES (@id, @clientId, @platform, @periodStart, @periodEnd, @spend, @impressions, @clicks, @conversions, @revenue, @createdAt)`
+    `INSERT INTO metric_snapshots (id, agencyId, clientId, platform, periodStart, periodEnd, spend, impressions, clicks, conversions, revenue, createdAt)
+     VALUES (@id, (SELECT agencyId FROM clients WHERE id = @clientId), @clientId, @platform, @periodStart, @periodEnd, @spend, @impressions, @clicks, @conversions, @revenue, @createdAt)`
   ).run(snap);
   return snap;
 }
@@ -235,18 +237,15 @@ export function listSales(clientId: string): SaleEntry[] {
 export function createSale(input: Omit<SaleEntry, "id" | "createdAt">): SaleEntry {
   const sale: SaleEntry = { ...input, id: randomUUID(), createdAt: now() };
   db.prepare(
-    `INSERT INTO sales_entries (id, clientId, source, kind, periodStart, periodEnd, revenue, units, currency, note, createdAt)
-     VALUES (@id, @clientId, @source, @kind, @periodStart, @periodEnd, @revenue, @units, @currency, @note, @createdAt)`
+    `INSERT INTO sales_entries (id, agencyId, clientId, source, kind, periodStart, periodEnd, revenue, units, currency, note, createdAt)
+     VALUES (@id, (SELECT agencyId FROM clients WHERE id = @clientId), @clientId, @source, @kind, @periodStart, @periodEnd, @revenue, @units, @currency, @note, @createdAt)`
   ).run(sale);
   return sale;
 }
 
-export function deleteSale(id: string, clientId?: string): void {
-  if (clientId) {
-    db.prepare("DELETE FROM sales_entries WHERE id = ? AND clientId = ?").run(id, clientId);
-    return;
-  }
-  db.prepare("DELETE FROM sales_entries WHERE id = ?").run(id);
+// Sempre amarrado à marca (a rota já checou a posse dela).
+export function deleteSale(id: string, clientId: string): void {
+  db.prepare("DELETE FROM sales_entries WHERE id = ? AND clientId = ?").run(id, clientId);
 }
 
 export type SalesTotals = {
@@ -275,11 +274,12 @@ export function salesTotals(clientId: string): SalesTotals {
 }
 
 // Total de vendas agregado da carteira inteira — para os Insights da agência.
-export function agencySalesTotal(): { revenue: number; clientsWithSales: number } {
+export function agencySalesTotal(scope: TenantScope): { revenue: number; clientsWithSales: number } {
+  const where = scopeWhere(scope);
   const row = db
     .prepare(
-      "SELECT COALESCE(SUM(revenue),0) as revenue, COUNT(DISTINCT clientId) as clients FROM sales_entries"
+      `SELECT COALESCE(SUM(revenue),0) as revenue, COUNT(DISTINCT clientId) as clients FROM sales_entries WHERE ${where.sql}`
     )
-    .get() as { revenue: number; clients: number };
+    .get(...where.params) as { revenue: number; clients: number };
   return { revenue: row.revenue, clientsWithSales: row.clients };
 }

@@ -1,6 +1,5 @@
-import { getAgencyPage, getPublicDeliverable } from "@/lib/agency-page-db";
-import { isPageLive } from "@/lib/agency-page-rules";
-import { readUpload } from "@/lib/uploads";
+import { findPublishedPage, getPublicDeliverable } from "@/lib/agency-page-db";
+import { FILE_RESPONSE_HEADERS, readUpload, sniffImageMime } from "@/lib/uploads";
 
 type Context = { params: Promise<{ slug: string; id: string }> };
 
@@ -8,12 +7,16 @@ type Context = { params: Promise<{ slug: string; id: string }> };
 // portfólio" saem por aqui — as demais continuam atrás do login.
 export async function GET(_request: Request, { params }: Context) {
   const { slug, id } = await params;
-  if (!isPageLive(getAgencyPage(), slug)) return new Response("Não encontrado", { status: 404 });
-  const deliverable = getPublicDeliverable(id);
+  const page = findPublishedPage(slug);
+  if (!page) return new Response("Não encontrado", { status: 404 });
+  // Só peças da agência dona da página.
+  const deliverable = getPublicDeliverable(page.agencyId, id);
   if (!deliverable) return new Response("Não encontrado", { status: 404 });
   const data = readUpload(deliverable.id, deliverable.mime);
   if (!data) return new Response("Arquivo indisponível", { status: 404 });
+  const mime = sniffImageMime(data);
+  if (!mime) return new Response("Não encontrado", { status: 404 });
   return new Response(new Uint8Array(data), {
-    headers: { "Content-Type": deliverable.mime, "Cache-Control": "public, max-age=3600" },
+    headers: { ...FILE_RESPONSE_HEADERS, "Content-Type": mime, "Cache-Control": "public, max-age=3600" },
   });
 }

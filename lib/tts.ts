@@ -1,6 +1,7 @@
 import { createHash } from "crypto";
 import fs from "fs";
 import path from "path";
+import { aiBudgetExceeded, envUsd, recordExternalSpend } from "./ai-spend";
 
 // A voz que fala com o usuário é de IA, nunca a do navegador. ElevenLabs
 // (multilingual, pt-BR natural) é a preferida; OpenAI TTS é a alternativa.
@@ -26,6 +27,8 @@ export async function synthesise(text: string, lang: "pt" | "en"): Promise<Buffe
   const key = createHash("sha1").update(`${provider}|${lang}|${text}`).digest("hex");
   const file = path.join(CACHE_DIR, `${key}.mp3`);
   if (fs.existsSync(file)) return fs.readFileSync(file);
+  // Disjuntor de gasto: sem voz nova (o texto continua na tela).
+  if (aiBudgetExceeded()) return null;
   const res = provider === "elevenlabs"
     ? await fetch(`https://api.elevenlabs.io/v1/text-to-speech/${process.env.ELEVENLABS_VOICE_ID ?? ELEVEN_DEFAULT_VOICE}?output_format=mp3_44100_128`, {
         method: "POST",
@@ -39,7 +42,30 @@ export async function synthesise(text: string, lang: "pt" | "en"): Promise<Buffe
       });
   if (!res.ok) throw new Error(`TTS ${provider} ${res.status}: ${(await res.text()).slice(0, 200)}`);
   const buf = Buffer.from(await res.arrayBuffer());
+  // Custo estimado por mil caracteres (ElevenLabs ~US$0,20; OpenAI bem menos).
+  const perThousand = envUsd("TTS_USD_PER_1K_CHARS", provider === "elevenlabs" ? 0.2 : 0.015);
+  recordExternalSpend(`tts_${provider}`, text.length, (text.length / 1000) * perThousand);
   fs.mkdirSync(CACHE_DIR, { recursive: true });
   fs.writeFileSync(file, buf);
+  pruneCache();
   return buf;
+}
+
+// Cache limitado: mantém os arquivos mais recentes (TTS_CACHE_MAX_FILES).
+let lastPrune = 0;
+function pruneCache(): void {
+  const now = Date.now();
+  if (now - lastPrune < 60_000) return;
+  lastPrune = now;
+  try {
+    const max = Math.max(50, Number(process.env.TTS_CACHE_MAX_FILES) || 2000);
+    const files = fs.readdirSync(CACHE_DIR).filter((f) => f.endsWith(".mp3"));
+    if (files.length <= max) return;
+    const stats = files
+      .map((f) => ({ f, t: fs.statSync(path.join(CACHE_DIR, f)).mtimeMs }))
+      .sort((a, b) => a.t - b.t);
+    for (const { f } of stats.slice(0, files.length - max)) fs.rmSync(path.join(CACHE_DIR, f), { force: true });
+  } catch (error) {
+    console.error("[tts] limpeza do cache falhou:", error);
+  }
 }
