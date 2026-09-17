@@ -85,8 +85,12 @@ test("a logged-out client approves posts and a delivery from a link", async ({ p
   expect((await page.request.patch(`/api/approval-links/${links.links[0].id}`)).status()).toBe(200);
   const closed = await guest.request.post(`/api/approve/${token}`, { data: { kind: "post", id: posts[1].id, decision: "approved" } });
   expect(closed.status()).toBe(410);
+  // link encerrado não mostra mais o conteúdo
+  const closedView = await (await guest.request.get(`/api/approve/${token}`)).json();
+  expect(closedView).toMatchObject({ state: "closed", items: [] });
   await guestPage.goto(`/aprovar/${token}`);
   await expect(guestPage.getByTestId("approval-expired")).toBeVisible();
+  await expect(guestPage.getByText("Post da torta — venha provar")).toHaveCount(0);
   // token inválido
   expect((await guest.request.get("/aprovar/nao-existe")).status()).toBe(404);
   await guest.close();
@@ -100,4 +104,41 @@ test("a client of another agency cannot list or create links", async ({ page }) 
   expect((await page.request.get(`/api/approval-links?clientId=${client.id}`)).status()).toBe(403);
   const created = await page.request.post("/api/approval-links", { data: { clientId: client.id, items: [{ kind: "post", id: "x" }] } });
   expect(created.status()).toBe(403);
+});
+
+// O agendador interno (tick de 60 s) não publica post que espera o cliente;
+// publica depois da aprovação; e o link recusa decidir post já publicado.
+test("the scheduler holds a post that waits for the client and publishes it once approved", async ({ page, browser }) => {
+  test.setTimeout(240_000);
+  await login(page, "agencia");
+  await skipOnboarding(page);
+  const { client } = await seedClientWithDelivery(page.request, "Agendaco");
+  const yesterday = new Date(Date.now() - 86_400_000).toISOString().slice(0, 10);
+  const make = async (title: string) => {
+    const r = await page.request.post("/api/scheduled-posts", {
+      data: { clientId: client.id, title, channel: "Blog", caption: `${title} legenda`, scheduledFor: `${yesterday}T10:00`, status: "scheduled" },
+    });
+    expect(r.status()).toBe(201);
+    return (await r.json()) as { id: string };
+  };
+  const held = await make("Post que espera o cliente");
+  const free = await make("Post sem link");
+  const created = await page.request.post("/api/approval-links", { data: { clientId: client.id, items: [{ kind: "post", id: held.id }] } });
+  expect(created.status()).toBe(201);
+  const token = String((await created.json()).url).split("/aprovar/")[1];
+  const byId = async () =>
+    new Map(((await (await page.request.get(`/api/scheduled-posts?clientId=${client.id}`)).json()) as { id: string; status: string; clientApproval: string }[]).map((p) => [p.id, p]));
+
+  // o tick publica o post livre e segura o que espera o cliente
+  await expect.poll(async () => (await byId()).get(free.id)?.status, { timeout: 100_000, intervals: [3_000] }).toBe("published");
+  expect((await byId()).get(held.id)).toMatchObject({ status: "scheduled", clientApproval: "pending" });
+
+  // o cliente aprova pelo link → o próximo tick publica
+  const guest = await browser.newContext();
+  const approved = await guest.request.post(`/api/approve/${token}`, { data: { kind: "post", id: held.id, decision: "approved", approver: "Bia" } });
+  expect(approved.status()).toBe(200);
+  await expect.poll(async () => (await byId()).get(held.id)?.status, { timeout: 100_000, intervals: [3_000] }).toBe("published");
+  const late = await guest.request.post(`/api/approve/${token}`, { data: { kind: "post", id: held.id, decision: "changes_requested", note: "trocar a foto" } });
+  expect(late.status()).toBe(409);
+  await guest.close();
 });

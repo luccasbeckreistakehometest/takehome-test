@@ -219,13 +219,15 @@ export function linkPageData(token: string) {
   const client = getClient(link.clientId);
   const agency = getAgency(link.agencyId);
   if (!client || !agency) return null;
+  const state = linkState(link);
   return {
     link,
-    state: linkState(link),
+    state,
     clientName: client.name,
     lang: client.language,
     agency: { name: agency.name, tagline: agency.tagline, accentColor: agency.accentColor, logoUrl: agencyLogoUrl(agency) },
-    items: link.items.map(itemView).filter((v): v is LinkItemView => Boolean(v)),
+    // link encerrado ou vencido não mostra mais o conteúdo (só o aviso)
+    items: state === "open" ? link.items.map(itemView).filter((v): v is LinkItemView => Boolean(v)) : [],
   };
 }
 
@@ -245,7 +247,7 @@ export function linkFile(token: string, fileId: string): { id: string; mime: str
 
 export type LinkDecisionOutcome =
   | { ok: true; item: LinkItemView; alreadyDecided: boolean }
-  | { ok: false; status: 404 | 410; error: string };
+  | { ok: false; status: 404 | 409 | 410; error: string };
 
 export function decideViaLink(
   token: string,
@@ -279,6 +281,14 @@ export function decideViaLink(
   if (!post || post.clientId !== link.clientId) return { ok: false, status: 404, error: "Item não encontrado neste link." };
   if (alreadyDecided(post.clientApproval ?? "", input.decision)) {
     return { ok: true, item: itemView(target)!, alreadyDecided: true };
+  }
+  // já foi ao ar (ou saiu da agenda): decidir agora não muda nada
+  if (post.status === "published" || post.status === "canceled") {
+    return {
+      ok: false,
+      status: 409,
+      error: post.status === "published" ? "Este post já foi publicado. Fale com a agência." : "Este post saiu da agenda. Fale com a agência.",
+    };
   }
   const nextStatus = postStatusAfter(post.status, input.decision);
   const who = input.approver ? `${input.approver} (${client.name})` : client.name;

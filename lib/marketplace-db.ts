@@ -222,6 +222,10 @@ addColumnIfMissing("scheduled_posts", "clientApprovalAt", "TEXT");
 addColumnIfMissing("scheduled_posts", "clientApprovalBy", "TEXT NOT NULL DEFAULT ''");
 // Mídia do post (URLs públicas das imagens; carrossel = várias)
 addColumnIfMissing("scheduled_posts", "mediaJson", "TEXT NOT NULL DEFAULT '[]'");
+// Publicação automática: tentativas que falharam e o último erro (o
+// agendador desiste depois de algumas e mostra o motivo no calendário)
+addColumnIfMissing("scheduled_posts", "publishAttempts", "INTEGER NOT NULL DEFAULT 0");
+addColumnIfMissing("scheduled_posts", "publishError", "TEXT NOT NULL DEFAULT ''");
 addColumnIfMissing("professionals", "availability", "TEXT NOT NULL DEFAULT ''");
 addColumnIfMissing("professionals", "employmentType", "TEXT NOT NULL DEFAULT 'freelancer'");
 addColumnIfMissing("annotations", "author", "TEXT NOT NULL DEFAULT 'agency'");
@@ -1183,6 +1187,9 @@ export type ScheduledPost = {
   clientApprovalBy?: string;
   // URLs públicas das imagens (JSON); carrossel pronto guarda os slides aqui
   mediaJson?: string;
+  // publicação automática que falhou (o agendador para depois de algumas)
+  publishAttempts?: number;
+  publishError?: string;
   createdAt: string;
 };
 
@@ -1270,10 +1277,21 @@ export function updateScheduledPost(
   const merged = { ...existing, ...patch };
   const publishedAt =
     patch.status === "published" ? now() : merged.publishedAt ?? null;
+  // a agência mexeu no post: o agendador tenta publicar de novo do zero
   db.prepare(
-    "UPDATE scheduled_posts SET scheduledFor = ?, status = ?, caption = ?, title = ?, channel = ?, format = ?, hookType = ?, publishedAt = ? WHERE id = ?"
+    "UPDATE scheduled_posts SET scheduledFor = ?, status = ?, caption = ?, title = ?, channel = ?, format = ?, hookType = ?, publishedAt = ?, publishAttempts = 0, publishError = '' WHERE id = ?"
   ).run(merged.scheduledFor, merged.status, merged.caption, merged.title, merged.channel, merged.format ?? "", merged.hookType ?? "", publishedAt, id);
   return true;
+}
+
+// Falha de publicação automática: conta a tentativa e guarda o motivo.
+export function recordPublishFailure(id: string, message: string): void {
+  db.prepare("UPDATE scheduled_posts SET publishAttempts = publishAttempts + 1, publishError = ? WHERE id = ?").run(message.slice(0, 300), id);
+}
+
+// A agência libera o post sem esperar o cliente (a decisão fica com ela).
+export function releasePostApproval(id: string): void {
+  db.prepare("UPDATE scheduled_posts SET clientApproval = '', clientApprovalNote = '', clientApprovalBy = '', clientApprovalAt = NULL WHERE id = ?").run(id);
 }
 
 export function setPostClientApproval(

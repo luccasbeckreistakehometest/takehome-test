@@ -333,6 +333,30 @@ function PostPanel({
             <span className="mt-1 block text-xs text-accent">Peça aprovada pelo cliente ↗</span>
           </a>
         )}
+        {(post.clientApproval === "pending" || post.clientApproval === "changes_requested") && post.status !== "published" && post.status !== "canceled" && (
+          <div className="mt-3 flex flex-wrap items-center justify-between gap-2 rounded-md border border-edge bg-surface-2 px-3 py-2 text-xs" data-testid="post-approval-hold">
+            <span className="min-w-0 flex-1">
+              {post.clientApproval === "pending"
+                ? "Não vai ao ar enquanto o cliente não aprovar pelo link."
+                : "Não vai ao ar até o cliente aprovar a versão nova. Ajuste e mande outro link."}
+            </span>
+            <button
+              type="button"
+              className="rounded-md border border-edge px-2.5 py-1 hover:border-accent"
+              onClick={() => {
+                if (window.confirm("Liberar este post sem a aprovação do cliente? Ele vai ao ar no horário marcado.")) void onPatch({ releaseApproval: true });
+              }}
+              data-testid="post-release-approval"
+            >
+              Liberar sem aprovação
+            </button>
+          </div>
+        )}
+        {post.status === "scheduled" && Number(post.publishAttempts ?? 0) >= 5 && (
+          <p className="mt-3 rounded-md border border-red-500/50 bg-red-500/10 px-3 py-2 text-xs" data-testid="post-publish-error">
+            {`Não conseguimos publicar: ${post.publishError || "erro desconhecido"}. Confira a conexão e agende de novo para tentar outra vez.`}
+          </p>
+        )}
         {post.clientApproval === "changes_requested" && post.clientApprovalNote && (
           <p className="mt-3 rounded-md border border-amber-500/50 bg-amber-500/10 px-3 py-2 text-sm" data-testid="post-client-note">
             <span className="block text-xs font-medium">{post.clientApprovalBy ? `Ajuste pedido por ${post.clientApprovalBy}` : "Ajuste pedido pelo cliente"}</span>

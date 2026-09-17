@@ -95,3 +95,25 @@ test("carousel: generate, render in the brand colour, edit one slide, zip, sched
   expect([403, 404]).toContain((await otherPage.request.get(`/api/carousels/${carousel.id}/zip`)).status());
   await otherCtx.close();
 });
+
+// Logo em WebP (o renderizador só lê PNG/JPEG): o slide sai com a inicial da
+// marca em vez de quebrar, e o ZIP também.
+test("carousel renders when the brand logo is WebP", async ({ page }) => {
+  await login(page, "agencia");
+  await skipOnboarding(page);
+  const client = await (await page.request.post("/api/clients", { data: { name: "Logo Webp", channels: ["Instagram"] } })).json();
+  const webp = Buffer.from("UklGRhoAAABXRUJQVlA4TA0AAAAvAAAAEAcQERGIiP4HAA==", "base64");
+  const upload = await page.request.post(`/api/clients/${client.id}/assets`, {
+    multipart: { kind: "brand", file: { name: "logo.webp", mimeType: "image/webp", buffer: webp } },
+  });
+  expect(upload.status()).toBe(201);
+  expect((await upload.json()).mime).toBe("image/webp");
+  const created = await page.request.post(`/api/clients/${client.id}/carousels`, { data: { mode: "manual", topic: "Logo em webp", count: 3 } });
+  expect(created.status()).toBe(201);
+  const { carousels } = await (await page.request.get(`/api/clients/${client.id}/carousels`)).json();
+  const slide = await page.request.get(`/api/carousels/${carousels[0].id}/slide/0`);
+  expect(slide.status()).toBe(200);
+  expect(readPng(Buffer.from(await slide.body())).width).toBe(1080);
+  const zip = await page.request.get(`/api/carousels/${carousels[0].id}/zip`);
+  expect(zip.status()).toBe(200);
+});

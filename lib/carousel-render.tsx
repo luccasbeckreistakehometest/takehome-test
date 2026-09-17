@@ -25,7 +25,7 @@ function displayFont(): ArrayBuffer | null {
 }
 
 function logoDataUrl(brand: CarouselBrand): string | null {
-  if (!brand.logo) return null;
+  if (!brand.logo || !/^image\/(png|jpeg)$/.test(brand.logo.mime)) return null;
   const data = readGenericUpload(brand.logo.id, brand.logo.ext);
   return data ? `data:${brand.logo.mime};base64,${data.toString("base64")}` : null;
 }
@@ -82,11 +82,24 @@ export async function renderSlide(carousel: Carousel, brand: CarouselBrand, inde
   const file = path.join(cacheDir(), carousel.id, `${index}-${hash}.png`);
   if (fs.existsSync(file)) return { hash, png: fs.readFileSync(file), cached: true };
   const font = displayFont();
-  const response = new ImageResponse(
-    <SlideView template={carousel.template} palette={brand.palette} slide={slide} index={index} total={total} brandName={brand.name} logo={logoDataUrl(brand)} />,
-    { ...SLIDE_SIZE, ...(font ? { fonts: [{ name: "Display", data: font, weight: 700 as const, style: "normal" as const }] } : {}) }
-  );
-  const png = Buffer.from(await response.arrayBuffer());
+  const draw = async (logo: string | null) => {
+    const response = new ImageResponse(
+      <SlideView template={carousel.template} palette={brand.palette} slide={slide} index={index} total={total} brandName={brand.name} logo={logo} />,
+      { ...SLIDE_SIZE, ...(font ? { fonts: [{ name: "Display", data: font, weight: 700 as const, style: "normal" as const }] } : {}) }
+    );
+    return Buffer.from(await response.arrayBuffer());
+  };
+  const logo = logoDataUrl(brand);
+  let png: Buffer;
+  try {
+    png = await draw(logo);
+  } catch (error) {
+    // logo que o renderizador não entende (arquivo corrompido, formato
+    // inesperado): o slide sai com a inicial da marca em vez de quebrar
+    if (!logo) throw error;
+    console.error(`[carousel] logo ignorado no slide ${carousel.id}/${index}:`, error instanceof Error ? error.message : error);
+    png = await draw(null);
+  }
   fs.mkdirSync(path.dirname(file), { recursive: true });
   // versões antigas deste slide saem do disco
   for (const old of fs.readdirSync(path.dirname(file))) {

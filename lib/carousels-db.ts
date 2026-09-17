@@ -135,7 +135,9 @@ export function carouselBrand(clientId: string): CarouselBrand | null {
   }
   const agency = getAgency(client.agencyId);
   const palette = pickPalette({ identityHexes: hexes, brandColors: client.brandColors, fallback: agency?.accentColor ?? "#f76b15" });
-  const images = listClientAssets(clientId).filter((a) => /^image\/(png|jpeg|webp)$/.test(a.mime));
+  // o renderizador (Satori) só lê PNG e JPEG: logo em WebP/SVG fica de fora
+  // e o slide usa a inicial da marca
+  const images = listClientAssets(clientId).filter((a) => /^image\/(png|jpeg)$/.test(a.mime));
   const logo = images.find((a) => /logo|marca/i.test(a.title)) ?? images.find((a) => a.kind === "brand") ?? null;
   return { name: client.name, palette, logo: logo ? { id: logo.id, ext: logo.ext, mime: logo.mime } : null };
 }

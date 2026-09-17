@@ -1,12 +1,10 @@
 import { NextResponse } from "next/server";
 import { z } from "zod";
 import { guardClient, isDenied, notFound } from "@/lib/guard";
-import { carouselBrand, getCarousel, updateCarousel } from "@/lib/carousels-db";
-import { slideHashes } from "@/lib/carousel-render";
+import { getCarousel, updateCarousel } from "@/lib/carousels-db";
+import { carouselMediaUrls } from "@/lib/carousel-media";
 import { captionText, contentProblems } from "@/lib/carousel-rules";
 import { createScheduledPost, getScheduledPost, setPostMedia, updateScheduledPost } from "@/lib/marketplace-db";
-import { signMedia } from "@/lib/media-sign";
-import { appBaseUrl } from "@/lib/legal";
 
 type Context = { params: Promise<{ id: string }> };
 
@@ -29,15 +27,8 @@ export async function POST(request: Request, { params }: Context) {
   if (!parsed.success) return NextResponse.json({ error: "Escolha a data e a hora." }, { status: 400 });
   const problems = contentProblems(carousel.content);
   if (problems.length) return NextResponse.json({ error: problems[0] }, { status: 400 });
-  const brand = carouselBrand(carousel.clientId)!;
-  const hashes = slideHashes(carousel, brand);
-  const base = appBaseUrl();
-  const urls = hashes
-    .map((hash, index) => {
-      const sig = signMedia(carousel.id, index, hash);
-      return sig ? `${base}/api/c/${carousel.id}/${index}-${hash}.png?sig=${sig}` : null;
-    })
-    .filter((u): u is string => Boolean(u));
+  // o agendador regera estes endereços na hora de publicar (lib/carousel-media)
+  const urls = carouselMediaUrls(carousel);
   const caption = captionText(carousel.content);
   const existing = carousel.postId ? getScheduledPost(carousel.postId) : null;
   let postId: string;
