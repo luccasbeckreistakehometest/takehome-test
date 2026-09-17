@@ -20,7 +20,7 @@ test("first login: welcome → anchored tour across pages → saved on the serve
   await expect(page.getByTestId("tour-step")).toHaveAttribute("data-step", "5");
   await expect(page.getByTestId("differentiators")).toBeVisible();
   // um passo por diferencial (5 da rodada 1 + os da rodada 2)
-  for (let i = 0; i < 8; i++) await page.getByTestId("tour-next").click();
+  for (let i = 0; i < 9; i++) await page.getByTestId("tour-next").click();
   await expect(page.getByTestId("tour-step")).toBeHidden();
   const state = await page.evaluate(() => fetch("/api/onboarding").then((r) => r.json()));
   expect(state.tourCompleted).toBe(true);

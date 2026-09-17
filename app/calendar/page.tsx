@@ -17,6 +17,7 @@ import {
 } from "@/lib/calendar-utils";
 import { Button, Card, ErrorBox, Input, Label, Select, Spinner, Tag, Textarea } from "@/components/ui";
 import { Icon } from "@/components/icons";
+import BrandVoiceCheck from "@/components/BrandVoiceCheck";
 
 type Post = ScheduledPostWithClient;
 type View = "month" | "week";
@@ -284,6 +285,7 @@ function PostPanel({
   onDelete: () => void;
 }) {
   const [when, setWhen] = useState(post.scheduledFor.slice(0, 16));
+  const [caption, setCaption] = useState(post.caption);
   return (
     <div className="fixed inset-0 z-[70] flex items-end justify-center bg-black/40 p-4 sm:items-center" onClick={onClose}>
       <div className="w-full max-w-lg animate-pop-in rounded-2xl border border-edge bg-surface p-5 shadow-2xl [transform-origin:center]" onClick={(e) => e.stopPropagation()} data-testid="post-panel">
@@ -307,7 +309,16 @@ function PostPanel({
             <span className="mt-1 block text-xs text-accent">Peça aprovada pelo cliente ↗</span>
           </a>
         )}
-        {post.caption && <p className="mt-3 whitespace-pre-wrap text-sm text-muted">{post.caption}</p>}
+        <div className="mt-3 space-y-2">
+          <Label>Legenda</Label>
+          <Textarea value={caption} onChange={(e) => setCaption(e.target.value)} placeholder="Legenda do post" data-testid="post-caption" />
+          {caption !== post.caption && (
+            <Button variant="ghost" className="!px-2.5 !py-1 text-xs" onClick={() => onPatch({ caption })} data-testid="post-caption-save">
+              Salvar legenda
+            </Button>
+          )}
+          <BrandVoiceCheck clientId={post.clientId} text={caption} kind="post" onRewrite={setCaption} />
+        </div>
         <div className="mt-4 flex flex-wrap items-end gap-2">
           <div>
             <Label>Data e hora</Label>
@@ -434,7 +445,12 @@ function QuickAdd({
           </div>
           <div className="sm:col-span-2">
             <Label>Legenda (opcional)</Label>
-            <Textarea value={form.caption} onChange={(e) => setForm({ ...form, caption: e.target.value })} />
+            <Textarea value={form.caption} onChange={(e) => setForm({ ...form, caption: e.target.value })} data-testid="quick-caption" />
+            {form.clientId && form.caption.trim() && (
+              <div className="mt-2">
+                <BrandVoiceCheck clientId={form.clientId} text={form.caption} kind="post" onRewrite={(text) => setForm((f) => ({ ...f, caption: text }))} compact />
+              </div>
+            )}
           </div>
           <div className="sm:col-span-2">
             <Label>Entrar como</Label>

@@ -34,6 +34,7 @@ import LandingPreview from "./LandingPreview";
 import ProjectsTab from "./ProjectsTab";
 import AttendantTab from "./AttendantTab";
 import TimeTab from "./TimeTab";
+import BrandVoiceCard from "./BrandVoiceCard";
 import {
   CampaignPlanView,
   ClientReportView,
@@ -307,6 +308,7 @@ export default function Workspace({
       {tab === "briefing" && (
         <div className="space-y-6">
           <ClientForm initial={client} onSaved={onClientUpdated} />
+          <BrandVoiceCard clientId={client.id} />
           <BrandAssets clientId={client.id} />
           <Card className="flex items-center justify-between">
             <p className="text-sm text-muted">

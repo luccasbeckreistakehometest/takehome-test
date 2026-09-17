@@ -9,6 +9,7 @@ import type { AttendantReply } from "@/lib/attendant-db";
 import type { InboundMessage } from "@/lib/messaging-db";
 import { Button, Card, ErrorBox, Input, Label, SectionTitle, Spinner, Tag, Textarea } from "./ui";
 import { Icon } from "./icons";
+import BrandVoiceCheck from "./BrandVoiceCheck";
 
 type View = {
   config: AttendantConfig & { hasToken: boolean };
@@ -391,7 +392,8 @@ function ReplyRow({
       )}
       {isDraft ? (
         <div className="mt-2 space-y-2">
-          <Textarea value={text} onChange={(e) => setText(e.target.value)} />
+          <Textarea value={text} onChange={(e) => setText(e.target.value)} data-testid="reply-text" />
+          <BrandVoiceCheck clientId={reply.clientId} text={text} kind="reply" onRewrite={setText} compact />
           <div className="flex gap-2">
             <Button
               className="!px-3 !py-1.5 text-xs"

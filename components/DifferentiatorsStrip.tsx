@@ -70,6 +70,14 @@ const ITEMS: { anchor: string; icon: IconName; title: string; body: string; href
     href: "/finance",
     cta: "Ver margem do mês",
   },
+  {
+    anchor: "diff-brand-voice",
+    icon: "sparkle",
+    title: "Guardião da voz da marca",
+    body: "Antes de agendar um post ou enviar uma resposta, um clique checa tom, termos proibidos, CTA, hashtags e alegações sem fonte — e reescreve no tom.",
+    href: "/calendar",
+    cta: "Checar um post",
+  },
 ];
 
 export default function DifferentiatorsStrip() {
