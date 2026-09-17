@@ -36,6 +36,33 @@ export async function publishInstagramImage(input: {
   return published.id as string;
 }
 
+async function graphPost(url: string, body: Record<string, unknown>): Promise<{ id: string }> {
+  const res = await fetch(url, { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(body) });
+  const data = await res.json();
+  if (!res.ok) throw new Error(data?.error?.message ?? `IG ${res.status}`);
+  return data as { id: string };
+}
+
+// Carrossel: um container por imagem (is_carousel_item), o container
+// CAROUSEL com os filhos e a publicação. O Graph aceita de 2 a 10 itens.
+export async function publishInstagramCarousel(input: { igId: string; token: string; imageUrls: string[]; caption: string }): Promise<string> {
+  const urls = input.imageUrls.slice(0, 10);
+  if (urls.length < 2) throw new Error("Carrossel precisa de pelo menos 2 imagens");
+  const children: string[] = [];
+  for (const imageUrl of urls) {
+    const child = await graphPost(`${GRAPH}/${input.igId}/media`, { image_url: imageUrl, is_carousel_item: true, access_token: input.token });
+    children.push(child.id);
+  }
+  const container = await graphPost(`${GRAPH}/${input.igId}/media`, {
+    media_type: "CAROUSEL",
+    children: children.join(","),
+    caption: input.caption,
+    access_token: input.token,
+  });
+  const published = await graphPost(`${GRAPH}/${input.igId}/media_publish`, { creation_id: container.id, access_token: input.token });
+  return published.id;
+}
+
 // Tenta publicar de verdade um post agendado. Retorna:
 // - "published" quando de fato publicou na rede,
 // - "auto" quando não há caminho real (sem conexão/mídia) e apenas avança a fila.
@@ -44,14 +71,20 @@ export async function tryPublishPost(post: {
   channel: string;
   caption: string;
   mediaUrl?: string | null;
+  mediaUrls?: string[];
 }): Promise<"published" | "auto"> {
   if (post.channel.toLowerCase().includes("instagram")) {
     const conn = getConnection(post.agencyId, "instagram");
-    if (conn?.mode === "api" && conn.apiToken && conn.apiAccountId && post.mediaUrl) {
+    if (conn?.mode === "api" && conn.apiToken && conn.apiAccountId && (post.mediaUrls?.length ?? 0) >= 2) {
+      await publishInstagramCarousel({ igId: conn.apiAccountId, token: conn.apiToken, imageUrls: post.mediaUrls!, caption: post.caption });
+      return "published";
+    }
+    const single = post.mediaUrl ?? (post.mediaUrls?.length === 1 ? post.mediaUrls[0] : null);
+    if (conn?.mode === "api" && conn.apiToken && conn.apiAccountId && single) {
       await publishInstagramImage({
         igId: conn.apiAccountId,
         token: conn.apiToken,
-        imageUrl: post.mediaUrl,
+        imageUrl: post.mediaUrl ?? post.mediaUrls?.[0] ?? "",
         caption: post.caption,
       });
       return "published";

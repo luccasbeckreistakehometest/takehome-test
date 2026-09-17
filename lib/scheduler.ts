@@ -6,7 +6,7 @@
 import { db } from "./db";
 import { processApiOutbox } from "./messaging/send";
 import { tryPublishPost } from "./messaging/publish";
-import { logActivity, updateScheduledPost, type ScheduledPost } from "./marketplace-db";
+import { logActivity, postMedia, updateScheduledPost, type ScheduledPost } from "./marketplace-db";
 import { refreshAllAccounts } from "./billing-db";
 import { purgeAuthEvents } from "./auth";
 import { purgeOldInbox } from "./contact-db";
@@ -31,6 +31,7 @@ async function publishDuePosts(): Promise<number> {
         channel: post.channel,
         caption: post.caption,
         mediaUrl: post.mediaUrl ?? null,
+        mediaUrls: postMedia(post),
       });
       updateScheduledPost(post.id, { status: "published" });
       logActivity({

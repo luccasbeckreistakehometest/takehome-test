@@ -1,6 +1,5 @@
 import { CHEAP_MODEL, generateStructured, recordMockCall } from "./claude";
-import { isAiMock } from "./ai-mock";
-import { getSettings } from "./settings";
+import { aiUsable, isAiMock } from "./ai-mock";
 import { aiHash, readAiCache, writeAiCache } from "./ai-cache";
 import { guessItem, type ClientPackage } from "./scope-rules";
 
@@ -10,8 +9,7 @@ import { guessItem, type ClientPackage } from "./scope-rules";
 export type ScopeGuess = { itemKey: string; qty: number; confidence: number; reasoning: string; source: "ai" | "rules"; cached: boolean };
 
 export function scopeAiAvailable(): boolean {
-  if (isAiMock()) return true;
-  return Boolean(getSettings().anthropicApiKey || process.env.ANTHROPIC_API_KEY);
+  return aiUsable();
 }
 
 export function scopeCacheKey(text: string, pkg: ClientPackage): string {

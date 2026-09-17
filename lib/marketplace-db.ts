@@ -220,6 +220,8 @@ addColumnIfMissing("scheduled_posts", "clientApproval", "TEXT NOT NULL DEFAULT '
 addColumnIfMissing("scheduled_posts", "clientApprovalNote", "TEXT NOT NULL DEFAULT ''");
 addColumnIfMissing("scheduled_posts", "clientApprovalAt", "TEXT");
 addColumnIfMissing("scheduled_posts", "clientApprovalBy", "TEXT NOT NULL DEFAULT ''");
+// Mídia do post (URLs públicas das imagens; carrossel = várias)
+addColumnIfMissing("scheduled_posts", "mediaJson", "TEXT NOT NULL DEFAULT '[]'");
 addColumnIfMissing("professionals", "availability", "TEXT NOT NULL DEFAULT ''");
 addColumnIfMissing("professionals", "employmentType", "TEXT NOT NULL DEFAULT 'freelancer'");
 addColumnIfMissing("annotations", "author", "TEXT NOT NULL DEFAULT 'agency'");
@@ -1179,6 +1181,8 @@ export type ScheduledPost = {
   clientApprovalNote?: string;
   clientApprovalAt?: string | null;
   clientApprovalBy?: string;
+  // URLs públicas das imagens (JSON); carrossel pronto guarda os slides aqui
+  mediaJson?: string;
   createdAt: string;
 };
 
@@ -1279,6 +1283,19 @@ export function setPostClientApproval(
   db.prepare(
     "UPDATE scheduled_posts SET status = ?, clientApproval = ?, clientApprovalNote = ?, clientApprovalBy = ?, clientApprovalAt = ? WHERE id = ?"
   ).run(input.status, input.clientApproval, input.note, input.by, input.clientApproval === "pending" ? null : now(), id);
+}
+
+export function setPostMedia(id: string, urls: string[]): void {
+  db.prepare("UPDATE scheduled_posts SET mediaJson = ? WHERE id = ?").run(JSON.stringify(urls.slice(0, 10)), id);
+}
+
+export function postMedia(post: { mediaJson?: string | null }): string[] {
+  try {
+    const parsed = JSON.parse(post.mediaJson ?? "[]");
+    return Array.isArray(parsed) ? parsed.filter((u): u is string => typeof u === "string") : [];
+  } catch {
+    return [];
+  }
 }
 
 export function deleteScheduledPost(id: string): boolean {

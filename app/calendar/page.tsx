@@ -388,6 +388,15 @@ function PostPanel({
               Reativar
             </Button>
           )}
+          {post.status !== "published" && post.format !== "Carrossel" && (
+            <a
+              href={`/clients/${post.clientId}?tab=carousels&topic=${encodeURIComponent(post.title)}&post=${post.id}`}
+              className="inline-flex items-center gap-1.5 rounded-md border border-edge px-3.5 py-2 text-sm hover:border-accent"
+              data-testid="post-to-carousel"
+            >
+              <Icon name="layers" size={14} /> Transformar em carrossel
+            </a>
+          )}
           <Button variant="danger" className="ml-auto" onClick={onDelete}>
             Excluir
           </Button>
