@@ -67,9 +67,9 @@ export const PROJECT_STATUS_LABELS: Record<ProjectStatus, string> = {
 export type EscrowStatus = "none" | "held" | "released";
 
 export const ESCROW_LABELS: Record<EscrowStatus, string> = {
-  none: "Pagamento não reservado",
-  held: "Pagamento reservado (garantido)",
-  released: "Pagamento liberado ao profissional",
+  none: "Pagamento a combinar",
+  held: "Pagamento combinado (marcado pela agência)",
+  released: "Pagamento feito ao profissional",
 };
 
 export type Project = {

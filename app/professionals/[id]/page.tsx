@@ -160,7 +160,7 @@ export default function ProfessionalPage({
             <SectionTitle>Meus ganhos</SectionTitle>
             <div className="grid gap-3 sm:grid-cols-2">
               <div className="rounded-lg border border-edge bg-surface-2 p-3 text-sm">
-                <p className="text-xs uppercase tracking-wide text-muted">A receber (escrow reservado)</p>
+                <p className="text-xs uppercase tracking-wide text-muted">A receber (pagamento combinado)</p>
                 {profile.projects.filter((p) => p.escrow === "held").length === 0 ? (
                   <p className="mt-1 text-muted">Nada reservado no momento.</p>
                 ) : (

@@ -32,7 +32,7 @@ const INTEGRATIONS: {
   { name: "Instagram Publishing", area: "Publicação social", status: "beta", where: "posts agendados na Agenda" },
   { name: "Google Calendar / Meet", area: "Reuniões", status: "beta", where: "links de calendário na Agenda" },
   { name: "Canva / Figma", area: "Design", status: "soon" },
-  { name: "Stripe / Mercado Pago", area: "Pagamentos & escrow", status: "soon" },
+  { name: "Stripe / Mercado Pago", area: "Pagamentos entre agência e profissional", status: "soon" },
   { name: "RD Station / HubSpot", area: "CRM & leads", status: "soon" },
 ];
 

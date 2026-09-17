@@ -9,10 +9,6 @@ import { useEffect, useState } from "react";
 
 export type UiLang = "pt" | "en";
 
-// Câmbio BRL→USD usado quando a interface está em inglês. Os preços do produto
-// são definidos em BRL (lib/plans.ts); em inglês mostramos o equivalente em
-// dólar. Configurável por env para acompanhar o câmbio sem novo build.
-export const USD_PER_BRL = Number(process.env.NEXT_PUBLIC_USD_PER_BRL) || 0.18;
 
 // Leitura direta (fora de render). No servidor sempre "pt" (sem localStorage).
 export function readUiLang(): UiLang {
@@ -34,14 +30,12 @@ export function useUiLang(): UiLang {
 
 const locale = (lang: UiLang) => (lang === "en" ? "en-US" : "pt-BR");
 
-// Dinheiro: valor SEMPRE em BRL na entrada. Em inglês converte para USD.
+// Dinheiro: valores do produto são em reais e são cobrados em reais (Mercado
+// Pago). Em inglês mostramos R$ com agrupamento em inglês — nunca um
+// equivalente em dólar, que não seria o valor cobrado.
 export function fmtMoney(brl: number, lang: UiLang = readUiLang()): string {
   if (lang === "en") {
-    return (brl * USD_PER_BRL).toLocaleString("en-US", {
-      style: "currency",
-      currency: "USD",
-      maximumFractionDigits: 0,
-    });
+    return `R$${brl.toLocaleString("en-US", { maximumFractionDigits: 0 })}`;
   }
   return brl.toLocaleString("pt-BR", {
     style: "currency",

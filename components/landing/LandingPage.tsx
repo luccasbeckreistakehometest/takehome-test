@@ -394,6 +394,10 @@ export default function LandingPage({ config }: { config: LandingConfig }) {
             <Link href="/para-marcas" className="hover:text-foreground">{lang === "pt" ? "Marcas" : "Brands"}</Link>
             <Link href="/para-profissionais" className="hover:text-foreground">{lang === "pt" ? "Profissionais" : "Professionals"}</Link>
             <Link href="/login" className="hover:text-foreground">{lang === "pt" ? "Entrar" : "Sign in"}</Link>
+            <Link href={lang === "pt" ? "/termos" : "/terms"} className="hover:text-foreground">{lang === "pt" ? "Termos" : "Terms"}</Link>
+            <Link href={lang === "pt" ? "/privacidade" : "/privacy"} className="hover:text-foreground">{lang === "pt" ? "Privacidade" : "Privacy"}</Link>
+            <Link href={lang === "pt" ? "/reembolso" : "/refunds"} className="hover:text-foreground">{lang === "pt" ? "Reembolso" : "Refunds"}</Link>
+            <Link href={lang === "pt" ? "/contato" : "/contact"} className="hover:text-foreground">{lang === "pt" ? "Contato" : "Contact"}</Link>
           </div>
         </div>
       </section>
