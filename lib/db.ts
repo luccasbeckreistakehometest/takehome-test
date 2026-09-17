@@ -3,7 +3,7 @@ import fs from "fs";
 import path from "path";
 import { randomUUID } from "crypto";
 import type { Client, ClientInput, Generation, GenerationType } from "./types";
-import { addColumn, createIndex } from "./sqlite-migrate";
+import { addColumn, createIndex, enableWal } from "./sqlite-migrate";
 import { migrateTenancy } from "./tenancy-migration";
 import { scopeWhere, type TenantScope } from "./tenancy-rules";
 
@@ -14,7 +14,7 @@ function createDb() {
   fs.mkdirSync(dataDir, { recursive: true });
   // timeout: workers paralelos do build esperam o lock da migração.
   const db = new Database(path.join(dataDir, "agencyhub.db"), { timeout: 15_000 });
-  db.pragma("journal_mode = WAL");
+  enableWal(db);
   db.exec(`
     CREATE TABLE IF NOT EXISTS clients (
       id TEXT PRIMARY KEY,

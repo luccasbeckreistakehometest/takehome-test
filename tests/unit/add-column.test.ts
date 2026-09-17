@@ -46,3 +46,34 @@ describe("addColumn (migration race)", () => {
     expect(() => addColumn(database, "clients", "monthlyFee", "REAL")).toThrow(/locked/);
   });
 });
+
+describe("enableWal", () => {
+  it("retries while another worker holds the lock, then switches once", async () => {
+    const { enableWal } = await import("../../lib/sqlite-migrate");
+    let mode = "delete";
+    let busyLeft = 2;
+    const calls: string[] = [];
+    const fake = {
+      pragma: (source: string) => {
+        calls.push(source);
+        if (source === "journal_mode") return mode;
+        if (busyLeft > 0) {
+          busyLeft -= 1;
+          throw Object.assign(new Error("database is locked"), { code: "SQLITE_BUSY" });
+        }
+        mode = "wal";
+        return "wal";
+      },
+    };
+    enableWal(fake as never, 2_000);
+    expect(mode).toBe("wal");
+    expect(calls.filter((c) => c === "journal_mode = WAL")).toHaveLength(3);
+    // já em WAL: não tenta trocar de novo
+    calls.length = 0;
+    enableWal(fake as never);
+    expect(calls).toEqual(["journal_mode"]);
+    // outro erro sobe na hora
+    const broken = { pragma: () => { throw Object.assign(new Error("disk I/O error"), { code: "SQLITE_IOERR" }); } };
+    expect(() => enableWal(broken as never)).toThrow("disk I/O error");
+  });
+});

@@ -21,6 +21,26 @@ export function addColumn(
   }
 }
 
+// Liga o WAL de forma segura entre processos. Trocar o journal_mode pede lock
+// exclusivo e o SQLite pode devolver SQLITE_BUSY na hora (sem esperar o
+// busy_timeout) quando outro worker do build está migrando o mesmo arquivo:
+// se o banco já está em WAL não mexe; senão tenta de novo por até `waitMs`.
+export function enableWal(database: Pick<Database.Database, "pragma">, waitMs = 15_000): void {
+  const deadline = Date.now() + waitMs;
+  const pause = new Int32Array(new SharedArrayBuffer(4));
+  for (;;) {
+    try {
+      if (String(database.pragma("journal_mode", { simple: true })).toLowerCase() === "wal") return;
+      database.pragma("journal_mode = WAL");
+      return;
+    } catch (error) {
+      const busy = (error as { code?: string } | null)?.code?.startsWith("SQLITE_BUSY") ?? false;
+      if (!busy || Date.now() > deadline) throw error;
+      Atomics.wait(pause, 0, 0, 50);
+    }
+  }
+}
+
 // CREATE INDEX IF NOT EXISTS ainda pode perder a corrida para outro worker.
 export function createIndex(database: Pick<Database.Database, "exec">, sql: string): void {
   try {
