@@ -1,9 +1,13 @@
 import { randomUUID } from "crypto";
-import { db, getClient, tenantColumn } from "./db";
+import { addColumnIfMissing, db, getClient, tenantColumn } from "./db";
+import { cachedScopeGuess } from "./scope-ai";
 import { createProject, listClientProjects, listClientScheduledPosts, listClientMeetings, logActivity } from "./marketplace-db";
 import { notifyAgency } from "./notify";
 import {
+  classificationOf,
   consumption,
+  DONE_PROJECT_STATUSES,
+  guessItem,
   packageUsage,
   previousMonth,
   quotaCheck,
@@ -32,6 +36,10 @@ export type ScopeRequest = {
   status: ScopeRequestStatus;
   classifiedBy: "ai" | "manual" | "rules";
   aiReasoning: string;
+  // item que o sistema sugeriu; o cliente escolheu outro com sugestão
+  // confiável → a agência confere (pode cobrar como extra)
+  suggestedKey: string;
+  needsReview: boolean;
   projectId: string | null;
   invoiceId: string | null;
   createdAt: string;
@@ -66,6 +74,8 @@ db.exec(`
 `);
 tenantColumn("client_packages");
 tenantColumn("scope_requests");
+addColumnIfMissing("scope_requests", "suggestedKey", "TEXT NOT NULL DEFAULT ''");
+addColumnIfMissing("scope_requests", "needsReview", "INTEGER NOT NULL DEFAULT 0");
 
 const nowIso = () => new Date().toISOString();
 export const currentMonth = (now: Date = new Date()) => now.toISOString().slice(0, 7);
@@ -113,7 +123,23 @@ function monthConsumption(clientId: string, month: string, pkg: ClientPackage): 
       .filter((r) => unitOf.has(r.itemKey) && unitOf.get(r.itemKey) !== "demanda")
       .map((r) => r.projectId)
   );
+  // pedido dentro do pacote reserva a cota enquanto a demanda está aberta
+  // (a peça pronta passa a contar pelo calendário/reuniões/relatórios);
+  // "demanda" já conta pelo próprio projeto
+  const reserved = (
+    db
+      .prepare(
+        `SELECT sr.itemKey, sr.qty, sr.createdAt FROM scope_requests sr
+         LEFT JOIN projects p ON p.id = sr.projectId
+         WHERE sr.clientId = ? AND sr.status = 'converted' AND sr.inPackage = 1
+           AND p.id IS NOT NULL AND p.status NOT IN (${[...DONE_PROJECT_STATUSES].map(() => "?").join(",")})`
+      )
+      .all(clientId, ...DONE_PROJECT_STATUSES) as { itemKey: string; qty: number; createdAt: string }[]
+  )
+    .filter((r) => unitOf.has(r.itemKey) && unitOf.get(r.itemKey) !== "demanda")
+    .map((r) => ({ unit: unitOf.get(r.itemKey)!, qty: r.qty, createdAt: r.createdAt }));
   return consumption(month, {
+    reserved,
     posts: listClientScheduledPosts(clientId).map((p) => ({ format: p.format, scheduledFor: p.scheduledFor, status: p.status })),
     projects: listClientProjects(clientId)
       .filter((p) => !notDemand.has(p.id))
@@ -130,8 +156,14 @@ export function clientPackageUsage(clientId: string, month = currentMonth()): { 
   return { month, package: pkg, usage: packageUsage(pkg, monthConsumption(clientId, month, pkg), previous) };
 }
 
-type Row = Omit<ScopeRequest, "inPackage" | "agencyId"> & { inPackage: number; agencyId: string | null };
-const toRequest = (row: Row): ScopeRequest => ({ ...row, agencyId: row.agencyId ?? "", inPackage: row.inPackage === 1 });
+type Row = Omit<ScopeRequest, "inPackage" | "agencyId" | "needsReview"> & { inPackage: number; agencyId: string | null; needsReview: number };
+const toRequest = (row: Row): ScopeRequest => ({
+  ...row,
+  agencyId: row.agencyId ?? "",
+  inPackage: row.inPackage === 1,
+  suggestedKey: row.suggestedKey ?? "",
+  needsReview: row.needsReview === 1,
+});
 
 export function getScopeRequest(id: string): ScopeRequest | null {
   const row = db.prepare("SELECT * FROM scope_requests WHERE id = ?").get(id) as Row | undefined;
@@ -160,14 +192,14 @@ function demandFor(request: Pick<ScopeRequest, "clientId" | "text" | "itemLabel"
 export type ScopeCreateResult = { request: ScopeRequest; needsApproval: boolean };
 
 // Registra o pedido. Sem pacote, ou dentro do que sobrou: vira demanda na
-// hora. Passou do pacote: fica esperando o cliente aprovar o valor.
+// hora (e reserva a cota). Passou do pacote: fica esperando o cliente
+// aprovar o valor. A classificação guardada é a do servidor (IA em cache ou
+// palavras-chave), nunca a que o navegador diz.
 export function createScopeRequest(input: {
   clientId: string;
   text: string;
   itemKey: string;
   qty: number;
-  classifiedBy: ScopeRequest["classifiedBy"];
-  aiReasoning?: string;
 }): ScopeCreateResult | { error: string } {
   const client = getClient(input.clientId);
   if (!client) return { error: "Cliente não encontrado" };
@@ -176,6 +208,10 @@ export function createScopeRequest(input: {
   if (pkg && pkg.items.length > 0 && !row) return { error: "Escolha um item do pacote." };
   const qty = Math.max(1, Math.min(50, Math.floor(input.qty || 1)));
   const verdict = row ? quotaCheck(row, qty) : { inPackage: true, extraQty: 0, extraTotal: 0 };
+  const classification =
+    pkg && row
+      ? classificationOf({ chosenKey: row.key, ai: cachedScopeGuess(input.text, pkg), rules: guessItem(input.text, pkg) })
+      : { classifiedBy: "manual" as const, aiReasoning: "", suggestedKey: "", needsReview: false };
   const request: ScopeRequest = {
     id: randomUUID(),
     agencyId: client.agencyId,
@@ -187,8 +223,11 @@ export function createScopeRequest(input: {
     inPackage: verdict.inPackage,
     extraPrice: verdict.extraTotal,
     status: verdict.inPackage ? "converted" : "pending_client",
-    classifiedBy: input.classifiedBy,
-    aiReasoning: (input.aiReasoning ?? "").slice(0, 500),
+    classifiedBy: classification.classifiedBy,
+    aiReasoning: classification.aiReasoning,
+    suggestedKey: classification.suggestedKey,
+    // só pedido que já virou demanda dentro do pacote precisa de conferência
+    needsReview: classification.needsReview && verdict.inPackage,
     projectId: null,
     invoiceId: null,
     createdAt: nowIso(),
@@ -200,16 +239,16 @@ export function createScopeRequest(input: {
       request.decidedAt = request.createdAt;
     }
     db.prepare(
-      `INSERT INTO scope_requests (id, agencyId, clientId, text, itemKey, itemLabel, qty, inPackage, extraPrice, status, classifiedBy, aiReasoning, projectId, invoiceId, createdAt, decidedAt)
-       VALUES (@id, @agencyId, @clientId, @text, @itemKey, @itemLabel, @qty, @inPackage, @extraPrice, @status, @classifiedBy, @aiReasoning, @projectId, @invoiceId, @createdAt, @decidedAt)`
-    ).run({ ...request, inPackage: request.inPackage ? 1 : 0 });
+      `INSERT INTO scope_requests (id, agencyId, clientId, text, itemKey, itemLabel, qty, inPackage, extraPrice, status, classifiedBy, aiReasoning, suggestedKey, needsReview, projectId, invoiceId, createdAt, decidedAt)
+       VALUES (@id, @agencyId, @clientId, @text, @itemKey, @itemLabel, @qty, @inPackage, @extraPrice, @status, @classifiedBy, @aiReasoning, @suggestedKey, @needsReview, @projectId, @invoiceId, @createdAt, @decidedAt)`
+    ).run({ ...request, inPackage: request.inPackage ? 1 : 0, needsReview: request.needsReview ? 1 : 0 });
   }).immediate();
   notifyAgency({
     agencyId: client.agencyId,
     clientId: client.id,
     href: `/clients/${client.id}?tab=package`,
     text: request.inPackage
-      ? `📋 ${client.name} pediu: ${request.text.slice(0, 100)} (dentro do pacote)`
+      ? `📋 ${client.name} pediu: ${request.text.slice(0, 100)} (dentro do pacote${request.needsReview ? " — o cliente escolheu outro item do que o sugerido, confira" : ""})`
       : `💰 ${client.name} pediu algo fora do pacote (+R$ ${request.extraPrice.toFixed(2)}): ${request.text.slice(0, 80)} — aguardando o cliente aprovar o valor`,
   });
   return { request: getScopeRequest(request.id)!, needsApproval: !request.inPackage };
@@ -217,6 +256,30 @@ export function createScopeRequest(input: {
 
 // O cliente decide o extra (aprovar → vira demanda e entra na fatura do mês).
 // A agência pode dispensar a cobrança (vira demanda sem valor) ou cancelar.
+// Reclassificar (agência): pedido que entrou "dentro do pacote" mas não é
+// do pacote vira extra com o valor que a agência definir e espera o cliente.
+// A demanda já criada continua (a agência segura a produção se quiser).
+export function chargeAsExtra(id: string, price: number): ScopeRequest | { error: string; status: number } {
+  const request = getScopeRequest(id);
+  if (!request) return { error: "Pedido não encontrado", status: 404 };
+  if (request.status !== "converted" || !request.inPackage) return { error: "Só pedidos dentro do pacote podem virar extra.", status: 409 };
+  const value = Math.round(Math.max(0, Math.min(100_000, Number(price) || 0)) * 100) / 100;
+  if (value <= 0) return { error: "Informe o valor do extra.", status: 400 };
+  const client = getClient(request.clientId);
+  if (!client) return { error: "Pedido não encontrado", status: 404 };
+  const changed = db
+    .prepare("UPDATE scope_requests SET status = 'pending_client', inPackage = 0, extraPrice = ?, needsReview = 0, decidedAt = NULL WHERE id = ? AND status = 'converted'")
+    .run(value, id).changes;
+  if (changed === 0) return { error: "Este pedido já foi decidido.", status: 409 };
+  logActivity({
+    audience: "client",
+    clientId: client.id,
+    text: `A agência avisou que "${request.text.slice(0, 60)}" fica fora do pacote: extra de R$ ${value.toFixed(2)} para você aprovar`,
+    href: `/portal/client/${client.id}`,
+  });
+  return getScopeRequest(id)!;
+}
+
 export function decideScopeRequest(
   id: string,
   decision: "approved" | "declined" | "waived",
@@ -237,7 +300,8 @@ export function decideScopeRequest(
     if (claimed === 0) return;
     if (decision === "declined") return;
     const waived = decision === "waived";
-    const projectId = demandFor({ ...request, inPackage: waived, extraPrice: waived ? 0 : request.extraPrice });
+    // reclassificado pela agência: a demanda já existe
+    const projectId = request.projectId ?? demandFor({ ...request, inPackage: waived, extraPrice: waived ? 0 : request.extraPrice });
     db.prepare("UPDATE scope_requests SET projectId = ?, extraPrice = ? WHERE id = ?").run(projectId, waived ? 0 : request.extraPrice, id);
   }).immediate();
   const updated = getScopeRequest(id)!;
@@ -250,7 +314,14 @@ export function decideScopeRequest(
       whatsappBody: `${client.name} aprovou um extra de R$ ${updated.extraPrice.toFixed(2)}: ${updated.text.slice(0, 200)}`,
     });
   } else if (decision === "declined" && actor === "client") {
-    notifyAgency({ agencyId: client.agencyId, clientId: client.id, href: `/clients/${client.id}?tab=package`, text: `${client.name} desistiu do extra: ${updated.text.slice(0, 80)}` });
+    notifyAgency({
+      agencyId: client.agencyId,
+      clientId: client.id,
+      href: `/clients/${client.id}?tab=package`,
+      text: request.projectId
+        ? `${client.name} não aprovou o extra de "${updated.text.slice(0, 60)}". A demanda aberta continua no painel: cancele se não for fazer.`
+        : `${client.name} desistiu do extra: ${updated.text.slice(0, 80)}`,
+    });
   } else {
     logActivity({
       audience: "client",

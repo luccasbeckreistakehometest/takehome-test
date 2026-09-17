@@ -101,6 +101,9 @@ export type ConsumptionInput = {
   projects: { createdAt: string }[];
   meetings: { scheduledAt: string }[];
   reports: { month: string }[];
+  // pedidos do portal dentro do pacote ainda em produção: reservam a cota
+  // até a peça entrar no calendário (ou a demanda ser concluída)
+  reserved?: { unit: ScopeUnit; qty: number; createdAt: string }[];
 };
 export type Consumption = Record<ScopeUnit, number>;
 
@@ -122,7 +125,35 @@ export function consumption(month: string, input: ConsumptionInput): Consumption
   out.demanda += input.projects.filter((p) => monthOf(p.createdAt) === month).length;
   out["reunião"] += input.meetings.filter((m) => monthOf(m.scheduledAt) === month).length;
   out["relatório"] += input.reports.filter((r) => r.month === month).length;
+  for (const r of input.reserved ?? []) {
+    if (monthOf(r.createdAt) !== month || !SCOPE_UNITS.includes(r.unit)) continue;
+    out[r.unit] += Math.max(1, Math.floor(r.qty || 1));
+  }
   return out;
+}
+
+// Demanda concluída: a peça já foi entregue (e, se for post, está na agenda),
+// então a reserva do pedido deixa de contar.
+export const DONE_PROJECT_STATUSES = new Set(["approved", "paid"]);
+
+// A sugestão do sistema (IA em cache ou palavras-chave) e o que o cliente
+// escolheu: quem classificou de verdade, e se a agência deve conferir.
+export function classificationOf(input: {
+  chosenKey: string;
+  ai: { itemKey: string; confidence: number; reasoning: string } | null;
+  rules: { itemKey: string; confidence: number };
+}): { classifiedBy: "ai" | "rules" | "manual"; aiReasoning: string; suggestedKey: string; needsReview: boolean } {
+  if (input.ai && input.ai.itemKey === input.chosenKey) {
+    return { classifiedBy: "ai", aiReasoning: input.ai.reasoning.slice(0, 500), suggestedKey: input.ai.itemKey, needsReview: false };
+  }
+  const suggestion = input.ai ?? input.rules;
+  if (!input.ai && input.rules.itemKey === input.chosenKey) {
+    return { classifiedBy: "rules", aiReasoning: "", suggestedKey: input.rules.itemKey, needsReview: false };
+  }
+  // o cliente escolheu outro item: vale a escolha, mas a agência confere
+  // quando a sugestão era confiável
+  const confident = input.ai ? input.ai.confidence >= 0.6 : input.rules.confidence >= 0.7;
+  return { classifiedBy: "manual", aiReasoning: "", suggestedKey: suggestion.itemKey, needsReview: confident && Boolean(suggestion.itemKey) };
 }
 
 export type UsageRow = PackageItem & { used: number; allowance: number; remaining: number };

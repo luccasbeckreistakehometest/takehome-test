@@ -52,13 +52,15 @@ const STATUS: Record<ScopeRequest["status"], string> = {
   waived: "Incluído sem custo",
 };
 
+export type RequestDecision = "approved" | "declined" | "waived" | "charge_extra";
+
 export function RequestList({
   requests,
   onDecide,
   actor,
 }: {
   requests: ScopeRequest[];
-  onDecide?: (id: string, decision: "approved" | "declined" | "waived") => void;
+  onDecide?: (id: string, decision: RequestDecision, price?: number) => void;
   actor: "agency" | "client";
 }) {
   const lang = useUiLang();
@@ -75,6 +77,25 @@ export function RequestList({
             {`${r.qty}× ${r.itemLabel || "item"}`}
             {r.extraPrice > 0 ? ` · +${fmtMoney(r.extraPrice, lang)}` : ""}
           </p>
+          {actor === "agency" && r.needsReview && (
+            <p className="mt-0.5 text-xs text-amber-600 dark:text-amber-300" data-testid="scope-review">
+              O cliente escolheu este item; confira se o pedido é mesmo do pacote.
+            </p>
+          )}
+          {actor === "agency" && r.status === "converted" && r.inPackage && onDecide && (
+            <button
+              type="button"
+              onClick={() => {
+                const answer = window.prompt("Cobrar este pedido como extra. Valor em R$:", "0");
+                const price = Number((answer ?? "").replace(",", "."));
+                if (Number.isFinite(price) && price > 0) onDecide(r.id, "charge_extra", price);
+              }}
+              className="mt-2 rounded-md border border-edge px-3 py-1.5 text-xs hover:border-accent"
+              data-testid="scope-charge-extra"
+            >
+              Cobrar como extra
+            </button>
+          )}
           {r.status === "pending_client" && onDecide && (
             <div className="mt-2 flex flex-wrap gap-2">
               {actor === "client" ? (

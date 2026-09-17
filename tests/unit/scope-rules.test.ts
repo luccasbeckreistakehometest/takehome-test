@@ -1,6 +1,7 @@
 import { describe, expect, it } from "vitest";
 import {
   PACKAGE_PRESETS,
+  classificationOf,
   consumption,
   formatUnit,
   guessItem,
@@ -81,5 +82,41 @@ describe("scope rules", () => {
     expect(guessItem("preciso de 2 reels do evento", pkg)).toMatchObject({ itemKey: "reel", qty: 2 });
     expect(guessItem("uma reunião de alinhamento", pkg).itemKey).toBe("reuniao");
     expect(guessItem("fotos novas do cardápio", pkg)).toMatchObject({ itemKey: "demanda", confidence: 0.3 });
+  });
+});
+
+describe("scope guard: reservations and who classified", () => {
+  it("counts in-package requests still in production against the quota", () => {
+    const counts = consumption("2026-09", {
+      posts: [post("2026-09-01T10:00")],
+      projects: [],
+      meetings: [],
+      reports: [],
+      reserved: [
+        { unit: "post", qty: 12, createdAt: "2026-09-02T10:00:00.000Z" },
+        { unit: "post", qty: 1, createdAt: "2026-08-30T10:00:00.000Z" },
+        { unit: "story", qty: 2, createdAt: "2026-09-03T10:00:00.000Z" },
+      ],
+    });
+    expect(counts).toMatchObject({ post: 13, story: 2 });
+    const rows = packageUsage(pkg, counts);
+    expect(rows.find((r) => r.key === "post")).toMatchObject({ used: 13, remaining: 0 });
+    expect(quotaCheck(rows.find((r) => r.key === "post")!, 12)).toMatchObject({ inPackage: false, extraQty: 12 });
+  });
+
+  it("only trusts the AI label when the cached guess matches what was sent", () => {
+    const ai = { itemKey: "post", confidence: 0.9, reasoning: "pedido de post" };
+    expect(classificationOf({ chosenKey: "post", ai, rules: { itemKey: "post", confidence: 0.7 } })).toMatchObject({ classifiedBy: "ai", needsReview: false, aiReasoning: "pedido de post" });
+    // o cliente arquivou em outro item: a escolha vale, mas a agência confere
+    expect(classificationOf({ chosenKey: "relatorio", ai, rules: { itemKey: "post", confidence: 0.7 } })).toMatchObject({
+      classifiedBy: "manual",
+      aiReasoning: "",
+      suggestedKey: "post",
+      needsReview: true,
+    });
+    // sem IA: as palavras-chave classificam quando batem
+    expect(classificationOf({ chosenKey: "post", ai: null, rules: { itemKey: "post", confidence: 0.7 } })).toMatchObject({ classifiedBy: "rules", needsReview: false });
+    // palpite fraco das regras não vira pedido de conferência
+    expect(classificationOf({ chosenKey: "relatorio", ai: null, rules: { itemKey: "demanda", confidence: 0.3 } })).toMatchObject({ classifiedBy: "manual", needsReview: false });
   });
 });

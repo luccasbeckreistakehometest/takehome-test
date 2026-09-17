@@ -5,7 +5,7 @@ import { api } from "@/lib/api";
 import { useUiLang } from "@/lib/i18n";
 import { SCOPE_UNITS, UNIT_LABEL, type PackageItem, type ScopeUnit } from "@/lib/scope-rules";
 import { Button, Card, ErrorBox, Input, SectionTitle, Select, Spinner } from "./ui";
-import { monthLabel, RequestList, UsageBars, type PackagePayload } from "./PackageUsage";
+import { monthLabel, RequestList, UsageBars, type PackagePayload, type RequestDecision } from "./PackageUsage";
 
 type Draft = Omit<PackageItem, "qty" | "extraPrice"> & { qty: string; extraPrice: string };
 
@@ -72,9 +72,9 @@ export default function PackageTab({ clientId }: { clientId: string }) {
     }
   }
 
-  async function decide(id: string, decision: "approved" | "declined" | "waived") {
+  async function decide(id: string, decision: RequestDecision, price?: number) {
     try {
-      await api(`/api/scope-requests/${id}`, { method: "PATCH", body: JSON.stringify({ decision }) });
+      await api(`/api/scope-requests/${id}`, { method: "PATCH", body: JSON.stringify({ decision, price }) });
       await load(false);
     } catch (e) {
       setError(e instanceof Error ? e.message : "Erro");

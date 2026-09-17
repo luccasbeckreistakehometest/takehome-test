@@ -5,7 +5,7 @@ import { api } from "@/lib/api";
 import { fmtMoney, useUiLang } from "@/lib/i18n";
 import { quotaCheck } from "@/lib/scope-rules";
 import { Button, Card, ErrorBox, Input, SectionTitle, Select, Textarea } from "./ui";
-import { monthLabel, RequestList, UsageBars, type PackagePayload } from "./PackageUsage";
+import { monthLabel, RequestList, UsageBars, type PackagePayload, type RequestDecision } from "./PackageUsage";
 
 type Guess = { itemKey: string; qty: number; confidence: number; reasoning: string; source: "ai" | "rules" | "manual"; noPackage?: boolean };
 
@@ -53,13 +53,7 @@ export default function ScopeRequestCard({ clientId }: { clientId: string }) {
     try {
       const result = await api<{ needsApproval: boolean }>(`/api/clients/${clientId}/scope-requests`, {
         method: "POST",
-        body: JSON.stringify({
-          text,
-          itemKey,
-          qty: Number(qty) || 1,
-          classifiedBy: guess?.source === "ai" && guess.itemKey === itemKey ? "ai" : "manual",
-          aiReasoning: guess?.reasoning,
-        }),
+        body: JSON.stringify({ text, itemKey, qty: Number(qty) || 1 }),
       });
       setSent(result.needsApproval ? "extra" : "in");
       setText("");
@@ -72,7 +66,7 @@ export default function ScopeRequestCard({ clientId }: { clientId: string }) {
     }
   }
 
-  async function decide(id: string, decision: "approved" | "declined" | "waived") {
+  async function decide(id: string, decision: RequestDecision) {
     try {
       await api(`/api/scope-requests/${id}`, { method: "PATCH", body: JSON.stringify({ decision }) });
       await load();
