@@ -5,6 +5,7 @@ import {
   type MessageChannel,
   type OutboxMessage,
 } from "../messaging-db";
+import { getAttendant } from "../attendant-db";
 
 // Envio por API OFICIAL das plataformas (o caminho suportado e estável):
 // - WhatsApp Cloud API (graph.facebook.com/{phoneNumberId}/messages)
@@ -66,6 +67,15 @@ async function sendInstagramApi(
 }
 
 async function sendApi(msg: OutboxMessage): Promise<void> {
+  // Atendente por cliente com número próprio: sai pelas credenciais dele
+  // (WhatsApp Cloud), não pelo canal da agência.
+  if (msg.channel === "whatsapp" && msg.clientId) {
+    const attendant = getAttendant(msg.clientId);
+    if (attendant?.phoneNumberId && attendant.apiToken) {
+      await sendWhatsAppApi(msg.toAddress, msg.body, attendant.apiToken, attendant.phoneNumberId);
+      return;
+    }
+  }
   const conn = getConnection(msg.channel);
   if (!conn || !conn.apiToken || !conn.apiAccountId) {
     throw new Error(

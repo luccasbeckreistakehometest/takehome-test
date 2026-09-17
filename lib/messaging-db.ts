@@ -34,6 +34,9 @@ export type OutboxMessage = {
   mode: SendMode;
   contactId: string | null;
   listId: string | null;
+  // conta do cliente em nome de quem a mensagem sai (atendente por cliente):
+  // com número próprio configurado, o envio usa as credenciais dele
+  clientId: string | null;
   toAddress: string; // telefone ou handle resolvido no momento do enfileiramento
   body: string;
   status: OutboxStatus;
@@ -107,6 +110,20 @@ db.exec(`
   );
   CREATE INDEX IF NOT EXISTS idx_inbound_received ON inbound_messages(receivedAt DESC);
 `);
+
+// Migração leve: atendente por cliente — mensagens recebidas e enviadas
+// sabem a qual conta pertencem (roteadas pelo phone_number_id do WhatsApp).
+{
+  const inboundCols = (db.prepare("PRAGMA table_info(inbound_messages)").all() as { name: string }[]).map((c) => c.name);
+  if (!inboundCols.includes("clientId")) {
+    db.exec("ALTER TABLE inbound_messages ADD COLUMN clientId TEXT");
+    db.exec("ALTER TABLE inbound_messages ADD COLUMN phoneNumberId TEXT NOT NULL DEFAULT ''");
+  }
+  const outboxCols = (db.prepare("PRAGMA table_info(message_outbox)").all() as { name: string }[]).map((c) => c.name);
+  if (!outboxCols.includes("clientId")) {
+    db.exec("ALTER TABLE message_outbox ADD COLUMN clientId TEXT");
+  }
+}
 
 const now = () => new Date().toISOString();
 
@@ -185,19 +202,20 @@ export function listOutbox(limit = 100): OutboxMessage[] {
 }
 
 function insertOutbox(
-  msg: Omit<OutboxMessage, "id" | "createdAt" | "sentAt" | "error"> &
-    Partial<Pick<OutboxMessage, "sentAt" | "error">>
+  msg: Omit<OutboxMessage, "id" | "createdAt" | "sentAt" | "error" | "clientId"> &
+    Partial<Pick<OutboxMessage, "sentAt" | "error" | "clientId">>
 ): OutboxMessage {
   const full: OutboxMessage = {
     ...msg,
+    clientId: msg.clientId ?? null,
     id: randomUUID(),
     sentAt: msg.sentAt ?? null,
     error: msg.error ?? "",
     createdAt: now(),
   };
   db.prepare(
-    `INSERT INTO message_outbox (id, channel, mode, contactId, listId, toAddress, body, status, scheduledFor, sentAt, error, createdAt)
-     VALUES (@id, @channel, @mode, @contactId, @listId, @toAddress, @body, @status, @scheduledFor, @sentAt, @error, @createdAt)`
+    `INSERT INTO message_outbox (id, channel, mode, contactId, listId, clientId, toAddress, body, status, scheduledFor, sentAt, error, createdAt)
+     VALUES (@id, @channel, @mode, @contactId, @listId, @clientId, @toAddress, @body, @status, @scheduledFor, @sentAt, @error, @createdAt)`
   ).run(full);
   return full;
 }
@@ -244,12 +262,14 @@ export function enqueueDirect(input: {
   mode: SendMode;
   toAddress: string;
   body: string;
+  clientId?: string | null;
 }): OutboxMessage {
   return insertOutbox({
     channel: input.channel,
     mode: input.mode,
     contactId: null,
     listId: null,
+    clientId: input.clientId ?? null,
     toAddress: input.toAddress,
     body: input.body,
     status: "queued",
@@ -306,6 +326,10 @@ export type InboundMessage = {
   fromAddress: string;
   fromName: string;
   body: string;
+  // conta do cliente dona do número que recebeu (atendente por cliente);
+  // null = número da agência
+  clientId: string | null;
+  phoneNumberId: string;
   receivedAt: string;
   readAt: string | null;
 };
@@ -315,6 +339,8 @@ export function saveInbound(input: {
   fromAddress: string;
   fromName?: string;
   body: string;
+  clientId?: string | null;
+  phoneNumberId?: string;
 }): InboundMessage {
   const msg: InboundMessage = {
     id: randomUUID(),
@@ -322,20 +348,42 @@ export function saveInbound(input: {
     fromAddress: input.fromAddress,
     fromName: input.fromName ?? "",
     body: input.body,
+    clientId: input.clientId ?? null,
+    phoneNumberId: input.phoneNumberId ?? "",
     receivedAt: now(),
     readAt: null,
   };
   db.prepare(
-    `INSERT INTO inbound_messages (id, channel, fromAddress, fromName, body, receivedAt, readAt)
-     VALUES (@id, @channel, @fromAddress, @fromName, @body, @receivedAt, @readAt)`
+    `INSERT INTO inbound_messages (id, channel, fromAddress, fromName, body, clientId, phoneNumberId, receivedAt, readAt)
+     VALUES (@id, @channel, @fromAddress, @fromName, @body, @clientId, @phoneNumberId, @receivedAt, @readAt)`
   ).run(msg);
   return msg;
 }
 
-export function listInbound(limit = 100): InboundMessage[] {
+export function getInbound(id: string): InboundMessage | undefined {
+  return db.prepare("SELECT * FROM inbound_messages WHERE id = ?").get(id) as InboundMessage | undefined;
+}
+
+export type InboundWithClient = InboundMessage & { clientName: string | null };
+
+export function listInbound(limit = 100, clientId?: string): InboundWithClient[] {
+  const where = clientId ? "WHERE m.clientId = ?" : "";
   return db
-    .prepare("SELECT * FROM inbound_messages ORDER BY receivedAt DESC LIMIT ?")
-    .all(limit) as InboundMessage[];
+    .prepare(
+      `SELECT m.*, c.name AS clientName FROM inbound_messages m
+       LEFT JOIN clients c ON c.id = m.clientId ${where}
+       ORDER BY m.receivedAt DESC LIMIT ?`
+    )
+    .all(...(clientId ? [clientId, limit] : [limit])) as InboundWithClient[];
+}
+
+// Histórico curto da conversa com um contato (para a IA responder no contexto).
+export function listInboundFrom(clientId: string, fromAddress: string, limit = 6): InboundMessage[] {
+  return db
+    .prepare(
+      "SELECT * FROM inbound_messages WHERE clientId = ? AND fromAddress = ? ORDER BY receivedAt DESC LIMIT ?"
+    )
+    .all(clientId, fromAddress, limit) as InboundMessage[];
 }
 
 export function markInboundRead(): void {

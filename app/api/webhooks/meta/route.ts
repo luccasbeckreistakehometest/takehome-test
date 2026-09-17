@@ -1,5 +1,7 @@
 import { NextResponse } from "next/server";
 import { saveInbound } from "@/lib/messaging-db";
+import { findClientByPhoneNumberId } from "@/lib/attendant-db";
+import { handleInbound } from "@/lib/attendant";
 
 // Webhook da Meta (WhatsApp Cloud / Instagram / Messenger). Recebe mensagens
 // que os contatos ENVIAM de volta e as guarda na plataforma (inbox).
@@ -29,13 +31,20 @@ export async function POST(request: Request) {
       for (const change of entry.changes ?? []) {
         const value = change.value ?? {};
         const contacts = value.contacts ?? [];
+        // Número que recebeu: se for o número próprio de um cliente (atendente
+        // por cliente), a mensagem entra na conta dele e o atendente responde.
+        const phoneNumberId = String(value.metadata?.phone_number_id ?? "");
+        const clientId = findClientByPhoneNumberId(phoneNumberId);
         for (const m of value.messages ?? []) {
-          saveInbound({
+          const inbound = saveInbound({
             channel: "whatsapp",
             fromAddress: m.from ?? "",
             fromName: contacts[0]?.profile?.name ?? "",
             body: m.text?.body ?? m.button?.text ?? "[mídia]",
+            clientId,
+            phoneNumberId,
           });
+          if (clientId) await handleInbound(inbound).catch(() => null);
         }
       }
       // Instagram / Messenger: entry.messaging[]

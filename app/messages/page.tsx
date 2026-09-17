@@ -136,6 +136,8 @@ type InboundMessage = {
   body: string;
   receivedAt: string;
   readAt: string | null;
+  clientId?: string | null;
+  clientName?: string | null;
 };
 
 // Caixa de entrada: mensagens que os contatos ENVIAM de volta, capturadas pelo
@@ -170,6 +172,11 @@ function Inbox() {
                 <span className="flex items-center gap-1.5 font-medium">
                   <Icon name={m.channel === "whatsapp" ? "whatsapp" : "instagram"} size={14} />
                   {m.fromName || m.fromAddress}
+                  {m.clientName && (
+                    <a href={`/clients/${m.clientId}?tab=attendant`} className="rounded-full border border-edge px-2 py-0.5 text-[10px] font-normal text-muted hover:border-accent hover:text-accent">
+                      {m.clientName}
+                    </a>
+                  )}
                 </span>
                 <span className="text-xs text-muted">
                   {new Date(m.receivedAt).toLocaleString("pt-BR")}
