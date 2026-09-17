@@ -46,12 +46,12 @@ test("AI radar: suggest questions, run once a week, ledger and report block", as
   expect(report.data.aiRadar.shareOfVoice).toBe(15.8);
   expect(report.data.aiRadar.disclaimer).toContain("podem responder diferente");
 
-  // ledger: 8 perguntas com 3 buscas cada
+  // ledger: 8 perguntas com 2 buscas cada
   await login(page, "admin");
   const overview = await (await page.request.get("/api/admin/overview")).json();
   const radar = overview.ai.byActionModel.find((r: { action: string }) => r.action === "ai_radar");
   expect(radar.calls).toBe(8);
-  expect(radar.webSearches).toBe(24);
+  expect(radar.webSearches).toBe(16);
 
   // outra marca não abre o radar deste cliente
   const other = await browser.newContext();

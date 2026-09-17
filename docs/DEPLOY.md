@@ -90,6 +90,7 @@ Gere segredos **no servidor** (`openssl rand -hex 32`), nunca no repositório.
 | `PUBLIC_DECISION_RATE_LIMIT_PER_10MIN` | `30` | decisões no link de aprovação (`/api/approve/<token>`) e "já paguei" da fatura, por IP. |
 | `PUBLIC_READ_RATE_LIMIT_PER_10MIN` | `300` | leituras públicas (`/aprovar`, `/fatura`, `/b/<slug>`, imagens assinadas do carrossel), por IP. |
 | `ANALYTICS_RATE_LIMIT_PER_MIN` | `120` | beacon de analytics sem cookie (`/api/t`), por IP. |
+| `LINKS_RATE_LIMIT_PER_HOUR` | `60` | links curtos criados por conta (o endereço é público e a plataforma responde por ele). |
 | `USD_BRL_RATE` | `5.5` | câmbio do admin (**Custos de IA**) para comparar gasto em US$ com receita em R$. |
 
 ### Cadastro, identidade legal e suporte

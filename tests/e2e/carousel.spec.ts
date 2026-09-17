@@ -108,7 +108,7 @@ test("carousel renders when the brand logo is WebP", async ({ page }) => {
   });
   expect(upload.status()).toBe(201);
   expect((await upload.json()).mime).toBe("image/webp");
-  const created = await page.request.post(`/api/clients/${client.id}/carousels`, { data: { mode: "manual", topic: "Logo em webp", count: 3 } });
+  const created = await page.request.post(`/api/clients/${client.id}/carousels`, { data: { mode: "manual", topic: "Logo em webp", count: 5 } });
   expect(created.status()).toBe(201);
   const { carousels } = await (await page.request.get(`/api/clients/${client.id}/carousels`)).json();
   const slide = await page.request.get(`/api/carousels/${carousels[0].id}/slide/0`);

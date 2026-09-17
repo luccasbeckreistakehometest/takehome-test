@@ -86,6 +86,11 @@ export async function suggestQuestions(client: Client): Promise<string[]> {
   return clean;
 }
 
+// Buscas por pergunta: com 10 perguntas o teto de busca de uma rodada fica em
+// US$ 0,20 — dentro dos 12 coins cobrados. Só sobe se o custo real no ledger
+// mostrar que cabe.
+export const WEB_SEARCHES_PER_QUESTION = 2;
+
 async function askOne(client: Client, question: string): Promise<QuestionResult> {
   const lang = client.language === "en" ? "English" : "Brazilian Portuguese";
   const country = countryCode(client.country);
@@ -93,7 +98,7 @@ async function askOne(client: Client, question: string): Promise<QuestionResult>
     model: STANDARD_MODEL,
     maxTokens: 1500,
     useWebSearch: true,
-    webSearchMaxUses: 3,
+    webSearchMaxUses: WEB_SEARCHES_PER_QUESTION,
     webSearchUserLocation: country ? { country } : undefined,
     system: `Answer the consumer's question the way an AI assistant would, using web search. Then report, in ${lang}: answerSummary (2 sentences), brandsMentioned (every business you recommended or named, in order, position starting at 1, with sentiment), citedSources (the pages you relied on, each typed as one of: ${SOURCE_TYPES.join(", ")}). Be neutral: do not favour any brand you were not asked about.`,
     prompt: question,
@@ -115,7 +120,7 @@ async function askOne(client: Client, question: string): Promise<QuestionResult>
 export async function runRadar(client: Client, questions: string[]): Promise<{ results: QuestionResult[]; demo: boolean }> {
   const competitors = latestCompetitors(client);
   if (isAiMock()) {
-    for (let i = 0; i < questions.length; i++) recordMockCall({ model: STANDARD_MODEL, webSearches: 3 });
+    for (let i = 0; i < questions.length; i++) recordMockCall({ model: STANDARD_MODEL, webSearches: WEB_SEARCHES_PER_QUESTION });
     return { results: mockResults(questions, client.name, competitors), demo: true };
   }
   const results: QuestionResult[] = new Array(questions.length);
