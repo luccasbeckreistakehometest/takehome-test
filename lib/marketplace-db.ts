@@ -130,6 +130,14 @@ if (deliverableColumns.length > 0 && !deliverableColumns.includes("kind")) {
 if (projectColumns.length > 0 && !projectColumns.includes("mode")) {
   db.exec("ALTER TABLE projects ADD COLUMN mode TEXT NOT NULL DEFAULT 'marketplace'");
 }
+// Migração: aprovação por entrega (o que dispara as automações do portal)
+if (deliverableColumns.length > 0 && !deliverableColumns.includes("approvalStatus")) {
+  db.exec(`
+    ALTER TABLE deliverables ADD COLUMN approvalStatus TEXT NOT NULL DEFAULT 'pending';
+    ALTER TABLE deliverables ADD COLUMN approvedAt TEXT;
+    ALTER TABLE deliverables ADD COLUMN approvalNote TEXT NOT NULL DEFAULT '';
+  `);
+}
 db.exec(`
   CREATE TABLE IF NOT EXISTS applications (
     id TEXT PRIMARY KEY,
@@ -211,6 +219,13 @@ db.exec(`
     createdAt TEXT NOT NULL
   );
 `);
+// Migração: post agendado pode nascer de uma entrega aprovada (rascunho)
+const scheduledPostColumns = (
+  db.prepare("PRAGMA table_info(scheduled_posts)").all() as { name: string }[]
+).map((column) => column.name);
+if (scheduledPostColumns.length > 0 && !scheduledPostColumns.includes("deliverableId")) {
+  db.exec("ALTER TABLE scheduled_posts ADD COLUMN deliverableId TEXT");
+}
 const professionalColumns = (
   db.prepare("PRAGMA table_info(professionals)").all() as { name: string }[]
 ).map((column) => column.name);
@@ -530,13 +545,27 @@ export function createDeliverable(input: {
     ...input,
     kind: input.kind ?? "delivery",
     meaning: input.meaning ?? "",
+    approvalStatus: "pending",
+    approvedAt: null,
+    approvalNote: "",
     id: randomUUID(),
     createdAt: now(),
   };
   db.prepare(
-    "INSERT INTO deliverables (id, projectId, title, mime, kind, meaning, createdAt) VALUES (@id, @projectId, @title, @mime, @kind, @meaning, @createdAt)"
+    "INSERT INTO deliverables (id, projectId, title, mime, kind, meaning, approvalStatus, approvedAt, approvalNote, createdAt) VALUES (@id, @projectId, @title, @mime, @kind, @meaning, @approvalStatus, @approvedAt, @approvalNote, @createdAt)"
   ).run(deliverable);
   return deliverable;
+}
+
+export function setDeliverableApproval(
+  id: string,
+  patch: { approvalStatus: Deliverable["approvalStatus"]; approvedAt: string | null; approvalNote: string }
+): boolean {
+  return (
+    db
+      .prepare("UPDATE deliverables SET approvalStatus = ?, approvedAt = ?, approvalNote = ? WHERE id = ?")
+      .run(patch.approvalStatus, patch.approvedAt, patch.approvalNote, id).changes > 0
+  );
 }
 
 export function deleteDeliverable(id: string): boolean {
@@ -1022,10 +1051,13 @@ export type ScheduledPost = {
   caption: string;
   hashtags: string[];
   scheduledFor: string;
+  // draft = rascunho (nasceu de uma aprovação, ainda sem data confirmada);
   // scheduled = na fila; published = publicado (auto via integração ou
   // confirmação manual); canceled = cancelado
-  status: "scheduled" | "published" | "canceled";
+  status: "draft" | "scheduled" | "published" | "canceled";
   publishedAt: string | null;
+  // entrega aprovada que originou o post (arquivo em /api/files/{id})
+  deliverableId: string | null;
   createdAt: string;
 };
 
@@ -1052,24 +1084,39 @@ export function createScheduledPost(input: {
   caption: string;
   hashtags: string[];
   scheduledFor: string;
+  status?: "draft" | "scheduled";
+  deliverableId?: string | null;
 }): ScheduledPost {
   const post: ScheduledPost = {
-    ...input,
+    clientId: input.clientId,
+    title: input.title,
+    channel: input.channel,
+    caption: input.caption,
+    hashtags: input.hashtags,
+    scheduledFor: input.scheduledFor,
     id: randomUUID(),
-    status: "scheduled",
+    status: input.status ?? "scheduled",
     publishedAt: null,
+    deliverableId: input.deliverableId ?? null,
     createdAt: now(),
   };
   db.prepare(
-    `INSERT INTO scheduled_posts (id, clientId, title, channel, caption, hashtags, scheduledFor, status, publishedAt, createdAt)
-     VALUES (@id, @clientId, @title, @channel, @caption, @hashtags, @scheduledFor, @status, @publishedAt, @createdAt)`
+    `INSERT INTO scheduled_posts (id, clientId, title, channel, caption, hashtags, scheduledFor, status, publishedAt, deliverableId, createdAt)
+     VALUES (@id, @clientId, @title, @channel, @caption, @hashtags, @scheduledFor, @status, @publishedAt, @deliverableId, @createdAt)`
   ).run({ ...post, hashtags: JSON.stringify(post.hashtags) });
   return post;
 }
 
+export function getScheduledPost(id: string): ScheduledPost | null {
+  const row = db.prepare("SELECT * FROM scheduled_posts WHERE id = ?").get(id) as
+    | ScheduledPostRow
+    | undefined;
+  return row ? { ...row, hashtags: JSON.parse(row.hashtags) } : null;
+}
+
 export function updateScheduledPost(
   id: string,
-  patch: Partial<Pick<ScheduledPost, "scheduledFor" | "status" | "caption">>
+  patch: Partial<Pick<ScheduledPost, "scheduledFor" | "status" | "caption" | "title" | "channel">>
 ): boolean {
   const existing = db.prepare("SELECT * FROM scheduled_posts WHERE id = ?").get(id) as
     | ScheduledPostRow
@@ -1079,8 +1126,8 @@ export function updateScheduledPost(
   const publishedAt =
     patch.status === "published" ? now() : merged.publishedAt ?? null;
   db.prepare(
-    "UPDATE scheduled_posts SET scheduledFor = ?, status = ?, caption = ?, publishedAt = ? WHERE id = ?"
-  ).run(merged.scheduledFor, merged.status, merged.caption, publishedAt, id);
+    "UPDATE scheduled_posts SET scheduledFor = ?, status = ?, caption = ?, title = ?, channel = ?, publishedAt = ? WHERE id = ?"
+  ).run(merged.scheduledFor, merged.status, merged.caption, merged.title, merged.channel, publishedAt, id);
   return true;
 }
 

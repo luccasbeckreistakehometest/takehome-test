@@ -12,6 +12,8 @@ import {
   updateProject,
 } from "@/lib/marketplace-db";
 import { projectPatchSchema } from "@/lib/validation";
+import { decideDeliverable, listApprovalEvents } from "@/lib/approvals-db";
+import { getSession } from "@/lib/session";
 
 type Context = { params: Promise<{ id: string }> };
 
@@ -31,6 +33,7 @@ export async function GET(_request: Request, { params }: Context) {
     meetings: listMeetings(id),
     applications: listApplications(id),
     sketches: listSketches(id),
+    approvals: listApprovalEvents({ projectId: id }),
   });
 }
 
@@ -44,6 +47,17 @@ export async function PATCH(request: Request, { params }: Context) {
   const updated = updateProject(id, parsed.data);
   if (!updated || !before) {
     return NextResponse.json({ error: "Demanda não encontrada" }, { status: 404 });
+  }
+  // Aprovar a demanda inteira aprova cada entrega pendente — e cada uma
+  // dispara as automações (rascunho de post, aviso) como no portal.
+  if (parsed.data.status === "approved" && before.status !== "approved") {
+    const session = await getSession();
+    const actor = session?.role === "client" ? "client" : "agency";
+    for (const deliverable of listDeliverables(id)) {
+      if (deliverable.kind !== "reference" && deliverable.approvalStatus !== "approved") {
+        decideDeliverable({ deliverableId: deliverable.id, actor, decision: "approved" });
+      }
+    }
   }
   if (parsed.data.status && parsed.data.status !== before.status) {
     const base = {

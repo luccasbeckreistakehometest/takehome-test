@@ -12,6 +12,7 @@ type SettingsView = AgencySettings & {
 };
 import { Button, Card, CopyButton, ErrorBox, Input, Label, SectionTitle } from "@/components/ui";
 import InviteGenerator from "@/components/InviteGenerator";
+import ApprovalRulesCard from "@/components/ApprovalRulesCard";
 
 type IntegrationStatus = "live" | "beta" | "soon";
 const INTEGRATIONS: {
@@ -357,6 +358,8 @@ export default function SettingsPage() {
           {saved && <span className="text-sm text-accent">Aplicado ✓</span>}
         </div>
       </Card>
+
+      <ApprovalRulesCard />
 
       <InviteGenerator origin={origin} />
 

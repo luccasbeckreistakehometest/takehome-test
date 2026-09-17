@@ -1,30 +1,5 @@
-import { test, expect, type APIRequestContext } from "@playwright/test";
-import { login, skipOnboarding } from "./helpers";
-
-// 1x1 PNG — o upload de entrega exige imagem
-const PNG = Buffer.from(
-  "iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mNkYPhfDwAChwGA60e6kgAAAABJRU5ErkJggg==",
-  "base64"
-);
-
-export async function seedClientWithDelivery(request: APIRequestContext, name: string) {
-  const client = await (
-    await request.post("/api/clients", {
-      data: { name, industry: "cafeteria", description: "Café de bairro", channels: ["Instagram"], country: "Brasil" },
-    })
-  ).json();
-  const project = await (
-    await request.post("/api/projects", {
-      data: { clientId: client.id, title: "Posts do feed", brief: "3 posts para o Instagram", skillsNeeded: ["Social media design"], location: "", budget: "", deadline: "", mode: "internal" },
-    })
-  ).json();
-  const deliverable = await (
-    await request.post(`/api/projects/${project.id}/deliverables`, {
-      multipart: { title: "Post do cappuccino", file: { name: "post.png", mimeType: "image/png", buffer: PNG } },
-    })
-  ).json();
-  return { client, project, deliverable };
-}
+import { test, expect } from "@playwright/test";
+import { login, seedClientWithDelivery, skipOnboarding } from "./helpers";
 
 test("monthly report: numbers, AI summary, print link and the client portal view", async ({ page }) => {
   await login(page, "agencia");

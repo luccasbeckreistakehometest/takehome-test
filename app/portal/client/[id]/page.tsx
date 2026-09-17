@@ -4,12 +4,15 @@ import { use, useEffect, useState } from "react";
 import { api } from "@/lib/api";
 import type { Client, Generation } from "@/lib/types";
 import {
+  APPROVAL_STATUS_LABELS,
   ESCROW_LABELS,
   PROJECT_STATUS_LABELS,
   type Deliverable,
   type Professional,
   type Project,
 } from "@/lib/marketplace-types";
+import type { ApprovalEvent } from "@/lib/approvals-db";
+import ApprovalTimeline from "@/components/ApprovalTimeline";
 import type { ClientReport } from "@/lib/marketplace-schemas";
 import type { TierInfo } from "@/lib/ranking";
 import { ClientReportView } from "@/components/renderers";
@@ -21,6 +24,7 @@ import type { AccountMessage } from "@/lib/marketplace-db";
 type ProjectDetail = Project & {
   professional: Professional | null;
   deliverables: Deliverable[];
+  approvals: ApprovalEvent[];
 };
 
 // Portal do cliente: visão read-only do que a agência está produzindo,
@@ -74,16 +78,41 @@ export default function ClientPortalPage({
     return () => clearInterval(interval);
   }, [id]);
 
-  async function approveProject(projectId: string, approve: boolean) {
-    await api(`/api/projects/${projectId}`, {
-      method: "PATCH",
-      body: JSON.stringify({ status: approve ? "approved" : "in_progress" }),
-    });
+  async function reloadProjects() {
     const list = await api<Project[]>(`/api/projects?clientId=${id}`);
     const detailed = await Promise.all(
       list.map((p) => api<ProjectDetail>(`/api/projects/${p.id}`))
     );
     setProjects(detailed);
+  }
+
+  // Aprovar a demanda inteira = aprovar cada entrega pendente (cada uma
+  // dispara as automações); pedir ajustes devolve a demanda para produção.
+  async function approveProject(projectId: string, approve: boolean) {
+    await api(`/api/projects/${projectId}`, {
+      method: "PATCH",
+      body: JSON.stringify({ status: approve ? "approved" : "in_progress" }),
+    });
+    await reloadProjects();
+  }
+
+  const [busyDeliverable, setBusyDeliverable] = useState<string | null>(null);
+  async function decideDeliverable(deliverableId: string, decision: "approved" | "changes_requested") {
+    let note = "";
+    if (decision === "changes_requested") {
+      note = window.prompt("O que precisa mudar nesta peça?") ?? "";
+      if (!note.trim()) return;
+    }
+    setBusyDeliverable(deliverableId);
+    try {
+      await api(`/api/deliverables/${deliverableId}/approval`, {
+        method: "POST",
+        body: JSON.stringify({ decision, note }),
+      });
+      await reloadProjects();
+    } finally {
+      setBusyDeliverable(null);
+    }
   }
 
   async function sendChat() {
@@ -215,17 +244,59 @@ export default function ClientPortalPage({
                     Profissional: {project.professional.name}
                   </p>
                 )}
-                {project.deliverables.length > 0 && (
-                  <div className="mt-2 flex flex-wrap gap-2">
-                    {project.deliverables.map((deliverable) => (
-                      <a
-                        key={deliverable.id}
-                        href={`/api/files/${deliverable.id}?download=1`}
-                        className="rounded border border-edge bg-background px-2 py-1 text-xs text-muted transition-colors hover:border-accent hover:text-accent"
-                      >
-                        ⬇ {deliverable.title}
-                      </a>
-                    ))}
+                {project.deliverables.filter((d) => d.kind !== "reference").length > 0 && (
+                  <div className="mt-2 space-y-2">
+                    {project.deliverables
+                      .filter((d) => d.kind !== "reference")
+                      .map((deliverable) => {
+                        const canDecide =
+                          project.status === "client_approval" && deliverable.approvalStatus !== "approved";
+                        const events = project.approvals.filter((e) => e.deliverableId === deliverable.id);
+                        return (
+                          <div
+                            key={deliverable.id}
+                            className="rounded-md border border-edge bg-background p-2.5"
+                            data-testid="portal-deliverable"
+                          >
+                            <div className="flex flex-wrap items-center justify-between gap-2">
+                              <a
+                                href={`/api/files/${deliverable.id}?download=1`}
+                                className="text-xs text-muted transition-colors hover:text-accent"
+                              >
+                                ⬇ {deliverable.title}
+                              </a>
+                              <div className="flex flex-wrap items-center gap-1.5">
+                                <Tag>{APPROVAL_STATUS_LABELS[deliverable.approvalStatus]}</Tag>
+                                {canDecide && (
+                                  <>
+                                    <Button
+                                      className="!px-2.5 !py-1 text-xs"
+                                      disabled={busyDeliverable === deliverable.id}
+                                      onClick={() => decideDeliverable(deliverable.id, "approved")}
+                                      data-testid="approve-deliverable"
+                                    >
+                                      ✅ Aprovar
+                                    </Button>
+                                    <Button
+                                      variant="ghost"
+                                      className="!px-2.5 !py-1 text-xs"
+                                      disabled={busyDeliverable === deliverable.id}
+                                      onClick={() => decideDeliverable(deliverable.id, "changes_requested")}
+                                    >
+                                      ↩ Pedir ajustes
+                                    </Button>
+                                  </>
+                                )}
+                              </div>
+                            </div>
+                            {events.length > 0 && (
+                              <div className="mt-2">
+                                <ApprovalTimeline events={events} />
+                              </div>
+                            )}
+                          </div>
+                        );
+                      })}
                   </div>
                 )}
                 {project.status === "client_approval" && (
@@ -233,12 +304,15 @@ export default function ClientPortalPage({
                     <p className="text-sm font-medium">
                       Esta entrega aguarda a SUA aprovação:
                     </p>
+                    <p className="mt-1 text-xs text-muted">
+                      Ao aprovar, a agência é avisada na hora e as peças de redes sociais já entram no calendário como rascunho.
+                    </p>
                     <div className="mt-2 flex gap-2">
                       <Button
                         className="!px-3 !py-1.5 text-xs"
                         onClick={() => approveProject(project.id, true)}
                       >
-                        ✅ Aprovar entrega
+                        ✅ Aprovar tudo
                       </Button>
                       <Button
                         variant="ghost"

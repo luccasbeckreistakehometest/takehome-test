@@ -10,6 +10,7 @@ const scheduleSchema = z.object({
   caption: z.string().trim().default(""),
   hashtags: z.array(z.string()).default([]),
   scheduledFor: z.string().trim().min(1),
+  status: z.enum(["draft", "scheduled"]).default("scheduled"),
 });
 
 export async function GET(request: Request) {

@@ -128,7 +128,19 @@ export type Deliverable = {
   // agência (modelo, produto, equipe...) usada no sketch e no brief
   kind: "delivery" | "reference";
   meaning: string; // significado da referência (ex.: "modelo", "produto")
+  // Aprovação da peça pelo cliente (portal) — o que dispara as automações
+  approvalStatus: ApprovalStatus;
+  approvedAt: string | null;
+  approvalNote: string;
   createdAt: string;
+};
+
+export type ApprovalStatus = "pending" | "approved" | "changes_requested";
+
+export const APPROVAL_STATUS_LABELS: Record<ApprovalStatus, string> = {
+  pending: "Aguardando aprovação",
+  approved: "Aprovada",
+  changes_requested: "Ajustes pedidos",
 };
 
 export const REFERENCE_MEANINGS = [

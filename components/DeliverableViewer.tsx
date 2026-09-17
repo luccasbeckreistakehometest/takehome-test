@@ -10,8 +10,11 @@ import {
   type ReviewRole,
 } from "@/lib/marketplace-types";
 import type { ArtReviewContent } from "@/lib/marketplace-schemas";
-import { Button, Card, ErrorBox, SectionTitle, Spinner, Textarea } from "./ui";
+import { Button, Card, ErrorBox, SectionTitle, Spinner, Tag, Textarea } from "./ui";
 import { Icon } from "./icons";
+import ApprovalTimeline from "./ApprovalTimeline";
+import { APPROVAL_STATUS_LABELS } from "@/lib/marketplace-types";
+import type { ApprovalEvent } from "@/lib/approvals-db";
 
 // Comentários genéricos (thread) — funcionam para qualquer entregável, texto
 // ou imagem. Tipo local para não importar comments-db (server-only) no client.
@@ -52,13 +55,38 @@ export default function DeliverableViewer({ deliverable }: { deliverable: Delive
   const [commentBody, setCommentBody] = useState("");
   const [commentAuthor, setCommentAuthor] = useState<ReviewRole>("agency");
   const [posting, setPosting] = useState(false);
+  const [approval, setApproval] = useState<{
+    approvalStatus: Deliverable["approvalStatus"];
+    events: ApprovalEvent[];
+  } | null>(null);
+  const [deciding, setDeciding] = useState(false);
   const imageRef = useRef<HTMLDivElement>(null);
 
   const load = useCallback(() => {
     api<Annotation[]>(`/api/deliverables/${deliverable.id}/annotations`).then(setAnnotations);
     api<ArtReview[]>(`/api/deliverables/${deliverable.id}/review`).then(setReviews);
     api<DeliverableComment[]>(`/api/deliverables/${deliverable.id}/comments`).then(setComments);
+    api<{ approvalStatus: Deliverable["approvalStatus"]; events: ApprovalEvent[] }>(
+      `/api/deliverables/${deliverable.id}/approval`
+    )
+      .then(setApproval)
+      .catch(() => {});
   }, [deliverable.id]);
+
+  // Aprovação em nome do cliente: mesma regra do portal (rascunho de post
+  // quando é peça social), sem o aviso de WhatsApp — a agência é quem aprovou.
+  async function approveHere() {
+    setDeciding(true);
+    try {
+      await api(`/api/deliverables/${deliverable.id}/approval`, {
+        method: "POST",
+        body: JSON.stringify({ decision: "approved" }),
+      });
+      load();
+    } finally {
+      setDeciding(false);
+    }
+  }
 
   useEffect(load, [load]);
 
@@ -134,6 +162,20 @@ export default function DeliverableViewer({ deliverable }: { deliverable: Delive
       <div className="flex flex-wrap items-center justify-between gap-2">
         <p className="font-semibold">{deliverable.title}</p>
         <div className="flex items-center gap-2">
+          {approval && (
+            <Tag>{APPROVAL_STATUS_LABELS[approval.approvalStatus ?? "pending"]}</Tag>
+          )}
+          {approval && approval.approvalStatus !== "approved" && (
+            <Button
+              variant="ghost"
+              className="!px-2 !py-1 text-xs"
+              disabled={deciding}
+              onClick={approveHere}
+              title="Aprova a peça em nome do cliente e dispara as automações"
+            >
+              ✅ Aprovar peça
+            </Button>
+          )}
           <a
             href={`/api/files/${deliverable.id}?download=1`}
             className="rounded border border-edge bg-surface-2 px-2 py-1 text-xs text-muted transition-colors hover:border-accent hover:text-accent"
@@ -160,6 +202,7 @@ export default function DeliverableViewer({ deliverable }: { deliverable: Delive
         <Spinner label="A IA está avaliando a peça no contexto da campanha (1-2 min)..." />
       )}
       {error && <ErrorBox message={error} />}
+      {approval && approval.events.length > 0 && <ApprovalTimeline events={approval.events} />}
 
       <p className="text-xs text-muted">
         Clique em qualquer ponto da imagem para adicionar um comentário de revisão.

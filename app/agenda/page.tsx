@@ -152,6 +152,9 @@ export default function AgendaPage() {
                         {post.status === "published" && (
                           <span className="ml-2 text-xs text-accent">✓ Publicado</span>
                         )}
+                        {post.status === "draft" && (
+                          <span className="ml-2 text-xs text-amber-400">rascunho — confirme a data no Calendário</span>
+                        )}
                         {due && (
                           <span className="ml-2 text-xs font-semibold text-amber-400">
                             ⏰ Na hora — publicar agora

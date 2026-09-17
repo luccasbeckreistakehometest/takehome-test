@@ -6,8 +6,10 @@ type Context = { params: Promise<{ id: string }> };
 
 const patchSchema = z.object({
   scheduledFor: z.string().trim().min(1).optional(),
-  status: z.enum(["scheduled", "published", "canceled"]).optional(),
+  status: z.enum(["draft", "scheduled", "published", "canceled"]).optional(),
   caption: z.string().trim().optional(),
+  title: z.string().trim().min(1).optional(),
+  channel: z.string().trim().min(1).optional(),
 });
 
 export async function PATCH(request: Request, { params }: Context) {
