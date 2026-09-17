@@ -40,11 +40,14 @@ export default function ClientDashboard({
   landingEnabled,
   onNavigate,
   onRunKit,
+  children,
 }: {
   client: Client;
   landingEnabled: boolean;
   onNavigate: (tab: string) => void;
   onRunKit: () => void;
+  // cards extras (pacote, aprovação por link, cliques...) montados pelo workspace
+  children?: React.ReactNode;
 }) {
   const [data, setData] = useState<DashboardData | null>(null);
 
@@ -131,6 +134,8 @@ export default function ClientDashboard({
           </Link>
         </div>
       </Card>
+
+      {children}
 
       {!client.selfServe && <ClientPulseCard clientId={client.id} />}
 

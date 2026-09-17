@@ -36,6 +36,7 @@ import AttendantTab from "./AttendantTab";
 import TimeTab from "./TimeTab";
 import BrandVoiceCard from "./BrandVoiceCard";
 import CampaignTab from "./CampaignTab";
+import { ApprovalLinkCard } from "./ApprovalLinkPanel";
 import {
   CampaignPlanView,
   ClientReportView,
@@ -337,7 +338,9 @@ export default function Workspace({
           landingEnabled={landingEnabled}
           onNavigate={(next) => setTab(resolveTab(next, viewer).tab)}
           onRunKit={runFullKit}
-        />
+        >
+          {viewerRole !== "client" && <ApprovalLinkCard clientId={client.id} clientName={client.name} />}
+        </ClientDashboard>
       )}
 
       {tab === "briefing" && (

@@ -215,6 +215,11 @@ addColumnIfMissing("scheduled_posts", "campaignId", "TEXT");
 addColumnIfMissing("scheduled_posts", "format", "TEXT NOT NULL DEFAULT ''");
 addColumnIfMissing("scheduled_posts", "hookType", "TEXT NOT NULL DEFAULT ''");
 addColumnIfMissing("scheduled_posts", "imageBrief", "TEXT NOT NULL DEFAULT ''");
+// Aprovação do cliente por link (sem login)
+addColumnIfMissing("scheduled_posts", "clientApproval", "TEXT NOT NULL DEFAULT ''");
+addColumnIfMissing("scheduled_posts", "clientApprovalNote", "TEXT NOT NULL DEFAULT ''");
+addColumnIfMissing("scheduled_posts", "clientApprovalAt", "TEXT");
+addColumnIfMissing("scheduled_posts", "clientApprovalBy", "TEXT NOT NULL DEFAULT ''");
 addColumnIfMissing("professionals", "availability", "TEXT NOT NULL DEFAULT ''");
 addColumnIfMissing("professionals", "employmentType", "TEXT NOT NULL DEFAULT 'freelancer'");
 addColumnIfMissing("annotations", "author", "TEXT NOT NULL DEFAULT 'agency'");
@@ -1169,6 +1174,11 @@ export type ScheduledPost = {
   format: string; // Feed, Reels, Carrossel, Stories, Texto...
   hookType: string; // dor, prova social, bastidores, dado, pergunta, tutorial, oferta
   imageBrief: string; // direção de arte para a peça
+  // aprovação do cliente pelo link (vazio = nunca pedida)
+  clientApproval?: "" | "pending" | "approved" | "changes_requested";
+  clientApprovalNote?: string;
+  clientApprovalAt?: string | null;
+  clientApprovalBy?: string;
   createdAt: string;
 };
 
@@ -1260,6 +1270,15 @@ export function updateScheduledPost(
     "UPDATE scheduled_posts SET scheduledFor = ?, status = ?, caption = ?, title = ?, channel = ?, format = ?, hookType = ?, publishedAt = ? WHERE id = ?"
   ).run(merged.scheduledFor, merged.status, merged.caption, merged.title, merged.channel, merged.format ?? "", merged.hookType ?? "", publishedAt, id);
   return true;
+}
+
+export function setPostClientApproval(
+  id: string,
+  input: { status: string; clientApproval: "" | "pending" | "approved" | "changes_requested"; note: string; by: string }
+): void {
+  db.prepare(
+    "UPDATE scheduled_posts SET status = ?, clientApproval = ?, clientApprovalNote = ?, clientApprovalBy = ?, clientApprovalAt = ? WHERE id = ?"
+  ).run(input.status, input.clientApproval, input.note, input.by, input.clientApproval === "pending" ? null : now(), id);
 }
 
 export function deleteScheduledPost(id: string): boolean {

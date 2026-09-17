@@ -18,6 +18,7 @@ import {
 import { Button, Card, ErrorBox, Input, Label, Select, Spinner, Tag, Textarea } from "@/components/ui";
 import { Icon } from "@/components/icons";
 import BrandVoiceCheck from "@/components/BrandVoiceCheck";
+import { ApprovalLinkDialog } from "@/components/ApprovalLinkPanel";
 
 type Post = ScheduledPostWithClient;
 type View = "month" | "week";
@@ -48,6 +49,7 @@ export default function CalendarPage() {
   const [clientFilter, setClientFilter] = useState("all");
   const [selected, setSelected] = useState<Post | null>(null);
   const [adding, setAdding] = useState<{ date: string } | null>(null);
+  const [sharing, setSharing] = useState(false);
   const [error, setError] = useState("");
 
   const load = useCallback(() => api<Post[]>("/api/scheduled-posts").then(setPosts).catch((e) => setError(e.message)), []);
@@ -131,6 +133,9 @@ export default function CalendarPage() {
               ›
             </button>
           </div>
+          <Button variant="ghost" onClick={() => setSharing(true)} data-testid="calendar-approval-link" disabled={clients.length === 0}>
+            <Icon name="send" size={14} /> Enviar para aprovação
+          </Button>
           <Button onClick={() => setAdding({ date: today })} data-testid="calendar-add">
             <Icon name="plus" size={14} /> Novo post
           </Button>
@@ -229,6 +234,7 @@ export default function CalendarPage() {
                               data-testid="calendar-post"
                               data-status={post.status}
                             >
+                              {post.clientApproval === "approved" ? "✓ " : post.clientApproval === "changes_requested" ? "↩ " : post.clientApproval === "pending" ? "⏳ " : ""}
                               {post.title}
                               {clientFilter === "all" && <span className="text-muted"> · {post.clientName}</span>}
                             </button>
@@ -252,6 +258,17 @@ export default function CalendarPage() {
           onClose={() => setSelected(null)}
           onPatch={(body) => patch(selected, body)}
           onDelete={() => remove(selected)}
+        />
+      )}
+
+      {sharing && (
+        <ApprovalLinkDialog
+          clients={clients}
+          defaultClientId={clientFilter !== "all" ? clientFilter : ""}
+          onClose={() => {
+            setSharing(false);
+            load();
+          }}
         />
       )}
 
@@ -299,6 +316,9 @@ function PostPanel({
               {post.hookType && <Tag>{post.hookType}</Tag>}
               <Tag>{STATUS_LABEL[post.status]}</Tag>
               {post.campaignId && <Tag>campanha de 30 dias</Tag>}
+              {post.clientApproval === "pending" && <Tag>Aguardando o cliente</Tag>}
+              {post.clientApproval === "approved" && <Tag>Aprovado pelo cliente</Tag>}
+              {post.clientApproval === "changes_requested" && <Tag>Cliente pediu ajuste</Tag>}
             </div>
           </div>
           <button onClick={onClose} className="text-muted hover:text-foreground" aria-label="Fechar" data-testid="post-close">
@@ -311,6 +331,12 @@ function PostPanel({
             <img src={`/api/files/${post.deliverableId}`} alt={post.title} className="max-h-48 rounded-md border border-edge object-contain" />
             <span className="mt-1 block text-xs text-accent">Peça aprovada pelo cliente ↗</span>
           </a>
+        )}
+        {post.clientApproval === "changes_requested" && post.clientApprovalNote && (
+          <p className="mt-3 rounded-md border border-amber-500/50 bg-amber-500/10 px-3 py-2 text-sm" data-testid="post-client-note">
+            <span className="block text-xs font-medium">{post.clientApprovalBy ? `Ajuste pedido por ${post.clientApprovalBy}` : "Ajuste pedido pelo cliente"}</span>
+            “{post.clientApprovalNote}”
+          </p>
         )}
         {post.imageBrief && (
           <p className="mt-3 whitespace-pre-wrap rounded-md border border-edge bg-surface-2 p-2 text-xs text-muted" data-testid="post-image-brief">

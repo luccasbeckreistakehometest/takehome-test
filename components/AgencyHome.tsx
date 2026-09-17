@@ -26,6 +26,7 @@ type Overview = {
   meetingsToday: { id: string; title: string; scheduledAt: string; clientName: string | null }[];
   clients: (Client & { tier: TierInfo })[];
   agency: { tier: TierInfo };
+  staleApprovals: { id: string; clientId: string; clientName: string; createdAt: string; pending: number }[];
 };
 
 // Home operacional da agência: o que precisa da sua ação agora
@@ -52,7 +53,8 @@ export default function AgencyHome() {
     data.inReview.length +
     data.awaitingClient.length +
     data.unansweredClientMessages.length +
-    data.duePosts.length;
+    data.duePosts.length +
+    data.staleApprovals.length;
 
   return (
     <div className="space-y-6">
@@ -97,6 +99,31 @@ export default function AgencyHome() {
 
       <div className="grid gap-6 lg:grid-cols-2">
         <PulseOverviewCard mode="home" />
+        {data.staleApprovals.length > 0 && (
+          <Card data-testid="stale-approvals">
+            <SectionTitle>⏳ Aguardando aprovação há mais de 48h</SectionTitle>
+            <div className="space-y-1.5">
+              {data.staleApprovals.map((item) => (
+                <div key={item.id} className="flex items-center justify-between gap-2 rounded-md border border-edge bg-surface-2 px-3 py-2 text-sm">
+                  <Link href={`/clients/${item.clientId}`} className="min-w-0 truncate hover:text-accent">
+                    <span className="font-medium">{item.clientName}</span>{" "}
+                    <span className="text-muted">{`· ${item.pending} sem resposta`}</span>
+                  </Link>
+                  <button
+                    type="button"
+                    className="shrink-0 text-xs font-medium text-accent hover:underline"
+                    onClick={async () => {
+                      const share = await api<{ whatsappUrl: string }>(`/api/approval-links/${item.id}`);
+                      window.open(share.whatsappUrl, "_blank", "noopener");
+                    }}
+                  >
+                    Reenviar
+                  </button>
+                </div>
+              ))}
+            </div>
+          </Card>
+        )}
         {data.pendingApplications.length > 0 && (
           <Card>
             <SectionTitle>✋ Candidaturas aguardando análise</SectionTitle>
