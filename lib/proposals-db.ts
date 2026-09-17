@@ -1,5 +1,5 @@
 import { randomBytes, randomUUID } from "crypto";
-import { createClient, db, getClient, tenantColumn } from "./db";
+import { addColumnIfMissing, createClient, db, getClient, tenantColumn } from "./db";
 import { scopeWhere, type TenantScope } from "./tenancy-rules";
 import { createUser, randomPassword } from "./auth";
 import { getProspect, updateProspect } from "./marketplace-db";
@@ -60,9 +60,16 @@ db.exec(`
   CREATE INDEX IF NOT EXISTS idx_proposals_prospect ON proposals(prospectId, createdAt);
 `);
 tenantColumn("proposals");
+// Reserva do aceite (dois cliques/aceites ao mesmo tempo: só um cria a marca).
+addColumnIfMissing("proposals", "claimedAt", "TEXT");
 
-type Row = Omit<Proposal, "content"> & { content: string };
-const toProposal = (row: Row): Proposal => ({
+type Row = Omit<Proposal, "content"> & { content: string; claimedAt?: string | null };
+const toProposal = (raw: Row): Proposal => {
+  const row = { ...raw };
+  delete row.claimedAt; // reserva interna do aceite, não sai na API
+  return toProposalFields(row);
+};
+const toProposalFields = (row: Row): Proposal => ({
   ...row,
   lang: row.lang === "en" ? "en" : "pt-BR",
   content: JSON.parse(row.content) as ProposalContent,
@@ -151,6 +158,28 @@ export async function acceptProposal(input: {
   if (!proposal) return { ok: false, reason: "not_found" };
   const check = canAccept(proposal, input.packageName);
   if (!check.ok) return { ok: false, reason: check.reason };
+  // Reserva atômica antes de qualquer await: um aceite só por proposta.
+  const claimAt = now();
+  const claimed =
+    db
+      .prepare(
+        `UPDATE proposals SET claimedAt = @at WHERE id = @id AND status != 'accepted'
+         AND (claimedAt IS NULL OR claimedAt < @stale)`
+      )
+      .run({ at: claimAt, id: proposal.id, stale: new Date(Date.now() - 2 * 60 * 1000).toISOString() }).changes === 1;
+  if (!claimed) return { ok: false, reason: "accepted" };
+  try {
+    return await finishAccept(proposal, input);
+  } catch (error) {
+    db.prepare("UPDATE proposals SET claimedAt = NULL WHERE id = ? AND status != 'accepted'").run(proposal.id);
+    throw error;
+  }
+}
+
+async function finishAccept(
+  proposal: Proposal,
+  input: { token: string; packageName: string; name: string; contact: string }
+): Promise<AcceptResult> {
 
   // A marca nasce na agência da proposta (nunca em outra).
   const prospectRow = proposal.prospectId ? getProspect(proposal.prospectId) : null;

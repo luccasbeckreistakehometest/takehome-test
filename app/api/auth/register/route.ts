@@ -15,7 +15,7 @@ import { createAgency, deleteAgencyWorkspace, setAgencyOwner } from "@/lib/agenc
 import { HOUSE_AGENCY_ID } from "@/lib/tenancy-rules";
 import { createClient, deleteClient } from "@/lib/db";
 import { createProfessional, deleteProfessional } from "@/lib/marketplace-db";
-import { consumeInvite, getInvite } from "@/lib/invites-db";
+import { claimInvite, consumeInvite, getInvite, releaseInvite } from "@/lib/invites-db";
 import { startAccount } from "@/lib/billing-db";
 import { agencySelfSignupEnabled, LEGAL_VERSION } from "@/lib/legal";
 import { getPlan, isBillingPeriod, isPaidPlan } from "@/lib/plans";
@@ -101,6 +101,11 @@ export async function POST(request: Request) {
   if (emailInUse(email)) {
     return NextResponse.json({ error: new EmailTakenError().message }, { status: 409 });
   }
+  // Reserva o convite ANTES do primeiro await: dois cadastros simultâneos com
+  // o mesmo link não entram os dois.
+  if (data.token && !claimInvite(data.token)) {
+    return NextResponse.json({ error: "Convite inválido ou expirado." }, { status: 400 });
+  }
 
   let refId: string | null = null;
   // Marca autônoma quando se cadastra sozinha (sem agência convidando).
@@ -171,6 +176,7 @@ export async function POST(request: Request) {
     if (refId && role === "client") deleteClient(refId);
     if (refId && role === "professional") deleteProfessional(refId);
     if (createdAgency && agencyId) deleteAgencyWorkspace(agencyId);
+    if (data.token) releaseInvite(data.token);
     if (error instanceof EmailTakenError) {
       return NextResponse.json({ error: error.message }, { status: 409 });
     }
