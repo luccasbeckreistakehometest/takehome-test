@@ -1718,7 +1718,7 @@ export const UI_DICT: Record<string, string> = {
   "Pedir acesso": "Request access",
   "Site ou Instagram": "Website or Instagram",
   "Quantos clientes você atende e o que quer resolver?": "How many clients do you serve and what do you want to solve?",
-  "O cadastro de agências está por convite enquanto preparamos os espaços separados por agência. Conte sobre a sua e liberamos o acesso.": "Agency sign-up is by invitation while we prepare separate spaces per agency. Tell us about yours and we'll grant access.",
+  "O cadastro de agências está por convite no momento. Conte sobre a sua e liberamos o acesso.": "Agency sign-up is by invitation right now. Tell us about yours and we'll grant access.",
   "Acesso para agências": "Access for agencies",
   "Marcas e profissionais criam conta na hora.": "Brands and professionals can sign up right away.",
   "Recebemos várias mensagens daqui. Tente de novo mais tarde.": "We've received several messages from here. Try again later.",

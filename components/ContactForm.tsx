@@ -72,8 +72,7 @@ export default function ContactForm({
     <form className="space-y-3" onSubmit={submit} aria-label={access ? "Pedir acesso" : "Fale com a gente"}>
       {access && (
         <p className="text-sm text-muted">
-          O cadastro de agências está por convite enquanto preparamos os espaços separados por agência. Conte sobre a sua e
-          liberamos o acesso.
+          O cadastro de agências está por convite no momento. Conte sobre a sua e liberamos o acesso.
         </p>
       )}
       <div className="grid gap-3 sm:grid-cols-2">
