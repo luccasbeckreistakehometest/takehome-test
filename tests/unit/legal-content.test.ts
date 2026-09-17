@@ -26,7 +26,30 @@ describe("legal documents", () => {
       expect(privacy).toContain(needle);
     }
     expect(JSON.stringify(pt.REFUNDS_PT)).toContain("art. 49");
-    expect(JSON.stringify(pt.TERMS_PT)).toContain("não renovam automaticamente");
+  });
+
+  it("describes the card subscription the product actually sells", () => {
+    const ptAll = JSON.stringify([pt.TERMS_PT, pt.REFUNDS_PT]);
+    expect(ptAll).not.toContain("não renovam automaticamente");
+    for (const needle of ["assinatura no cartão", "Cancelar renovação", "3 dias", "7 dias"]) expect(ptAll).toContain(needle);
+    const enAll = JSON.stringify([en.TERMS_EN, en.REFUNDS_EN]);
+    expect(enAll).not.toContain("do not renew automatically");
+    for (const needle of ["card subscription", "Cancelar renovação", "3 days"]) expect(enAll).toContain(needle);
+  });
+
+  it("explains the cookie-free measurement round 3 added", () => {
+    for (const doc of [pt.PRIVACY_PT, pt.COOKIES_PT]) {
+      const text = JSON.stringify(doc);
+      expect(text).toContain("sem cookie");
+      expect(text).toContain("utm");
+    }
+    expect(JSON.stringify(pt.PRIVACY_PT)).toContain("90 dias");
+    for (const doc of [en.PRIVACY_EN, en.COOKIES_EN]) {
+      const text = JSON.stringify(doc).toLowerCase();
+      expect(text).toContain("no cookies");
+      expect(text).toContain("utm");
+    }
+    expect(JSON.stringify(en.PRIVACY_EN)).toContain("90 days");
   });
 
   it("never invent company data: identity only from env", () => {
