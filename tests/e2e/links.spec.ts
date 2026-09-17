@@ -1,5 +1,5 @@
 import { test, expect } from "@playwright/test";
-import { login, skipOnboarding } from "./helpers";
+import { login, signupViaApi, skipOnboarding } from "./helpers";
 
 // Links rastreáveis + link na bio: UTM automático, clique contado (robô não),
 // sem redirecionamento aberto, bio com as cores do cliente.
@@ -82,4 +82,53 @@ test("another tenant's brand cannot read or create links", async ({ page }) => {
   expect((await page.request.get(`/api/clients/${a.id}/links`)).status()).toBe(403);
   expect((await page.request.post(`/api/clients/${a.id}/links`, { data: { destUrl: "https://x.example.com" } })).status()).toBe(403);
   expect((await page.request.put(`/api/clients/${a.id}/bio`, { data: { published: true } })).status()).toBe(403);
+});
+
+// A Marqa responde pelo próprio domínio: conta grátis não manda a bio para o
+// Google, destino interno não vira link curto e o admin tira do ar.
+test("free accounts cannot index their bio, private destinations are refused and the admin can unpublish", async ({ page, browser }) => {
+  // agência nova (a agência da casa é sempre indexável) e a marca dela
+  const agencyCtx = await browser.newContext();
+  await signupViaApi(agencyCtx.request, "agency", "Agência Moderação", {}, "198.51.100.91");
+  await agencyCtx.request.post("/api/onboarding", { data: { completed: true, event: "e2e_skip" } });
+  const client = await (await agencyCtx.request.post("/api/clients", { data: { name: "Moderação Flores", channels: [] } })).json();
+  const request = agencyCtx.request;
+  const bad = await request.post(`/api/clients/${client.id}/links`, { data: { destUrl: "http://192.168.0.10/admin" } });
+  expect(bad.status()).toBe(400);
+  expect((await bad.json()).error).toContain("público");
+  expect((await request.post(`/api/clients/${client.id}/links`, { data: { destUrl: "http://localhost:3200/login" } })).status()).toBe(400);
+  const ok = await request.post(`/api/clients/${client.id}/links`, { data: { destUrl: "https://loja-moderacao.example.com/", label: "Loja" } });
+  expect(ok.status()).toBe(201);
+  const code = (await ok.json()).code as string;
+
+  const saved = await request.put(`/api/clients/${client.id}/bio`, { data: { slug: "moderacao-flores", published: true, indexable: true, title: "Moderação Flores" } });
+  expect(saved.status()).toBe(200);
+  const guest = await browser.newContext();
+  const bioPage = await guest.newPage();
+  await bioPage.goto("/b/moderacao-flores");
+  await expect(bioPage.getByTestId("bio-page")).toBeVisible();
+  // pediu Google, mas a conta não é paga nem liberada pelo admin
+  await expect(bioPage.locator('meta[name="robots"]')).toHaveAttribute("content", /noindex/);
+
+  // o admin libera o Google e depois tira a página do ar
+  const adminPage = page;
+  await login(adminPage, "admin");
+  await adminPage.goto("/admin");
+  await adminPage.getByTestId("admin-tab-public").click();
+  const row = adminPage.locator('[data-testid="admin-bio-row"][data-slug="moderacao-flores"]');
+  await row.getByTestId("admin-bio-index").click();
+  await expect(row.getByTestId("admin-bio-index")).toHaveText("Negar Google");
+  await bioPage.reload();
+  await expect(bioPage.locator('meta[name="robots"]')).toHaveAttribute("content", /^index/);
+  await row.getByTestId("admin-bio-toggle").click();
+  await expect(row.getByTestId("admin-bio-toggle")).toHaveText("Publicar");
+  expect((await guest.request.get("/b/moderacao-flores")).status()).toBe(404);
+
+  // e arquiva um link curto
+  const linkRow = adminPage.locator(`[data-testid="admin-link-row"][data-code="${code}"]`);
+  await linkRow.getByTestId("admin-link-toggle").click();
+  await expect(linkRow.getByTestId("admin-link-toggle")).toHaveText("Reativar");
+  expect((await guest.request.get(`/l/${code}`, { maxRedirects: 0 })).status()).toBe(404);
+  await guest.close();
+  await agencyCtx.close();
 });

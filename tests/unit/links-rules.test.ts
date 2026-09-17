@@ -30,6 +30,25 @@ describe("tracked links", () => {
     expect(validateDestUrl("").ok).toBe(false);
   });
 
+  it("refuses private hosts, raw IPs and the platform's own domain", () => {
+    for (const bad of [
+      "http://localhost:3000/entrar",
+      "http://127.0.0.1/",
+      "http://10.0.0.5/admin",
+      "http://192.168.0.1/",
+      "http://172.16.3.2/",
+      "http://169.254.169.254/latest/meta-data",
+      "http://[::1]/",
+      "http://intranet/",
+      "https://app.local/",
+    ]) {
+      expect(validateDestUrl(bad).ok, bad).toBe(false);
+    }
+    expect(validateDestUrl("https://marqa.online/l/abc", "marqa.online").ok).toBe(false);
+    expect(validateDestUrl("https://loja.marqa.online/", "marqa.online").ok).toBe(true);
+    expect(validateDestUrl("https://11.12.13.14/x").ok).toBe(true);
+  });
+
   it("adds UTM without touching existing parameters", () => {
     const utm = utmFor({ channel: "Instagram", campaign: null, postId: "p1", month: "2026-09" });
     expect(utm).toEqual({ utm_source: "instagram", utm_medium: "social", utm_campaign: "marqa-2026-09", utm_content: "p1" });

@@ -8,6 +8,7 @@ import { Icon, type IconName } from "@/components/icons";
 import { fmtMoney, useUiLang } from "@/lib/i18n";
 import AdminUsers from "./AdminUsers";
 import AdminPayments from "./AdminPayments";
+import AdminPublicPages from "./AdminPublicPages";
 import AdminInbox from "./AdminInbox";
 
 type AgencyRow = {
@@ -65,13 +66,14 @@ type Overview = {
   pulse: { responses: number; avgScore: number | null; recent: { clientId: string; clientName: string | null; score: number; createdAt: string }[] };
 };
 
-type AdminTab = "overview" | "users" | "payments" | "inbox" | "ai";
+type AdminTab = "overview" | "users" | "payments" | "inbox" | "ai" | "public";
 const TABS: { key: AdminTab; label: string }[] = [
   { key: "overview", label: "Visão geral" },
   { key: "users", label: "Usuários" },
   { key: "payments", label: "Pagamentos" },
   { key: "inbox", label: "Caixa de entrada" },
   { key: "ai", label: "Custos de IA" },
+  { key: "public", label: "Páginas públicas" },
 ];
 const usd = (n: number) => `US$ ${n.toFixed(2)}`;
 
@@ -200,6 +202,7 @@ export default function AdminPage() {
       {tab === "payments" && <AdminPayments agency={agency} />}
       {tab === "inbox" && <AdminInbox />}
       {tab === "ai" && <AiUsage ai={data.ai} />}
+      {tab === "public" && <AdminPublicPages />}
 
       {tab === "overview" && (
       <>

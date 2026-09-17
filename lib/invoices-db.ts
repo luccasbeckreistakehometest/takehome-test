@@ -7,6 +7,9 @@ import { notifyAgency } from "./notify";
 import { logActivity } from "./marketplace-db";
 import { markExtrasInvoiced, unbilledApprovedExtras } from "./scope-db";
 import { buildPixPayload, validatePixKey } from "./pix";
+// a fatura lê clients.monthlyFee, coluna criada pelo módulo de horas & margem:
+// importar aqui garante a coluna mesmo em banco novo (build/servidor limpo)
+import "./finance-db";
 import {
   brazilToday,
   buildDraftItems,

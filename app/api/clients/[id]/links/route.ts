@@ -5,6 +5,7 @@ import { createLink, getBio, listLinks, suggestBioSlug } from "@/lib/links-db";
 import { validateDestUrl } from "@/lib/links-rules";
 import { getScheduledPost } from "@/lib/marketplace-db";
 import { appBaseUrl } from "@/lib/legal";
+import { checkLimits, retryAfterHeader } from "@/lib/rate-limit";
 
 type Context = { params: Promise<{ id: string }> };
 
@@ -38,7 +39,11 @@ export async function POST(request: Request, { params }: Context) {
   if (isDenied(auth)) return auth;
   const parsed = schema.safeParse(await request.json().catch(() => null));
   if (!parsed.success) return NextResponse.json({ error: "Dados inválidos" }, { status: 400 });
-  const dest = validateDestUrl(parsed.data.destUrl);
+  const verdict = checkLimits([["linksPerAccount", auth.userId]]);
+  if (!verdict.ok) {
+    return NextResponse.json({ error: "Muitos links criados agora há pouco. Espere um pouco." }, { status: 429, headers: retryAfterHeader(verdict) });
+  }
+  const dest = validateDestUrl(parsed.data.destUrl, new URL(appBaseUrl()).hostname);
   if (!dest.ok) return NextResponse.json({ error: dest.error }, { status: 400 });
   if (parsed.data.postId) {
     const post = getScheduledPost(parsed.data.postId);

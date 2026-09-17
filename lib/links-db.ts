@@ -1,5 +1,8 @@
 import { randomBytes, randomUUID } from "crypto";
-import { db, getClient, tenantColumn } from "./db";
+import { addColumnIfMissing, db, getClient, tenantColumn } from "./db";
+import { agencyPageIndexable } from "./agencies";
+import { viewAccount } from "./billing-db";
+import { getPlan, isPaidPlan } from "./plans";
 import { getScheduledPost } from "./marketplace-db";
 import {
   CODE_RE,
@@ -231,6 +234,8 @@ export function suggestBioSlug(clientId: string): string {
   return `${base}-${randomBytes(3).toString("hex")}`;
 }
 
+addColumnIfMissing("clients", "pageIndexable", "INTEGER NOT NULL DEFAULT 0");
+
 export function saveBio(
   clientId: string,
   input: { slug?: string; title?: string; bio?: string; buttons?: unknown; published?: boolean; indexable?: boolean }
@@ -291,4 +296,52 @@ export function agencyLinksOverview(agencyId: string | null): { clientId: string
       )
       .all(since, ...(agencyId ? [agencyId] : [])) as { clientId: string; clientName: string; links: number; clicks30: number; bioSlug: string | null; bioPublished: number }[]
   ).map((r) => ({ ...r, bioPublished: r.bioPublished === 1 }));
+}
+
+// ---------- Moderação (a Marqa responde pelo endereço público) ----------
+
+// Página de bio no Google: mesma régua da página pública da agência — conta
+// paga (ou liberada pelo admin). Marca autônoma responde pela própria conta.
+export function bioIndexable(clientId: string): boolean {
+  const bio = getBio(clientId);
+  const client = getClient(clientId);
+  if (!bio?.published || !bio.indexable || !client) return false;
+  const approved = (db.prepare("SELECT pageIndexable FROM clients WHERE id = ?").get(clientId) as { pageIndexable?: number } | undefined)?.pageIndexable === 1;
+  if (approved) return true;
+  if (client.selfServe) return isPaidPlan(getPlan(viewAccount("client", clientId).subscription.planId));
+  return agencyPageIndexable(client.agencyId);
+}
+
+export type AdminBioRow = { clientId: string; clientName: string; agencyId: string | null; slug: string; published: boolean; indexable: boolean; approved: boolean; updatedAt: string };
+
+export function listBiosForAdmin(limit = 100): AdminBioRow[] {
+  return (
+    db
+      .prepare(
+        `SELECT b.clientId, b.slug, b.published, b.indexable, b.updatedAt, c.name AS clientName, c.agencyId, COALESCE(c.pageIndexable, 0) AS approved
+         FROM bio_pages b JOIN clients c ON c.id = b.clientId ORDER BY b.updatedAt DESC LIMIT ?`
+      )
+      .all(limit) as (Omit<AdminBioRow, "published" | "indexable" | "approved"> & { published: number; indexable: number; approved: number })[]
+  ).map((r) => ({ ...r, published: r.published === 1, indexable: r.indexable === 1, approved: r.approved === 1 }));
+}
+
+export type AdminLinkRow = { code: string; destUrl: string; label: string; clientId: string; clientName: string; agencyId: string | null; clicks: number; createdAt: string; archivedAt: string | null };
+
+export function listLinksForAdmin(limit = 100): AdminLinkRow[] {
+  return db
+    .prepare(
+      `SELECT l.code, l.destUrl, l.label, l.clientId, l.createdAt, l.archivedAt, c.name AS clientName, c.agencyId,
+         (SELECT COUNT(*) FROM link_clicks k WHERE k.code = l.code) AS clicks
+       FROM short_links l JOIN clients c ON c.id = l.clientId ORDER BY l.createdAt DESC LIMIT ?`
+    )
+    .all(limit) as AdminLinkRow[];
+}
+
+// Admin: tirar do ar uma bio (ou um link) e liberar/negar o Google.
+export function setBioPublished(clientId: string, published: boolean): boolean {
+  return db.prepare("UPDATE bio_pages SET published = ?, updatedAt = ? WHERE clientId = ?").run(published ? 1 : 0, new Date().toISOString(), clientId).changes > 0;
+}
+
+export function setClientPageIndexable(clientId: string, on: boolean): boolean {
+  return db.prepare("UPDATE clients SET pageIndexable = ? WHERE id = ?").run(on ? 1 : 0, clientId).changes > 0;
 }

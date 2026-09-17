@@ -11,8 +11,21 @@ export function newCode(random: (n: number) => Uint8Array): string {
   return Array.from(bytes, (b) => ALPHABET[b % ALPHABET.length]).join("");
 }
 
-// Só http(s), com host, sem credenciais embutidas.
-export function validateDestUrl(raw: string): { ok: true; url: string } | { ok: false; error: string } {
+// Endereço de rede interna, IP cru ou host sem ponto: não é destino de
+// campanha e serve para varrer a rede de dentro.
+function privateHost(hostname: string): boolean {
+  const host = hostname.toLowerCase().replace(/^\[|\]$/g, "");
+  if (host === "localhost" || host.endsWith(".localhost") || host.endsWith(".local") || host.endsWith(".internal") || !host.includes(".")) return true;
+  if (host.includes(":")) return true; // IPv6 cru
+  const v4 = host.match(/^(\d{1,3})\.(\d{1,3})\.(\d{1,3})\.(\d{1,3})$/);
+  if (!v4) return false;
+  const [a, b] = v4.slice(1).map(Number);
+  return a === 0 || a === 10 || a === 127 || (a === 169 && b === 254) || (a === 172 && b >= 16 && b <= 31) || (a === 192 && b === 168) || a >= 224;
+}
+
+// Só http(s), com host público, sem credenciais embutidas e sem apontar para
+// a própria Marqa (link curto não vira corrente de redirecionamento).
+export function validateDestUrl(raw: string, ownHost?: string | null): { ok: true; url: string } | { ok: false; error: string } {
   const value = (raw ?? "").trim();
   if (!value || value.length > 2000) return { ok: false, error: "Informe um endereço válido (http ou https)." };
   let url: URL;
@@ -23,6 +36,9 @@ export function validateDestUrl(raw: string): { ok: true; url: string } | { ok: 
   }
   if (url.protocol !== "http:" && url.protocol !== "https:") return { ok: false, error: "Só aceitamos endereços http ou https." };
   if (!url.hostname || url.username || url.password) return { ok: false, error: "Informe um endereço válido (http ou https)." };
+  if (privateHost(url.hostname)) return { ok: false, error: "Esse endereço não é público. Use o site que você quer divulgar." };
+  const own = (ownHost ?? "").trim().toLowerCase();
+  if (own && url.hostname.toLowerCase() === own) return { ok: false, error: "O link curto precisa apontar para fora da Marqa." };
   return { ok: true, url: url.toString() };
 }
 

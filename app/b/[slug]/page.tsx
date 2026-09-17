@@ -1,6 +1,6 @@
 import type { Metadata } from "next";
 import { notFound } from "next/navigation";
-import { bioGrid, getBioBySlug, getLink } from "@/lib/links-db";
+import { bioGrid, bioIndexable, getBioBySlug, getLink } from "@/lib/links-db";
 import { carouselBrand } from "@/lib/carousels-db";
 
 export const dynamic = "force-dynamic";
@@ -26,8 +26,9 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
   return {
     title: data.bio.title || data.brand.name,
     description: data.bio.bio.slice(0, 160) || undefined,
-    // fora do Google, a menos que o cliente peça
-    robots: data.bio.indexable ? { index: true, follow: true } : { index: false, follow: false },
+    // fora do Google, a menos que o cliente peça E a conta seja paga (ou
+    // liberada pelo admin) — mesma régua da página pública da agência
+    robots: bioIndexable(data.bio.clientId) ? { index: true, follow: true } : { index: false, follow: false },
     alternates: { canonical: `/b/${data.bio.slug}` },
   };
 }
