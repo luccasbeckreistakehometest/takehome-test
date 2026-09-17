@@ -590,10 +590,25 @@ export const UI_DICT_R3: Record<string, string> = {
     "Messages, Pix invoices and the monthly report, all in one place.",
   "Nenhuma fatura por aqui ainda. Quando a agência enviar, ela aparece aqui com Pix copia e cola.":
     "No invoices here yet. When the agency sends one, it shows up here with Pix copy-and-paste.",
+  // Rodada 3 · correções de lançamento (aprovação x agendador, escopo, primeiros passos)
+  "Não vai ao ar enquanto o cliente não aprovar pelo link.": "It won't go live until the client approves it through the link.",
+  "Não vai ao ar até o cliente aprovar a versão nova. Ajuste e mande outro link.":
+    "It won't go live until the client approves the new version. Make the change and send another link.",
+  "Liberar sem aprovação": "Release without approval",
+  "O cliente escolheu este item; confira se o pedido é mesmo do pacote.":
+    "The client picked this item; check whether the request really belongs to the package.",
+  "Cobrar como extra": "Charge as an extra",
+  "Pode fechar quando quiser; os passos continuam marcando sozinhos.":
+    "You can close this whenever you like; the steps keep ticking on their own.",
+  "Ocultar": "Hide",
 };
 
 export const UI_REGEX_R3: [RegExp, string][] = [
   [/^(\d+) de (\d+)$/, "$1 of $2"],
+  [
+    /^Não conseguimos publicar: (.+)\. Confira a conexão e agende de novo para tentar outra vez\.$/,
+    "We couldn't publish it: $1. Check the connection and schedule it again to retry.",
+  ],
   [/^Ver todos os diferenciais \((\d+)\)$/, "See every differentiator ($1)"],
   [/^Versão ([ABC])$/, "Version $1"],
   [/^Vencedora: versão ([ABC])$/, "Winner: version $1"],
