@@ -1,14 +1,26 @@
 import { NextResponse } from "next/server";
 import { getSession } from "./session";
 import type { SessionPayload } from "./auth-shared";
-import { getClient, getGeneration } from "./db";
+import { clientAgencyId, getGeneration } from "./db";
 import {
   getApplication,
   getClientAsset,
   getDeliverable,
   getProfessional,
   getProject,
+  getProspect,
+  professionalWorkedWith,
 } from "./marketplace-db";
+import {
+  adminScope,
+  HOUSE_AGENCY_ID,
+  NO_AGENCY,
+  inScope,
+  professionalEditableBy,
+  professionalVisibleTo,
+  scopeForSession,
+  type TenantScope,
+} from "./tenancy-rules";
 
 export type Role = SessionPayload["role"];
 
@@ -16,12 +28,22 @@ export type Role = SessionPayload["role"];
 // cliente e profissional fora das rotas dos portais; aqui a rota declara QUEM
 // pode chamar e checa a posse do recurso.
 //
+// Multi-tenant: quando a rota passa `clientId`, a marca precisa ser da
+// agência da sessão (agência de outro tenant recebe 404 — nem a existência
+// vaza). `agencyId` faz o mesmo para recursos sem cliente (prospect, contato,
+// reunião...). Admin passa sempre.
+//
 // Uso:
 //   const auth = await guard(["agency", "admin"]);
 //   if (isDenied(auth)) return auth;
 export async function guard(
   roles: Role[],
-  opts: { clientId?: string | null; professionalId?: string | null; selfServe?: boolean } = {}
+  opts: {
+    clientId?: string | null;
+    professionalId?: string | null;
+    selfServe?: boolean;
+    agencyId?: string | null;
+  } = {}
 ): Promise<SessionPayload | NextResponse> {
   const session = await getSession();
   if (!session) return unauthorized();
@@ -33,7 +55,39 @@ export async function guard(
   if (session.role === "professional" && opts.professionalId !== undefined && session.refId !== opts.professionalId) {
     return forbidden();
   }
+  const scope = scopeForSession(session);
+  if (opts.clientId !== undefined) {
+    if (!opts.clientId) return notFound("Cliente não encontrado");
+    const owner = clientAgencyId(opts.clientId);
+    if (owner === null && session.role !== "admin") return notFound("Cliente não encontrado");
+    if (owner !== null && !inScope(scope, owner)) return notFound("Cliente não encontrado");
+  }
+  if (opts.agencyId !== undefined && !inScope(scope, opts.agencyId)) return notFound();
   return session;
+}
+
+// Escopo de leitura da sessão. Admin = todas as agências, ou a do filtro
+// ?agency= quando a rota recebe o request (painel do admin).
+export function tenantOf(session: SessionPayload, request?: Request): TenantScope {
+  if (session.role === "admin" && request) return adminScope(new URL(request.url).searchParams.get("agency"));
+  return scopeForSession(session);
+}
+
+// Agência em nome de quem a sessão age (configurações, criação). Admin age na
+// agência do filtro ?agency= (ou na da casa).
+export function actingAgencyId(session: SessionPayload, request?: Request): string {
+  if (session.role === "admin") {
+    const wanted = request ? (new URL(request.url).searchParams.get("agency") ?? "").trim() : "";
+    return wanted || HOUSE_AGENCY_ID;
+  }
+  return session.agencyId ?? NO_AGENCY;
+}
+
+// Agência que recebe o que a sessão cria. Admin cria na agência pedida (ou
+// na da casa); os demais, sempre na própria.
+export function writeAgencyId(session: SessionPayload, requested?: string | null): string | null {
+  if (session.role === "admin") return requested || null;
+  return session.agencyId ?? null;
 }
 
 export function isDenied<T>(auth: T | NextResponse): auth is NextResponse {
@@ -116,14 +170,32 @@ export async function guardApplication(applicationId: string, access: ClientAcce
   return isDenied(auth) ? auth : { session: auth, application, project };
 }
 
-// Perfil do profissional: ele mesmo ou a agência/admin.
-export async function guardProfessional(professionalId: string) {
-  if (!getProfessional(professionalId)) return notFound("Profissional não encontrado");
-  return guard(["agency", "admin", "professional"], { professionalId });
+// Prospect: só a agência dona (ou o admin).
+export async function guardProspect(prospectId: string) {
+  const prospect = getProspect(prospectId);
+  if (!prospect) return notFound("Prospect não encontrado");
+  const auth = await guard(["agency", "admin"], { agencyId: prospect.agencyId });
+  return isDenied(auth) ? auth : { session: auth, prospect };
+}
+
+// Perfil do profissional: ele mesmo, o admin, ou uma agência que o enxerga
+// (os dela, os do marketplace aberto e os que já trabalharam/se candidataram
+// em demandas dela). `edit` = só a agência dona (ou ele mesmo/admin).
+export async function guardProfessional(professionalId: string, access: "view" | "edit" = "view") {
+  const professional = getProfessional(professionalId);
+  if (!professional) return notFound("Profissional não encontrado");
+  const auth = await guard(["agency", "admin", "professional"], { professionalId });
+  if (isDenied(auth) || auth.role !== "agency") return auth;
+  const scope = scopeForSession(auth);
+  const allowed =
+    access === "edit"
+      ? professionalEditableBy(scope, professional)
+      : professionalVisibleTo(scope, professional, professionalWorkedWith(professionalId, auth.agencyId ?? ""));
+  return allowed ? auth : notFound("Profissional não encontrado");
 }
 
 export function clientExists(clientId: string): boolean {
-  return Boolean(getClient(clientId));
+  return clientAgencyId(clientId) !== null;
 }
 
 // A marca age em nome próprio: o "autor" vem da sessão, nunca do corpo.

@@ -4,7 +4,8 @@ import { getClient } from "@/lib/db";
 import { guard, isDenied } from "@/lib/guard";
 import { currentMonth, isValidMonth } from "@/lib/report-aggregate";
 import { clientMonthMargin, getClientFee, getFinanceSettings, listEntries, listProfessionalRates, runningTimer, setClientFee } from "@/lib/finance-db";
-import { listDeliverables, listProjects } from "@/lib/marketplace-db";
+import { listClientProjects, listDeliverables } from "@/lib/marketplace-db";
+import { agencyScope } from "@/lib/tenancy-rules";
 
 type Context = { params: Promise<{ id: string }> };
 
@@ -12,13 +13,13 @@ type Context = { params: Promise<{ id: string }> };
 // para apontar (demandas/entregas, profissionais).
 export async function GET(request: Request, { params }: Context) {
   const { id } = await params;
-  const auth = await guard(["agency", "admin"]);
+  const auth = await guard(["agency", "admin"], { clientId: id });
   if (isDenied(auth)) return auth;
   const client = getClient(id);
   if (!client) return NextResponse.json({ error: "Cliente não encontrado" }, { status: 404 });
   const month = new URL(request.url).searchParams.get("month") ?? currentMonth();
   if (!isValidMonth(month)) return NextResponse.json({ error: "Mês inválido (use AAAA-MM)" }, { status: 400 });
-  const projects = listProjects({ clientId: id }).map((p) => ({
+  const projects = listClientProjects(id).map((p) => ({
     id: p.id,
     title: p.title,
     status: p.status,
@@ -29,12 +30,12 @@ export async function GET(request: Request, { params }: Context) {
   return NextResponse.json({
     month,
     fee: getClientFee(id),
-    settings: getFinanceSettings(),
+    settings: getFinanceSettings(client.agencyId),
     margin: clientMonthMargin(id, client.name, month),
-    entries: listEntries({ clientId: id, month }),
+    entries: listEntries({ scope: agencyScope(client.agencyId), clientId: id, month }),
     running: runningTimer(auth.userId),
     projects,
-    professionals: listProfessionalRates(),
+    professionals: listProfessionalRates(agencyScope(client.agencyId)),
   });
 }
 
@@ -42,7 +43,7 @@ const schema = z.object({ monthlyFee: z.number().min(0) });
 
 export async function PUT(request: Request, { params }: Context) {
   const { id } = await params;
-  const auth = await guard(["agency", "admin"]);
+  const auth = await guard(["agency", "admin"], { clientId: id });
   if (isDenied(auth)) return auth;
   const parsed = schema.safeParse(await request.json().catch(() => null));
   if (!parsed.success) return NextResponse.json({ error: "Dados inválidos" }, { status: 400 });

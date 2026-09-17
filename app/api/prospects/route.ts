@@ -4,7 +4,7 @@ import { GenerationError, generateStructured } from "@/lib/claude";
 import { createJob, createProspect, createProspectSearch, finishJob, latestProspectSearch, listProspects } from "@/lib/marketplace-db";
 import { prospectingSchema, type ProspectingResult } from "@/lib/marketplace-schemas";
 import { aiErrorResponse, beginAi } from "@/lib/metering";
-import { agencyOnly, isDenied } from "@/lib/guard";
+import { actingAgencyId, agencyOnly, isDenied, tenantOf } from "@/lib/guard";
 
 export const maxDuration = 300;
 
@@ -14,12 +14,13 @@ const searchSchema = z.object({
   notes: z.string().trim().max(2000).default(""),
 });
 
-export async function GET() {
+export async function GET(request: Request) {
   const auth = await agencyOnly();
   if (isDenied(auth)) return auth;
+  const scope = tenantOf(auth, request);
   return NextResponse.json({
-    prospects: listProspects(),
-    lastSearch: latestProspectSearch(),
+    prospects: listProspects(scope),
+    lastSearch: latestProspectSearch(scope),
   });
 }
 
@@ -36,9 +37,10 @@ export async function POST(request: Request) {
     );
   }
   const { niche, region, notes } = parsed.data;
-  const ticket = await beginAi(request, auth, "prospecting");
+  const agencyId = actingAgencyId(auth, request);
+  const ticket = await beginAi(request, auth, "prospecting", { agencyId });
   if (isDenied(ticket)) return ticket;
-  const job = createJob({ kind: "prospecting", label: `Prospecção: ${niche} — ${region}` });
+  const job = createJob({ kind: "prospecting", label: `Prospecção: ${niche} — ${region}`, agencyId });
   try {
     return await ticket.run(async () => {
     const result = await generateStructured<ProspectingResult>({
@@ -63,10 +65,11 @@ Priorize empresas com maior probabilidade de fechar: dor visível + capacidade d
 
     const searchQuery = `${niche} — ${region}`;
     const saved = result.prospects.map((prospect) =>
-      createProspect({ ...prospect, searchQuery })
+      createProspect({ ...prospect, searchQuery }, agencyId)
     );
     // Resumo persistente: sobrevive a refresh e explica buscas vazias
     createProspectSearch({
+      agencyId,
       query: searchQuery,
       summary: result.summary,
       resultCount: saved.length,

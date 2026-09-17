@@ -1,8 +1,14 @@
 import { generateStructured } from "./claude";
 import { isAiMock } from "./ai-mock";
-import { getSettings } from "./settings";
+import { currentAgencyProfile } from "./agencies";
 import type { Client } from "./types";
 import { describeLearnings, mockLearningsReading, type Learnings, type LearningsReading } from "./learnings-rules";
+
+// Nome e estilo da casa da agência em nome de quem a IA roda.
+function agencyPromptProfile(): { agencyName: string; houseStyle: string } {
+  const profile = currentAgencyProfile();
+  return { agencyName: profile.name, houseStyle: profile.houseStyle };
+}
 
 // Leitura curta (3 linhas) dos aprendizados do mês. Os números já vêm
 // calculados; a IA só interpreta — modelo padrão, poucos tokens.
@@ -16,7 +22,7 @@ const SCHEMA = {
 export async function generateLearningsReading(client: Client, l: Learnings): Promise<LearningsReading> {
   const lang = client.language === "en" ? "en" : "pt-BR";
   if (isAiMock({ orNoKey: true })) return mockLearningsReading(l, lang);
-  const settings = getSettings();
+  const settings = agencyPromptProfile();
   const result = await generateStructured<{ lines: string[] }>({
     tier: "standard",
     maxTokens: 800,

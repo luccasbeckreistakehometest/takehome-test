@@ -31,7 +31,7 @@ export async function DELETE(_request: Request, { params }: Context) {
   const { id } = await params;
   const asset = findAsset(id);
   if (!asset) return NextResponse.json({ error: "Não encontrado" }, { status: 404 });
-  const auth = await guardProfessional(asset.professionalId);
+  const auth = await guardProfessional(asset.professionalId, "edit");
   if (isDenied(auth)) return auth;
   deleteProfessionalAsset(id);
   deleteUpload(asset.id, asset.mime);

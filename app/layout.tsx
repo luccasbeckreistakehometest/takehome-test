@@ -1,7 +1,6 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import { Geist, Geist_Mono, Space_Grotesk } from "next/font/google";
-import { getSettings } from "@/lib/settings";
 import { resolveBrand } from "@/lib/branding";
 import { getSession } from "@/lib/session";
 import Translator, { LangToggle } from "@/components/Translator";
@@ -67,11 +66,10 @@ export default async function RootLayout({
 }: Readonly<{
   children: React.ReactNode;
 }>) {
-  const settings = getSettings();
   const session = await getSession();
-  // Marca exibida no chrome: agência (whitelabel) para a agência e convidados;
-  // plataforma para anônimos e auto-cadastrados.
-  const brand = resolveBrand(session, settings);
+  // Marca exibida no chrome: a da agência da sessão (whitelabel) para a
+  // agência e os convidados dela; plataforma para anônimos e auto-cadastrados.
+  const brand = resolveBrand(session);
 
   return (
     <html
@@ -107,10 +105,10 @@ export default async function RootLayout({
               }
               className="flex shrink-0 items-center gap-2"
             >
-              {brand.logoMime ? (
+              {brand.logoUrl ? (
                 // eslint-disable-next-line @next/next/no-img-element
                 <img
-                  src="/api/settings/logo"
+                  src={brand.logoUrl}
                   alt={brand.name}
                   className="size-7 rounded-md object-contain"
                 />

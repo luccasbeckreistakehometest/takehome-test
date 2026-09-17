@@ -2,7 +2,7 @@ import { NextResponse } from "next/server";
 import { z } from "zod";
 import { getClient } from "@/lib/db";
 import { createScheduledPost, listScheduledPosts } from "@/lib/marketplace-db";
-import { guard, isDenied } from "@/lib/guard";
+import { guard, isDenied, tenantOf } from "@/lib/guard";
 
 const scheduleSchema = z.object({
   clientId: z.string().min(1),
@@ -22,7 +22,7 @@ export async function GET(request: Request) {
   // A marca só vê a própria fila.
   const clientId =
     auth.role === "client" ? (auth.refId ?? "-") : (new URL(request.url).searchParams.get("clientId") ?? undefined);
-  return NextResponse.json(listScheduledPosts(clientId));
+  return NextResponse.json(listScheduledPosts(tenantOf(auth, request), clientId));
 }
 
 // Agenda um post na fila de publicação. O disparo automático nas redes é

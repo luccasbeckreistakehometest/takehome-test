@@ -1,6 +1,7 @@
 import { randomBytes, randomInt, scrypt, timingSafeEqual } from "crypto";
 import { randomUUID } from "crypto";
-import { addColumnIfMissing, db } from "./db";
+import { addColumnIfMissing, db, tenantColumn } from "./db";
+import { HOUSE_AGENCY_ID } from "./tenancy-rules";
 
 export type BrandSource = "agency" | "platform";
 export type UserRole = "admin" | "agency" | "client" | "professional";
@@ -11,6 +12,9 @@ export type User = {
   email: string | null;
   role: UserRole;
   refId: string | null;
+  // agência (tenant) da conta: agência → a dela; marca → a da marca;
+  // profissional → a que o cadastrou (null = marketplace aberto); admin → null
+  agencyId: string | null;
   name: string;
   // whitelabel: "agency" = convidado por uma agência (vê a marca dela);
   // "platform" = auto-cadastrado (vê a marca da plataforma)
@@ -50,6 +54,7 @@ addColumnIfMissing("users", "passwordChangedAt", "TEXT");
 addColumnIfMissing("users", "consentAt", "TEXT");
 addColumnIfMissing("users", "consentVersion", "TEXT");
 addColumnIfMissing("users", "lastLoginAt", "TEXT");
+tenantColumn("users");
 try {
   db.exec("CREATE UNIQUE INDEX IF NOT EXISTS idx_users_email ON users(email) WHERE email IS NOT NULL");
 } catch (error) {
@@ -96,6 +101,7 @@ type UserRow = {
   email: string | null;
   role: UserRole;
   refId: string | null;
+  agencyId: string | null;
   name: string;
   brandSource: string;
   sessionVersion: number;
@@ -114,6 +120,7 @@ function toUser(row: UserRow): User {
     email: row.email ?? null,
     role: row.role,
     refId: row.refId,
+    agencyId: row.agencyId ?? null,
     name: row.name,
     brandSource: row.brandSource === "platform" ? "platform" : "agency",
     sessionVersion: Number(row.sessionVersion ?? 0),
@@ -212,6 +219,7 @@ export async function createUser(input: {
   password: string;
   role: UserRole;
   refId: string | null;
+  agencyId: string | null;
   name: string;
   brandSource?: BrandSource;
   email?: string | null;
@@ -236,15 +244,16 @@ export async function createUser(input: {
         candidate = `${base}${suffix}`;
       }
       db.prepare(
-        `INSERT INTO users (id, username, passwordHash, role, refId, name, brandSource, email,
+        `INSERT INTO users (id, username, passwordHash, role, refId, agencyId, name, brandSource, email,
           mustChangePassword, consentAt, consentVersion, passwordChangedAt, createdAt)
-         VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`
+         VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`
       ).run(
         id,
         candidate,
         passwordHash,
         input.role,
         input.refId,
+        input.role === "admin" ? null : input.agencyId,
         input.name,
         input.brandSource ?? "agency",
         email,
@@ -303,12 +312,31 @@ export function findUserByRef(refId: string): User | null {
 }
 
 // Consulta barata (PK) feita em toda requisição autenticada.
-export function getSessionState(userId: string): { sessionVersion: number; disabled: boolean } | null {
-  const row = db.prepare("SELECT sessionVersion, disabledAt FROM users WHERE id = ?").get(userId) as
-    | { sessionVersion: number; disabledAt: string | null }
+export function getSessionState(
+  userId: string
+): { sessionVersion: number; disabled: boolean; agencyId: string | null; role: UserRole } | null {
+  const row = db.prepare("SELECT sessionVersion, disabledAt, agencyId, role FROM users WHERE id = ?").get(userId) as
+    | { sessionVersion: number; disabledAt: string | null; agencyId: string | null; role: UserRole }
     | undefined;
   if (!row) return null;
-  return { sessionVersion: Number(row.sessionVersion ?? 0), disabled: Boolean(row.disabledAt) };
+  return {
+    sessionVersion: Number(row.sessionVersion ?? 0),
+    disabled: Boolean(row.disabledAt),
+    agencyId: row.agencyId ?? null,
+    role: row.role,
+  };
+}
+
+// Vincula a conta a uma agência (cadastro de agência nova, convite de time).
+export function setUserAgency(userId: string, agencyId: string | null): void {
+  db.prepare("UPDATE users SET agencyId = ? WHERE id = ?").run(agencyId, userId);
+}
+
+// Contas de agência de um tenant (time).
+export function listAgencyUsers(agencyId: string): Pick<User, "id" | "username" | "name" | "email" | "disabledAt">[] {
+  return db
+    .prepare("SELECT id, username, name, email, disabledAt FROM users WHERE role = 'agency' AND agencyId = ? ORDER BY createdAt")
+    .all(agencyId) as Pick<User, "id" | "username" | "name" | "email" | "disabledAt">[];
 }
 
 export function bumpSessionVersion(userId: string): number {
@@ -387,15 +415,16 @@ export function homeForUser(
 
 export type AdminUserRow = Pick<
   User,
-  "id" | "username" | "email" | "role" | "name" | "refId" | "disabledAt" | "lastLoginAt" | "createdAt" | "mustChangePassword"
+  "id" | "username" | "email" | "role" | "name" | "refId" | "agencyId" | "disabledAt" | "lastLoginAt" | "createdAt" | "mustChangePassword"
 >;
 
-export function listUsers(): AdminUserRow[] {
+export function listUsers(filter: { agencyId?: string | null } = {}): AdminUserRow[] {
+  const where = filter.agencyId ? "WHERE agencyId = ?" : "";
   const rows = db
     .prepare(
-      "SELECT id, username, email, role, name, refId, disabledAt, lastLoginAt, createdAt, mustChangePassword FROM users ORDER BY role, username"
+      `SELECT id, username, email, role, name, refId, agencyId, disabledAt, lastLoginAt, createdAt, mustChangePassword FROM users ${where} ORDER BY role, username`
     )
-    .all() as (Omit<AdminUserRow, "mustChangePassword"> & { mustChangePassword: number })[];
+    .all(...(filter.agencyId ? [filter.agencyId] : [])) as (Omit<AdminUserRow, "mustChangePassword"> & { mustChangePassword: number })[];
   return rows.map((r) => ({ ...r, mustChangePassword: Number(r.mustChangePassword) === 1 }));
 }
 
@@ -437,7 +466,10 @@ export function ensureSeedUsers(): Promise<void> {
 
 export async function seedUsers(password: string | undefined = process.env.SEED_PASSWORD): Promise<void> {
   const has = (role: string) => Boolean(db.prepare("SELECT 1 FROM users WHERE role = ?").get(role));
-  if (has("admin") && has("agency")) return;
+  if (has("admin") && has("agency")) {
+    linkHouseOwner();
+    return;
+  }
   if (!password || password.length < MIN_PASSWORD_LENGTH) {
     console.error(
       `[auth] SEED_PASSWORD ausente ou curto (mín. ${MIN_PASSWORD_LENGTH}): contas admin/agencia não foram criadas.`
@@ -450,10 +482,25 @@ export async function seedUsers(password: string | undefined = process.env.SEED_
       if (db.prepare("SELECT 1 FROM users WHERE role = ?").get(role)) return;
       if (db.prepare("SELECT 1 FROM users WHERE username = ?").get(username)) return;
       db.prepare(
-        "INSERT INTO users (id, username, passwordHash, role, refId, name, brandSource, passwordChangedAt, createdAt) VALUES (?, ?, ?, ?, NULL, ?, 'agency', ?, ?)"
-      ).run(randomUUID(), username, passwordHash, role, name, now(), now());
+        "INSERT INTO users (id, username, passwordHash, role, refId, agencyId, name, brandSource, passwordChangedAt, createdAt) VALUES (?, ?, ?, ?, NULL, ?, ?, 'agency', ?, ?)"
+      ).run(randomUUID(), username, passwordHash, role, role === "agency" ? HOUSE_AGENCY_ID : null, name, now(), now());
     };
     insert("admin", "admin", "Admin da Plataforma");
     insert("agencia", "agency", "Agência");
+  }).immediate();
+  linkHouseOwner();
+}
+
+// A casa é da conta `agencia` (criada pelo seed depois da migração num banco novo).
+function linkHouseOwner(): void {
+  db.transaction(() => {
+    const house = db.prepare("SELECT ownerUserId FROM agencies WHERE id = ?").get(HOUSE_AGENCY_ID) as
+      | { ownerUserId: string | null }
+      | undefined;
+    if (!house || house.ownerUserId) return;
+    const owner = db
+      .prepare("SELECT id FROM users WHERE role = 'agency' AND agencyId = ? ORDER BY CASE WHEN username = 'agencia' THEN 0 ELSE 1 END, createdAt LIMIT 1")
+      .get(HOUSE_AGENCY_ID) as { id: string } | undefined;
+    if (owner) db.prepare("UPDATE agencies SET ownerUserId = ? WHERE id = ?").run(owner.id, HOUSE_AGENCY_ID);
   }).immediate();
 }

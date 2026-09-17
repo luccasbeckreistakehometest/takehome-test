@@ -15,10 +15,10 @@ const schema = z.object({
 export async function POST(request: Request, { params }: Context) {
   const { id } = await params;
   // O atendente usa o WhatsApp da agência: só ela aprova ou descarta.
-  const auth = await guard(["agency", "admin"]);
-  if (isDenied(auth)) return auth;
   const reply = getReply(id);
   if (!reply) return NextResponse.json({ error: "Resposta não encontrada" }, { status: 404 });
+  const auth = await guard(["agency", "admin"], { clientId: reply.clientId });
+  if (isDenied(auth)) return auth;
   const parsed = schema.safeParse(await request.json().catch(() => null));
   if (!parsed.success) return NextResponse.json({ error: "Dados inválidos" }, { status: 400 });
   if (reply.status !== "draft") {

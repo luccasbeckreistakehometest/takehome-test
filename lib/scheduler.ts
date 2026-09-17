@@ -25,6 +25,7 @@ async function publishDuePosts(): Promise<number> {
   for (const post of due) {
     try {
       await tryPublishPost({
+        agencyId: post.agencyId,
         channel: post.channel,
         caption: post.caption,
         mediaUrl: post.mediaUrl ?? null,
@@ -32,6 +33,7 @@ async function publishDuePosts(): Promise<number> {
       updateScheduledPost(post.id, { status: "published" });
       logActivity({
         audience: "client",
+        agencyId: post.agencyId,
         clientId: post.clientId,
         text: `Post publicado automaticamente: ${post.title}`,
         href: `/agenda`,

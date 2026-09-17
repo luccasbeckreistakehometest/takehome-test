@@ -8,7 +8,7 @@ import type { AccountType } from "@/lib/plans";
 type Context = { params: Promise<{ id: string }> };
 
 function accountOf(user: NonNullable<ReturnType<typeof getUserById>>): { accountType: AccountType; accountId: string } | null {
-  if (user.role === "agency") return { accountType: "agency", accountId: "agency" };
+  if (user.role === "agency") return user.agencyId ? { accountType: "agency", accountId: user.agencyId } : null;
   if ((user.role === "client" || user.role === "professional") && user.refId) {
     return { accountType: user.role, accountId: user.refId };
   }

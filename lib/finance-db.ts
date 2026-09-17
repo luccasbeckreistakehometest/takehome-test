@@ -1,5 +1,6 @@
 import { randomUUID } from "crypto";
-import { addColumnIfMissing, db, listClients } from "./db";
+import { addColumnIfMissing, clientAgencyId, db, listClients, tenantColumn } from "./db";
+import { kvKeyFor, scopeWhere, agencyScope, type TenantScope } from "./tenancy-rules";
 import { getKv, setKv } from "./kv-settings";
 // garante clients/professionals/projects/deliverables antes das migrações
 import { listProfessionals } from "./marketplace-db";
@@ -45,18 +46,20 @@ db.exec(`
   CREATE INDEX IF NOT EXISTS idx_time_client ON time_entries(clientId, startedAt);
   CREATE INDEX IF NOT EXISTS idx_time_user_running ON time_entries(userId, endedAt);
 `);
+tenantColumn("time_entries");
 
 export type TimeEntry = TimeEntryLike & { createdAt: string };
 type Row = Omit<TimeEntry, "manual"> & { manual: number };
 const toEntry = (row: Row): TimeEntry => ({ ...row, manual: row.manual === 1 });
 const now = () => new Date().toISOString();
 
-export function getFinanceSettings(): FinanceSettings {
-  return sanitizeFinanceSettings(getKv<FinanceSettings>(SETTINGS_KEY, DEFAULT_FINANCE_SETTINGS));
+// Metas e custo-hora padrão: por agência.
+export function getFinanceSettings(agencyId: string): FinanceSettings {
+  return sanitizeFinanceSettings(getKv<FinanceSettings>(kvKeyFor(SETTINGS_KEY, agencyId), DEFAULT_FINANCE_SETTINGS));
 }
 
-export function saveFinanceSettings(input: Partial<FinanceSettings>): FinanceSettings {
-  return setKv(SETTINGS_KEY, sanitizeFinanceSettings(input, getFinanceSettings()));
+export function saveFinanceSettings(agencyId: string, input: Partial<FinanceSettings>): FinanceSettings {
+  return setKv(kvKeyFor(SETTINGS_KEY, agencyId), sanitizeFinanceSettings(input, getFinanceSettings(agencyId)));
 }
 
 export function getClientFee(clientId: string): number {
@@ -72,8 +75,11 @@ export function setProfessionalRate(professionalId: string, hourlyCost: number):
   return db.prepare("UPDATE professionals SET hourlyCost = ? WHERE id = ?").run(sanitizeMoney(hourlyCost), professionalId).changes > 0;
 }
 
-export function listProfessionalRates(): { id: string; name: string; role: string; hourlyCost: number }[] {
-  return db.prepare("SELECT id, name, role, hourlyCost FROM professionals ORDER BY name ASC").all() as {
+// Custo-hora é da agência dona do profissional (freelancer do marketplace
+// não entra: a agência registra o custo pelo padrão).
+export function listProfessionalRates(scope: TenantScope): { id: string; name: string; role: string; hourlyCost: number }[] {
+  const where = scopeWhere(scope);
+  return db.prepare(`SELECT id, name, role, hourlyCost FROM professionals WHERE ${where.sql} ORDER BY name ASC`).all(...where.params) as {
     id: string;
     name: string;
     role: string;
@@ -81,18 +87,22 @@ export function listProfessionalRates(): { id: string; name: string; role: strin
   }[];
 }
 
-export function currentRates(): Rates {
-  const settings = getFinanceSettings();
+export function currentRates(agencyId: string): Rates {
+  const settings = getFinanceSettings(agencyId);
   const professional: Record<string, number> = {};
-  for (const p of listProfessionalRates()) professional[p.id] = Number(p.hourlyCost);
+  for (const p of listProfessionalRates(agencyScope(agencyId))) professional[p.id] = Number(p.hourlyCost);
   return { defaultHourlyCost: settings.defaultHourlyCost, professional };
 }
 
 // ---------- Apontamentos ----------
 
-export function listEntries(filter: { clientId?: string; month?: string; userId?: string; limit?: number }): TimeEntry[] {
+export function listEntries(filter: { scope: TenantScope; clientId?: string; month?: string; userId?: string; limit?: number }): TimeEntry[] {
   const clauses: string[] = [];
   const params: Record<string, unknown> = { limit: filter.limit ?? 500 };
+  if (filter.scope.agencyId !== null) {
+    clauses.push("agencyId = @scopeAgency");
+    params.scopeAgency = filter.scope.agencyId;
+  }
   if (filter.clientId) {
     clauses.push("clientId = @clientId");
     params.clientId = filter.clientId;
@@ -193,8 +203,8 @@ export function addManualEntry(input: {
 
 function insert(entry: TimeEntry): void {
   db.prepare(
-    `INSERT INTO time_entries (id, clientId, projectId, deliverableId, userId, userName, professionalId, note, startedAt, endedAt, minutes, manual, createdAt)
-     VALUES (@id, @clientId, @projectId, @deliverableId, @userId, @userName, @professionalId, @note, @startedAt, @endedAt, @minutes, @manual, @createdAt)`
+    `INSERT INTO time_entries (id, agencyId, clientId, projectId, deliverableId, userId, userName, professionalId, note, startedAt, endedAt, minutes, manual, createdAt)
+     VALUES (@id, (SELECT agencyId FROM clients WHERE id = @clientId), @clientId, @projectId, @deliverableId, @userId, @userName, @professionalId, @note, @startedAt, @endedAt, @minutes, @manual, @createdAt)`
   ).run({ ...entry, manual: entry.manual ? 1 : 0 });
 }
 
@@ -222,11 +232,12 @@ export type MarginReport = {
   rates: { id: string; name: string; role: string; hourlyCost: number }[];
 };
 
-export function marginReport(month: string, at: Date = new Date()): MarginReport {
-  const settings = getFinanceSettings();
-  const rates = currentRates();
-  const entries = monthEntries(listEntries({ month, limit: 5000 }), month);
-  const rows = listClients()
+export function marginReport(agencyId: string, month: string, at: Date = new Date()): MarginReport {
+  const scope = agencyScope(agencyId);
+  const settings = getFinanceSettings(agencyId);
+  const rates = currentRates(agencyId);
+  const entries = monthEntries(listEntries({ scope, month, limit: 5000 }), month);
+  const rows = listClients(scope)
     .map((client) =>
       clientMargin({
         clientId: client.id,
@@ -240,17 +251,18 @@ export function marginReport(month: string, at: Date = new Date()): MarginReport
     )
     .filter((r) => r.status !== "idle")
     .sort((a, b) => a.margin - b.margin);
-  return { month, rows, totals: marginTotals(rows), settings, rates: listProfessionalRates() };
+  return { month, rows, totals: marginTotals(rows), settings, rates: listProfessionalRates(scope) };
 }
 
 export function clientMonthMargin(clientId: string, name: string, month: string, at: Date = new Date()): ClientMargin {
-  const settings = getFinanceSettings();
+  const agencyId = clientAgencyId(clientId) ?? "";
+  const settings = getFinanceSettings(agencyId);
   return clientMargin({
     clientId,
     name,
     fee: getClientFee(clientId),
-    entries: monthEntries(listEntries({ clientId, month, limit: 5000 }), month),
-    rates: currentRates(),
+    entries: monthEntries(listEntries({ scope: agencyScope(agencyId), clientId, month, limit: 5000 }), month),
+    rates: currentRates(agencyId),
     targetMarginPct: settings.targetMarginPct,
     now: at,
   });

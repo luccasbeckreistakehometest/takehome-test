@@ -40,12 +40,13 @@ export async function publishInstagramImage(input: {
 // - "published" quando de fato publicou na rede,
 // - "auto" quando não há caminho real (sem conexão/mídia) e apenas avança a fila.
 export async function tryPublishPost(post: {
+  agencyId: string;
   channel: string;
   caption: string;
   mediaUrl?: string | null;
 }): Promise<"published" | "auto"> {
   if (post.channel.toLowerCase().includes("instagram")) {
-    const conn = getConnection("instagram");
+    const conn = getConnection(post.agencyId, "instagram");
     if (conn?.mode === "api" && conn.apiToken && conn.apiAccountId && post.mediaUrl) {
       await publishInstagramImage({
         igId: conn.apiAccountId,

@@ -1,6 +1,6 @@
 import { AsyncLocalStorage } from "node:async_hooks";
 import { randomUUID } from "crypto";
-import { db } from "./db";
+import { db, tenantColumn } from "./db";
 import type { AccountType, AiQuality } from "./plans";
 
 // Gasto real de IA (custo estimado a partir do `usage` de cada chamada) e o
@@ -9,6 +9,9 @@ import type { AccountType, AiQuality } from "./plans";
 
 export type AiContext = {
   action: string;
+  // agência em nome de quem a IA roda (nome e estilo da casa nos prompts,
+  // atribuição do gasto). null = admin/sistema.
+  agencyId?: string | null;
   accountType?: AccountType | null;
   accountId?: string | null;
   userId?: string | null;
@@ -58,6 +61,8 @@ db.exec(`
   );
   CREATE INDEX IF NOT EXISTS idx_ai_errors_created ON ai_errors(createdAt);
 `);
+tenantColumn("ai_usage");
+tenantColumn("ai_errors");
 
 import { estimateCostUsd, type TokenUsage } from "./ai-spend-cost";
 
@@ -70,14 +75,15 @@ export function recordAiUsage(model: string, usage: TokenUsage): number {
   const cost = estimateCostUsd(model, usage);
   const at = new Date().toISOString();
   db.prepare(
-    `INSERT INTO ai_usage (id, createdAt, day, provider, action, accountType, accountId, userId, model,
+    `INSERT INTO ai_usage (id, createdAt, day, provider, action, agencyId, accountType, accountId, userId, model,
       inputTokens, outputTokens, cacheReadTokens, cacheWriteTokens, webSearches, costUsd)
-     VALUES (?, ?, ?, 'anthropic', ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`
+     VALUES (?, ?, ?, 'anthropic', ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`
   ).run(
     randomUUID(),
     at,
     at.slice(0, 10),
     ctx?.action ?? "background",
+    ctx?.agencyId ?? null,
     ctx?.accountType ?? null,
     ctx?.accountId ?? null,
     ctx?.userId ?? null,
@@ -97,14 +103,15 @@ export function recordExternalSpend(provider: string, units: number, costUsd: nu
   const ctx = currentAiContext();
   const at = new Date().toISOString();
   db.prepare(
-    `INSERT INTO ai_usage (id, createdAt, day, provider, action, accountType, accountId, userId, model, units, costUsd)
-     VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`
+    `INSERT INTO ai_usage (id, createdAt, day, provider, action, agencyId, accountType, accountId, userId, model, units, costUsd)
+     VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`
   ).run(
     randomUUID(),
     at,
     at.slice(0, 10),
     provider,
     ctx?.action ?? provider,
+    ctx?.agencyId ?? null,
     ctx?.accountType ?? null,
     ctx?.accountId ?? null,
     ctx?.userId ?? null,
@@ -141,8 +148,8 @@ export function recordAiError(kind: string, detail: string): void {
   console.error(`[ai] ${ctx?.action ?? "?"} ${kind}: ${clean}`);
   try {
     db.prepare(
-      "INSERT INTO ai_errors (id, createdAt, action, accountType, accountId, kind, detail) VALUES (?, ?, ?, ?, ?, ?, ?)"
-    ).run(randomUUID(), new Date().toISOString(), ctx?.action ?? "", ctx?.accountType ?? null, ctx?.accountId ?? null, kind, clean);
+      "INSERT INTO ai_errors (id, createdAt, action, agencyId, accountType, accountId, kind, detail) VALUES (?, ?, ?, ?, ?, ?, ?, ?)"
+    ).run(randomUUID(), new Date().toISOString(), ctx?.action ?? "", ctx?.agencyId ?? null, ctx?.accountType ?? null, ctx?.accountId ?? null, kind, clean);
   } catch {
     // o log no console já basta se o banco falhar
   }
@@ -150,27 +157,39 @@ export function recordAiError(kind: string, detail: string): void {
 
 export type AiErrorRow = { id: string; createdAt: string; action: string; accountType: string | null; accountId: string | null; kind: string; detail: string };
 
-export function recentAiErrors(limit = 30): AiErrorRow[] {
-  return db.prepare("SELECT * FROM ai_errors ORDER BY createdAt DESC LIMIT ?").all(limit) as AiErrorRow[];
+export function recentAiErrors(limit = 30, agencyId?: string | null): AiErrorRow[] {
+  const where = agencyId ? "WHERE agencyId = ?" : "";
+  return db
+    .prepare(`SELECT * FROM ai_errors ${where} ORDER BY createdAt DESC LIMIT ?`)
+    .all(...(agencyId ? [agencyId] : []), limit) as AiErrorRow[];
 }
 
-export type AccountUsageRow = { accountType: string | null; accountId: string | null; calls: number; costUsd: number; lastAt: string };
+export type AccountUsageRow = {
+  agencyId: string | null;
+  accountType: string | null;
+  accountId: string | null;
+  calls: number;
+  costUsd: number;
+  lastAt: string;
+};
 
-export function usageByAccount(days = 30): AccountUsageRow[] {
+export function usageByAccount(days = 30, agencyId?: string | null): AccountUsageRow[] {
   const since = new Date(Date.now() - days * 86_400_000).toISOString();
+  const where = agencyId ? "AND agencyId = ?" : "";
   return db
     .prepare(
-      `SELECT accountType, accountId, COUNT(*) AS calls, SUM(costUsd) AS costUsd, MAX(createdAt) AS lastAt
-       FROM ai_usage WHERE createdAt >= ? GROUP BY accountType, accountId ORDER BY costUsd DESC LIMIT 200`
+      `SELECT agencyId, accountType, accountId, COUNT(*) AS calls, SUM(costUsd) AS costUsd, MAX(createdAt) AS lastAt
+       FROM ai_usage WHERE createdAt >= ? ${where} GROUP BY agencyId, accountType, accountId ORDER BY costUsd DESC LIMIT 200`
     )
-    .all(since) as AccountUsageRow[];
+    .all(since, ...(agencyId ? [agencyId] : [])) as AccountUsageRow[];
 }
 
-export function spendByDay(days = 14): { day: string; costUsd: number; calls: number }[] {
+export function spendByDay(days = 14, agencyId?: string | null): { day: string; costUsd: number; calls: number }[] {
   const since = new Date(Date.now() - days * 86_400_000).toISOString().slice(0, 10);
+  const where = agencyId ? "AND agencyId = ?" : "";
   return db
-    .prepare("SELECT day, SUM(costUsd) AS costUsd, COUNT(*) AS calls FROM ai_usage WHERE day >= ? GROUP BY day ORDER BY day")
-    .all(since) as { day: string; costUsd: number; calls: number }[];
+    .prepare(`SELECT day, SUM(costUsd) AS costUsd, COUNT(*) AS calls FROM ai_usage WHERE day >= ? ${where} GROUP BY day ORDER BY day`)
+    .all(since, ...(agencyId ? [agencyId] : [])) as { day: string; costUsd: number; calls: number }[];
 }
 
 export function purgeOldAiErrors(olderThanDays = 90): number {

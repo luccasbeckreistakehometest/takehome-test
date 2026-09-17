@@ -21,7 +21,7 @@ import { billingAccount } from "./session";
 
 export type Payer = { accountType: AccountType; accountId: string } | null;
 
-export function payerFor(session: Pick<SessionPayload, "role" | "refId">): Payer {
+export function payerFor(session: Pick<SessionPayload, "role" | "refId" | "agencyId">): Payer {
   if (session.role === "admin") return null;
   return billingAccount(session);
 }
@@ -49,11 +49,13 @@ export type AiGate =
   | { ok: false; status: number; reason: string; headers?: Record<string, string> };
 
 // Contexto de atribuição (quem paga, teto de qualidade do plano).
-export function aiContextFor(session: SessionPayload, action: string): AiContext {
+export function aiContextFor(session: SessionPayload, action: string, agencyId?: string | null): AiContext {
   const payer = payerFor(session);
   const quality = payer ? (getPlan(getSubscription(payer.accountType, payer.accountId).planId)?.quality ?? null) : null;
   return {
     action,
+    // admin agindo num recurso de outra agência pode informar a agência dele
+    agencyId: session.role === "admin" ? (agencyId ?? null) : (session.agencyId ?? null),
     accountType: payer?.accountType ?? null,
     accountId: payer?.accountId ?? null,
     userId: session.userId,
@@ -110,7 +112,7 @@ export async function beginAi(
   request: Request,
   session: SessionPayload,
   action: string,
-  opts: { units?: number; limits?: [LimitName, LimitName] } = {}
+  opts: { units?: number; limits?: [LimitName, LimitName]; agencyId?: string | null } = {}
 ): Promise<NextResponse | AiTicket> {
   const gate = gateAi(request, session, action, opts);
   if (!gate.ok) {
@@ -119,7 +121,7 @@ export async function beginAi(
       { status: gate.status, headers: gate.headers }
     );
   }
-  const ctx = aiContextFor(session, action);
+  const ctx = aiContextFor(session, action, opts.agencyId);
   return {
     run: (fn) => runWithAiContext(ctx, fn),
     refund: gate.refund,
@@ -131,7 +133,7 @@ export async function meterAi<T>(
   session: SessionPayload,
   action: string,
   fn: () => Promise<T>,
-  opts: { units?: number; limits?: [LimitName, LimitName] } = {}
+  opts: { units?: number; limits?: [LimitName, LimitName]; agencyId?: string | null } = {}
 ): Promise<T | NextResponse> {
   const ticket = await beginAi(request, session, action, opts);
   if (ticket instanceof NextResponse) return ticket;

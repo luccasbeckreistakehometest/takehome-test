@@ -1,6 +1,8 @@
 import { NextResponse } from "next/server";
 import { z } from "zod";
-import { guard, isDenied } from "@/lib/guard";
+import { actingAgencyId, guard, isDenied } from "@/lib/guard";
+import { getAgency } from "@/lib/agencies";
+import { agencyScope } from "@/lib/tenancy-rules";
 import {
   getAgencyPage,
   listLeads,
@@ -10,28 +12,29 @@ import {
   setPublicDeliverables,
   setShowcaseClients,
 } from "@/lib/agency-page-db";
-import { getSettings } from "@/lib/settings";
 
 // Configuração da página pública da agência (Configurações → Página pública):
 // slug, textos, serviços, depoimentos, peças do portfólio, clientes com
 // consentimento e os leads recebidos.
-function view() {
-  const config = getAgencyPage();
-  const settings = getSettings();
+// Cada agência tem a sua (admin: a do ?agency=, ou a da casa).
+function view(agencyId: string) {
+  const config = getAgencyPage(agencyId);
   return {
     config,
-    agencyName: settings.agencyName,
+    agencyName: getAgency(agencyId)?.name ?? "",
     path: config.slug ? `/a/${config.slug}` : "",
-    portfolio: listPortfolioCandidates(),
-    clients: listShowcaseCandidates(),
-    leads: listLeads(50),
+    portfolio: listPortfolioCandidates(agencyId),
+    clients: listShowcaseCandidates(agencyId),
+    leads: listLeads(agencyScope(agencyId), 50),
   };
 }
 
-export async function GET() {
+export async function GET(request: Request) {
   const auth = await guard(["agency", "admin"]);
   if (isDenied(auth)) return auth;
-  return NextResponse.json(view());
+  const agencyId = actingAgencyId(auth, request);
+  if (!getAgency(agencyId)) return NextResponse.json({ error: "Agência não encontrada" }, { status: 404 });
+  return NextResponse.json(view(agencyId));
 }
 
 const schema = z.object({
@@ -59,8 +62,10 @@ export async function PUT(request: Request) {
   if (!parsed.success) {
     return NextResponse.json({ error: parsed.error.issues[0]?.message ?? "Dados inválidos" }, { status: 400 });
   }
-  saveAgencyPage(parsed.data.config);
-  if (parsed.data.portfolioIds) setPublicDeliverables(parsed.data.portfolioIds);
-  if (parsed.data.showcaseClientIds) setShowcaseClients(parsed.data.showcaseClientIds);
-  return NextResponse.json(view());
+  const agencyId = actingAgencyId(auth, request);
+  const saved = saveAgencyPage(agencyId, parsed.data.config);
+  if (!saved.ok) return NextResponse.json({ error: saved.error }, { status: 409 });
+  if (parsed.data.portfolioIds) setPublicDeliverables(agencyId, parsed.data.portfolioIds);
+  if (parsed.data.showcaseClientIds) setShowcaseClients(agencyId, parsed.data.showcaseClientIds);
+  return NextResponse.json(view(agencyId));
 }

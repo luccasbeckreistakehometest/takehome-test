@@ -1,27 +1,33 @@
 import { NextResponse } from "next/server";
-import { getSettings, saveSettings } from "@/lib/settings";
 import { ALLOWED_IMAGE_MIMES, readUpload, saveUpload, type AllowedImageMime } from "@/lib/uploads";
-import { agencyOnly, isDenied } from "@/lib/guard";
+import { actingAgencyId, agencyOnly, isDenied } from "@/lib/guard";
+import { getAgency, setAgencyLogoMime } from "@/lib/agencies";
+import { getSession } from "@/lib/session";
+import { agencyLogoUploadId, HOUSE_AGENCY_ID } from "@/lib/tenancy-rules";
 
-const LOGO_ID = "agency-logo";
-
-// Serve o logo whitelabel salvo (usado no header, login e cadastro).
-export async function GET() {
-  const settings = getSettings();
-  if (!settings.logoMime) {
+// Serve o logo whitelabel de uma agência (header, página pública, proposta,
+// relatório). Público: ?agency=<id>; sem parâmetro, o da agência da sessão.
+export async function GET(request: Request) {
+  const wanted = new URL(request.url).searchParams.get("agency");
+  const agencyId = wanted || (await getSession())?.agencyId || HOUSE_AGENCY_ID;
+  const agency = getAgency(agencyId);
+  if (!agency?.logoMime) {
     return NextResponse.json({ error: "sem logo" }, { status: 404 });
   }
-  const data = readUpload(LOGO_ID, settings.logoMime);
+  const data = readUpload(agencyLogoUploadId(agency.id), agency.logoMime);
   if (!data) return NextResponse.json({ error: "sem logo" }, { status: 404 });
   return new NextResponse(new Uint8Array(data), {
-    headers: { "Content-Type": settings.logoMime, "Cache-Control": "no-cache", "X-Content-Type-Options": "nosniff" },
+    headers: { "Content-Type": agency.logoMime, "Cache-Control": "no-cache", "X-Content-Type-Options": "nosniff" },
   });
 }
 
-// Upload do logo (multipart). Aceita PNG/JPEG/WEBP/GIF.
+// Upload do logo (multipart). Aceita PNG/JPEG/WEBP/GIF. Vai para a agência da
+// sessão (admin: a do ?agency=, ou a da casa).
 export async function POST(request: Request) {
   const auth = await agencyOnly();
   if (isDenied(auth)) return auth;
+  const agencyId = actingAgencyId(auth, request);
+  if (!getAgency(agencyId)) return NextResponse.json({ error: "Agência não encontrada" }, { status: 404 });
   const form = await request.formData().catch(() => null);
   const file = form?.get("file");
   if (!(file instanceof File)) {
@@ -35,14 +41,14 @@ export async function POST(request: Request) {
     return NextResponse.json({ error: "Logo acima de 2 MB." }, { status: 400 });
   }
   const buffer = Buffer.from(await file.arrayBuffer());
-  saveUpload(LOGO_ID, mime, buffer);
-  saveSettings({ ...getSettings(), logoMime: mime });
+  saveUpload(agencyLogoUploadId(agencyId), mime, buffer);
+  setAgencyLogoMime(agencyId, mime);
   return NextResponse.json({ ok: true, logoMime: mime }, { status: 201 });
 }
 
-export async function DELETE() {
+export async function DELETE(request: Request) {
   const auth = await agencyOnly();
   if (isDenied(auth)) return auth;
-  saveSettings({ ...getSettings(), logoMime: "" });
+  setAgencyLogoMime(actingAgencyId(auth, request), "");
   return NextResponse.json({ ok: true });
 }

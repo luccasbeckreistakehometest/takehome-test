@@ -1,12 +1,15 @@
 import { NextResponse } from "next/server";
 import { z } from "zod";
 import { createInvite, listInvites, revokeInvite } from "@/lib/invites-db";
-import { agencyOnly, isDenied } from "@/lib/guard";
+import { actingAgencyId, agencyOnly, isDenied, tenantOf } from "@/lib/guard";
+import { getAgency } from "@/lib/agencies";
 
-export async function GET() {
+// Convites da agência (admin: todos, ou os do ?agency=). Quem aceita entra
+// na agência que convidou — "agência" = alguém do time.
+export async function GET(request: Request) {
   const auth = await agencyOnly();
   if (isDenied(auth)) return auth;
-  return NextResponse.json({ invites: listInvites() });
+  return NextResponse.json({ invites: listInvites(tenantOf(auth, request)) });
 }
 
 const schema = z.object({
@@ -22,7 +25,9 @@ export async function POST(request: Request) {
   if (!parsed.success) {
     return NextResponse.json({ error: parsed.error.issues[0]?.message ?? "Dados inválidos" }, { status: 400 });
   }
-  return NextResponse.json({ invite: createInvite(parsed.data) }, { status: 201 });
+  const agencyId = actingAgencyId(auth, request);
+  if (!getAgency(agencyId)) return NextResponse.json({ error: "Agência não encontrada" }, { status: 404 });
+  return NextResponse.json({ invite: createInvite({ ...parsed.data, agencyId }) }, { status: 201 });
 }
 
 export async function DELETE(request: Request) {
@@ -30,6 +35,6 @@ export async function DELETE(request: Request) {
   if (isDenied(auth)) return auth;
   const id = new URL(request.url).searchParams.get("id");
   if (!id) return NextResponse.json({ error: "id ausente" }, { status: 400 });
-  revokeInvite(id);
+  if (!revokeInvite(tenantOf(auth), id)) return NextResponse.json({ error: "Convite não encontrado" }, { status: 404 });
   return NextResponse.json({ ok: true });
 }

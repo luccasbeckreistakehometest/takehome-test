@@ -1,5 +1,6 @@
 import { randomBytes, randomUUID } from "crypto";
-import { createClient, db, getClient } from "./db";
+import { createClient, db, getClient, tenantColumn } from "./db";
+import { scopeWhere, type TenantScope } from "./tenancy-rules";
 import { createUser, randomPassword } from "./auth";
 import { getProspect, updateProspect } from "./marketplace-db";
 import { notifyAgency } from "./notify";
@@ -17,6 +18,7 @@ import {
 
 export type Proposal = {
   id: string;
+  agencyId: string;
   token: string;
   prospectId: string | null;
   clientId: string | null;
@@ -57,6 +59,7 @@ db.exec(`
   );
   CREATE INDEX IF NOT EXISTS idx_proposals_prospect ON proposals(prospectId, createdAt);
 `);
+tenantColumn("proposals");
 
 type Row = Omit<Proposal, "content"> & { content: string };
 const toProposal = (row: Row): Proposal => ({
@@ -67,6 +70,7 @@ const toProposal = (row: Row): Proposal => ({
 const now = () => new Date().toISOString();
 
 export function createProposal(input: {
+  agencyId: string;
   prospectId: string | null;
   prospectName: string;
   segment: string;
@@ -77,6 +81,7 @@ export function createProposal(input: {
 }): Proposal {
   const proposal: Proposal = {
     id: randomUUID(),
+    agencyId: input.agencyId,
     token: randomBytes(12).toString("hex"),
     prospectId: input.prospectId,
     clientId: null,
@@ -95,8 +100,8 @@ export function createProposal(input: {
     createdAt: now(),
   };
   db.prepare(
-    `INSERT INTO proposals (id, token, prospectId, clientId, prospectName, segment, lang, currency, content, status, expiresAt, viewedAt, acceptedAt, acceptedPackage, acceptedBy, acceptedContact, createdAt)
-     VALUES (@id, @token, @prospectId, @clientId, @prospectName, @segment, @lang, @currency, @content, @status, @expiresAt, @viewedAt, @acceptedAt, @acceptedPackage, @acceptedBy, @acceptedContact, @createdAt)`
+    `INSERT INTO proposals (id, agencyId, token, prospectId, clientId, prospectName, segment, lang, currency, content, status, expiresAt, viewedAt, acceptedAt, acceptedPackage, acceptedBy, acceptedContact, createdAt)
+     VALUES (@id, @agencyId, @token, @prospectId, @clientId, @prospectName, @segment, @lang, @currency, @content, @status, @expiresAt, @viewedAt, @acceptedAt, @acceptedPackage, @acceptedBy, @acceptedContact, @createdAt)`
   ).run({ ...proposal, content: JSON.stringify(proposal.content) });
   return proposal;
 }
@@ -115,8 +120,11 @@ export function listProposalsForProspect(prospectId: string): (Proposal & { stat
   });
 }
 
-export function listRecentProposals(limit = 50): (Proposal & { state: ProposalState })[] {
-  return (db.prepare("SELECT * FROM proposals ORDER BY createdAt DESC LIMIT ?").all(limit) as Row[]).map((row) => {
+export function listRecentProposals(scope: TenantScope, limit = 50): (Proposal & { state: ProposalState })[] {
+  const where = scopeWhere(scope);
+  return (
+    db.prepare(`SELECT * FROM proposals WHERE ${where.sql} ORDER BY createdAt DESC LIMIT ?`).all(...where.params, limit) as Row[]
+  ).map((row) => {
     const p = toProposal(row);
     return { ...p, state: proposalState(p) };
   });
@@ -144,10 +152,12 @@ export async function acceptProposal(input: {
   const check = canAccept(proposal, input.packageName);
   if (!check.ok) return { ok: false, reason: check.reason };
 
-  const prospect = proposal.prospectId ? getProspect(proposal.prospectId) : null;
+  // A marca nasce na agência da proposta (nunca em outra).
+  const prospectRow = proposal.prospectId ? getProspect(proposal.prospectId) : null;
+  const prospect = prospectRow && prospectRow.agencyId === proposal.agencyId ? prospectRow : null;
   let clientId = prospect?.clientId ?? null;
   let login: { username: string; password: string } | null = null;
-  if (!clientId || !getClient(clientId)) {
+  if (!clientId || getClient(clientId)?.agencyId !== proposal.agencyId) {
     const client = createClient({
       name: proposal.prospectName,
       industry: proposal.segment,
@@ -168,13 +178,14 @@ export async function acceptProposal(input: {
       source: "agency",
       country: "Brasil",
       selfServe: false,
-    });
+    }, proposal.agencyId);
     clientId = client.id;
     const password = randomPassword();
     const created = await createUser({
       password,
       role: "client",
       refId: client.id,
+      agencyId: proposal.agencyId,
       name: client.name,
       mustChangePassword: true,
     });
@@ -187,6 +198,7 @@ export async function acceptProposal(input: {
 
   const base = (process.env.APP_URL ?? "").replace(/\/$/, "");
   notifyAgency({
+    agencyId: proposal.agencyId,
     text: `🎉 ${proposal.prospectName} aceitou a proposta (${input.packageName}) — cliente criado`,
     href: `/clients/${clientId}`,
     clientId,

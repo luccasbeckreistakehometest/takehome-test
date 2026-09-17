@@ -8,7 +8,7 @@ import {
 } from "@/lib/marketplace-db";
 import { meetingRecsSchema, type MeetingRecs } from "@/lib/marketplace-schemas";
 import { aiErrorResponse, beginAi } from "@/lib/metering";
-import { agencyOnly, isDenied } from "@/lib/guard";
+import { agencyOnly, isDenied, tenantOf } from "@/lib/guard";
 
 export const maxDuration = 300;
 
@@ -17,7 +17,8 @@ export const maxDuration = 300;
 export async function POST(request: Request) {
   const auth = await agencyOnly();
   if (isDenied(auth)) return auth;
-  const clients = listClients();
+  const scope = tenantOf(auth, request);
+  const clients = listClients(scope);
   if (clients.length === 0) {
     return NextResponse.json({ error: "Nenhum cliente cadastrado ainda." }, { status: 400 });
   }
@@ -25,7 +26,7 @@ export async function POST(request: Request) {
   const lines: string[] = [];
   for (const client of clients) {
     const generations = listGenerations(client.id).slice(0, 6);
-    const projects = listProjects({ clientId: client.id });
+    const projects = listProjects({ scope, clientId: client.id });
     lines.push(`Cliente "${client.name}" (clientId: ${client.id}, segmento: ${client.industry || "n/d"}):`);
     lines.push(
       `  Últimos entregáveis: ${generations.map((g) => `${g.type} em ${g.createdAt.slice(0, 10)}`).join("; ") || "nenhum"}`
@@ -39,12 +40,12 @@ export async function POST(request: Request) {
       );
     }
   }
-  const existing = listAllMeetings()
+  const existing = listAllMeetings(scope)
     .filter((meeting) => new Date(meeting.scheduledAt) > new Date())
     .map((meeting) => `- ${meeting.scheduledAt} · ${meeting.title} (${meeting.clientName ?? "geral"})`)
     .join("\n");
 
-  const ticket = await beginAi(request, auth, "meeting_recs");
+  const ticket = await beginAi(request, auth, "meeting_recs", { agencyId: scope.agencyId });
   if (isDenied(ticket)) return ticket;
   try {
     return await ticket.run(async () => {

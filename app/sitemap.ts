@@ -1,6 +1,6 @@
 import type { MetadataRoute } from "next";
 import { appBaseUrl } from "@/lib/legal";
-import { getAgencyPage } from "@/lib/agency-page-db";
+import { listPublishedAgencySlugs } from "@/lib/agencies";
 
 export const dynamic = "force-dynamic";
 
@@ -18,7 +18,7 @@ const PUBLIC_PAGES: { path: string; priority: number; alternate?: string }[] = [
   { path: "/cookies", priority: 0.1, alternate: "/cookie-policy" },
 ];
 
-// Landing, funis, páginas legais e a página pública da agência (se publicada).
+// Landing, funis, páginas legais e as páginas públicas publicadas das agências.
 export default function sitemap(): MetadataRoute.Sitemap {
   const base = appBaseUrl();
   const now = new Date();
@@ -35,9 +35,8 @@ export default function sitemap(): MetadataRoute.Sitemap {
     entries.push({ url: `${base}${page.alternate}`, lastModified: now, changeFrequency: "monthly", priority: 0.1 });
   }
   try {
-    const agency = getAgencyPage();
-    if (agency.published && agency.slug) {
-      entries.push({ url: `${base}/a/${agency.slug}`, lastModified: now, changeFrequency: "weekly", priority: 0.7 });
+    for (const slug of listPublishedAgencySlugs()) {
+      entries.push({ url: `${base}/a/${slug}`, lastModified: now, changeFrequency: "weekly", priority: 0.7 });
     }
   } catch (error) {
     console.error("[sitemap] página da agência indisponível:", error);

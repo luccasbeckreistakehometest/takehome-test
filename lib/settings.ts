@@ -6,10 +6,11 @@ import { addColumnIfMissing, db } from "./db";
 // - premium: Opus em tudo
 export type AiMode = "economy" | "balanced" | "premium";
 
-export type AgencySettings = {
-  agencyName: string;
-  tagline: string;
-  accentColor: string;
+// Configurações da PLATAFORMA (uma linha, só o admin muda). O whitelabel
+// (nome, slogan, cor, logo, estilo da casa) é de cada agência: lib/agencies.ts.
+// As colunas antigas de whitelabel continuam na tabela só como origem da
+// migração da agência da casa.
+export type PlatformSettings = {
   landingPagesEnabled: boolean; // gerador de landing page (alto consumo de tokens)
   aiMode: AiMode;
   // Chaves de API gerenciadas pela UI (armazenadas no banco local)
@@ -18,14 +19,22 @@ export type AgencySettings = {
   togetherApiKey: string; // Together AI (FLUX.1-schnell-Free)
   hfApiKey: string; // Hugging Face (FLUX.1-dev, melhor qualidade free)
   imageProvider: "huggingface" | "together" | "pollinations"; // provedor de conceitos free
-  logoMime: string; // mime do logo whitelabel (vazio = sem logo, usa inicial)
-  houseStyle: string; // "estilo da casa": diretrizes injetadas em todos os prompts
 };
 
-const DEFAULTS: AgencySettings = {
-  agencyName: "Marqa",
-  tagline: "sua marca, acelerada por IA",
-  accentColor: "#f76b15",
+// Resposta de GET /api/settings: marca da agência da sessão + flags da
+// plataforma (as chaves nunca voltam preenchidas).
+export type AgencySettings = PlatformSettings & {
+  agencyId: string | null;
+  agencySlug: string | null;
+  agencyName: string;
+  tagline: string;
+  accentColor: string;
+  logoMime: string;
+  logoUrl: string;
+  houseStyle: string;
+};
+
+const DEFAULTS: PlatformSettings = {
   landingPagesEnabled: false,
   aiMode: "balanced",
   anthropicApiKey: "",
@@ -33,8 +42,6 @@ const DEFAULTS: AgencySettings = {
   togetherApiKey: "",
   hfApiKey: "",
   imageProvider: "pollinations",
-  logoMime: "",
-  houseStyle: "",
 };
 
 db.exec(`
@@ -69,9 +76,6 @@ addColumnIfMissing("settings", "hfApiKey", "TEXT NOT NULL DEFAULT ''");
 addColumnIfMissing("settings", "logoMime", "TEXT NOT NULL DEFAULT ''");
 
 type SettingsRow = {
-  agencyName: string;
-  tagline: string;
-  accentColor: string;
   landingPagesEnabled: number;
   aiMode: string;
   anthropicApiKey: string;
@@ -79,19 +83,14 @@ type SettingsRow = {
   togetherApiKey: string;
   hfApiKey: string;
   imageProvider: string;
-  logoMime: string;
-  houseStyle: string;
 };
 
-export function getSettings(): AgencySettings {
+export function getSettings(): PlatformSettings {
   const row = db.prepare("SELECT * FROM settings WHERE id = 1").get() as
     | SettingsRow
     | undefined;
   if (!row) return DEFAULTS;
   return {
-    agencyName: row.agencyName,
-    tagline: row.tagline,
-    accentColor: row.accentColor,
     landingPagesEnabled: row.landingPagesEnabled === 1,
     aiMode: (["economy", "balanced", "premium"] as const).includes(row.aiMode as AiMode)
       ? (row.aiMode as AiMode)
@@ -105,17 +104,15 @@ export function getSettings(): AgencySettings {
     )
       ? (row.imageProvider as "huggingface" | "together" | "pollinations")
       : "pollinations",
-    logoMime: row.logoMime ?? "",
-    houseStyle: row.houseStyle ?? "",
   };
 }
 
-export function saveSettings(settings: AgencySettings): AgencySettings {
+export function saveSettings(settings: PlatformSettings): PlatformSettings {
   db.prepare(
-    `INSERT INTO settings (id, agencyName, tagline, accentColor, landingPagesEnabled, aiMode, anthropicApiKey, googleAiApiKey, togetherApiKey, hfApiKey, imageProvider, logoMime, houseStyle)
-     VALUES (1, @agencyName, @tagline, @accentColor, @landingPagesEnabled, @aiMode, @anthropicApiKey, @googleAiApiKey, @togetherApiKey, @hfApiKey, @imageProvider, @logoMime, @houseStyle)
-     ON CONFLICT(id) DO UPDATE SET agencyName=@agencyName, tagline=@tagline, accentColor=@accentColor,
-       landingPagesEnabled=@landingPagesEnabled, aiMode=@aiMode, anthropicApiKey=@anthropicApiKey, googleAiApiKey=@googleAiApiKey, togetherApiKey=@togetherApiKey, hfApiKey=@hfApiKey, imageProvider=@imageProvider, logoMime=@logoMime, houseStyle=@houseStyle`
+    `INSERT INTO settings (id, agencyName, tagline, accentColor, landingPagesEnabled, aiMode, anthropicApiKey, googleAiApiKey, togetherApiKey, hfApiKey, imageProvider)
+     VALUES (1, 'Marqa', '', '#f76b15', @landingPagesEnabled, @aiMode, @anthropicApiKey, @googleAiApiKey, @togetherApiKey, @hfApiKey, @imageProvider)
+     ON CONFLICT(id) DO UPDATE SET landingPagesEnabled=@landingPagesEnabled, aiMode=@aiMode, anthropicApiKey=@anthropicApiKey,
+       googleAiApiKey=@googleAiApiKey, togetherApiKey=@togetherApiKey, hfApiKey=@hfApiKey, imageProvider=@imageProvider`
   ).run({
     ...settings,
     landingPagesEnabled: settings.landingPagesEnabled ? 1 : 0,

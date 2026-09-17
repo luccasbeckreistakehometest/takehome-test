@@ -9,8 +9,10 @@ import {
   listMeetings,
   listMessages,
   logActivity,
+  professionalWorkedWith,
   updateProject,
 } from "@/lib/marketplace-db";
+import { professionalVisibleTo, agencyScope } from "@/lib/tenancy-rules";
 import { projectPatchSchema } from "@/lib/validation";
 import { decideDeliverable, listApprovalEvents } from "@/lib/approvals-db";
 import { guardProject, isDenied } from "@/lib/guard";
@@ -54,6 +56,18 @@ export async function PATCH(request: Request, { params }: Context) {
       keys.every((key) => key === "status") &&
       (parsed.data.status === "approved" || parsed.data.status === "in_progress");
     if (!allowed) return NextResponse.json({ error: "Acesso negado" }, { status: 403 });
+  }
+  // Profissional escalado precisa ser visível para a agência da demanda.
+  if (parsed.data.professionalId) {
+    const professional = getProfessional(parsed.data.professionalId);
+    const visible =
+      professional &&
+      professionalVisibleTo(
+        agencyScope(auth.project.agencyId),
+        professional,
+        professionalWorkedWith(professional.id, auth.project.agencyId)
+      );
+    if (!visible) return NextResponse.json({ error: "Profissional não encontrado" }, { status: 404 });
   }
   const before = getProject(id);
   const updated = updateProject(id, parsed.data);

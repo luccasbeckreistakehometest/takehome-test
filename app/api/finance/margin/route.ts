@@ -1,5 +1,5 @@
 import { NextResponse } from "next/server";
-import { guard, isDenied } from "@/lib/guard";
+import { actingAgencyId, guard, isDenied } from "@/lib/guard";
 import { currentMonth, isValidMonth } from "@/lib/report-aggregate";
 import { marginReport } from "@/lib/finance-db";
 import { marginCsv } from "@/lib/finance-rules";
@@ -11,7 +11,7 @@ export async function GET(request: Request) {
   const url = new URL(request.url);
   const month = url.searchParams.get("month") ?? currentMonth();
   if (!isValidMonth(month)) return NextResponse.json({ error: "Mês inválido (use AAAA-MM)" }, { status: 400 });
-  const report = marginReport(month);
+  const report = marginReport(actingAgencyId(auth, request), month);
   if (url.searchParams.get("format") === "csv") {
     const lang = url.searchParams.get("lang") === "en" ? "en" : "pt";
     return new NextResponse(`﻿${marginCsv(report.rows, month, lang)}`, {

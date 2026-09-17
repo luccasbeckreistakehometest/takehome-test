@@ -2,6 +2,8 @@ export type ProfessionalRole = "fotografo" | "designer";
 
 export type Professional = {
   id: string;
+  // agência que cadastrou (null = freelancer do marketplace aberto)
+  agencyId: string | null;
   name: string;
   role: ProfessionalRole;
   email: string;
@@ -20,7 +22,7 @@ export type Professional = {
   createdAt: string;
 };
 
-export type ProfessionalInput = Omit<Professional, "id" | "createdAt">;
+export type ProfessionalInput = Omit<Professional, "id" | "createdAt" | "agencyId">;
 
 export const ROLE_LABELS: Record<ProfessionalRole, string> = {
   fotografo: "Fotógrafo(a)",
@@ -74,6 +76,7 @@ export const ESCROW_LABELS: Record<EscrowStatus, string> = {
 
 export type Project = {
   id: string;
+  agencyId: string; // herdada da marca
   clientId: string;
   professionalId: string | null;
   title: string;
@@ -104,6 +107,7 @@ export const APPLICATION_STATUS_LABELS: Record<ApplicationStatus, string> = {
 // mais de uma (pagando ambas) e depois definir o preferido no projeto.
 export type Application = {
   id: string;
+  agencyId?: string | null; // agência da demanda
   projectId: string;
   professionalId: string;
   message: string;
@@ -209,6 +213,7 @@ export const PROSPECT_STATUS_LABELS: Record<ProspectStatus, string> = {
 
 export type Prospect = {
   id: string;
+  agencyId: string;
   searchQuery: string;
   name: string;
   segment: string;

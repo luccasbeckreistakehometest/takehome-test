@@ -5,6 +5,8 @@ import { anonymiseBillingAccount, exportBillingAccount } from "./billing-db";
 import { anonymiseAiUsage } from "./ai-spend";
 import { anonymiseInboxForUser, listInboxForUser } from "./contact-db";
 import { deleteGenericUpload, deleteUpload } from "./uploads";
+import { deleteAgencyWorkspace, getAgency, setAgencyOwner } from "./agencies";
+import { HOUSE_AGENCY_ID } from "./tenancy-rules";
 import type { AccountType } from "./plans";
 
 // LGPD self-service: "baixar meus dados" (JSON) e "excluir minha conta".
@@ -45,8 +47,8 @@ function rowsBy(column: string, value: string, skip: string[] = []): Record<stri
   return out;
 }
 
-function accountFor(user: Pick<User, "role" | "refId">): { accountType: AccountType; accountId: string } | null {
-  if (user.role === "agency") return { accountType: "agency", accountId: "agency" };
+function accountFor(user: Pick<User, "role" | "refId" | "agencyId">): { accountType: AccountType; accountId: string } | null {
+  if (user.role === "agency") return user.agencyId ? { accountType: "agency", accountId: user.agencyId } : null;
   if ((user.role === "client" || user.role === "professional") && user.refId) {
     return { accountType: user.role, accountId: user.refId };
   }
@@ -85,6 +87,14 @@ export function exportAccountData(userId: string) {
   return data;
 }
 
+// Agência: o dono que sai sozinho leva o workspace inteiro (menos a casa);
+// com mais gente no time, a agência fica com outro membro.
+function agencyTeam(agencyId: string, exceptUserId: string): { id: string }[] {
+  return db
+    .prepare("SELECT id FROM users WHERE role = 'agency' AND agencyId = ? AND id != ? ORDER BY createdAt")
+    .all(agencyId, exceptUserId) as { id: string }[];
+}
+
 export type DeleteOutcome =
   | { ok: true; removedWorkspace: boolean }
   | { ok: false; error: string; status: number };
@@ -102,8 +112,20 @@ export function deleteAccount(userId: string): DeleteOutcome {
   }
   const files: { id: string; mime?: string; ext?: string }[] = [];
   let removedWorkspace = false;
+  const agencyId = user.role === "agency" ? user.agencyId : null;
+  const lastOfAgency = Boolean(agencyId && agencyId !== HOUSE_AGENCY_ID && agencyTeam(agencyId, user.id).length === 0);
 
   db.transaction(() => {
+    if (agencyId) {
+      const agency = getAgency(agencyId);
+      if (lastOfAgency) {
+        files.push(...deleteAgencyWorkspace(agencyId).files);
+        removedWorkspace = true;
+      } else if (agency?.ownerUserId === user.id) {
+        const next = agencyTeam(agencyId, user.id)[0];
+        if (next) setAgencyOwner(agencyId, next.id);
+      }
+    }
     if (user.role === "client" && user.refId) {
       const client = getClient(user.refId);
       const ownWorkspace = client && (client.source === "self" || user.brandSource === "platform");
@@ -136,8 +158,8 @@ export function deleteAccount(userId: string): DeleteOutcome {
       removedWorkspace = true;
     }
     const account = accountFor(user);
-    if (account && user.role !== "agency" && removedWorkspace) anonymiseBillingAccount(account.accountType, account.accountId);
-    if (account) anonymiseAiUsage(account.accountType, user.role === "agency" ? "-" : account.accountId, userId);
+    if (account && removedWorkspace) anonymiseBillingAccount(account.accountType, account.accountId);
+    if (account) anonymiseAiUsage(account.accountType, user.role === "agency" && !removedWorkspace ? "-" : account.accountId, userId);
     anonymiseInboxForUser(userId);
     for (const { table } of tablesWithColumn("userId")) {
       if (table !== "users" && table !== "contact_messages") db.prepare(`DELETE FROM ${table} WHERE userId = ?`).run(userId);

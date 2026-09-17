@@ -1,12 +1,22 @@
 import { NextResponse } from "next/server";
 import { z } from "zod";
-import { getWorkerStatus, sessionModeAvailable, startWorker, stopWorker } from "@/lib/messaging/worker-manager";
+import { getWorkerStatus, sessionModeAvailableFor, startWorker, stopWorker } from "@/lib/messaging/worker-manager";
 import { enqueueDirect, getConnection } from "@/lib/messaging-db";
-import { agencyOnly, isDenied } from "@/lib/guard";
+import { agencyOnly, forbidden, isDenied } from "@/lib/guard";
+import { HOUSE_AGENCY_ID } from "@/lib/tenancy-rules";
+import type { SessionPayload } from "@/lib/auth-shared";
+
+// O worker de sessão é da agência da casa (uma sessão física de WhatsApp).
+function houseOnly(session: SessionPayload): boolean {
+  return session.role === "admin" || session.agencyId === HOUSE_AGENCY_ID;
+}
 
 export async function GET() {
   const auth = await agencyOnly();
   if (isDenied(auth)) return auth;
+  if (!houseOnly(auth)) {
+    return NextResponse.json({ running: false, pid: null, channel: null, state: "idle", message: "", updatedAt: null });
+  }
   return NextResponse.json(getWorkerStatus());
 }
 
@@ -29,7 +39,8 @@ export async function POST(request: Request) {
     return NextResponse.json({ error: parsed.error.issues[0]?.message ?? "Dados inválidos" }, { status: 400 });
   }
   const { action, channel, testPhone, testMessage } = parsed.data;
-  if (action !== "stop" && !sessionModeAvailable()) {
+  if (!houseOnly(auth)) return forbidden();
+  if (action !== "stop" && !sessionModeAvailableFor(HOUSE_AGENCY_ID)) {
     return NextResponse.json(
       { error: "O modo sessão não está disponível neste servidor. Use a API oficial da Meta." },
       { status: 400 }
@@ -53,7 +64,7 @@ export async function POST(request: Request) {
   if (!testPhone) {
     return NextResponse.json({ error: "Informe um número (com DDI) para o teste." }, { status: 400 });
   }
-  const conn = getConnection("whatsapp");
+  const conn = getConnection(HOUSE_AGENCY_ID, "whatsapp");
   if (!conn || conn.mode !== "session") {
     return NextResponse.json(
       { error: "Salve a conexão do WhatsApp no modo 'sessão' antes de testar." },
@@ -61,6 +72,7 @@ export async function POST(request: Request) {
     );
   }
   const msg = enqueueDirect({
+    agencyId: HOUSE_AGENCY_ID,
     channel: "whatsapp",
     mode: "session",
     toAddress: testPhone,

@@ -1,8 +1,8 @@
 import type { Metadata } from "next";
 import { notFound } from "next/navigation";
-import { getAgencyPage, listPublicWork, listShowcaseClients } from "@/lib/agency-page-db";
-import { isPageLive } from "@/lib/agency-page-rules";
-import { getSettings } from "@/lib/settings";
+import { findPublishedPage, listPublicWork, listShowcaseClients } from "@/lib/agency-page-db";
+import { getAgency } from "@/lib/agencies";
+import { agencyLogoUrl } from "@/lib/branding";
 import LeadForm from "@/components/LeadForm";
 
 export const dynamic = "force-dynamic";
@@ -11,11 +11,25 @@ type Props = { params: Promise<{ slug: string }> };
 
 // Página pública da agência: quem somos, serviços, trabalhos selecionados,
 // clientes que consentiram, depoimentos e o formulário que vira prospect.
+// A agência vem do endereço (/a/[slug]); cada agência tem a sua.
+function loadPage(slug: string) {
+  const page = findPublishedPage(slug);
+  const agency = page ? getAgency(page.agencyId) : null;
+  if (!page || !agency) return null;
+  const settings = {
+    agencyName: agency.name,
+    tagline: agency.tagline,
+    accentColor: agency.accentColor,
+    logoUrl: agencyLogoUrl(agency),
+  };
+  return { agencyId: agency.id, config: page.config, settings };
+}
+
 export async function generateMetadata({ params }: Props): Promise<Metadata> {
   const { slug } = await params;
-  const config = getAgencyPage();
-  if (!isPageLive(config, slug)) return { title: "Página não encontrada" };
-  const settings = getSettings();
+  const page = loadPage(slug);
+  if (!page) return { title: "Página não encontrada" };
+  const { config, settings } = page;
   const title = config.headline ? `${settings.agencyName} — ${config.headline}` : `${settings.agencyName} — ${settings.tagline}`;
   const description = (config.about || settings.tagline).slice(0, 160);
   return {
@@ -29,19 +43,19 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
 
 export default async function AgencyPublicPage({ params }: Props) {
   const { slug } = await params;
-  const config = getAgencyPage();
-  if (!isPageLive(config, slug)) notFound();
-  const settings = getSettings();
-  const work = listPublicWork();
-  const clients = config.showClients ? listShowcaseClients() : [];
+  const page = loadPage(slug);
+  if (!page) notFound();
+  const { config, settings, agencyId } = page;
+  const work = listPublicWork(agencyId);
+  const clients = config.showClients ? listShowcaseClients(agencyId) : [];
   const cta = config.ctaTitle || "Vamos conversar?";
 
   return (
     <div className="mx-auto max-w-5xl space-y-12 py-4" style={{ ["--accent" as string]: settings.accentColor }} data-testid="agency-page">
       <section className="flex flex-col items-start gap-5 sm:flex-row sm:items-center">
-        {settings.logoMime ? (
+        {settings.logoUrl ? (
           // eslint-disable-next-line @next/next/no-img-element
-          <img src="/api/settings/logo" alt={settings.agencyName} className="size-20 rounded-2xl border border-edge object-contain" />
+          <img src={settings.logoUrl} alt={settings.agencyName} className="size-20 rounded-2xl border border-edge object-contain" />
         ) : (
           <span className="grid size-20 place-items-center rounded-2xl bg-accent font-[family-name:var(--font-display)] text-3xl font-bold text-accent-ink">
             {settings.agencyName.charAt(0).toUpperCase()}

@@ -20,13 +20,24 @@ export async function sessionFromToken(token: string | undefined): Promise<Sessi
   const state = getSessionState(payload.userId);
   if (!state || state.disabled) return null;
   if ((payload.sv ?? 0) !== state.sessionVersion) return null;
+  // Papel mudou no banco (admin editou): o cookie antigo não vale mais.
+  if (state.role !== payload.role) return null;
   // O modo da marca pode mudar pelo painel da agência: lê o valor atual.
-  if (payload.role === "client" && payload.refId) {
-    const client = getClient(payload.refId);
-    if (!client) return null;
-    return { ...payload, selfServe: client.selfServe };
+  // A agência (tenant) vem sempre do banco, nunca do cookie.
+  if (payload.role === "client") {
+    const client = payload.refId ? getClient(payload.refId) : null;
+    if (!client || !client.agencyId) return null;
+    return { ...payload, selfServe: client.selfServe, agencyId: client.agencyId };
   }
-  return payload;
+  if (payload.role === "agency") {
+    // Conta de agência sem tenant não entra (falha fechada).
+    if (!state.agencyId) return null;
+    return { ...payload, agencyId: state.agencyId };
+  }
+  if (payload.role === "professional") {
+    return { ...payload, agencyId: state.agencyId };
+  }
+  return { ...payload, agencyId: null };
 }
 
 // Lê a sessão nas rotas/servidor.
@@ -59,9 +70,10 @@ export async function reissueSession(
   session: SessionPayload,
   changes: Partial<Pick<SessionPayload, "selfServe" | "sv" | "name">>
 ): Promise<void> {
-  const { iat, exp, ...rest } = session;
+  const { iat, exp, agencyId, ...rest } = session;
   void iat;
   void exp;
+  void agencyId;
   const token = await signSession({ ...rest, ...changes });
   response.cookies.set(SESSION_COOKIE, token, sessionCookieOptions());
 }
@@ -70,12 +82,15 @@ export function clearSessionCookie(response: NextResponse): void {
   response.cookies.set(SESSION_COOKIE, "", { ...sessionCookieOptions(), maxAge: 0 });
 }
 
-// Mapeia a sessão para a conta de billing (tipo + id). A agência da casa usa
-// accountId fixo "agency"; cliente/profissional usam o refId.
+// Mapeia a sessão para a conta de billing (tipo + id). Agência → a carteira
+// da agência dela (a casa mantém o accountId "agency"); marca/profissional →
+// o refId.
 export function billingAccount(
-  session: Pick<SessionPayload, "role" | "refId">
+  session: Pick<SessionPayload, "role" | "refId" | "agencyId">
 ): { accountType: AccountType; accountId: string } | null {
-  if (session.role === "agency") return { accountType: "agency", accountId: "agency" };
+  if (session.role === "agency") {
+    return session.agencyId ? { accountType: "agency", accountId: session.agencyId } : null;
+  }
   if (session.role === "client" && session.refId)
     return { accountType: "client", accountId: session.refId };
   if (session.role === "professional" && session.refId)

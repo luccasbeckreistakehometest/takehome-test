@@ -1,13 +1,14 @@
 import { NextResponse } from "next/server";
 import { z } from "zod";
-import { db } from "@/lib/db";
-import { deleteMeeting, updateMeeting } from "@/lib/marketplace-db";
-import { agencyOnly, guardClient, isDenied, notFound } from "@/lib/guard";
+import { deleteMeeting, getMeeting, updateMeeting } from "@/lib/marketplace-db";
+import { guard, guardClient, isDenied, notFound } from "@/lib/guard";
 
+// Reunião de uma marca: quem opera a marca; reunião geral: a agência dona.
 async function authorize(id: string) {
-  const row = db.prepare("SELECT clientId FROM meetings WHERE id = ?").get(id) as { clientId: string | null } | undefined;
+  const row = getMeeting(id);
   if (!row) return notFound("Reunião não encontrada");
-  return row.clientId ? guardClient(row.clientId, "workspace") : agencyOnly();
+  if (row.clientId) return guardClient(row.clientId, "workspace");
+  return guard(["agency", "admin"], { agencyId: row.agencyId });
 }
 
 type Context = { params: Promise<{ id: string }> };

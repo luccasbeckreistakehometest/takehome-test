@@ -34,10 +34,11 @@ export function supportChannels(): SupportChannels {
   return { email: clean(process.env.SUPPORT_EMAIL), whatsapp: whatsapp && whatsapp.length >= 10 ? whatsapp : null };
 }
 
-// Cadastro público de agência: desligado por padrão até o isolamento por
-// agência (multi-tenant) existir. Desligado → "pedir acesso".
+// Cadastro público de agência: LIGADO (cada agência nasce com o próprio
+// workspace isolado). AGENCY_SELF_SIGNUP=false fecha o cadastro de novo
+// (vira "pedir acesso") — um interruptor de emergência.
 export function agencySelfSignupEnabled(): boolean {
-  return process.env.AGENCY_SELF_SIGNUP === "true";
+  return (process.env.AGENCY_SELF_SIGNUP ?? "").trim().toLowerCase() !== "false";
 }
 
 export function appBaseUrl(): string {

@@ -1,5 +1,5 @@
 import { randomBytes } from "crypto";
-import { db } from "./db";
+import { db, tenantColumn } from "./db";
 
 // Autenticação dos webhooks de entrada.
 
@@ -17,6 +17,7 @@ db.exec(`
     createdAt TEXT NOT NULL
   );
 `);
+tenantColumn("client_webhook_tokens");
 
 export function getSalesWebhookToken(clientId: string): string | null {
   const row = db.prepare("SELECT token FROM client_webhook_tokens WHERE clientId = ?").get(clientId) as
@@ -28,9 +29,10 @@ export function getSalesWebhookToken(clientId: string): string | null {
 export function rotateSalesWebhookToken(clientId: string): string {
   const token = randomBytes(24).toString("hex");
   db.prepare(
-    `INSERT INTO client_webhook_tokens (clientId, token, createdAt) VALUES (?, ?, ?)
+    `INSERT INTO client_webhook_tokens (clientId, agencyId, token, createdAt)
+     VALUES (?, (SELECT agencyId FROM clients WHERE id = ?), ?, ?)
      ON CONFLICT(clientId) DO UPDATE SET token = excluded.token, createdAt = excluded.createdAt`
-  ).run(clientId, token, new Date().toISOString());
+  ).run(clientId, clientId, token, new Date().toISOString());
   return token;
 }
 

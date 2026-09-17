@@ -38,13 +38,17 @@ describe("legal documents", () => {
     expect(all).not.toMatch(/\d{2}\.\d{3}\.\d{3}\/\d{4}-\d{2}/); // nenhum CNPJ no texto
   });
 
-  it("support channels and agency signup are opt-in", () => {
+  it("support channels are opt-in; agency signup is open unless switched off", () => {
     vi.stubEnv("SUPPORT_EMAIL", "");
     vi.stubEnv("SUPPORT_WHATSAPP", "123");
     expect(supportChannels()).toEqual({ email: null, whatsapp: null });
     vi.stubEnv("AGENCY_SELF_SIGNUP", "");
-    expect(agencySelfSignupEnabled()).toBe(false);
+    expect(agencySelfSignupEnabled()).toBe(true);
     vi.stubEnv("AGENCY_SELF_SIGNUP", "true");
     expect(agencySelfSignupEnabled()).toBe(true);
+    vi.stubEnv("AGENCY_SELF_SIGNUP", "false");
+    expect(agencySelfSignupEnabled()).toBe(false);
+    vi.stubEnv("AGENCY_SELF_SIGNUP", " FALSE ");
+    expect(agencySelfSignupEnabled()).toBe(false);
   });
 });

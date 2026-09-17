@@ -49,12 +49,12 @@ export async function POST(request: Request, { params }: Context) {
   if (!parsed.success) {
     return NextResponse.json({ error: parsed.error.issues[0]?.message ?? "Dados inválidos" }, { status: 400 });
   }
-  const ticket = await beginAi(request, auth, "monthly_report");
+  const ticket = await beginAi(request, auth, "monthly_report", { agencyId: client.agencyId });
   if (isDenied(ticket)) return ticket;
 
   const { month } = parsed.data;
   const data = buildMonthData(id, month);
-  const job = createJob({ kind: "monthly_report", label: `Relatório mensal ${month} — ${client.name}`, clientId: id });
+  const job = createJob({ kind: "monthly_report", label: `Relatório mensal ${month} — ${client.name}`, clientId: id, agencyId: client.agencyId });
   try {
     const summary = await ticket.run(() => generateReportSummary(client, data));
     // Sem chave de IA o resumo sai de exemplo: ninguém paga por isso.

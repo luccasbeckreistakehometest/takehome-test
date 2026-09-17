@@ -1,9 +1,15 @@
 import { generateStructured } from "./claude";
 import { isAiMock } from "./ai-mock";
 import { clientContext } from "./prompts";
-import { getSettings } from "./settings";
+import { currentAgencyProfile } from "./agencies";
 import type { Client } from "./types";
 import { formatsFor, HOOK_TYPES, mockCampaignPlan, type CampaignInput, type CampaignPlan } from "./campaign-rules";
+
+// Nome e estilo da casa da agência em nome de quem a IA roda.
+function agencyPromptProfile(): { agencyName: string; houseStyle: string } {
+  const profile = currentAgencyProfile();
+  return { agencyName: profile.name, houseStyle: profile.houseStyle };
+}
 
 // Campanha de 30 dias: do briefing + objetivo + canais para um mês inteiro
 // de posts rascunhados (tema, formato, dia, gancho, legenda, CTA, brief da
@@ -48,7 +54,7 @@ export async function generateCampaignPlan(client: Client, input: CampaignInput)
   if (isAiMock()) return mockCampaignPlan({ ...input, clientName: client.name, lang: client.language });
   const total = Math.max(1, Math.round((input.days / 7) * input.postsPerWeek));
   const language = client.language === "en" ? "English (US)" : "Brazilian Portuguese";
-  const settings = getSettings();
+  const settings = agencyPromptProfile();
   const plan = await generateStructured<CampaignPlan>({
     tier: "standard",
     maxTokens: 24000,

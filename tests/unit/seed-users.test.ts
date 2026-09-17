@@ -28,6 +28,11 @@ describe("seed users", () => {
       }[]
     ).map((r) => r.username);
     expect(names).toEqual(["admin", "agencia"]);
+    // A conta `agencia` é a dona da agência da casa; o admin não tem agência.
+    const agencia = db.prepare("SELECT id, agencyId FROM users WHERE username = 'agencia'").get() as { id: string; agencyId: string };
+    expect(agencia.agencyId).toBe("agency");
+    expect((db.prepare("SELECT agencyId FROM users WHERE username = 'admin'").get() as { agencyId: string | null }).agencyId).toBeNull();
+    expect((db.prepare("SELECT ownerUserId FROM agencies WHERE id = 'agency'").get() as { ownerUserId: string }).ownerUserId).toBe(agencia.id);
   });
 
   it("never creates logins for existing clients or professionals", async () => {
@@ -51,7 +56,7 @@ describe("seed users", () => {
       source: "agency",
       country: "Brasil",
       selfServe: false,
-    });
+    }, "agency");
     await auth.seedUsers("seed-password-1");
     expect(count("client")).toBe(0);
     expect(count("professional")).toBe(0);
@@ -62,6 +67,7 @@ describe("seed users", () => {
       password: "senha-forte-1",
       role: "client",
       refId: null,
+      agencyId: "agency",
       name: "Ana Souza",
       email: "Ana@Example.com",
     });
@@ -72,12 +78,12 @@ describe("seed users", () => {
     const disabled = await auth.verifyLogin("ana@example.com", "senha-forte-1");
     expect(disabled).toEqual({ ok: false, reason: "disabled" });
     await expect(
-      auth.createUser({ password: "senha-forte-2", role: "client", refId: null, name: "Outra", email: "ana@example.com" })
+      auth.createUser({ password: "senha-forte-2", role: "client", refId: null, agencyId: "agency", name: "Outra", email: "ana@example.com" })
     ).rejects.toBeInstanceOf(auth.EmailTakenError);
   });
 
   it("password change and admin reset bump the session version", async () => {
-    const { id } = await auth.createUser({ password: "senha-forte-1", role: "professional", refId: null, name: "Beto" });
+    const { id } = await auth.createUser({ password: "senha-forte-1", role: "professional", refId: null, agencyId: null, name: "Beto" });
     const before = auth.getSessionState(id)!.sessionVersion;
     const changed = await auth.changePassword(id, "senha-forte-1", "senha-nova-22");
     expect(changed.ok).toBe(true);

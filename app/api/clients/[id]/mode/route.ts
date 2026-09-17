@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server";
 import { z } from "zod";
-import { setClientSelfServe } from "@/lib/db";
+import { clientAgencyId, setClientSelfServe } from "@/lib/db";
 import { getSession, reissueSession } from "@/lib/session";
 import { homeForUser } from "@/lib/auth";
 
@@ -19,7 +19,9 @@ export async function POST(request: Request, { params }: Context) {
     return NextResponse.json({ error: "Não autenticado" }, { status: 401 });
   }
   const isOwner = session.role === "client" && session.refId === id;
-  const isManager = session.role === "agency" || session.role === "admin";
+  // Agência só troca o modo de marca dela.
+  const isManager =
+    session.role === "admin" || (session.role === "agency" && clientAgencyId(id) === session.agencyId);
   if (!isOwner && !isManager) {
     return NextResponse.json({ error: "Acesso negado" }, { status: 403 });
   }

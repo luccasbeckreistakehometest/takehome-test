@@ -1,5 +1,5 @@
 import { NextResponse } from "next/server";
-import { saveInbound } from "@/lib/messaging-db";
+import { findAgencyByAccountId, saveInbound } from "@/lib/messaging-db";
 import { findClientByPhoneNumberId } from "@/lib/attendant-db";
 import { handleInbound } from "@/lib/attendant";
 import { metaVerifyToken, safeEqual, verifyMetaSignature } from "@/lib/webhook-auth";
@@ -49,10 +49,15 @@ export async function POST(request: Request) {
         const contacts = value.contacts ?? [];
         // Número que recebeu: se for o número próprio de um cliente (atendente
         // por cliente), a mensagem entra na conta dele e o atendente responde.
+        // Senão, é o número de uma agência (Conexões). Número desconhecido
+        // fica sem agência (só o admin vê).
         const phoneNumberId = String(value.metadata?.phone_number_id ?? "");
-        const clientId = findClientByPhoneNumberId(phoneNumberId);
+        const owner = findClientByPhoneNumberId(phoneNumberId);
+        const clientId = owner?.clientId ?? null;
+        const agencyId = owner?.agencyId ?? findAgencyByAccountId("whatsapp", phoneNumberId);
         for (const m of value.messages ?? []) {
           const inbound = saveInbound({
+            agencyId,
             channel: "whatsapp",
             fromAddress: m.from ?? "",
             fromName: contacts[0]?.profile?.name ?? "",
@@ -65,10 +70,12 @@ export async function POST(request: Request) {
           }
         }
       }
-      // Instagram / Messenger: entry.messaging[]
+      // Instagram / Messenger: entry.messaging[] (entry.id = conta que recebeu)
+      const igAgency = findAgencyByAccountId("instagram", String(entry.id ?? ""));
       for (const evt of entry.messaging ?? []) {
         if (evt.message?.text) {
           saveInbound({
+            agencyId: igAgency,
             channel: "instagram",
             fromAddress: evt.sender?.id ?? "",
             body: evt.message.text,

@@ -11,8 +11,10 @@ const billing = await import("../../lib/billing-db");
 const market = await import("../../lib/marketplace-db");
 const { exportAccountData, deleteAccount } = await import("../../lib/account-data");
 const { createInboxMessage, listInbox } = await import("../../lib/contact-db");
+const agencies = await import("../../lib/agencies");
+const { HOUSE_AGENCY_ID } = await import("../../lib/tenancy-rules");
 
-const brand = (name: string, source: "self" | "agency") =>
+const brand = (name: string, source: "self" | "agency", agencyId: string = HOUSE_AGENCY_ID) =>
   createClient({
     name,
     industry: "café",
@@ -33,7 +35,7 @@ const brand = (name: string, source: "self" | "agency") =>
     source,
     country: "Brasil",
     selfServe: source === "self",
-  });
+  }, agencyId);
 
 describe("LGPD self-service", () => {
   it("exports the account without secrets and deletes a self-signup brand with its data", async () => {
@@ -42,6 +44,7 @@ describe("LGPD self-service", () => {
       password: "senha-forte-1",
       role: "client",
       refId: client.id,
+      agencyId: HOUSE_AGENCY_ID,
       name: client.name,
       brandSource: "platform",
       email: "cafe@example.com",
@@ -71,13 +74,41 @@ describe("LGPD self-service", () => {
 
   it("keeps an agency-managed brand's work when its login is deleted", async () => {
     const client = brand("Marca da Agência", "agency");
-    const user = await auth.createUser({ password: "senha-forte-1", role: "client", refId: client.id, name: client.name });
+    const user = await auth.createUser({ password: "senha-forte-1", role: "client", refId: client.id, agencyId: HOUSE_AGENCY_ID, name: client.name });
     expect(deleteAccount(user.id)).toEqual({ ok: true, removedWorkspace: false });
     expect(getClient(client.id)).not.toBeNull();
   });
 
+  it("an agency owner who leaves alone takes the whole workspace (never the house)", async () => {
+    const agency = agencies.createAgency({ name: "Estúdio Solo", ownerUserId: null });
+    const owner = await auth.createUser({ password: "senha-forte-1", role: "agency", refId: null, agencyId: agency.id, name: "Solo" });
+    agencies.setAgencyOwner(agency.id, owner.id);
+    const client = brand("Cliente do Solo", "agency", agency.id);
+    const login = await auth.createUser({ password: "senha-forte-1", role: "client", refId: client.id, agencyId: agency.id, name: client.name });
+    market.createProject({ clientId: client.id, title: "Logo", brief: "", skillsNeeded: [], location: "", budget: "", deadline: "" });
+    const houseClient = brand("Cliente da Casa", "agency");
+
+    expect(deleteAccount(owner.id)).toEqual({ ok: true, removedWorkspace: true });
+    expect(agencies.getAgency(agency.id)).toBeNull();
+    expect(getClient(client.id)).toBeNull();
+    expect(auth.getUserById(login.id)).toBeNull();
+    expect((db.prepare("SELECT COUNT(*) AS c FROM projects WHERE agencyId = ?").get(agency.id) as { c: number }).c).toBe(0);
+    expect(getClient(houseClient.id)).not.toBeNull();
+  });
+
+  it("a team member leaving keeps the agency and hands over ownership", async () => {
+    const agency = agencies.createAgency({ name: "Estúdio Dupla", ownerUserId: null });
+    const owner = await auth.createUser({ password: "senha-forte-1", role: "agency", refId: null, agencyId: agency.id, name: "Dona" });
+    const mate = await auth.createUser({ password: "senha-forte-1", role: "agency", refId: null, agencyId: agency.id, name: "Sócio" });
+    agencies.setAgencyOwner(agency.id, owner.id);
+    const client = brand("Cliente da Dupla", "agency", agency.id);
+    expect(deleteAccount(owner.id)).toEqual({ ok: true, removedWorkspace: false });
+    expect(agencies.getAgency(agency.id)?.ownerUserId).toBe(mate.id);
+    expect(getClient(client.id)).not.toBeNull();
+  });
+
   it("refuses to delete the last admin", async () => {
-    const admin = await auth.createUser({ password: "senha-forte-1", role: "admin", refId: null, name: "Admin" });
+    const admin = await auth.createUser({ password: "senha-forte-1", role: "admin", refId: null, agencyId: null, name: "Admin" });
     expect(deleteAccount(admin.id)).toMatchObject({ ok: false, status: 409 });
   });
 });

@@ -1,5 +1,5 @@
 import { randomUUID } from "crypto";
-import { db } from "./db";
+import { db, tenantColumn } from "./db";
 
 // Thread de comentários genérica por entregável. Diferente das anotações de
 // imagem (pins com x/y em marketplace-db), estes comentários funcionam para
@@ -27,6 +27,7 @@ db.exec(`
   );
   CREATE INDEX IF NOT EXISTS idx_deliverable_comments ON deliverable_comments(deliverableId, createdAt);
 `);
+tenantColumn("deliverable_comments");
 
 const now = () => new Date().toISOString();
 
@@ -50,13 +51,14 @@ export function createComment(input: {
     createdAt: now(),
   };
   db.prepare(
-    `INSERT INTO deliverable_comments (id, deliverableId, author, authorName, body, createdAt)
-     VALUES (@id, @deliverableId, @author, @authorName, @body, @createdAt)`
+    `INSERT INTO deliverable_comments (id, agencyId, deliverableId, author, authorName, body, createdAt)
+     VALUES (@id, (SELECT agencyId FROM deliverables WHERE id = @deliverableId), @deliverableId, @author, @authorName, @body, @createdAt)`
   ).run(comment);
   return comment;
 }
 
-export function deleteComment(id: string): boolean {
-  const result = db.prepare("DELETE FROM deliverable_comments WHERE id = ?").run(id);
+// Só apaga comentário da entrega informada (a rota já checou a posse dela).
+export function deleteComment(id: string, deliverableId: string): boolean {
+  const result = db.prepare("DELETE FROM deliverable_comments WHERE id = ? AND deliverableId = ?").run(id, deliverableId);
   return result.changes > 0;
 }

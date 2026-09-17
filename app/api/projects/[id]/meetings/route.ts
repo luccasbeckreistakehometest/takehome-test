@@ -35,7 +35,7 @@ export async function POST(request: Request, { params }: Context) {
     );
   }
   return NextResponse.json(
-    createMeeting({ projectId: id, clientId: project.clientId, ...parsed.data }),
+    createMeeting({ agencyId: project.agencyId, projectId: id, clientId: project.clientId, ...parsed.data }),
     { status: 201 }
   );
 }

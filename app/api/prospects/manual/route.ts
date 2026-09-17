@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server";
 import { z } from "zod";
-import { guard, isDenied } from "@/lib/guard";
+import { actingAgencyId, guard, isDenied } from "@/lib/guard";
 import { createProspect } from "@/lib/marketplace-db";
 
 const schema = z.object({
@@ -31,6 +31,6 @@ export async function POST(request: Request) {
     whyFit: parsed.data.notes,
     marketingMaturity: "",
     suggestedApproach: "",
-  });
+  }, actingAgencyId(auth, request));
   return NextResponse.json(prospect, { status: 201 });
 }

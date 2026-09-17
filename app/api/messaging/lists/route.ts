@@ -1,12 +1,12 @@
 import { NextResponse } from "next/server";
 import { z } from "zod";
 import { createBroadcastList, deleteBroadcastList, listBroadcastLists } from "@/lib/messaging-db";
-import { agencyOnly, isDenied } from "@/lib/guard";
+import { actingAgencyId, agencyOnly, isDenied, tenantOf } from "@/lib/guard";
 
-export async function GET() {
+export async function GET(request: Request) {
   const auth = await agencyOnly();
   if (isDenied(auth)) return auth;
-  return NextResponse.json({ lists: listBroadcastLists() });
+  return NextResponse.json({ lists: listBroadcastLists(tenantOf(auth, request)) });
 }
 
 const schema = z.object({
@@ -22,7 +22,11 @@ export async function POST(request: Request) {
   if (!parsed.success) {
     return NextResponse.json({ error: parsed.error.issues[0]?.message ?? "Dados inválidos" }, { status: 400 });
   }
-  return NextResponse.json({ list: createBroadcastList(parsed.data) }, { status: 201 });
+  const list = createBroadcastList({ ...parsed.data, agencyId: actingAgencyId(auth, request) });
+  if (list.contactIds.length === 0) {
+    return NextResponse.json({ error: "Nenhum dos contatos escolhidos foi encontrado." }, { status: 400 });
+  }
+  return NextResponse.json({ list }, { status: 201 });
 }
 
 export async function DELETE(request: Request) {
@@ -30,6 +34,6 @@ export async function DELETE(request: Request) {
   if (isDenied(auth)) return auth;
   const id = new URL(request.url).searchParams.get("id");
   if (!id) return NextResponse.json({ error: "id ausente" }, { status: 400 });
-  deleteBroadcastList(id);
+  if (!deleteBroadcastList(tenantOf(auth), id)) return NextResponse.json({ error: "Lista não encontrada" }, { status: 404 });
   return NextResponse.json({ ok: true });
 }

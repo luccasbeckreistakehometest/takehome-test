@@ -2,7 +2,7 @@ import { NextResponse } from "next/server";
 import { z } from "zod";
 import { getClient } from "@/lib/db";
 import { guard, isDenied } from "@/lib/guard";
-import { getSettings } from "@/lib/settings";
+import { getAgency } from "@/lib/agencies";
 import { clientPulseView, notifyOnBadPulse, recordPulse } from "@/lib/pulse-db";
 
 type Context = { params: Promise<{ id: string }> };
@@ -15,7 +15,7 @@ export async function GET(_request: Request, { params }: Context) {
   if (isDenied(auth)) return auth;
   const client = getClient(id);
   if (!client) return NextResponse.json({ error: "Cliente não encontrado" }, { status: 404 });
-  return NextResponse.json({ ...clientPulseView(id, client.createdAt), agencyName: getSettings().agencyName });
+  return NextResponse.json({ ...clientPulseView(id, client.createdAt), agencyName: getAgency(client.agencyId)?.name ?? "" });
 }
 
 const schema = z.object({

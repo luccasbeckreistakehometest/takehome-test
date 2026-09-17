@@ -15,7 +15,8 @@ import { ideasSchema, type IdeasResult } from "@/lib/marketplace-schemas";
 import { clientContext } from "@/lib/prompts";
 import { professionalTier } from "@/lib/ranking";
 import { aiErrorResponse, beginAi } from "@/lib/metering";
-import { agencyOnly, isDenied } from "@/lib/guard";
+import { actingAgencyId, agencyOnly, guard, guardProfessional, isDenied, tenantOf } from "@/lib/guard";
+import { agencyScope, type TenantScope } from "@/lib/tenancy-rules";
 
 export const maxDuration = 300;
 
@@ -33,12 +34,12 @@ export async function GET(request: Request) {
     return NextResponse.json({ error: "audience inválido" }, { status: 400 });
   }
   return NextResponse.json(
-    listIdeaBatches(audience, url.searchParams.get("targetId") || null)
+    listIdeaBatches(audience, url.searchParams.get("targetId") || null, tenantOf(auth, request))
   );
 }
 
-function professionalsSummary(): string {
-  return listProfessionals()
+function professionalsSummary(scope: TenantScope): string {
+  return listProfessionals(scope)
     .map((p) => {
       const stats = getProfessionalStats(p.id);
       return `- ${p.name} (${p.role}, ${p.location}): ${p.skills.join(", ")} | elo ${professionalTier(stats).tier}, nota média ${stats.avgScore ?? "n/d"}`;
@@ -57,29 +58,36 @@ export async function POST(request: Request) {
     return NextResponse.json({ error: "Requisição inválida" }, { status: 400 });
   }
   const { audience, targetId } = parsed.data;
+  // Tudo acontece dentro de UMA agência (a da sessão; admin: a do alvo ou ?agency=).
+  let agencyId = actingAgencyId(auth, request);
 
   let prompt: string;
   if (audience === "client") {
+    const owner = await guard(["agency", "admin"], { clientId: targetId });
+    if (isDenied(owner)) return owner;
     const client = targetId ? getClient(targetId) : null;
     if (!client) {
       return NextResponse.json({ error: "Cliente não encontrado" }, { status: 404 });
     }
+    agencyId = client.agencyId;
     const strategy = listGenerations(client.id, "strategy_analysis")[0];
     prompt = `${clientContext(client)}
 ${strategy ? `\n<estrategia_vigente>\n${strategy.content.slice(0, 4000)}\n</estrategia_vigente>` : ""}
 
 <profissionais_disponiveis_na_plataforma>
-${professionalsSummary() || "nenhum cadastrado"}
+${professionalsSummary(agencyScope(agencyId)) || "nenhum cadastrado"}
 </profissionais_disponiveis_na_plataforma>
 
 Pesquise as tendências mais recentes do segmento deste cliente e proponha 4 a 6 ideias NOVAS de campanha/trabalho para ele — coisas que ainda não estão na estratégia vigente. Para cada ideia: qual tendência real a sustenta (com fonte), o próximo passo concreto, e — quando um profissional cadastrado tiver fit claro para executá-la — indique o nome dele em "linkedTo" (senão, string vazia). Priorize (alta/média/baixa) pelo potencial de resultado para ESTE cliente.`;
   } else if (audience === "professional") {
+    const visible = targetId ? await guardProfessional(targetId) : null;
+    if (visible && isDenied(visible)) return visible;
     const professional = targetId ? getProfessional(targetId) : null;
     if (!professional) {
       return NextResponse.json({ error: "Profissional não encontrado" }, { status: 404 });
     }
     const stats = getProfessionalStats(professional.id);
-    const openProjects = listProjects({ openOnly: true })
+    const openProjects = listProjects({ scope: agencyScope(agencyId), openOnly: true })
       .map((p) => `- "${p.title}" (skills: ${p.skillsNeeded.join(", ") || "n/d"}, local: ${p.location || "remoto"}, verba: ${p.budget || "n/d"})`)
       .join("\n");
     prompt = `<perfil_do_profissional>
@@ -97,10 +105,11 @@ ${openProjects || "nenhuma no momento"}
 
 Pesquise as tendências mais recentes do mercado criativo (fotografia/design para marketing) e proponha 4 a 6 ideias para este profissional crescer: skills que estão subindo em demanda, formatos/estilos em alta para o portfolio, posicionamento e precificação. Quando uma demanda aberta da plataforma tiver fit claro com o perfil, recomende-a em uma ideia com o título dela em "linkedTo". Para cada ideia: tendência real que a sustenta (com fonte) e próximo passo concreto.`;
   } else {
-    const clients = listClients()
+    const scope = agencyScope(agencyId);
+    const clients = listClients(scope)
       .map((c) => `- ${c.name} (${c.industry || "segmento n/d"})`)
       .join("\n");
-    const prospects = listProspects()
+    const prospects = listProspects(scope)
       .filter((p) => p.status === "new" || p.status === "contacted")
       .map((p) => `- ${p.name} (${p.segment}, ${p.status})`)
       .join("\n");
@@ -112,13 +121,13 @@ Prospects em aberto:
 ${prospects || "nenhum"}
 
 Profissionais parceiros:
-${professionalsSummary() || "nenhum"}
+${professionalsSummary(scope) || "nenhum"}
 </carteira_da_agencia>
 
 Pesquise as tendências mais recentes de marketing digital e proponha 4 a 6 ideias de negócio para a agência: novas campanhas para clientes específicos da carteira (cite o cliente em "linkedTo"), novos serviços para ofertar, nichos quentes para prospectar e formas de ativar os profissionais parceiros. Para cada ideia: tendência real que a sustenta (com fonte), próximo passo concreto e prioridade pelo potencial de receita.`;
   }
 
-  const ticket = await beginAi(request, auth, "ideas");
+  const ticket = await beginAi(request, auth, "ideas", { agencyId });
   if (isDenied(ticket)) return ticket;
   try {
     return await ticket.run(async () => {
@@ -132,6 +141,7 @@ Pesquise as tendências mais recentes de marketing digital e proponha 4 a 6 idei
       maxTokens: 20000,
     });
     const batch = createIdeaBatch({
+      agencyId,
       audience,
       targetId,
       content: JSON.stringify(result),

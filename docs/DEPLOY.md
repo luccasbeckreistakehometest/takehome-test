@@ -59,7 +59,7 @@ Gere segredos **no servidor** (`openssl rand -hex 32`), nunca no repositório.
 
 | Variável | Uso |
 |---|---|
-| `AGENCY_SELF_SIGNUP` | `true` libera o cadastro público de agências. Padrão: desligado (agências pedem acesso pelo formulário). |
+| `AGENCY_SELF_SIGNUP` | Cadastro público de agências. Padrão: aberto — cada agência nova ganha o próprio workspace (clientes, carteira, whitelabel, página pública), isolado das outras. `false` fecha o cadastro (agências pedem acesso pelo formulário). |
 | `LEGAL_NAME`, `LEGAL_DOCUMENT`, `LEGAL_ADDRESS`, `LEGAL_EMAIL` | razão social, CNPJ/CPF, endereço e e-mail nas páginas legais e no rodapé. Vazios → as linhas somem e as páginas apontam para o formulário de contato. |
 | `SUPPORT_EMAIL`, `SUPPORT_WHATSAPP` | canais extras na página de contato (só aparecem se definidos; WhatsApp com DDI, só dígitos). |
 

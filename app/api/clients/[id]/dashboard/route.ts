@@ -3,7 +3,7 @@ import { getClient, listGenerations } from "@/lib/db";
 import {
   getClientStats,
   listClientMeetings,
-  listProjects,
+  listClientProjects,
 } from "@/lib/marketplace-db";
 import { clientTier } from "@/lib/ranking";
 import { GENERATION_TYPES } from "@/lib/types";
@@ -36,7 +36,7 @@ export async function GET(_request: Request, { params }: Context) {
     })
   );
 
-  const projects = listProjects({ clientId: id });
+  const projects = listClientProjects(id);
   const stats = getClientStats(id);
   const upcoming = listClientMeetings(id).filter(
     (meeting) => new Date(meeting.scheduledAt) > new Date()

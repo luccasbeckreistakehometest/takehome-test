@@ -19,7 +19,7 @@ export async function GET(_request: Request, { params }: Context) {
 
 export async function POST(request: Request, { params }: Context) {
   const { id } = await params;
-  const auth = await guardProfessional(id);
+  const auth = await guardProfessional(id, "edit");
   if (isDenied(auth)) return auth;
   if (!getProfessional(id)) {
     return NextResponse.json({ error: "Profissional não encontrado" }, { status: 404 });

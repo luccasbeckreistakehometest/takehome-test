@@ -1,4 +1,4 @@
-import { db } from "./db";
+import { db, tenantColumn } from "./db";
 import {
   DEFAULT_BRAND_VOICE_POLICY,
   sanitizeBrandVoicePolicy,
@@ -32,6 +32,8 @@ db.exec(`
   );
   CREATE INDEX IF NOT EXISTS idx_voice_cache_client ON brand_voice_cache(clientId, createdAt);
 `);
+tenantColumn("brand_voice_policies");
+tenantColumn("brand_voice_cache");
 
 type PolicyRow = {
   bannedTerms: string;
@@ -69,8 +71,8 @@ export function getBrandVoicePolicy(clientId: string): BrandVoicePolicy {
 export function saveBrandVoicePolicy(clientId: string, input: BrandVoicePolicyInput): BrandVoicePolicy {
   const policy = sanitizeBrandVoicePolicy(input, getBrandVoicePolicy(clientId));
   db.prepare(
-    `INSERT INTO brand_voice_policies (clientId, bannedTerms, requiredTerms, requireCta, maxHashtags, maxEmojis, flagClaims, notes, updatedAt)
-     VALUES (@clientId, @bannedTerms, @requiredTerms, @requireCta, @maxHashtags, @maxEmojis, @flagClaims, @notes, @updatedAt)
+    `INSERT INTO brand_voice_policies (clientId, agencyId, bannedTerms, requiredTerms, requireCta, maxHashtags, maxEmojis, flagClaims, notes, updatedAt)
+     VALUES (@clientId, (SELECT agencyId FROM clients WHERE id = @clientId), @bannedTerms, @requiredTerms, @requireCta, @maxHashtags, @maxEmojis, @flagClaims, @notes, @updatedAt)
      ON CONFLICT(clientId) DO UPDATE SET bannedTerms=@bannedTerms, requiredTerms=@requiredTerms, requireCta=@requireCta, maxHashtags=@maxHashtags,
        maxEmojis=@maxEmojis, flagClaims=@flagClaims, notes=@notes, updatedAt=@updatedAt`
   ).run({
@@ -99,9 +101,10 @@ export function readCache<T>(hash: string): T | null {
 
 export function writeCache(input: { hash: string; clientId: string; op: "check" | "rewrite"; kind: CheckKind; result: unknown }): void {
   db.prepare(
-    `INSERT INTO brand_voice_cache (hash, clientId, op, kind, result, createdAt) VALUES (?, ?, ?, ?, ?, ?)
+    `INSERT INTO brand_voice_cache (hash, agencyId, clientId, op, kind, result, createdAt)
+     VALUES (?, (SELECT agencyId FROM clients WHERE id = ?), ?, ?, ?, ?, ?)
      ON CONFLICT(hash) DO UPDATE SET result = excluded.result, createdAt = excluded.createdAt`
-  ).run(input.hash, input.clientId, input.op, input.kind, JSON.stringify(input.result), new Date().toISOString());
+  ).run(input.hash, input.clientId, input.clientId, input.op, input.kind, JSON.stringify(input.result), new Date().toISOString());
 }
 
 export function voiceCacheStats(clientId: string): { checks: number; rewrites: number } {

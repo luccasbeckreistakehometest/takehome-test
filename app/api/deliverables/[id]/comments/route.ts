@@ -44,7 +44,7 @@ export async function DELETE(request: Request, { params }: Context) {
   if (!db.prepare("SELECT 1 FROM deliverable_comments WHERE id = ? AND deliverableId = ?").get(commentId, id)) {
     return NextResponse.json({ error: "Comentário não encontrado" }, { status: 404 });
   }
-  if (!deleteComment(commentId)) {
+  if (!deleteComment(commentId, id)) {
     return NextResponse.json({ error: "Comentário não encontrado" }, { status: 404 });
   }
   return NextResponse.json({ ok: true });

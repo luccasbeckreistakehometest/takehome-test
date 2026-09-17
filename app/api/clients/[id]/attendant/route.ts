@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { z } from "zod";
-import { getClient } from "@/lib/db";
+import { clientAgencyId, getClient } from "@/lib/db";
+import { agencyScope } from "@/lib/tenancy-rules";
 import { guard, isDenied } from "@/lib/guard";
 import { attendantStats, getAttendant, listReplies, saveAttendant } from "@/lib/attendant-db";
 import { DEFAULT_ATTENDANT_CONFIG } from "@/lib/attendant-rules";
@@ -11,7 +12,8 @@ type Context = { params: Promise<{ id: string }> };
 
 function view(clientId: string) {
   const cfg = getAttendant(clientId) ?? DEFAULT_ATTENDANT_CONFIG;
-  const route = resolveSendMode(cfg);
+  const agencyId = clientAgencyId(clientId) ?? "";
+  const route = resolveSendMode(cfg, agencyId);
   return {
     config: { ...cfg, apiToken: "", hasToken: Boolean(cfg.apiToken) },
     channel: {
@@ -20,7 +22,7 @@ function view(clientId: string) {
     },
     stats: attendantStats(clientId),
     replies: listReplies(clientId, 50),
-    inbound: listInbound(50, clientId),
+    inbound: listInbound(agencyScope(agencyId), 50, clientId),
   };
 }
 
@@ -29,7 +31,7 @@ function view(clientId: string) {
 // própria marca.
 export async function GET(_request: Request, { params }: Context) {
   const { id } = await params;
-  const auth = await guard(["agency", "admin"]);
+  const auth = await guard(["agency", "admin"], { clientId: id });
   if (isDenied(auth)) return auth;
   if (!getClient(id)) return NextResponse.json({ error: "Cliente não encontrado" }, { status: 404 });
   return NextResponse.json(view(id));
@@ -52,7 +54,7 @@ const schema = z.object({
 
 export async function PUT(request: Request, { params }: Context) {
   const { id } = await params;
-  const auth = await guard(["agency", "admin"]);
+  const auth = await guard(["agency", "admin"], { clientId: id });
   if (isDenied(auth)) return auth;
   if (!getClient(id)) return NextResponse.json({ error: "Cliente não encontrado" }, { status: 404 });
   const parsed = schema.safeParse(await request.json().catch(() => null));

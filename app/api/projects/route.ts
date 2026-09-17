@@ -2,21 +2,21 @@ import { NextResponse } from "next/server";
 import { getClient } from "@/lib/db";
 import { createProject, listProjects } from "@/lib/marketplace-db";
 import { projectSchema } from "@/lib/validation";
-import { guard, isDenied } from "@/lib/guard";
+import { guard, isDenied, tenantOf } from "@/lib/guard";
 
-// Demandas. A agência lista tudo; a marca só as dela (o clientId vem da
-// sessão, não da URL).
+// Demandas. A agência lista as dela (admin: todas, ou ?agency=); a marca só
+// as dela (o clientId vem da sessão, não da URL).
 export async function GET(request: Request) {
   const auth = await guard(["agency", "admin", "client"]);
   if (isDenied(auth)) return auth;
   const url = new URL(request.url);
   const openOnly = url.searchParams.get("open") === "1";
   if (auth.role === "client") {
-    return NextResponse.json(listProjects({ clientId: auth.refId ?? "-", openOnly }));
+    return NextResponse.json(listProjects({ scope: tenantOf(auth), clientId: auth.refId ?? "-", openOnly }));
   }
   const clientId = url.searchParams.get("clientId") ?? undefined;
   const professionalId = url.searchParams.get("professionalId") ?? undefined;
-  return NextResponse.json(listProjects({ clientId, professionalId, openOnly }));
+  return NextResponse.json(listProjects({ scope: tenantOf(auth, request), clientId, professionalId, openOnly }));
 }
 
 // A marca pode abrir pedidos da própria conta (portal e workspace).

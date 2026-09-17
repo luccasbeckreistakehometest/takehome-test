@@ -1,5 +1,6 @@
 import { randomUUID } from "crypto";
-import { addColumnIfMissing, db } from "./db";
+import { addColumnIfMissing, db, tenantColumn } from "./db";
+import { ALL_AGENCIES, HOUSE_AGENCY_ID, scopeWhere, type TenantScope } from "./tenancy-rules";
 import type {
   Annotation,
   ArtReview,
@@ -218,6 +219,26 @@ addColumnIfMissing("professionals", "availability", "TEXT NOT NULL DEFAULT ''");
 addColumnIfMissing("professionals", "employmentType", "TEXT NOT NULL DEFAULT 'freelancer'");
 addColumnIfMissing("annotations", "author", "TEXT NOT NULL DEFAULT 'agency'");
 addColumnIfMissing("annotations", "audience", "TEXT NOT NULL DEFAULT 'all'");
+for (const table of [
+  "professionals",
+  "projects",
+  "project_messages",
+  "deliverables",
+  "annotations",
+  "art_reviews",
+  "prospects",
+  "applications",
+  "prospect_searches",
+  "jobs",
+  "activities",
+  "account_messages",
+  "professional_assets",
+  "sketches",
+  "scheduled_posts",
+  "client_assets",
+]) {
+  tenantColumn(table);
+}
 
 // ---------- Profissionais ----------
 
@@ -229,15 +250,42 @@ type ProfessionalRow = Omit<Professional, "skills" | "portfolio"> & {
 function toProfessional(row: ProfessionalRow): Professional {
   return {
     ...row,
+    agencyId: row.agencyId ?? null,
     skills: JSON.parse(row.skills),
     portfolio: JSON.parse(row.portfolio),
   };
 }
 
-export function listProfessionals(): Professional[] {
+// Profissionais que uma agência enxerga: os dela, os do marketplace aberto
+// (sem agência) e os que se candidataram ou foram escalados em demandas dela.
+export function listProfessionals(scope: TenantScope): Professional[] {
+  if (scope.agencyId === null) {
+    return (db.prepare("SELECT * FROM professionals ORDER BY createdAt DESC").all() as ProfessionalRow[]).map(toProfessional);
+  }
   return (
-    db.prepare("SELECT * FROM professionals ORDER BY createdAt DESC").all() as ProfessionalRow[]
+    db
+      .prepare(
+        `SELECT * FROM professionals pr
+         WHERE pr.agencyId IS NULL OR pr.agencyId = @agency
+            OR EXISTS (SELECT 1 FROM applications a WHERE a.professionalId = pr.id AND a.agencyId = @agency)
+            OR EXISTS (SELECT 1 FROM projects p WHERE p.professionalId = pr.id AND p.agencyId = @agency)
+         ORDER BY pr.createdAt DESC`
+      )
+      .all({ agency: scope.agencyId }) as ProfessionalRow[]
   ).map(toProfessional);
+}
+
+// Já se candidatou ou foi escalado em alguma demanda da agência?
+export function professionalWorkedWith(professionalId: string, agencyId: string): boolean {
+  if (!agencyId) return false;
+  return Boolean(
+    db
+      .prepare(
+        `SELECT 1 WHERE EXISTS (SELECT 1 FROM applications WHERE professionalId = @id AND agencyId = @agency)
+            OR EXISTS (SELECT 1 FROM projects WHERE professionalId = @id AND agencyId = @agency)`
+      )
+      .get({ id: professionalId, agency: agencyId })
+  );
 }
 
 export function getProfessional(id: string): Professional | null {
@@ -247,11 +295,12 @@ export function getProfessional(id: string): Professional | null {
   return row ? toProfessional(row) : null;
 }
 
-export function createProfessional(input: ProfessionalInput): Professional {
-  const professional: Professional = { ...input, id: randomUUID(), createdAt: now() };
+// agencyId: agência que cadastrou (null = freelancer do marketplace aberto).
+export function createProfessional(input: ProfessionalInput, agencyId: string | null): Professional {
+  const professional: Professional = { ...input, agencyId, id: randomUUID(), createdAt: now() };
   db.prepare(
-    `INSERT INTO professionals (id, name, role, email, phone, location, skills, specialties, marketFocus, bio, portfolio, priceRange, availability, employmentType, createdAt)
-     VALUES (@id, @name, @role, @email, @phone, @location, @skills, @specialties, @marketFocus, @bio, @portfolio, @priceRange, @availability, @employmentType, @createdAt)`
+    `INSERT INTO professionals (id, agencyId, name, role, email, phone, location, skills, specialties, marketFocus, bio, portfolio, priceRange, availability, employmentType, createdAt)
+     VALUES (@id, @agencyId, @name, @role, @email, @phone, @location, @skills, @specialties, @marketFocus, @bio, @portfolio, @priceRange, @availability, @employmentType, @createdAt)`
   ).run({
     ...professional,
     skills: JSON.stringify(professional.skills),
@@ -322,19 +371,30 @@ function toProject(row: ProjectRow): Project {
   return {
     ...row,
     skillsNeeded: JSON.parse(row.skillsNeeded),
+    agencyId: row.agencyId ?? "",
     status: row.status as ProjectStatus,
     escrow: row.escrow as EscrowStatus,
     mode: row.mode === "internal" ? "internal" : "marketplace",
   };
 }
 
+// `scope` é obrigatório: agência vê só as dela. O marketplace aberto (demandas
+// "open" de todas as agências, vistas por freelancers) usa ALL_AGENCIES com
+// marketplaceOnly.
 export function listProjects(filter: {
+  scope: TenantScope;
   clientId?: string;
   professionalId?: string;
   openOnly?: boolean;
+  marketplaceOnly?: boolean;
 }): Project[] {
   const clauses: string[] = [];
   const params: Record<string, string> = {};
+  if (filter.scope.agencyId !== null) {
+    clauses.push("agencyId = @scopeAgency");
+    params.scopeAgency = filter.scope.agencyId;
+  }
+  if (filter.marketplaceOnly) clauses.push("mode = 'marketplace'");
   if (filter.clientId) {
     clauses.push("clientId = @clientId");
     params.clientId = filter.clientId;
@@ -350,6 +410,11 @@ export function listProjects(filter: {
       .prepare(`SELECT * FROM projects ${where} ORDER BY createdAt DESC`)
       .all(params) as ProjectRow[]
   ).map(toProject);
+}
+
+// Demandas de UMA marca (a rota já checou a posse da marca).
+export function listClientProjects(clientId: string): Project[] {
+  return listProjects({ scope: ALL_AGENCIES, clientId });
 }
 
 export function getProject(id: string): Project | null {
@@ -369,8 +434,13 @@ export function createProject(input: {
   deadline: string;
   mode?: "marketplace" | "internal";
 }): Project {
+  const client = db.prepare("SELECT agencyId FROM clients WHERE id = ?").get(input.clientId) as
+    | { agencyId: string | null }
+    | undefined;
+  if (!client?.agencyId) throw new Error("createProject: cliente sem agência");
   const project: Project = {
     ...input,
+    agencyId: client.agencyId,
     mode: input.mode ?? "marketplace",
     id: randomUUID(),
     professionalId: null,
@@ -381,8 +451,8 @@ export function createProject(input: {
     createdAt: now(),
   };
   db.prepare(
-    `INSERT INTO projects (id, clientId, professionalId, title, brief, skillsNeeded, location, budget, deadline, status, escrow, matchResult, sketch, mode, createdAt)
-     VALUES (@id, @clientId, @professionalId, @title, @brief, @skillsNeeded, @location, @budget, @deadline, @status, @escrow, @matchResult, @sketch, @mode, @createdAt)`
+    `INSERT INTO projects (id, agencyId, clientId, professionalId, title, brief, skillsNeeded, location, budget, deadline, status, escrow, matchResult, sketch, mode, createdAt)
+     VALUES (@id, @agencyId, @clientId, @professionalId, @title, @brief, @skillsNeeded, @location, @budget, @deadline, @status, @escrow, @matchResult, @sketch, @mode, @createdAt)`
   ).run({ ...project, skillsNeeded: JSON.stringify(project.skillsNeeded) });
   return project;
 }
@@ -458,8 +528,10 @@ export function createApplication(input: {
     status: "pending",
     createdAt: now(),
   };
+  // A candidatura carrega a agência da demanda (não a do profissional).
   db.prepare(
-    "INSERT INTO applications (id, projectId, professionalId, message, status, createdAt) VALUES (@id, @projectId, @professionalId, @message, @status, @createdAt)"
+    `INSERT INTO applications (id, agencyId, projectId, professionalId, message, status, createdAt)
+     VALUES (@id, (SELECT agencyId FROM projects WHERE id = @projectId), @projectId, @professionalId, @message, @status, @createdAt)`
   ).run(application);
   return application;
 }
@@ -489,7 +561,8 @@ export function createMessage(input: {
 }): ProjectMessage {
   const message: ProjectMessage = { ...input, id: randomUUID(), createdAt: now() };
   db.prepare(
-    "INSERT INTO project_messages (id, projectId, sender, text, createdAt) VALUES (@id, @projectId, @sender, @text, @createdAt)"
+    `INSERT INTO project_messages (id, agencyId, projectId, sender, text, createdAt)
+     VALUES (@id, (SELECT agencyId FROM projects WHERE id = @projectId), @projectId, @sender, @text, @createdAt)`
   ).run(message);
   return message;
 }
@@ -526,7 +599,8 @@ export function createDeliverable(input: {
     createdAt: now(),
   };
   db.prepare(
-    "INSERT INTO deliverables (id, projectId, title, mime, kind, meaning, approvalStatus, approvedAt, approvalNote, createdAt) VALUES (@id, @projectId, @title, @mime, @kind, @meaning, @approvalStatus, @approvedAt, @approvalNote, @createdAt)"
+    `INSERT INTO deliverables (id, agencyId, projectId, title, mime, kind, meaning, approvalStatus, approvedAt, approvalNote, createdAt)
+     VALUES (@id, (SELECT agencyId FROM projects WHERE id = @projectId), @projectId, @title, @mime, @kind, @meaning, @approvalStatus, @approvedAt, @approvalNote, @createdAt)`
   ).run(deliverable);
   return deliverable;
 }
@@ -566,7 +640,8 @@ export function createAnnotation(input: {
 }): Annotation {
   const annotation = { ...input, id: randomUUID(), resolved: 0, createdAt: now() };
   db.prepare(
-    "INSERT INTO annotations (id, deliverableId, x, y, comment, resolved, author, audience, createdAt) VALUES (@id, @deliverableId, @x, @y, @comment, @resolved, @author, @audience, @createdAt)"
+    `INSERT INTO annotations (id, agencyId, deliverableId, x, y, comment, resolved, author, audience, createdAt)
+     VALUES (@id, (SELECT agencyId FROM deliverables WHERE id = @deliverableId), @deliverableId, @x, @y, @comment, @resolved, @author, @audience, @createdAt)`
   ).run(annotation);
   return { ...annotation, resolved: false };
 }
@@ -596,7 +671,8 @@ export function createArtReview(input: {
 }): ArtReview {
   const review: ArtReview = { ...input, id: randomUUID(), createdAt: now() };
   db.prepare(
-    "INSERT INTO art_reviews (id, deliverableId, score, content, createdAt) VALUES (@id, @deliverableId, @score, @content, @createdAt)"
+    `INSERT INTO art_reviews (id, agencyId, deliverableId, score, content, createdAt)
+     VALUES (@id, (SELECT agencyId FROM deliverables WHERE id = @deliverableId), @deliverableId, @score, @content, @createdAt)`
   ).run(review);
   return review;
 }
@@ -612,6 +688,7 @@ if (meetingColumns.length > 0 && !meetingColumns.includes("clientId")) {
   db.exec(`
     CREATE TABLE meetings_new (
       id TEXT PRIMARY KEY,
+      agencyId TEXT,
       clientId TEXT,
       projectId TEXT,
       title TEXT NOT NULL,
@@ -621,8 +698,8 @@ if (meetingColumns.length > 0 && !meetingColumns.includes("clientId")) {
       reasoning TEXT NOT NULL DEFAULT '',
       createdAt TEXT NOT NULL
     );
-    INSERT INTO meetings_new (id, clientId, projectId, title, scheduledAt, link, notes, reasoning, createdAt)
-      SELECT m.id, p.clientId, m.projectId, m.title, m.scheduledAt, m.link, m.notes, '', m.createdAt
+    INSERT INTO meetings_new (id, agencyId, clientId, projectId, title, scheduledAt, link, notes, reasoning, createdAt)
+      SELECT m.id, '${HOUSE_AGENCY_ID}', p.clientId, m.projectId, m.title, m.scheduledAt, m.link, m.notes, '', m.createdAt
       FROM meetings m LEFT JOIN projects p ON p.id = m.projectId;
     DROP TABLE meetings;
     ALTER TABLE meetings_new RENAME TO meetings;
@@ -631,6 +708,7 @@ if (meetingColumns.length > 0 && !meetingColumns.includes("clientId")) {
 
 export type Meeting = {
   id: string;
+  agencyId: string;
   clientId: string | null;
   projectId: string | null;
   title: string;
@@ -658,19 +736,27 @@ export function listClientMeetings(clientId: string): Meeting[] {
     .all(clientId) as Meeting[];
 }
 
-export function listAllMeetings(): MeetingWithNames[] {
+export function listAllMeetings(scope: TenantScope): MeetingWithNames[] {
+  const where = scopeWhere(scope, "m.agencyId");
   return db
     .prepare(
       `SELECT m.*, c.name AS clientName, p.title AS projectTitle
        FROM meetings m
        LEFT JOIN clients c ON c.id = m.clientId
        LEFT JOIN projects p ON p.id = m.projectId
+       WHERE ${where.sql}
        ORDER BY m.scheduledAt ASC`
     )
-    .all() as MeetingWithNames[];
+    .all(...where.params) as MeetingWithNames[];
 }
 
+export function getMeeting(id: string): Meeting | null {
+  return (db.prepare("SELECT * FROM meetings WHERE id = ?").get(id) as Meeting | undefined) ?? null;
+}
+
+// agencyId: a do cliente/demanda quando houver; senão a informada.
 export function createMeeting(input: {
+  agencyId: string;
   clientId?: string | null;
   projectId?: string | null;
   title: string;
@@ -679,8 +765,14 @@ export function createMeeting(input: {
   notes: string;
   reasoning?: string;
 }): Meeting {
+  const owner = input.clientId
+    ? (db.prepare("SELECT agencyId FROM clients WHERE id = ?").get(input.clientId) as { agencyId: string } | undefined)?.agencyId
+    : input.projectId
+      ? (db.prepare("SELECT agencyId FROM projects WHERE id = ?").get(input.projectId) as { agencyId: string } | undefined)?.agencyId
+      : undefined;
   const meeting: Meeting = {
     id: randomUUID(),
+    agencyId: owner ?? input.agencyId,
     clientId: input.clientId ?? null,
     projectId: input.projectId ?? null,
     title: input.title,
@@ -691,7 +783,7 @@ export function createMeeting(input: {
     createdAt: now(),
   };
   db.prepare(
-    "INSERT INTO meetings (id, clientId, projectId, title, scheduledAt, link, notes, reasoning, createdAt) VALUES (@id, @clientId, @projectId, @title, @scheduledAt, @link, @notes, @reasoning, @createdAt)"
+    "INSERT INTO meetings (id, agencyId, clientId, projectId, title, scheduledAt, link, notes, reasoning, createdAt) VALUES (@id, @agencyId, @clientId, @projectId, @title, @scheduledAt, @link, @notes, @reasoning, @createdAt)"
   ).run(meeting);
   return meeting;
 }
@@ -740,7 +832,8 @@ export function createClientAsset(input: {
 }): ClientAsset {
   const asset: ClientAsset = { ...input, id: randomUUID(), createdAt: now() };
   db.prepare(
-    "INSERT INTO client_assets (id, clientId, title, ext, mime, kind, createdAt) VALUES (@id, @clientId, @title, @ext, @mime, @kind, @createdAt)"
+    `INSERT INTO client_assets (id, agencyId, clientId, title, ext, mime, kind, createdAt)
+     VALUES (@id, (SELECT agencyId FROM clients WHERE id = @clientId), @clientId, @title, @ext, @mime, @kind, @createdAt)`
   ).run(asset);
   return asset;
 }
@@ -753,6 +846,7 @@ export function deleteClientAsset(id: string): boolean {
 
 export type Job = {
   id: string;
+  agencyId: string | null;
   kind: string;
   label: string;
   clientId: string | null;
@@ -766,9 +860,14 @@ export function createJob(input: {
   kind: string;
   label: string;
   clientId?: string | null;
+  agencyId: string | null;
 }): Job {
+  const owner = input.clientId
+    ? ((db.prepare("SELECT agencyId FROM clients WHERE id = ?").get(input.clientId) as { agencyId: string } | undefined)?.agencyId ?? null)
+    : null;
   const job: Job = {
     id: randomUUID(),
+    agencyId: owner ?? input.agencyId,
     kind: input.kind,
     label: input.label,
     clientId: input.clientId ?? null,
@@ -778,7 +877,7 @@ export function createJob(input: {
     finishedAt: null,
   };
   db.prepare(
-    "INSERT INTO jobs (id, kind, label, clientId, status, error, createdAt, finishedAt) VALUES (@id, @kind, @label, @clientId, @status, @error, @createdAt, @finishedAt)"
+    "INSERT INTO jobs (id, agencyId, kind, label, clientId, status, error, createdAt, finishedAt) VALUES (@id, @agencyId, @kind, @label, @clientId, @status, @error, @createdAt, @finishedAt)"
   ).run(job);
   return job;
 }
@@ -792,14 +891,16 @@ export function finishJob(id: string, status: "done" | "error", error = ""): voi
   );
 }
 
-export function listJobs(): Job[] {
+export function listJobs(scope: TenantScope, clientId?: string): Job[] {
   // Jobs rodando + os finalizados nos últimos 2 minutos (para a UI reagir)
   const cutoff = new Date(Date.now() - 2 * 60 * 1000).toISOString();
+  const where = scopeWhere(scope);
+  const byClient = clientId ? "AND clientId = ?" : "";
   return db
     .prepare(
-      "SELECT * FROM jobs WHERE status = 'running' OR finishedAt > ? ORDER BY createdAt DESC LIMIT 20"
+      `SELECT * FROM jobs WHERE (status = 'running' OR finishedAt > ?) AND ${where.sql} ${byClient} ORDER BY createdAt DESC LIMIT 20`
     )
-    .all(cutoff) as Job[];
+    .all(cutoff, ...where.params, ...(clientId ? [clientId] : [])) as Job[];
 }
 
 // Jobs órfãos de sessões antigas do servidor (ficariam 'running' para sempre)
@@ -811,6 +912,7 @@ db.prepare(
 
 export type Activity = {
   id: string;
+  agencyId: string | null;
   audience: "agency" | "client" | "professional" | "all";
   clientId: string | null;
   professionalId: string | null;
@@ -821,18 +923,25 @@ export type Activity = {
   createdAt: string;
 };
 
+// agencyId: explícito, ou herdado da marca/demanda. Aviso sem agência
+// nenhuma (ex.: perfil de freelancer) fica só para o destinatário.
 export function logActivity(input: {
   audience: Activity["audience"];
   text: string;
   href?: string;
+  agencyId?: string | null;
   clientId?: string | null;
   professionalId?: string | null;
   projectId?: string | null;
 }): void {
   db.prepare(
-    "INSERT INTO activities (id, audience, clientId, professionalId, projectId, text, href, readAt, createdAt) VALUES (?, ?, ?, ?, ?, ?, ?, NULL, ?)"
+    `INSERT INTO activities (id, agencyId, audience, clientId, professionalId, projectId, text, href, readAt, createdAt)
+     VALUES (?, COALESCE(?, (SELECT agencyId FROM clients WHERE id = ?), (SELECT agencyId FROM projects WHERE id = ?)), ?, ?, ?, ?, ?, ?, NULL, ?)`
   ).run(
     randomUUID(),
+    input.agencyId ?? null,
+    input.clientId ?? null,
+    input.projectId ?? null,
     input.audience,
     input.clientId ?? null,
     input.professionalId ?? null,
@@ -845,6 +954,7 @@ export function logActivity(input: {
 
 export function listActivities(filter: {
   audience: Activity["audience"];
+  scope: TenantScope;
   clientId?: string;
   professionalId?: string;
   limit?: number;
@@ -854,6 +964,10 @@ export function listActivities(filter: {
     audience: filter.audience,
     limit: filter.limit ?? 30,
   };
+  if (filter.scope.agencyId !== null) {
+    clauses.push("agencyId = @scopeAgency");
+    params.scopeAgency = filter.scope.agencyId;
+  }
   if (filter.clientId) {
     clauses.push("clientId = @clientId");
     params.clientId = filter.clientId;
@@ -871,14 +985,16 @@ export function listActivities(filter: {
 
 export function markActivitiesRead(
   audience: Activity["audience"],
-  scope: { clientId?: string; professionalId?: string } = {}
+  scope: { tenant: TenantScope; clientId?: string; professionalId?: string }
 ): void {
   const clauses = ["readAt IS NULL", "(audience = @audience OR audience = 'all')"];
+  if (scope.tenant.agencyId !== null) clauses.push("agencyId = @scopeAgency");
   if (scope.clientId) clauses.push("clientId = @clientId");
   if (scope.professionalId) clauses.push("professionalId = @professionalId");
   db.prepare(`UPDATE activities SET readAt = @at WHERE ${clauses.join(" AND ")}`).run({
     at: now(),
     audience,
+    scopeAgency: scope.tenant.agencyId,
     clientId: scope.clientId ?? null,
     professionalId: scope.professionalId ?? null,
   });
@@ -907,7 +1023,8 @@ export function createAccountMessage(input: {
 }): AccountMessage {
   const message: AccountMessage = { ...input, id: randomUUID(), createdAt: now() };
   db.prepare(
-    "INSERT INTO account_messages (id, clientId, sender, text, createdAt) VALUES (@id, @clientId, @sender, @text, @createdAt)"
+    `INSERT INTO account_messages (id, agencyId, clientId, sender, text, createdAt)
+     VALUES (@id, (SELECT agencyId FROM clients WHERE id = @clientId), @clientId, @sender, @text, @createdAt)`
   ).run(message);
   return message;
 }
@@ -937,7 +1054,8 @@ export function createProfessionalAsset(input: {
 }): ProfessionalAsset {
   const asset: ProfessionalAsset = { ...input, id: randomUUID(), createdAt: now() };
   db.prepare(
-    "INSERT INTO professional_assets (id, professionalId, title, mime, createdAt) VALUES (@id, @professionalId, @title, @mime, @createdAt)"
+    `INSERT INTO professional_assets (id, agencyId, professionalId, title, mime, createdAt)
+     VALUES (@id, (SELECT agencyId FROM professionals WHERE id = @professionalId), @professionalId, @title, @mime, @createdAt)`
   ).run(asset);
   return asset;
 }
@@ -983,7 +1101,8 @@ export function createSketch(input: {
 }): Sketch {
   const sketch: Sketch = { ...input, id: randomUUID(), createdAt: now() };
   db.prepare(
-    "INSERT INTO sketches (id, projectId, svg, rationale, neededReferences, createdAt) VALUES (@id, @projectId, @svg, @rationale, @neededReferences, @createdAt)"
+    `INSERT INTO sketches (id, agencyId, projectId, svg, rationale, neededReferences, createdAt)
+     VALUES (@id, (SELECT agencyId FROM projects WHERE id = @projectId), @projectId, @svg, @rationale, @neededReferences, @createdAt)`
   ).run({ ...sketch, neededReferences: JSON.stringify(sketch.neededReferences) });
   return sketch;
 }
@@ -1009,9 +1128,10 @@ for (const row of db
     };
     if (parsed.svg) {
       db.prepare(
-        "INSERT INTO sketches (id, projectId, svg, rationale, neededReferences, createdAt) VALUES (?, ?, ?, ?, ?, ?)"
+        "INSERT INTO sketches (id, agencyId, projectId, svg, rationale, neededReferences, createdAt) VALUES (?, (SELECT agencyId FROM projects WHERE id = ?), ?, ?, ?, ?, ?)"
       ).run(
         randomUUID(),
+        row.id,
         row.id,
         parsed.svg,
         parsed.rationale ?? "",
@@ -1028,6 +1148,7 @@ for (const row of db
 
 export type ScheduledPost = {
   id: string;
+  agencyId: string;
   clientId: string;
   title: string;
   channel: string;
@@ -1053,16 +1174,23 @@ export type ScheduledPostWithClient = ScheduledPost & { clientName: string };
 
 type ScheduledPostRow = Omit<ScheduledPost, "hashtags"> & { hashtags: string };
 
-export function listScheduledPosts(clientId?: string): ScheduledPostWithClient[] {
-  const where = clientId ? "WHERE sp.clientId = ?" : "";
+export function listScheduledPosts(scope: TenantScope, clientId?: string): ScheduledPostWithClient[] {
+  const tenant = scopeWhere(scope, "sp.agencyId");
+  const byClient = clientId ? "AND sp.clientId = ?" : "";
   const rows = db
     .prepare(
       `SELECT sp.*, c.name AS clientName FROM scheduled_posts sp
-       JOIN clients c ON c.id = sp.clientId ${where}
+       JOIN clients c ON c.id = sp.clientId
+       WHERE ${tenant.sql} ${byClient}
        ORDER BY sp.scheduledFor ASC`
     )
-    .all(...(clientId ? [clientId] : [])) as (ScheduledPostRow & { clientName: string })[];
+    .all(...tenant.params, ...(clientId ? [clientId] : [])) as (ScheduledPostRow & { clientName: string })[];
   return rows.map((row) => ({ ...row, hashtags: JSON.parse(row.hashtags) }));
+}
+
+// Posts de UMA marca (a rota já checou a posse da marca).
+export function listClientScheduledPosts(clientId: string): ScheduledPostWithClient[] {
+  return listScheduledPosts(ALL_AGENCIES, clientId);
 }
 
 export function createScheduledPost(input: {
@@ -1079,7 +1207,12 @@ export function createScheduledPost(input: {
   hookType?: string;
   imageBrief?: string;
 }): ScheduledPost {
+  const owner = db.prepare("SELECT agencyId FROM clients WHERE id = ?").get(input.clientId) as
+    | { agencyId: string | null }
+    | undefined;
+  if (!owner?.agencyId) throw new Error("createScheduledPost: cliente sem agência");
   const post: ScheduledPost = {
+    agencyId: owner.agencyId,
     clientId: input.clientId,
     title: input.title,
     channel: input.channel,
@@ -1097,8 +1230,8 @@ export function createScheduledPost(input: {
     createdAt: now(),
   };
   db.prepare(
-    `INSERT INTO scheduled_posts (id, clientId, title, channel, caption, hashtags, scheduledFor, status, publishedAt, deliverableId, campaignId, format, hookType, imageBrief, createdAt)
-     VALUES (@id, @clientId, @title, @channel, @caption, @hashtags, @scheduledFor, @status, @publishedAt, @deliverableId, @campaignId, @format, @hookType, @imageBrief, @createdAt)`
+    `INSERT INTO scheduled_posts (id, agencyId, clientId, title, channel, caption, hashtags, scheduledFor, status, publishedAt, deliverableId, campaignId, format, hookType, imageBrief, createdAt)
+     VALUES (@id, @agencyId, @clientId, @title, @channel, @caption, @hashtags, @scheduledFor, @status, @publishedAt, @deliverableId, @campaignId, @format, @hookType, @imageBrief, @createdAt)`
   ).run({ ...post, hashtags: JSON.stringify(post.hashtags) });
   return post;
 }
@@ -1142,28 +1275,30 @@ export type ProspectSearch = {
 };
 
 export function createProspectSearch(input: {
+  agencyId: string;
   query: string;
   summary: string;
   resultCount: number;
 }): void {
   db.prepare(
-    "INSERT INTO prospect_searches (id, query, summary, resultCount, createdAt) VALUES (?, ?, ?, ?, ?)"
-  ).run(randomUUID(), input.query, input.summary, input.resultCount, now());
+    "INSERT INTO prospect_searches (id, agencyId, query, summary, resultCount, createdAt) VALUES (?, ?, ?, ?, ?, ?)"
+  ).run(randomUUID(), input.agencyId, input.query, input.summary, input.resultCount, now());
 }
 
-export function latestProspectSearch(): ProspectSearch | null {
+export function latestProspectSearch(scope: TenantScope): ProspectSearch | null {
+  const where = scopeWhere(scope);
   return (
     (db
-      .prepare("SELECT * FROM prospect_searches ORDER BY createdAt DESC LIMIT 1")
-      .get() as ProspectSearch) ?? null
+      .prepare(`SELECT * FROM prospect_searches WHERE ${where.sql} ORDER BY createdAt DESC LIMIT 1`)
+      .get(...where.params) as ProspectSearch) ?? null
   );
 }
 
-
-export function listProspects(): Prospect[] {
+export function listProspects(scope: TenantScope): Prospect[] {
+  const where = scopeWhere(scope);
   return db
-    .prepare("SELECT * FROM prospects ORDER BY createdAt DESC")
-    .all() as Prospect[];
+    .prepare(`SELECT * FROM prospects WHERE ${where.sql} ORDER BY createdAt DESC`)
+    .all(...where.params) as Prospect[];
 }
 
 export function getProspect(id: string): Prospect | null {
@@ -1171,18 +1306,21 @@ export function getProspect(id: string): Prospect | null {
 }
 
 export function createProspect(
-  input: Omit<Prospect, "id" | "status" | "clientId" | "createdAt">
+  input: Omit<Prospect, "id" | "status" | "clientId" | "createdAt" | "agencyId">,
+  agencyId: string
 ): Prospect {
+  if (!agencyId) throw new Error("createProspect: agência obrigatória");
   const prospect: Prospect = {
     ...input,
+    agencyId,
     id: randomUUID(),
     status: "new",
     clientId: null,
     createdAt: now(),
   };
   db.prepare(
-    `INSERT INTO prospects (id, searchQuery, name, segment, location, website, instagram, whyFit, marketingMaturity, suggestedApproach, status, clientId, createdAt)
-     VALUES (@id, @searchQuery, @name, @segment, @location, @website, @instagram, @whyFit, @marketingMaturity, @suggestedApproach, @status, @clientId, @createdAt)`
+    `INSERT INTO prospects (id, agencyId, searchQuery, name, segment, location, website, instagram, whyFit, marketingMaturity, suggestedApproach, status, clientId, createdAt)
+     VALUES (@id, @agencyId, @searchQuery, @name, @segment, @location, @website, @instagram, @whyFit, @marketingMaturity, @suggestedApproach, @status, @clientId, @createdAt)`
   ).run(prospect);
   return prospect;
 }
@@ -1210,6 +1348,7 @@ export function deleteProspect(id: string): boolean {
 
 export type IdeaBatch = {
   id: string;
+  agencyId: string | null;
   audience: "agency" | "client" | "professional";
   targetId: string | null;
   content: string;
@@ -1225,26 +1364,30 @@ db.exec(`
     createdAt TEXT NOT NULL
   );
 `);
+tenantColumn("idea_batches");
 
 export function listIdeaBatches(
   audience: IdeaBatch["audience"],
-  targetId: string | null
+  targetId: string | null,
+  scope: TenantScope
 ): IdeaBatch[] {
+  const where = scopeWhere(scope);
   return db
     .prepare(
-      "SELECT * FROM idea_batches WHERE audience = ? AND (targetId IS ? OR targetId = ?) ORDER BY createdAt DESC LIMIT 10"
+      `SELECT * FROM idea_batches WHERE audience = ? AND (targetId IS ? OR targetId = ?) AND ${where.sql} ORDER BY createdAt DESC LIMIT 10`
     )
-    .all(audience, targetId, targetId) as IdeaBatch[];
+    .all(audience, targetId, targetId, ...where.params) as IdeaBatch[];
 }
 
 export function createIdeaBatch(input: {
+  agencyId: string | null;
   audience: IdeaBatch["audience"];
   targetId: string | null;
   content: string;
 }): IdeaBatch {
   const batch: IdeaBatch = { ...input, id: randomUUID(), createdAt: now() };
   db.prepare(
-    "INSERT INTO idea_batches (id, audience, targetId, content, createdAt) VALUES (@id, @audience, @targetId, @content, @createdAt)"
+    "INSERT INTO idea_batches (id, agencyId, audience, targetId, content, createdAt) VALUES (@id, @agencyId, @audience, @targetId, @content, @createdAt)"
   ).run(batch);
   return batch;
 }
@@ -1254,7 +1397,7 @@ export function createIdeaBatch(input: {
 // Resumo textual de tudo que aconteceu na conta, usado como fonte de dados
 // real para o relatório executivo gerado por IA.
 export function getPlatformSnapshot(clientId: string): string {
-  const projects = listProjects({ clientId });
+  const projects = listClientProjects(clientId);
   const generations = db
     .prepare(
       "SELECT type, title, createdAt FROM generations WHERE clientId = ? ORDER BY createdAt DESC LIMIT 30"
@@ -1316,20 +1459,21 @@ export function getClientStats(clientId: string): {
 
 import type { AgencyStats } from "./ranking";
 
-export function getAgencyStats(): AgencyStats {
+export function getAgencyStats(scope: TenantScope): AgencyStats {
+  const where = scopeWhere(scope);
   const count = (sql: string, ...params: unknown[]) =>
-    (db.prepare(sql).get(...params) as { c: number }).c;
-  const review = db.prepare("SELECT AVG(score) as avg FROM art_reviews").get() as {
+    (db.prepare(sql).get(...params, ...where.params) as { c: number }).c;
+  const review = db.prepare(`SELECT AVG(score) as avg FROM art_reviews WHERE ${where.sql}`).get(...where.params) as {
     avg: number | null;
   };
   const weekAgo = new Date(Date.now() - 7 * 24 * 60 * 60 * 1000).toISOString();
   return {
-    activeClients: count("SELECT COUNT(*) as c FROM clients"),
-    paidProjects: count("SELECT COUNT(*) as c FROM projects WHERE status = 'paid'"),
-    generations: count("SELECT COUNT(*) as c FROM generations"),
+    activeClients: count(`SELECT COUNT(*) as c FROM clients WHERE ${where.sql}`),
+    paidProjects: count(`SELECT COUNT(*) as c FROM projects WHERE status = 'paid' AND ${where.sql}`),
+    generations: count(`SELECT COUNT(*) as c FROM generations WHERE ${where.sql}`),
     avgScore: review.avg !== null ? Math.round(review.avg) : null,
-    professionals: count("SELECT COUNT(*) as c FROM professionals"),
-    meetingsHeld: count("SELECT COUNT(*) as c FROM meetings WHERE scheduledAt < ?", new Date().toISOString()),
-    weeklyActions: count("SELECT COUNT(*) as c FROM activities WHERE createdAt >= ?", weekAgo),
+    professionals: count(`SELECT COUNT(*) as c FROM professionals WHERE ${where.sql}`),
+    meetingsHeld: count(`SELECT COUNT(*) as c FROM meetings WHERE scheduledAt < ? AND ${where.sql}`, new Date().toISOString()),
+    weeklyActions: count(`SELECT COUNT(*) as c FROM activities WHERE createdAt >= ? AND ${where.sql}`, weekAgo),
   };
 }

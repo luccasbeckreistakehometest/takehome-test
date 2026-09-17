@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server";
-import { createLeadFromPage, getAgencyPage } from "@/lib/agency-page-db";
-import { createRateLimiter, isPageLive, leadRateLimitPerHour, validateLead } from "@/lib/agency-page-rules";
+import { createLeadFromPage, findPublishedPage } from "@/lib/agency-page-db";
+import { createRateLimiter, leadRateLimitPerHour, validateLead } from "@/lib/agency-page-rules";
 
 type Context = { params: Promise<{ slug: string }> };
 
@@ -22,8 +22,9 @@ function clientIp(request: Request): string {
 // agência. Honeypot preenchido = finge sucesso e não grava nada.
 export async function POST(request: Request, { params }: Context) {
   const { slug } = await params;
-  const config = getAgencyPage();
-  if (!isPageLive(config, slug)) return NextResponse.json({ error: "Página não encontrada" }, { status: 404 });
+  // A agência dona do lead vem do endereço da página.
+  const page = findPublishedPage(slug);
+  if (!page) return NextResponse.json({ error: "Página não encontrada" }, { status: 404 });
   const ip = clientIp(request);
   const verdict = limiter.check(ip);
   if (!verdict.ok) {
@@ -43,6 +44,6 @@ export async function POST(request: Request, { params }: Context) {
     };
     return NextResponse.json({ error: messages[check.reason] ?? "Dados inválidos", field: check.reason }, { status: 400 });
   }
-  createLeadFromPage({ slug: config.slug, lead: check.lead, ip });
+  createLeadFromPage({ agencyId: page.agencyId, slug: page.config.slug, lead: check.lead, ip });
   return NextResponse.json({ ok: true }, { status: 201 });
 }

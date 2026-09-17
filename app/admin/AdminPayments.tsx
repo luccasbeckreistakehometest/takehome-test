@@ -28,7 +28,7 @@ const STATUS: Record<string, string> = {
 };
 const when = (iso: string) => new Date(iso).toLocaleString("pt-BR", { day: "2-digit", month: "2-digit", hour: "2-digit", minute: "2-digit" });
 
-export default function AdminPayments() {
+export default function AdminPayments({ agency = "" }: { agency?: string }) {
   const [payments, setPayments] = useState<Payment[]>([]);
   const [transactions, setTransactions] = useState<Tx[]>([]);
   const [paymentId, setPaymentId] = useState("");
@@ -37,13 +37,13 @@ export default function AdminPayments() {
   const [busy, setBusy] = useState(false);
 
   const load = useCallback(() => {
-    api<{ payments: Payment[]; transactions: Tx[] }>("/api/admin/payments")
+    api<{ payments: Payment[]; transactions: Tx[] }>(`/api/admin/payments${agency ? `?agency=${encodeURIComponent(agency)}` : ""}`)
       .then((r) => {
         setPayments(r.payments);
         setTransactions(r.transactions);
       })
       .catch((e) => setError(e instanceof Error ? e.message : "Erro"));
-  }, []);
+  }, [agency]);
 
   useEffect(() => {
     load();

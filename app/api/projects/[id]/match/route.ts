@@ -14,6 +14,7 @@ import { ROLE_LABELS } from "@/lib/marketplace-types";
 import { ALLOWED_IMAGE_MIMES, readUpload, type AllowedImageMime } from "@/lib/uploads";
 import { aiErrorResponse, beginAi } from "@/lib/metering";
 import { guardProject, isDenied } from "@/lib/guard";
+import { agencyScope } from "@/lib/tenancy-rules";
 
 // Visão do portfólio: além do histórico textual, deixamos a IA OLHAR peças
 // reais do portfólio dos candidatos mais aderentes. Imagens custam muitos
@@ -39,7 +40,9 @@ export async function POST(request: Request, { params }: Context) {
   if (!client) {
     return NextResponse.json({ error: "Cliente não encontrado" }, { status: 404 });
   }
-  const professionals = listProfessionals();
+  // Candidatos visíveis para a agência da demanda (os dela, marketplace e
+  // quem já trabalhou/se candidatou) — nunca o time interno de outra agência.
+  const professionals = listProfessionals(agencyScope(project.agencyId));
   if (professionals.length === 0) {
     return NextResponse.json(
       { error: "Nenhum profissional cadastrado ainda. Cadastre profissionais primeiro." },
@@ -129,7 +132,7 @@ export async function POST(request: Request, { params }: Context) {
 
   const latestStrategy = listGenerations(project.clientId, "strategy_analysis")[0];
 
-  const ticket = await beginAi(request, auth.session, "match");
+  const ticket = await beginAi(request, auth.session, "match", { agencyId: project.agencyId });
   if (isDenied(ticket)) return ticket;
   try {
     return await ticket.run(async () => {

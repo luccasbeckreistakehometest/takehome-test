@@ -5,69 +5,140 @@ import { agencySalesTotal } from "@/lib/integrations-db";
 import { listUsers } from "@/lib/auth";
 import { listInvites } from "@/lib/invites-db";
 import { onboardingStats } from "@/lib/onboarding-db";
-import { guard, isDenied } from "@/lib/guard";
+import { guard, isDenied, tenantOf } from "@/lib/guard";
 import { aiDailyLimitUsd, aiSpendTodayUsd, recentAiErrors, spendByDay, usageByAccount } from "@/lib/ai-spend";
 import { inboxCounts } from "@/lib/contact-db";
-import { isEnforced, platformRevenue } from "@/lib/billing-db";
+import { isEnforced, platformRevenue, viewAccount } from "@/lib/billing-db";
+import { listAgencies } from "@/lib/agencies";
+import { getPlan } from "@/lib/plans";
+import { scopeWhere } from "@/lib/tenancy-rules";
 import "@/lib/agency-page-db";
 import "@/lib/proposals-db";
 import "@/lib/pulse-db";
 
-// Visão do admin da plataforma: contas, receita, custo de IA e sinais de uso.
-export async function GET() {
+// Visão do admin da plataforma: agências, contas, receita, custo de IA e
+// sinais de uso. ?agency=<id> filtra tudo por uma agência.
+export async function GET(request: Request) {
   const auth = await guard(["admin"]);
   if (isDenied(auth)) return auth;
-  const count = (sql: string) => (db.prepare(sql).get() as { c: number }).c;
-  const agencyStats = getAgencyStats();
-  const sales = agencySalesTotal();
-  const clients = listClients();
-  const professionals = listProfessionals();
-  const clientName = new Map(clients.map((c) => [c.id, c.name]));
-  const proName = new Map(professionals.map((p) => [p.id, p.name]));
+  const scope = tenantOf(auth, request);
+  const tenant = scopeWhere(scope);
+  const agencyFilter = scope.agencyId;
+  const count = (sql: string, ...params: unknown[]) =>
+    (db.prepare(sql).get(...params, ...tenant.params) as { c: number }).c;
+  const agencyStats = getAgencyStats(scope);
+  const sales = agencySalesTotal(scope);
+  const clients = listClients(scope);
+  const professionals = listProfessionals(scope);
+  const agencies = listAgencies();
+  const agencyName = new Map(agencies.map((a) => [a.id, a.name]));
+  const clientName = new Map(listClients(tenantOf(auth)).map((c) => [c.id, c.name]));
+  const proName = new Map(listProfessionals(tenantOf(auth)).map((p) => [p.id, p.name]));
   const accountName = (type: string | null, id: string | null) =>
-    type === "agency" ? "Agência" : type === "client" ? (clientName.get(id ?? "") ?? "(removido)") : type === "professional" ? (proName.get(id ?? "") ?? "(removido)") : "Admin / sistema";
+    type === "agency"
+      ? (agencyName.get(id ?? "") ?? "Agência (removida)")
+      : type === "client"
+        ? (clientName.get(id ?? "") ?? "(removido)")
+        : type === "professional"
+          ? (proName.get(id ?? "") ?? "(removido)")
+          : "Admin / sistema";
+  const since30 = new Date(Date.now() - 30 * 86_400_000).toISOString();
 
   return NextResponse.json({
+    agencyFilter,
+    agencies: agencies.map((a) => {
+      const { subscription, wallet } = viewAccount("agency", a.billingAccountId);
+      return {
+        id: a.id,
+        name: a.name,
+        slug: a.slug,
+        ownerUsername: a.ownerUsername,
+        users: a.users,
+        clients: a.clients,
+        planId: subscription.planId,
+        planName: getPlan(subscription.planId)?.name ?? subscription.planId,
+        renewsAt: subscription.renewsAt,
+        coins: wallet.coins,
+        createdAt: a.createdAt,
+      };
+    }),
     onboarding: onboardingStats(),
     totals: {
-      users: count("SELECT COUNT(*) as c FROM users"),
+      agencies: agencies.length,
+      users: count(`SELECT COUNT(*) as c FROM users WHERE ${tenant.sql}`),
       clients: clients.length,
       professionals: professionals.length,
       generations: agencyStats.generations,
       paidProjects: agencyStats.paidProjects,
       trackedRevenue: sales.revenue,
     },
-    clients: clients.map((c) => ({ id: c.id, name: c.name, industry: c.industry, country: c.country, selfServe: c.selfServe })),
-    professionals: professionals.map((p) => ({ id: p.id, name: p.name, role: p.role, employmentType: p.employmentType })),
-    users: listUsers(),
-    invites: listInvites().map((i) => ({ token: i.token, role: i.role, status: i.status, note: i.note, createdAt: i.createdAt })),
-    billing: { enforced: isEnforced(), revenue: platformRevenue() },
+    clients: clients.map((c) => ({
+      id: c.id,
+      name: c.name,
+      industry: c.industry,
+      country: c.country,
+      selfServe: c.selfServe,
+      agencyId: c.agencyId,
+      agencyName: agencyName.get(c.agencyId) ?? "",
+    })),
+    professionals: professionals.map((p) => ({
+      id: p.id,
+      name: p.name,
+      role: p.role,
+      employmentType: p.employmentType,
+      agencyId: p.agencyId,
+      agencyName: p.agencyId ? (agencyName.get(p.agencyId) ?? "") : "Marketplace",
+    })),
+    users: listUsers({ agencyId: agencyFilter }).map((u) => ({
+      ...u,
+      agencyName: u.agencyId ? (agencyName.get(u.agencyId) ?? "") : "",
+    })),
+    invites: listInvites(scope).map((i) => ({
+      token: i.token,
+      role: i.role,
+      status: i.status,
+      note: i.note,
+      createdAt: i.createdAt,
+      agencyName: agencyName.get(i.agencyId) ?? "",
+    })),
+    billing: { enforced: isEnforced(), revenue: platformRevenue(agencyFilter) },
     ai: {
       spendTodayUsd: aiSpendTodayUsd(),
       dailyLimitUsd: aiDailyLimitUsd(),
-      byDay: spendByDay(14),
-      byAccount: usageByAccount(30).map((row) => ({ ...row, name: accountName(row.accountType, row.accountId) })),
-      errors: recentAiErrors(20),
+      byDay: spendByDay(14, agencyFilter),
+      byAccount: usageByAccount(30, agencyFilter).map((row) => ({
+        ...row,
+        name: accountName(row.accountType, row.accountId),
+        agencyName: row.agencyId ? (agencyName.get(row.agencyId) ?? "") : "",
+      })),
+      errors: recentAiErrors(20, agencyFilter),
       keyConfigured: Boolean(process.env.ANTHROPIC_API_KEY),
     },
     inbox: inboxCounts(),
     leads: {
-      total: count("SELECT COUNT(*) as c FROM leads"),
-      last30: count(`SELECT COUNT(*) as c FROM leads WHERE createdAt >= '${new Date(Date.now() - 30 * 86_400_000).toISOString()}'`),
-      recent: db.prepare("SELECT id, slug, name, need, budgetBand, createdAt FROM leads ORDER BY createdAt DESC LIMIT 15").all(),
+      total: count(`SELECT COUNT(*) as c FROM leads WHERE ${tenant.sql}`),
+      last30: count(`SELECT COUNT(*) as c FROM leads WHERE createdAt >= ? AND ${tenant.sql}`, since30),
+      recent: db
+        .prepare(`SELECT id, agencyId, slug, name, need, budgetBand, createdAt FROM leads WHERE ${tenant.sql} ORDER BY createdAt DESC LIMIT 15`)
+        .all(...tenant.params),
     },
     proposals: {
-      byStatus: db.prepare("SELECT status, COUNT(*) AS c FROM proposals GROUP BY status").all(),
+      byStatus: db.prepare(`SELECT status, COUNT(*) AS c FROM proposals WHERE ${tenant.sql} GROUP BY status`).all(...tenant.params),
       recent: db
-        .prepare("SELECT id, prospectName, status, acceptedPackage, expiresAt, createdAt FROM proposals ORDER BY createdAt DESC LIMIT 15")
-        .all(),
+        .prepare(
+          `SELECT id, agencyId, prospectName, status, acceptedPackage, expiresAt, createdAt FROM proposals WHERE ${tenant.sql} ORDER BY createdAt DESC LIMIT 15`
+        )
+        .all(...tenant.params),
     },
     pulse: {
-      responses: count("SELECT COUNT(*) as c FROM client_pulses"),
-      avgScore: (db.prepare("SELECT AVG(score) AS a FROM client_pulses").get() as { a: number | null }).a,
+      responses: count(`SELECT COUNT(*) as c FROM client_pulses WHERE ${tenant.sql}`),
+      avgScore: (db.prepare(`SELECT AVG(score) AS a FROM client_pulses WHERE ${tenant.sql}`).get(...tenant.params) as { a: number | null }).a,
       recent: db
-        .prepare("SELECT p.clientId, c.name AS clientName, p.score, p.createdAt FROM client_pulses p LEFT JOIN clients c ON c.id = p.clientId ORDER BY p.createdAt DESC LIMIT 15")
-        .all(),
+        .prepare(
+          `SELECT p.clientId, c.name AS clientName, p.score, p.createdAt FROM client_pulses p LEFT JOIN clients c ON c.id = p.clientId
+           WHERE ${scopeWhere(scope, "p.agencyId").sql} ORDER BY p.createdAt DESC LIMIT 15`
+        )
+        .all(...tenant.params),
     },
   });
 }

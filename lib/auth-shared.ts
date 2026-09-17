@@ -29,11 +29,15 @@ export type SessionPayload = {
   // desativar a conta ou "sair de todos os dispositivos" incrementa a versão
   // no banco e derruba todos os cookies antigos.
   sv?: number;
+  // Agência (tenant) da sessão. NUNCA vem do cookie: lib/session.ts resolve
+  // no banco a cada requisição (agência → users.agencyId; marca → a agência
+  // da marca; profissional → a do perfil; admin → null = todas).
+  agencyId?: string | null;
   iat?: number; // emitido em (segundos)
   exp?: number; // expira em (segundos)
 };
 
-export type SessionInput = Omit<SessionPayload, "iat" | "exp">;
+export type SessionInput = Omit<SessionPayload, "iat" | "exp" | "agencyId">;
 
 // Só para desenvolvimento/testes locais. Nunca aceito em produção.
 const DEV_ONLY_SECRET = "insecure-dev-only-secret-do-not-use-in-production";
@@ -78,7 +82,9 @@ export async function signSession(
   now: number = Date.now()
 ): Promise<string> {
   const iat = Math.floor(now / 1000);
-  const full: SessionPayload = { ...payload, iat, exp: iat + SESSION_MAX_AGE_SECONDS };
+  const { agencyId, ...signed } = payload as SessionPayload;
+  void agencyId;
+  const full: SessionPayload = { ...signed, iat, exp: iat + SESSION_MAX_AGE_SECONDS };
   const body = toBase64Url(new TextEncoder().encode(JSON.stringify(full)));
   const signature = await crypto.subtle.sign("HMAC", await hmacKey(), new TextEncoder().encode(body));
   return `${body}.${toBase64Url(new Uint8Array(signature))}`;
@@ -105,6 +111,7 @@ export async function verifySession(
     const payload = JSON.parse(new TextDecoder().decode(fromBase64Url(body))) as SessionPayload;
     if (typeof payload.exp !== "number" || payload.exp * 1000 <= now) return null;
     if (!payload.userId || !payload.role) return null;
+    delete payload.agencyId; // só o servidor define
     return payload;
   } catch (error) {
     // Segredo ausente em produção: falha fechada, mas deixa rastro no log.

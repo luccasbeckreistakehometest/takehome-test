@@ -1,13 +1,14 @@
 import { NextResponse } from "next/server";
 import { z } from "zod";
 import { createContact, deleteContact, listContacts } from "@/lib/messaging-db";
-import { agencyOnly, isDenied } from "@/lib/guard";
+import { actingAgencyId, agencyOnly, guard, isDenied, tenantOf } from "@/lib/guard";
+import { clientAgencyId } from "@/lib/db";
 
 export async function GET(request: Request) {
   const auth = await agencyOnly();
   if (isDenied(auth)) return auth;
   const clientId = new URL(request.url).searchParams.get("clientId") || undefined;
-  return NextResponse.json({ contacts: listContacts(clientId) });
+  return NextResponse.json({ contacts: listContacts(tenantOf(auth, request), clientId) });
 }
 
 const schema = z.object({
@@ -29,7 +30,14 @@ export async function POST(request: Request) {
   if (!parsed.data.phone && !parsed.data.instagram) {
     return NextResponse.json({ error: "Informe ao menos um telefone ou @ do Instagram." }, { status: 400 });
   }
-  return NextResponse.json({ contact: createContact(parsed.data) }, { status: 201 });
+  // Contato vinculado a uma marca: a marca precisa ser da agência.
+  const agencyId = parsed.data.clientId ? clientAgencyId(parsed.data.clientId) : actingAgencyId(auth, request);
+  if (parsed.data.clientId) {
+    const owner = await guard(["agency", "admin"], { clientId: parsed.data.clientId });
+    if (isDenied(owner)) return owner;
+  }
+  if (!agencyId) return NextResponse.json({ error: "Cliente não encontrado" }, { status: 404 });
+  return NextResponse.json({ contact: createContact({ ...parsed.data, agencyId }) }, { status: 201 });
 }
 
 export async function DELETE(request: Request) {
@@ -37,6 +45,6 @@ export async function DELETE(request: Request) {
   if (isDenied(auth)) return auth;
   const id = new URL(request.url).searchParams.get("id");
   if (!id) return NextResponse.json({ error: "id ausente" }, { status: 400 });
-  deleteContact(id);
+  if (!deleteContact(tenantOf(auth), id)) return NextResponse.json({ error: "Contato não encontrado" }, { status: 404 });
   return NextResponse.json({ ok: true });
 }

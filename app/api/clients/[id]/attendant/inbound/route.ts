@@ -20,14 +20,16 @@ const schema = z.object({
 // mensagens reais chegam pelo webhook da Meta e seguem o mesmo fluxo.
 export async function POST(request: Request, { params }: Context) {
   const { id } = await params;
-  const auth = await guard(["agency", "admin"]);
+  const auth = await guard(["agency", "admin"], { clientId: id });
   if (isDenied(auth)) return auth;
-  if (!getClient(id)) return NextResponse.json({ error: "Cliente não encontrado" }, { status: 404 });
+  const client = getClient(id);
+  if (!client) return NextResponse.json({ error: "Cliente não encontrado" }, { status: 404 });
   const parsed = schema.safeParse(await request.json().catch(() => null));
   if (!parsed.success) {
     return NextResponse.json({ error: parsed.error.issues[0]?.message ?? "Dados inválidos" }, { status: 400 });
   }
   const inbound = saveInbound({
+    agencyId: client.agencyId,
     channel: "whatsapp",
     fromAddress: parsed.data.fromAddress.replace(/\D/g, "") || parsed.data.fromAddress,
     fromName: parsed.data.fromName,

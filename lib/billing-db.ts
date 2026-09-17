@@ -1,5 +1,6 @@
 import { randomUUID } from "crypto";
-import { addColumnIfMissing, db } from "./db";
+import { addColumnIfMissing, db, tenantColumn } from "./db";
+import { billingAgencyId } from "./tenancy-rules";
 import {
   actionCost,
   entryPlanId,
@@ -97,6 +98,22 @@ addColumnIfMissing("mp_payments", "amount", "REAL NOT NULL DEFAULT 0");
 addColumnIfMissing("mp_payments", "mpStatus", "TEXT NOT NULL DEFAULT ''");
 addColumnIfMissing("mp_payments", "detail", "TEXT NOT NULL DEFAULT ''");
 addColumnIfMissing("mp_payments", "updatedAt", "TEXT");
+for (const table of ["subscriptions", "wallets", "billing_transactions", "mp_payments"]) tenantColumn(table);
+
+// Agência de uma conta de billing: a própria (conta de agência), a da marca
+// ou a do profissional (null = freelancer do marketplace aberto).
+const tableHas = (table: string) =>
+  Boolean(db.prepare("SELECT 1 FROM sqlite_master WHERE type = 'table' AND name = ?").get(table));
+export function accountAgencyId(accountType: AccountType | null | undefined, accountId: string | null | undefined): string | null {
+  return billingAgencyId(accountType, accountId, {
+    client: (id) =>
+      ((db.prepare("SELECT agencyId FROM clients WHERE id = ?").get(id) as { agencyId: string | null } | undefined)?.agencyId ?? null),
+    professional: (id) =>
+      tableHas("professionals")
+        ? ((db.prepare("SELECT agencyId FROM professionals WHERE id = ?").get(id) as { agencyId: string | null } | undefined)?.agencyId ?? null)
+        : null,
+  });
+}
 
 const nowIso = () => new Date().toISOString();
 
@@ -134,10 +151,11 @@ function recordTx(input: {
 }): string {
   const id = randomUUID();
   db.prepare(
-    `INSERT INTO billing_transactions (id, accountType, accountId, kind, description, amount, coins, ref, createdAt)
-     VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)`
+    `INSERT INTO billing_transactions (id, agencyId, accountType, accountId, kind, description, amount, coins, ref, createdAt)
+     VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`
   ).run(
     id,
+    accountAgencyId(input.accountType, input.accountId),
     input.accountType,
     input.accountId,
     input.kind,
@@ -173,9 +191,10 @@ function toWallet(row: WalletRow): Wallet {
 }
 
 function ensureWallet(accountType: AccountType, accountId: string): void {
-  db.prepare("INSERT OR IGNORE INTO wallets (accountType, accountId, coins, planCoins) VALUES (?, ?, 0, 0)").run(
+  db.prepare("INSERT OR IGNORE INTO wallets (accountType, accountId, agencyId, coins, planCoins) VALUES (?, ?, ?, 0, 0)").run(
     accountType,
-    accountId
+    accountId,
+    accountAgencyId(accountType, accountId)
   );
 }
 
@@ -229,11 +248,11 @@ function subscriptionRow(accountType: AccountType, accountId: string): Subscript
 
 function writeSubscription(sub: Subscription): void {
   db.prepare(
-    `INSERT INTO subscriptions (accountType, accountId, planId, period, status, startedAt, renewsAt, lastRefillAt)
-     VALUES (@accountType, @accountId, @planId, @period, @status, @startedAt, @renewsAt, @lastRefillAt)
-     ON CONFLICT(accountType, accountId) DO UPDATE SET planId=@planId, period=@period, status=@status,
+    `INSERT INTO subscriptions (accountType, accountId, agencyId, planId, period, status, startedAt, renewsAt, lastRefillAt)
+     VALUES (@accountType, @accountId, @agencyId, @planId, @period, @status, @startedAt, @renewsAt, @lastRefillAt)
+     ON CONFLICT(accountType, accountId) DO UPDATE SET agencyId=@agencyId, planId=@planId, period=@period, status=@status,
        startedAt=@startedAt, renewsAt=@renewsAt, lastRefillAt=@lastRefillAt`
-  ).run(sub);
+  ).run({ ...sub, agencyId: accountAgencyId(sub.accountType, sub.accountId) });
 }
 
 function planQuota(plan: Plan): number {
@@ -369,7 +388,7 @@ export function refreshAllAccounts(now: Date = new Date()): number {
       `SELECT accountType, accountId FROM subscriptions
        UNION SELECT 'client', id FROM clients
        ${hasProfessionals ? "UNION SELECT 'professional', id FROM professionals" : ""}
-       UNION SELECT 'agency', 'agency'`
+       UNION SELECT 'agency', id FROM agencies`
     )
     .all() as { accountType: AccountType; accountId: string }[];
   for (const row of rows) refreshAccount(row.accountType, row.accountId, now);
@@ -603,9 +622,15 @@ export type BillingTx = {
   createdAt: string;
 };
 
-export function listTransactions(filter: { accountType?: AccountType; accountId?: string; limit?: number } = {}): BillingTx[] {
+export function listTransactions(
+  filter: { accountType?: AccountType; accountId?: string; agencyId?: string | null; limit?: number } = {}
+): BillingTx[] {
   const where: string[] = [];
   const args: (string | number)[] = [];
+  if (filter.agencyId) {
+    where.push("agencyId = ?");
+    args.push(filter.agencyId);
+  }
   if (filter.accountType) {
     where.push("accountType = ?");
     args.push(filter.accountType);
@@ -624,10 +649,12 @@ export function listTransactions(filter: { accountType?: AccountType; accountId?
 
 // Receita da plataforma (para o admin): só dinheiro que entrou de verdade
 // (pagamentos confirmados menos estornos).
-export function platformRevenue(): { total: number; mrr: number; byKind: Record<string, number> } {
+export function platformRevenue(agencyId?: string | null): { total: number; mrr: number; byKind: Record<string, number> } {
+  const byAgency = agencyId ? "WHERE agencyId = ?" : "";
+  const agencyArgs = agencyId ? [agencyId] : [];
   const rows = db
-    .prepare("SELECT kind, COALESCE(SUM(amount),0) as total FROM billing_transactions GROUP BY kind")
-    .all() as { kind: string; total: number }[];
+    .prepare(`SELECT kind, COALESCE(SUM(amount),0) as total FROM billing_transactions ${byAgency} GROUP BY kind`)
+    .all(...agencyArgs) as { kind: string; total: number }[];
   const byKind: Record<string, number> = {};
   let total = 0;
   for (const r of rows) {
@@ -637,13 +664,14 @@ export function platformRevenue(): { total: number; mrr: number; byKind: Record<
   // MRR aproximado: preço mensal dos planos pagos vigentes pagos por pagamento
   const at = nowIso();
   const subs = db
-    .prepare("SELECT planId FROM subscriptions WHERE status = 'active' AND renewsAt > ?")
-    .all(at) as { planId: string }[];
+    .prepare(`SELECT planId FROM subscriptions WHERE status = 'active' AND renewsAt > ? ${agencyId ? "AND agencyId = ?" : ""}`)
+    .all(at, ...agencyArgs) as { planId: string }[];
   const mrr = subs.reduce((sum, s) => sum + (getPlan(s.planId)?.monthlyPrice ?? 0), 0);
   return { total, mrr, byKind };
 }
 
 export type AccountBillingRow = {
+  agencyId: string | null;
   accountType: AccountType;
   accountId: string;
   planId: string;
@@ -653,13 +681,21 @@ export type AccountBillingRow = {
   paid: boolean;
 };
 
-export function listAccountsBilling(): AccountBillingRow[] {
+export function listAccountsBilling(agencyId?: string | null): AccountBillingRow[] {
   const rows = db
     .prepare(
-      `SELECT s.accountType, s.accountId, s.planId, s.renewsAt, COALESCE(w.coins,0) + COALESCE(w.planCoins,0) AS coins
-       FROM subscriptions s LEFT JOIN wallets w ON w.accountType = s.accountType AND w.accountId = s.accountId`
+      `SELECT s.agencyId, s.accountType, s.accountId, s.planId, s.renewsAt, COALESCE(w.coins,0) + COALESCE(w.planCoins,0) AS coins
+       FROM subscriptions s LEFT JOIN wallets w ON w.accountType = s.accountType AND w.accountId = s.accountId
+       ${agencyId ? "WHERE s.agencyId = ?" : ""}`
     )
-    .all() as { accountType: AccountType; accountId: string; planId: string; renewsAt: string; coins: number }[];
+    .all(...(agencyId ? [agencyId] : [])) as {
+    agencyId: string | null;
+    accountType: AccountType;
+    accountId: string;
+    planId: string;
+    renewsAt: string;
+    coins: number;
+  }[];
   return rows.map((r) => {
     const plan = getPlan(r.planId);
     return { ...r, planName: plan?.name ?? r.planId, paid: isPaidPlan(plan) };
@@ -727,6 +763,7 @@ export type PaymentStatus = "credited" | "refunded" | "rejected" | "pending" | "
 
 export type PaymentRow = {
   id: string;
+  agencyId?: string | null;
   status: PaymentStatus;
   mpStatus: string;
   externalReference: string;
@@ -742,9 +779,15 @@ export function getPaymentRow(id: string): PaymentRow | null {
   return (db.prepare("SELECT * FROM mp_payments WHERE id = ?").get(id) as PaymentRow | undefined) ?? null;
 }
 
-export function listPayments(filter: { accountType?: AccountType; accountId?: string; limit?: number } = {}): PaymentRow[] {
+export function listPayments(
+  filter: { accountType?: AccountType; accountId?: string; agencyId?: string | null; limit?: number } = {}
+): PaymentRow[] {
   const where: string[] = [];
   const args: (string | number)[] = [];
+  if (filter.agencyId) {
+    where.push("agencyId = ?");
+    args.push(filter.agencyId);
+  }
   if (filter.accountType) {
     where.push("accountType = ?");
     args.push(filter.accountType);
@@ -762,11 +805,11 @@ export function listPayments(filter: { accountType?: AccountType; accountId?: st
 function upsertPayment(row: Omit<PaymentRow, "createdAt" | "updatedAt">): void {
   const at = nowIso();
   db.prepare(
-    `INSERT INTO mp_payments (id, status, mpStatus, externalReference, accountType, accountId, amount, detail, createdAt, updatedAt)
-     VALUES (@id, @status, @mpStatus, @externalReference, @accountType, @accountId, @amount, @detail, @at, @at)
-     ON CONFLICT(id) DO UPDATE SET status=@status, mpStatus=@mpStatus, externalReference=@externalReference,
+    `INSERT INTO mp_payments (id, agencyId, status, mpStatus, externalReference, accountType, accountId, amount, detail, createdAt, updatedAt)
+     VALUES (@id, @agencyId, @status, @mpStatus, @externalReference, @accountType, @accountId, @amount, @detail, @at, @at)
+     ON CONFLICT(id) DO UPDATE SET agencyId=@agencyId, status=@status, mpStatus=@mpStatus, externalReference=@externalReference,
        accountType=@accountType, accountId=@accountId, amount=@amount, detail=@detail, updatedAt=@at`
-  ).run({ ...row, at });
+  ).run({ ...row, at, agencyId: accountAgencyId(row.accountType, row.accountId) });
 }
 
 export type MpPaymentInput = {

@@ -9,13 +9,15 @@ import { professionalTier } from "@/lib/ranking";
 import { professionalSchema } from "@/lib/validation";
 import { createUser, randomPassword } from "@/lib/auth";
 import { startAccount } from "@/lib/billing-db";
-import { guard, isDenied } from "@/lib/guard";
+import { actingAgencyId, guard, isDenied, tenantOf } from "@/lib/guard";
+import { getAgency } from "@/lib/agencies";
 
-// Rede de profissionais da agência. Só agência/admin.
-export async function GET() {
+// Rede de profissionais da agência (os dela, o marketplace aberto e quem já
+// trabalhou com ela). Só agência/admin.
+export async function GET(request: Request) {
   const auth = await guard(["agency", "admin"]);
   if (isDenied(auth)) return auth;
-  const professionals = listProfessionals().map((professional) => {
+  const professionals = listProfessionals(tenantOf(auth, request)).map((professional) => {
     const stats = getProfessionalStats(professional.id);
     return { ...professional, stats, tier: professionalTier(stats) };
   });
@@ -30,13 +32,17 @@ export async function POST(request: Request) {
   if (!parsed.success) {
     return NextResponse.json({ error: parsed.error.issues[0]?.message ?? "Dados inválidos" }, { status: 400 });
   }
-  const professional = createProfessional(parsed.data);
+  // Cadastrado pela agência = da agência (admin: a do ?agency=, ou a da casa).
+  const agencyId = actingAgencyId(auth, request);
+  if (!getAgency(agencyId)) return NextResponse.json({ error: "Agência não encontrada" }, { status: 404 });
+  const professional = createProfessional(parsed.data, agencyId);
   const password = randomPassword();
   try {
     const login = await createUser({
       password,
       role: "professional",
       refId: professional.id,
+      agencyId,
       name: professional.name,
       mustChangePassword: true,
     });

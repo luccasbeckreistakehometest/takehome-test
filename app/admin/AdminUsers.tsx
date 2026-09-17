@@ -24,6 +24,8 @@ type AdminUser = {
   lastLoginAt: string | null;
   createdAt: string;
   mustChangePassword: boolean;
+  agencyId: string | null;
+  agencyName: string;
   billing: Billing;
 };
 
@@ -48,20 +50,20 @@ const PLAN_OPTIONS: Record<string, { id: string; label: string }[]> = {
 const ROLE_LABEL: Record<string, string> = { admin: "admin", agency: "agência", client: "marca", professional: "profissional" };
 const fmt = (iso: string | null) => (iso ? new Date(iso).toLocaleDateString("pt-BR") : "—");
 
-export default function AdminUsers() {
+export default function AdminUsers({ agency = "" }: { agency?: string }) {
   const [users, setUsers] = useState<AdminUser[]>([]);
   const [query, setQuery] = useState("");
   const [selected, setSelected] = useState<AdminUser | null>(null);
   const [error, setError] = useState("");
 
   const load = useCallback(() => {
-    api<{ users: AdminUser[] }>("/api/admin/users")
+    api<{ users: AdminUser[] }>(`/api/admin/users${agency ? `?agency=${encodeURIComponent(agency)}` : ""}`)
       .then((r) => {
         setUsers(r.users);
         setSelected((prev) => (prev ? (r.users.find((u) => u.id === prev.id) ?? null) : null));
       })
       .catch((e) => setError(e instanceof Error ? e.message : "Erro"));
-  }, []);
+  }, [agency]);
 
   useEffect(() => {
     load();
@@ -105,6 +107,7 @@ export default function AdminUsers() {
                     <p className="text-xs text-muted">
                       {u.name}
                       {u.email ? ` · ${u.email}` : ""}
+                      {u.agencyName ? ` · ${u.agencyName}` : ""}
                     </p>
                   </td>
                   <td className="py-2 pr-3">

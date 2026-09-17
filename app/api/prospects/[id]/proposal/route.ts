@@ -1,9 +1,9 @@
 import { NextResponse } from "next/server";
 import { z } from "zod";
-import { guard, isDenied } from "@/lib/guard";
+import { guardProspect, isDenied } from "@/lib/guard";
 import { GenerationError } from "@/lib/claude";
 import { aiErrorResponse, beginAi } from "@/lib/metering";
-import { createJob, finishJob, getProspect } from "@/lib/marketplace-db";
+import { createJob, finishJob } from "@/lib/marketplace-db";
 import { createProposal, listProposalsForProspect } from "@/lib/proposals-db";
 import { generateProposalContent } from "@/lib/proposal-ai";
 import { DEFAULT_PROPOSAL_DAYS, expiryFromNow } from "@/lib/proposal-rules";
@@ -14,8 +14,8 @@ type Context = { params: Promise<{ id: string }> };
 
 export async function GET(_request: Request, { params }: Context) {
   const { id } = await params;
-  const auth = await guard(["agency", "admin"]);
-  if (isDenied(auth)) return auth;
+  const guarded = await guardProspect(id);
+  if (isDenied(guarded)) return guarded;
   return NextResponse.json({ proposals: listProposalsForProspect(id) });
 }
 
@@ -31,18 +31,17 @@ const schema = z.object({
 // da agência; sai um link público com validade.
 export async function POST(request: Request, { params }: Context) {
   const { id } = await params;
-  const auth = await guard(["agency", "admin"]);
-  if (isDenied(auth)) return auth;
-  const prospect = getProspect(id);
-  if (!prospect) return NextResponse.json({ error: "Prospect não encontrado" }, { status: 404 });
+  const guarded = await guardProspect(id);
+  if (isDenied(guarded)) return guarded;
+  const { session: auth, prospect } = guarded;
   const parsed = schema.safeParse(await request.json().catch(() => ({})));
   if (!parsed.success) {
     return NextResponse.json({ error: parsed.error.issues[0]?.message ?? "Dados inválidos" }, { status: 400 });
   }
-  const ticket = await beginAi(request, auth, "proposal");
+  const ticket = await beginAi(request, auth, "proposal", { agencyId: prospect.agencyId });
   if (isDenied(ticket)) return ticket;
 
-  const job = createJob({ kind: "proposal", label: `Proposta — ${prospect.name}` });
+  const job = createJob({ kind: "proposal", label: `Proposta — ${prospect.name}`, agencyId: prospect.agencyId });
   try {
     const content = await ticket.run(() => generateProposalContent({
       prospect,
@@ -52,6 +51,7 @@ export async function POST(request: Request, { params }: Context) {
       currency: parsed.data.currency.toUpperCase(),
     }));
     const proposal = createProposal({
+      agencyId: prospect.agencyId,
       prospectId: prospect.id,
       prospectName: prospect.name,
       segment: prospect.segment,

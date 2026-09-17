@@ -10,8 +10,24 @@ import AdminUsers from "./AdminUsers";
 import AdminPayments from "./AdminPayments";
 import AdminInbox from "./AdminInbox";
 
+type AgencyRow = {
+  id: string;
+  name: string;
+  slug: string;
+  ownerUsername: string | null;
+  users: number;
+  clients: number;
+  planName: string;
+  renewsAt: string;
+  coins: number;
+  createdAt: string;
+};
+
 type Overview = {
+  agencyFilter: string | null;
+  agencies: AgencyRow[];
   totals: {
+    agencies: number;
     users: number;
     clients: number;
     professionals: number;
@@ -19,9 +35,9 @@ type Overview = {
     paidProjects: number;
     trackedRevenue: number;
   };
-  clients: { id: string; name: string; industry: string; country: string }[];
-  professionals: { id: string; name: string; role: string; employmentType: string }[];
-  users: { username: string; role: string; name: string }[];
+  clients: { id: string; name: string; industry: string; country: string; agencyName: string }[];
+  professionals: { id: string; name: string; role: string; employmentType: string; agencyName: string }[];
+  users: { username: string; role: string; name: string; agencyName: string }[];
   invites: { token: string; role: string; status: string; note: string; createdAt: string }[];
   onboarding: { toursStarted: number; toursCompleted: number; voiceBriefings: number; recent: { userId: string; username: string | null; role: string | null; tourCompleted: number; tourStep: number; firstSeenAt: string; events: string }[] };
   billing: { enforced: boolean; revenue: { total: number; mrr: number } };
@@ -54,10 +70,13 @@ export default function AdminPage() {
   const brl = (n: number) => fmtMoney(n, lang);
   const [data, setData] = useState<Overview | null>(null);
   const [tab, setTab] = useState<AdminTab>("overview");
+  // Filtro por agência ("" = todas): vale para a visão geral, usuários e pagamentos.
+  const [agency, setAgency] = useState("");
 
   useEffect(() => {
-    api<Overview>("/api/admin/overview").then(setData).catch(() => {});
-  }, []);
+    const query = agency ? `?agency=${encodeURIComponent(agency)}` : "";
+    api<Overview>(`/api/admin/overview${query}`).then(setData).catch(() => {});
+  }, [agency]);
 
   if (!data) {
     return (
@@ -73,6 +92,7 @@ export default function AdminPage() {
   }
 
   const kpis: { label: string; value: string; icon: IconName }[] = [
+    { label: "Agências", value: String(data.totals.agencies), icon: "briefcase" },
     { label: "Usuários", value: String(data.totals.users), icon: "users" },
     { label: "Clientes", value: String(data.totals.clients), icon: "briefcase" },
     { label: "Profissionais", value: String(data.totals.professionals), icon: "user" },
@@ -115,6 +135,26 @@ export default function AdminPage() {
         </div>
       </div>
 
+      <div className="flex flex-wrap items-center gap-2">
+        <label htmlFor="admin-agency-filter" className="text-sm text-muted">
+          Agência
+        </label>
+        <select
+          id="admin-agency-filter"
+          value={agency}
+          onChange={(e) => setAgency(e.target.value)}
+          className="rounded-md border border-edge bg-surface-2 px-3 py-1.5 text-sm"
+          data-testid="admin-agency-filter"
+        >
+          <option value="">Todas as agências</option>
+          {data.agencies.map((a) => (
+            <option key={a.id} value={a.id}>
+              {a.name}
+            </option>
+          ))}
+        </select>
+      </div>
+
       <div role="tablist" aria-label="Seções do admin" className="flex gap-1 overflow-x-auto rounded-lg border border-edge bg-surface-2 p-1">
         {TABS.map((t) => (
           <button
@@ -132,8 +172,8 @@ export default function AdminPage() {
         ))}
       </div>
 
-      {tab === "users" && <AdminUsers />}
-      {tab === "payments" && <AdminPayments />}
+      {tab === "users" && <AdminUsers agency={agency} />}
+      {tab === "payments" && <AdminPayments agency={agency} />}
       {tab === "inbox" && <AdminInbox />}
       {tab === "ai" && <AiUsage ai={data.ai} />}
 
@@ -154,6 +194,43 @@ export default function AdminPage() {
           Ajuste com AI_DAILY_SPEND_LIMIT_USD no servidor. Cobrança por saldo: {data.billing.enforced ? "ligada" : "desligada"}.
           {!data.ai.keyConfigured && " ANTHROPIC_API_KEY não está definida no ambiente."}
         </p>
+      </Card>
+
+      <Card data-testid="admin-agencies">
+        <SectionTitle>Agências ({data.agencies.length})</SectionTitle>
+        <div className="overflow-x-auto">
+          <table className="w-full min-w-[640px] text-left text-sm">
+            <thead className="text-xs text-muted">
+              <tr>
+                <th className="py-2 pr-3 font-normal">Agência</th>
+                <th className="py-2 pr-3 font-normal">Dono</th>
+                <th className="py-2 pr-3 font-normal">Equipe</th>
+                <th className="py-2 pr-3 font-normal">Clientes</th>
+                <th className="py-2 pr-3 font-normal">Plano</th>
+                <th className="py-2 pr-3 font-normal">Coins</th>
+                <th className="py-2 font-normal">Criada em</th>
+              </tr>
+            </thead>
+            <tbody className="divide-y divide-edge">
+              {data.agencies.map((a) => (
+                <tr key={a.id}>
+                  <td className="py-2 pr-3">
+                    <button type="button" onClick={() => setAgency(a.id)} className="font-medium hover:text-accent">
+                      {a.name}
+                    </button>
+                    <span className="block font-mono text-xs text-muted">/a/{a.slug}</span>
+                  </td>
+                  <td className="py-2 pr-3 font-mono text-xs">{a.ownerUsername ?? "—"}</td>
+                  <td className="py-2 pr-3">{a.users}</td>
+                  <td className="py-2 pr-3">{a.clients}</td>
+                  <td className="py-2 pr-3">{a.planName}</td>
+                  <td className="py-2 pr-3">{a.coins}</td>
+                  <td className="py-2 text-xs text-muted">{a.createdAt.slice(0, 10)}</td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
       </Card>
 
       <div className="grid gap-3 sm:grid-cols-3 lg:grid-cols-6">
@@ -177,7 +254,7 @@ export default function AdminPage() {
                 className="flex items-center justify-between rounded-md border border-edge bg-surface-2 px-3 py-2 text-sm transition-colors hover:border-accent/60"
               >
                 <span className="font-medium">{c.name}</span>
-                <span className="text-xs text-muted">{[c.industry, c.country].filter(Boolean).join(" · ")}</span>
+                <span className="text-xs text-muted">{[c.agencyName, c.industry, c.country].filter(Boolean).join(" · ")}</span>
               </Link>
             ))}
             {data.clients.length === 0 && <p className="text-sm text-muted">Nenhum cliente.</p>}
@@ -195,7 +272,7 @@ export default function AdminPage() {
               >
                 <span className="font-medium">{p.name}</span>
                 <span className="flex items-center gap-1.5 text-xs text-muted">
-                  {p.role}
+                  {[p.agencyName, p.role].filter(Boolean).join(" · ")}
                   <Tag>{p.employmentType === "employee" ? "full-time" : "freelancer"}</Tag>
                 </span>
               </Link>
@@ -227,7 +304,7 @@ export default function AdminPage() {
               >
                 <span>
                   <span className="font-mono text-accent">{u.username}</span>{" "}
-                  <span className="text-muted">— {u.name}</span>
+                  <span className="text-muted">— {u.name}{u.agencyName ? ` · ${u.agencyName}` : ""}</span>
                 </span>
                 <Tag>{u.role}</Tag>
               </div>

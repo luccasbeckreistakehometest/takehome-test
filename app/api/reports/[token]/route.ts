@@ -1,7 +1,8 @@
 import { NextResponse } from "next/server";
 import { getClient } from "@/lib/db";
 import { getMonthlyReportByToken } from "@/lib/reports-db";
-import { getSettings } from "@/lib/settings";
+import { getAgency } from "@/lib/agencies";
+import { agencyLogoUrl } from "@/lib/branding";
 
 type Context = { params: Promise<{ token: string }> };
 
@@ -12,10 +13,16 @@ export async function GET(_request: Request, { params }: Context) {
   const report = getMonthlyReportByToken(token);
   if (!report) return NextResponse.json({ error: "Relatório não encontrado" }, { status: 404 });
   const client = getClient(report.clientId);
-  const settings = getSettings();
+  // Marca da agência dona da marca do relatório.
+  const agency = getAgency(client?.agencyId);
   return NextResponse.json({
     report,
     client: { name: client?.name ?? "", language: client?.language ?? "pt-BR" },
-    agency: { name: settings.agencyName, accentColor: settings.accentColor, tagline: settings.tagline },
+    agency: {
+      name: agency?.name ?? "",
+      accentColor: agency?.accentColor ?? "#f76b15",
+      tagline: agency?.tagline ?? "",
+      logoUrl: agency ? agencyLogoUrl(agency) : "",
+    },
   });
 }

@@ -6,12 +6,18 @@ import { api } from "@/lib/api";
 import RegistrationForm from "@/components/RegistrationForm";
 import { Card, Spinner } from "@/components/ui";
 
-type Lookup = { valid: boolean; reason?: string; role?: "client" | "professional" | "agency"; note?: string };
+type Lookup = {
+  valid: boolean;
+  reason?: string;
+  role?: "client" | "professional" | "agency";
+  note?: string;
+  agency?: { name: string; accentColor: string; logoUrl: string } | null;
+};
 
 const ROLE_LABEL: Record<string, string> = {
   client: "cliente",
   professional: "profissional",
-  agency: "agência",
+  agency: "equipe da agência",
 };
 
 // Página de convite: valida o token e mostra o cadastro do papel convidado.
@@ -51,9 +57,17 @@ export default function ConvitePage({ params }: { params: Promise<{ token: strin
   }
 
   return (
-    <div className="mx-auto max-w-2xl space-y-6 py-12">
+    <div
+      className="mx-auto max-w-2xl space-y-6 py-12"
+      style={data.agency ? { ["--accent" as string]: data.agency.accentColor } : undefined}
+    >
       <div className="text-center">
         <p className="text-xs uppercase tracking-widest text-accent">Você foi convidado</p>
+        {data.agency && (
+          <p className="mt-2 text-sm text-muted" data-testid="invite-agency">
+            Convite de <strong className="text-foreground">{data.agency.name}</strong>
+          </p>
+        )}
         <h1 className="mt-1 font-[family-name:var(--font-display)] text-3xl font-bold tracking-tight">
           Cadastro de {ROLE_LABEL[data.role ?? "client"]}
         </h1>

@@ -1,9 +1,9 @@
 import { randomBytes, randomUUID } from "crypto";
-import { db } from "./db";
+import { db, tenantColumn } from "./db";
 // Os módulos abaixo criam as tabelas que o relatório lê (projects,
 // deliverables, annotations, scheduled_posts, metric_snapshots, sales_entries)
 // — importar por eles garante que existem mesmo num banco recém-criado.
-import { listProjects, listScheduledPosts } from "./marketplace-db";
+import { listClientProjects, listClientScheduledPosts } from "./marketplace-db";
 import { listSales } from "./integrations-db";
 import { listPulses } from "./pulse-db";
 import { getFreshReading } from "./learnings-db";
@@ -55,6 +55,7 @@ db.exec(`
     UNIQUE (clientId, month)
   );
 `);
+tenantColumn("monthly_reports");
 
 type Row = Omit<MonthlyReport, "data" | "summary"> & { data: string; summary: string };
 
@@ -69,7 +70,7 @@ function toReport(row: Row): MonthlyReport {
 
 // Carrega tudo que o mês precisa direto do banco e agrega.
 export function buildMonthData(clientId: string, month: ReportMonth): MonthlyReportData {
-  const projects: ReportProjectInput[] = listProjects({ clientId }).map((p) => ({
+  const projects: ReportProjectInput[] = listClientProjects(clientId).map((p) => ({
     id: p.id,
     title: p.title,
     status: p.status,
@@ -105,7 +106,7 @@ export function buildMonthData(clientId: string, month: ReportMonth): MonthlyRep
           .all(...deliverableIds) as { deliverableId: string; resolved: number; createdAt: string }[])
       : []
   ).map((a) => ({ ...a, resolved: a.resolved === 1 })) as ReportAnnotationInput[];
-  const posts: ReportPostInput[] = listScheduledPosts(clientId).map((p) => ({
+  const posts: ReportPostInput[] = listClientScheduledPosts(clientId).map((p) => ({
     id: p.id,
     title: p.title,
     channel: p.channel,
@@ -167,8 +168,8 @@ export function saveMonthlyReport(input: {
     createdAt: new Date().toISOString(),
   };
   db.prepare(
-    `INSERT INTO monthly_reports (id, clientId, month, token, lang, data, summary, createdAt)
-     VALUES (@id, @clientId, @month, @token, @lang, @data, @summary, @createdAt)
+    `INSERT INTO monthly_reports (id, agencyId, clientId, month, token, lang, data, summary, createdAt)
+     VALUES (@id, (SELECT agencyId FROM clients WHERE id = @clientId), @clientId, @month, @token, @lang, @data, @summary, @createdAt)
      ON CONFLICT(clientId, month) DO UPDATE SET lang=@lang, data=@data, summary=@summary, createdAt=@createdAt`
   ).run({ ...report, data: JSON.stringify(report.data), summary: JSON.stringify(report.summary) });
   return report;

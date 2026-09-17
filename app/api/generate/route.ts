@@ -30,7 +30,7 @@ export async function POST(request: Request) {
     return NextResponse.json({ error: "Landing pages estão desativadas nesta plataforma." }, { status: 403 });
   }
 
-  const ticket = await beginAi(request, auth, type);
+  const ticket = await beginAi(request, auth, type, { agencyId: client.agencyId });
   if (isDenied(ticket)) return ticket;
 
   // A análise estratégica mais recente alimenta os demais entregáveis,
@@ -45,7 +45,7 @@ export async function POST(request: Request) {
     strategy: latestStrategy?.content.slice(0, 8000),
   });
 
-  const job = createJob({ kind: type, label: `${spec.title} — ${client.name}`, clientId });
+  const job = createJob({ kind: type, label: `${spec.title} — ${client.name}`, clientId, agencyId: client.agencyId });
   try {
     const content = await ticket.run(async () =>
       type === "landing_page"

@@ -1,7 +1,7 @@
 import { generateStructured } from "./claude";
 import { isAiMock } from "./ai-mock";
 import { clientContext } from "./prompts";
-import { getSettings } from "./settings";
+import { currentAgencyProfile } from "./agencies";
 import type { Client } from "./types";
 import {
   contentHash,
@@ -15,6 +15,12 @@ import {
   type VoiceCheck,
 } from "./brand-voice-rules";
 import { readCache, writeCache } from "./brand-voice-db";
+
+// Nome e estilo da casa da agência em nome de quem a IA roda.
+function agencyPromptProfile(): { agencyName: string; houseStyle: string } {
+  const profile = currentAgencyProfile();
+  return { agencyName: profile.name, houseStyle: profile.houseStyle };
+}
 
 // Guardião da voz da marca: regras determinísticas + nota de tom da IA
 // (modelo barato, saída estruturada), tudo cacheado por hash do conteúdo.
@@ -76,7 +82,7 @@ export async function checkBrandVoice(input: {
     ai = mockToneAssessment(text, input.policy, input.client.tone, input.client.language);
     demo = true;
   } else {
-    const settings = getSettings();
+    const settings = agencyPromptProfile();
     ai = await generateStructured<AiVoiceAssessment>({
       tier: "standard",
       maxTokens: 1200,
@@ -122,7 +128,7 @@ export async function rewriteInBrandVoice(input: {
     out = mockRewrite(text, input.policy, input.kind, input.client.language);
     demo = true;
   } else {
-    const settings = getSettings();
+    const settings = agencyPromptProfile();
     const result = await generateStructured<{ text: string }>({
       tier: "standard",
       maxTokens: 2000,
