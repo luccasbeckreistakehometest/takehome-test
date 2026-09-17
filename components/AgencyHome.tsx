@@ -11,6 +11,7 @@ import DifferentiatorsStrip from "@/components/DifferentiatorsStrip";
 import PulseOverviewCard from "@/components/PulseOverviewCard";
 import { Card, SectionTitle, Spinner, Tag } from "@/components/ui";
 import { fmtMoney } from "@/lib/i18n";
+import { openAfter } from "@/lib/open-later";
 
 type Overview = {
   pendingApplications: {
@@ -29,6 +30,13 @@ type Overview = {
   agency: { tier: TierInfo };
   staleApprovals: { id: string; clientId: string; clientName: string; createdAt: string; pending: number }[];
   extras: { total: number; count: number; pending: number };
+  receivables: {
+    today: string;
+    dueSoon: { id: string; clientId: string; clientName: string; total: number; dueDate: string; status: string }[];
+    overdue: { id: string; clientId: string; clientName: string; total: number; dueDate: string; status: string }[];
+    drafts: number;
+    claimed: number;
+  };
 };
 
 // Home operacional da agência: o que precisa da sua ação agora
@@ -56,7 +64,9 @@ export default function AgencyHome() {
     data.awaitingClient.length +
     data.unansweredClientMessages.length +
     data.duePosts.length +
-    data.staleApprovals.length;
+    data.staleApprovals.length +
+    data.receivables.overdue.length +
+    data.receivables.claimed;
 
   return (
     <div className="space-y-6">
@@ -101,6 +111,38 @@ export default function AgencyHome() {
 
       <div className="grid gap-6 lg:grid-cols-2">
         <PulseOverviewCard mode="home" />
+        {(data.receivables.overdue.length > 0 || data.receivables.dueSoon.length > 0 || data.receivables.drafts > 0 || data.receivables.claimed > 0) && (
+          <Card data-testid="home-receivables">
+            <div className="flex items-center justify-between">
+              <SectionTitle>🧾 Faturas</SectionTitle>
+              <Link href="/invoices" className="text-xs text-accent hover:underline">
+                Cobranças →
+              </Link>
+            </div>
+            <div className="space-y-1.5 text-sm">
+              {data.receivables.overdue.map((item) => (
+                <div key={item.id} className="flex items-center justify-between gap-2 rounded-md border border-red-500/40 bg-red-500/5 px-3 py-2" data-testid="home-overdue">
+                  <span className="min-w-0 truncate">
+                    <span className="font-medium">{item.clientName}</span>{" "}
+                    <span className="text-red-500">{`· atrasada há ${Math.max(1, Math.round((Date.parse(`${data.receivables.today}T00:00:00Z`) - Date.parse(`${item.dueDate}T00:00:00Z`)) / 86_400_000))} dia(s)`}</span>
+                  </span>
+                  <button
+                    type="button"
+                    className="shrink-0 text-xs font-medium text-accent hover:underline"
+                    onClick={() => openAfter(async () => (await api<{ whatsappUrl: string }>(`/api/invoices/${item.id}`)).whatsappUrl).catch(() => {})}
+                  >
+                    Lembrar
+                  </button>
+                </div>
+              ))}
+              {data.receivables.dueSoon.length > 0 && (
+                <p className="text-muted">{`${data.receivables.dueSoon.length} fatura(s) vencem esta semana · ${fmtMoney(data.receivables.dueSoon.reduce((s, i) => s + i.total, 0))}`}</p>
+              )}
+              {data.receivables.claimed > 0 && <p className="text-muted">{`${data.receivables.claimed} cliente(s) avisaram que pagaram — confira e confirme`}</p>}
+              {data.receivables.drafts > 0 && <p className="text-muted">{`${data.receivables.drafts} rascunho(s) esperando envio`}</p>}
+            </div>
+          </Card>
+        )}
         {(data.extras.count > 0 || data.extras.pending > 0) && (
           <Card data-testid="extras-summary">
             <SectionTitle>💰 Extras do mês</SectionTitle>
@@ -122,10 +164,7 @@ export default function AgencyHome() {
                   <button
                     type="button"
                     className="shrink-0 text-xs font-medium text-accent hover:underline"
-                    onClick={async () => {
-                      const share = await api<{ whatsappUrl: string }>(`/api/approval-links/${item.id}`);
-                      window.open(share.whatsappUrl, "_blank", "noopener");
-                    }}
+                    onClick={() => openAfter(async () => (await api<{ whatsappUrl: string }>(`/api/approval-links/${item.id}`)).whatsappUrl).catch(() => {})}
                   >
                     Reenviar
                   </button>

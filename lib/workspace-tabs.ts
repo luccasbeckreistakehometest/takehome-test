@@ -87,6 +87,7 @@ export const TAB_GROUPS: { key: TabGroupKey; label: string; tabs: TabDef[] }[] =
     label: "Relatórios",
     tabs: [
       { key: "client_report", label: "Relatório executivo" },
+      { key: "invoices", label: "Cobranças", agencyOnly: true },
     ],
   },
 ];

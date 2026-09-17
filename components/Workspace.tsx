@@ -39,6 +39,7 @@ import CampaignTab from "./CampaignTab";
 import { ApprovalLinkCard } from "./ApprovalLinkPanel";
 import PackageTab from "./PackageTab";
 import { PackageSummaryCard } from "./PackageUsage";
+import InvoicesPanel from "./InvoicesPanel";
 import {
   CampaignPlanView,
   ClientReportView,
@@ -599,6 +600,8 @@ export default function Workspace({
       {tab === "time" && <TimeTab client={client} />}
 
       {tab === "package" && <PackageTab clientId={client.id} />}
+
+      {tab === "invoices" && <InvoicesPanel clientId={client.id} />}
 
       {tab === "campaign30" && <CampaignTab client={client} />}
 

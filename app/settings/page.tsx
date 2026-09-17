@@ -15,6 +15,7 @@ import { Button, Card, CopyButton, ErrorBox, Input, Label, SectionTitle } from "
 import InviteGenerator from "@/components/InviteGenerator";
 import ApprovalRulesCard from "@/components/ApprovalRulesCard";
 import AgencyPageCard from "@/components/AgencyPageCard";
+import InvoiceSettingsCard from "@/components/InvoiceSettingsCard";
 
 type IntegrationStatus = "live" | "beta" | "soon";
 const INTEGRATIONS: {
@@ -375,6 +376,10 @@ export default function SettingsPage() {
       </div>
 
       <ApprovalRulesCard />
+
+      <div id="recebimentos" className="scroll-mt-20">
+        <InvoiceSettingsCard />
+      </div>
 
       <div id="convites" className="scroll-mt-20">
         <InviteGenerator origin={origin} />

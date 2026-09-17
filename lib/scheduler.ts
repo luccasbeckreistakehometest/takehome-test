@@ -11,6 +11,7 @@ import { refreshAllAccounts } from "./billing-db";
 import { purgeAuthEvents } from "./auth";
 import { purgeOldInbox } from "./contact-db";
 import { purgeOldAiErrors } from "./ai-spend";
+import { runMonthlyInvoiceDrafts } from "./invoices-db";
 
 let running = false;
 
@@ -70,6 +71,12 @@ function runHousekeeping(now = Date.now()): void {
     purgeAuthEvents();
     purgeOldInbox();
     purgeOldAiErrors();
+  } catch (error) {
+    console.error("[scheduler] manutenção falhou:", error);
+  }
+  try {
+    const drafts = runMonthlyInvoiceDrafts();
+    if (drafts > 0) console.log(`[scheduler] ${drafts} rascunho(s) de fatura criados`);
   } catch (error) {
     console.error("[scheduler] manutenção falhou:", error);
   }

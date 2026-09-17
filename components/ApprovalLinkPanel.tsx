@@ -5,6 +5,7 @@ import QRCode from "qrcode";
 import { api } from "@/lib/api";
 import { Button, CopyButton, ErrorBox, Input, Label, Select, Spinner, Tag } from "./ui";
 import { Icon } from "./icons";
+import { openAfter } from "@/lib/open-later";
 
 type Candidate = { kind: "post" | "deliverable"; id: string; title: string; detail: string; status: string };
 type LinkRow = {
@@ -78,8 +79,7 @@ export default function ApprovalLinkPanel({ clientId }: { clientId: string }) {
   }
 
   async function resend(link: LinkRow) {
-    const share = await api<Created>(`/api/approval-links/${link.id}`);
-    window.open(share.whatsappUrl, "_blank", "noopener");
+    await openAfter(async () => (await api<Created>(`/api/approval-links/${link.id}`)).whatsappUrl).catch(() => {});
   }
 
   async function close(link: LinkRow) {

@@ -39,6 +39,7 @@ const PUBLIC_PREFIXES = [
   "/para-", // landings de funil (/para-agencias, /para-marcas, ...)
   "/a/", // página pública da agência (/a/[slug])
   "/aprovar/", // aprovação por link, sem login
+  "/fatura/", // fatura Pix do cliente, sem login
   "/opengraph-image",
   "/legal/",
 ];
@@ -55,6 +56,7 @@ const PRIVATE_PREFIXES = [
   "/growth",
   "/ideas",
   "/insights",
+  "/invoices",
   "/messages",
   "/plans",
   "/portal",
@@ -95,6 +97,7 @@ export function isPublicApi(pathname: string, method: string): boolean {
   // aprovação por link: o token é a credencial (cada rota confere o item)
   if ((method === "GET" || method === "POST") && /^\/api\/approve\/[^/]+$/.test(pathname)) return true;
   if (method === "GET" && /^\/api\/approve\/[^/]+\/file\/[^/]+$/.test(pathname)) return true;
+  if (method === "POST" && /^\/api\/fatura\/[^/]+\/paid$/.test(pathname)) return true;
   return false;
 }
 
@@ -163,7 +166,7 @@ export async function middleware(request: NextRequest) {
   if (isPublicPage(pathname)) {
     const response = NextResponse.next();
     // Páginas com token nunca vão para buscadores.
-    if (/^\/(convite|proposta|print|aprovar)\//.test(pathname)) response.headers.set("X-Robots-Tag", "noindex, nofollow");
+    if (/^\/(convite|proposta|print|aprovar|fatura)\//.test(pathname)) response.headers.set("X-Robots-Tag", "noindex, nofollow");
     return response;
   }
 

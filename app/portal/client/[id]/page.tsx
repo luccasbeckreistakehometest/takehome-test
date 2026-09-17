@@ -21,6 +21,7 @@ import { Button, Card, Input, SectionTitle, Spinner, Tag } from "@/components/ui
 import MarcaModeChoice from "@/components/MarcaModeChoice";
 import PulsePrompt from "@/components/PulsePrompt";
 import ScopeRequestCard from "@/components/ScopeRequestCard";
+import PortalInvoicesCard from "@/components/PortalInvoicesCard";
 import type { AccountMessage } from "@/lib/marketplace-db";
 
 type ProjectDetail = Project & {
@@ -351,6 +352,7 @@ export default function ClientPortalPage({
         </Card>
 
         <ScopeRequestCard clientId={id} />
+        <PortalInvoicesCard clientId={id} />
       </div>
       )}
 

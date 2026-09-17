@@ -3,6 +3,7 @@ import { actingAgencyId, guard, isDenied } from "@/lib/guard";
 import { currentMonth, isValidMonth } from "@/lib/report-aggregate";
 import { marginReport } from "@/lib/finance-db";
 import { marginCsv } from "@/lib/finance-rules";
+import { paidInvoicesByClient } from "@/lib/invoices-db";
 
 // Margem por cliente no mês: fee × horas × custo. ?format=csv baixa a planilha.
 export async function GET(request: Request) {
@@ -11,7 +12,8 @@ export async function GET(request: Request) {
   const url = new URL(request.url);
   const month = url.searchParams.get("month") ?? currentMonth();
   if (!isValidMonth(month)) return NextResponse.json({ error: "Mês inválido (use AAAA-MM)" }, { status: 400 });
-  const report = marginReport(actingAgencyId(auth, request), month);
+  const agencyId = actingAgencyId(auth, request);
+  const report = marginReport(agencyId, month);
   if (url.searchParams.get("format") === "csv") {
     const lang = url.searchParams.get("lang") === "en" ? "en" : "pt";
     return new NextResponse(`﻿${marginCsv(report.rows, month, lang)}`, {
@@ -21,5 +23,7 @@ export async function GET(request: Request) {
       },
     });
   }
-  return NextResponse.json(report);
+  // receita que entrou de verdade: faturas do mês confirmadas como pagas
+  const received = paidInvoicesByClient(agencyId, month);
+  return NextResponse.json({ ...report, received: Object.fromEntries(received) });
 }

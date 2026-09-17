@@ -43,4 +43,5 @@ export const AGENDA_TABS: SectionTab[] = [
 export const RESULTS_TABS: SectionTab[] = [
   { href: "/insights", label: "Insights", testId: "results-tab-insights" },
   { href: "/finance", label: "Horas & margem", testId: "results-tab-finance" },
+  { href: "/invoices", label: "Cobranças", testId: "results-tab-invoices" },
 ];

@@ -23,7 +23,7 @@ function monthLabel(month: string, lang: "pt" | "en"): string {
 export default function FinancePage() {
   const lang = useUiLang();
   const [month, setMonth] = useState(() => currentMonth());
-  const [report, setReport] = useState<MarginReport | null>(null);
+  const [report, setReport] = useState<(MarginReport & { received?: Record<string, number> }) | null>(null);
   const [error, setError] = useState("");
   const [rates, setRates] = useState<{ defaultHourlyCost: string; targetMarginPct: string; professionals: Record<string, string> }>({ defaultHourlyCost: "", targetMarginPct: "", professionals: {} });
   const [fees, setFees] = useState<Record<string, string>>({});
@@ -125,6 +125,7 @@ export default function FinancePage() {
                   <tr className="border-b border-edge text-left text-[11px] uppercase tracking-wider text-muted">
                     <th className="px-4 py-2">Cliente</th>
                     <th className="px-4 py-2">Fee mensal</th>
+                    <th className="px-4 py-2">Recebido</th>
                     <th className="px-4 py-2">Horas</th>
                     <th className="px-4 py-2">Custo</th>
                     <th className="px-4 py-2">Margem</th>
@@ -135,7 +136,7 @@ export default function FinancePage() {
                 <tbody>
                   {report.rows.length === 0 && (
                     <tr>
-                      <td colSpan={7} className="px-4 py-6 text-center text-muted">Nenhuma hora apontada e nenhum fee cadastrado neste mês. Aponte horas na aba Horas de cada cliente.</td>
+                      <td colSpan={8} className="px-4 py-6 text-center text-muted">Nenhuma hora apontada e nenhum fee cadastrado neste mês. Aponte horas na aba Horas de cada cliente.</td>
                     </tr>
                   )}
                   {report.rows.map((row) => (
@@ -153,6 +154,7 @@ export default function FinancePage() {
                           aria-label={`Fee de ${row.name}`}
                         />
                       </td>
+                      <td className="px-4 py-2 text-muted" data-testid="margin-received">{report.received?.[row.clientId] ? money(report.received[row.clientId]) : "—"}</td>
                       <td className="px-4 py-2">{formatHours(row.minutes)}</td>
                       <td className="px-4 py-2">{money(row.cost)}</td>
                       <td className={`px-4 py-2 font-medium ${row.margin < 0 ? "text-red-500" : ""}`} data-testid="margin-cell">
