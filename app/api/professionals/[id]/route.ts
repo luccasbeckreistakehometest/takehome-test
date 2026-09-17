@@ -6,8 +6,11 @@ import {
   getProfessionalStats,
   listApplicationsByProfessional,
   listProjects,
+  professionalWorkedWith,
   updateProfessional,
 } from "@/lib/marketplace-db";
+import { getAgency } from "@/lib/agencies";
+import { assignedProjectForProfessional, professionalForViewer, toOpportunity } from "@/lib/marketplace-privacy";
 import { professionalTier } from "@/lib/ranking";
 import { guardProfessional, isDenied, tenantOf } from "@/lib/guard";
 import { ALL_AGENCIES, agencyScope } from "@/lib/tenancy-rules";
@@ -34,12 +37,22 @@ export async function GET(_request: Request, { params }: Context) {
     professional.employmentType === "employee" && professional.agencyId
       ? listProjects({ scope: agencyScope(professional.agencyId), openOnly: true }).filter((p) => p.mode === "internal")
       : [];
-  const opportunities = [...internal, ...marketplace].filter((p) => self || scope.agencyId === p.agencyId);
+  // Oportunidade sai na versão pública (sem ranking da IA, marca ou escalado).
+  const agencyNames = new Map<string, string>();
+  const agencyName = (agencyId: string) => {
+    if (!agencyNames.has(agencyId)) agencyNames.set(agencyId, getAgency(agencyId)?.name ?? "");
+    return agencyNames.get(agencyId)!;
+  };
+  const opportunities = [...internal, ...marketplace]
+    .filter((p) => self || scope.agencyId === p.agencyId)
+    .map((p) => toOpportunity(p, agencyName(p.agencyId)));
+  const projects = listProjects({ scope, professionalId: id });
+  const worked = auth.role === "agency" && Boolean(auth.agencyId) && professionalWorkedWith(id, auth.agencyId!);
   return NextResponse.json({
-    ...professional,
+    ...professionalForViewer(professional, auth, worked),
     stats,
     tier: professionalTier(stats),
-    projects: listProjects({ scope, professionalId: id }),
+    projects: auth.role === "professional" ? projects.map(assignedProjectForProfessional) : projects,
     opportunities,
     applications: listApplicationsByProfessional(id).filter((a) => self || a.agencyId === scope.agencyId),
   });

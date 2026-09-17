@@ -16,6 +16,7 @@ import { professionalVisibleTo, agencyScope } from "@/lib/tenancy-rules";
 import { projectPatchSchema } from "@/lib/validation";
 import { decideDeliverable, listApprovalEvents } from "@/lib/approvals-db";
 import { guardProject, isDenied } from "@/lib/guard";
+import { professionalForViewer } from "@/lib/marketplace-privacy";
 
 type Context = { params: Promise<{ id: string }> };
 
@@ -26,8 +27,13 @@ export async function GET(_request: Request, { params }: Context) {
   const project = auth.project;
   return NextResponse.json({
     ...project,
+    // escalado nesta demanda = trabalhou com a agência (contato liberado;
+    // custo/hora só para a agência dona do profissional)
     professional: project.professionalId
-      ? getProfessional(project.professionalId)
+      ? (() => {
+          const professional = getProfessional(project.professionalId);
+          return professional ? professionalForViewer(professional, auth.session, true) : null;
+        })()
       : null,
     messages: listMessages(id),
     deliverables: listDeliverables(id),

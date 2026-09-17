@@ -4,7 +4,9 @@ import {
   deleteProfessional,
   getProfessionalStats,
   listProfessionals,
+  professionalWorkedWith,
 } from "@/lib/marketplace-db";
+import { professionalForViewer } from "@/lib/marketplace-privacy";
 import { professionalTier } from "@/lib/ranking";
 import { professionalSchema } from "@/lib/validation";
 import { createUser, randomPassword } from "@/lib/auth";
@@ -19,7 +21,11 @@ export async function GET(request: Request) {
   if (isDenied(auth)) return auth;
   const professionals = listProfessionals(tenantOf(auth, request)).map((professional) => {
     const stats = getProfessionalStats(professional.id);
-    return { ...professional, stats, tier: professionalTier(stats) };
+    // Contato e custo só para a agência dona (contato também para quem já
+    // recebeu candidatura/escalou o profissional).
+    const own = auth.role === "admin" || (professional.agencyId !== null && professional.agencyId === auth.agencyId);
+    const worked = !own && Boolean(auth.agencyId) && professionalWorkedWith(professional.id, auth.agencyId!);
+    return { ...professionalForViewer(professional, auth, worked), stats, tier: professionalTier(stats) };
   });
   return NextResponse.json(professionals);
 }

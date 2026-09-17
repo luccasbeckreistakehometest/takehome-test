@@ -11,6 +11,7 @@ import {
   ROLE_LABELS,
 } from "@/lib/marketplace-types";
 import type { ProfessionalStats } from "@/lib/marketplace-db";
+import type { Opportunity } from "@/lib/marketplace-privacy";
 import type { TierInfo } from "@/lib/ranking";
 import ProfessionalForm from "@/components/ProfessionalForm";
 import TierBadge, { TierProgress } from "@/components/TierBadge";
@@ -21,7 +22,7 @@ type Profile = Professional & {
   stats: ProfessionalStats;
   tier: TierInfo;
   projects: Project[];
-  opportunities: Project[];
+  opportunities: Opportunity[];
   applications: Application[];
 };
 
@@ -258,6 +259,7 @@ export default function ProfessionalPage({
                         )}
                       </div>
                       <p className="mt-1 text-xs text-muted">
+                        {project.agencyName && <>{project.agencyName} · </>}
                         Skills: {project.skillsNeeded.join(", ") || "n/d"} · Local:{" "}
                         {project.location || "remoto"} · Verba: {project.budget || "n/d"}
                       </p>
