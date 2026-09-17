@@ -15,7 +15,8 @@ export async function GET() {
   return NextResponse.json(payload);
 }
 
-// Fechar o card: só depois de concluir tudo.
+// Fechar o card: a qualquer momento (quem já sabe usar não fica com um
+// cartão preso na Hoje). Os passos continuam marcando sozinhos por baixo.
 export async function POST(request: Request) {
   const session = await getSession();
   if (!session) return NextResponse.json({ error: "Faça login" }, { status: 401 });
@@ -23,7 +24,6 @@ export async function POST(request: Request) {
   if (body.dismiss !== true) return NextResponse.json({ error: "Dados inválidos" }, { status: 400 });
   const payload = activationFor(session);
   if (!payload) return NextResponse.json({ error: "Sem primeiros passos para esta conta" }, { status: 400 });
-  if (!payload.progress.complete) return NextResponse.json({ error: "Conclua os primeiros passos antes de fechar." }, { status: 409 });
   dismissActivation(session.userId);
   return NextResponse.json({ ...payload, dismissed: true });
 }

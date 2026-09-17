@@ -3,9 +3,9 @@ import { getClient } from "@/lib/db";
 import { guardClient, isDenied } from "@/lib/guard";
 import { aiContextFor, aiErrorResponse, beginAi } from "@/lib/metering";
 import { aiUsable } from "@/lib/ai-mock";
-import { lastRunAt, listQuestions, runCostUsd, saveRun } from "@/lib/ai-visibility-db";
+import { claimRun, listQuestions, releaseRun, runCostUsd, saveRun } from "@/lib/ai-visibility-db";
 import { latestCompetitors, runRadar } from "@/lib/ai-visibility";
-import { canRun, nextRunAt, summarizeRun } from "@/lib/ai-visibility-rules";
+import { summarizeRun } from "@/lib/ai-visibility-rules";
 
 type Context = { params: Promise<{ id: string }> };
 export const maxDuration = 300;
@@ -17,19 +17,29 @@ export async function POST(request: Request, { params }: Context) {
   if (isDenied(auth)) return auth;
   const client = getClient(id);
   if (!client) return NextResponse.json({ error: "Cliente não encontrado" }, { status: 404 });
-  const last = lastRunAt(id);
-  if (!canRun(last)) {
-    const next = nextRunAt(last)!;
-    return NextResponse.json(
-      { error: `O radar deste cliente roda uma vez por semana. Próxima rodada a partir de ${next.slice(0, 10).split("-").reverse().join("/")}.`, nextRunAt: next },
-      { status: 429 }
-    );
-  }
   const questions = listQuestions(id);
   if (questions.length === 0) return NextResponse.json({ error: "Salve pelo menos uma pergunta antes de rodar." }, { status: 400 });
   if (!aiUsable()) return NextResponse.json({ error: "A IA não está disponível agora." }, { status: 503 });
+  // reserva a vez da semana antes de gastar qualquer coin (a rodada demora
+  // minutos: duas chamadas juntas não podem passar as duas)
+  const claim = claimRun(id);
+  if (!claim.ok) {
+    const next = claim.nextRunAt;
+    return NextResponse.json(
+      {
+        error: claim.running
+          ? "O radar deste cliente já está rodando. Espere terminar."
+          : `O radar deste cliente roda uma vez por semana. Próxima rodada a partir de ${next!.slice(0, 10).split("-").reverse().join("/")}.`,
+        nextRunAt: next,
+      },
+      { status: 429 }
+    );
+  }
   const ticket = await beginAi(request, auth, "ai_radar", { agencyId: client.agencyId });
-  if (isDenied(ticket)) return ticket;
+  if (isDenied(ticket)) {
+    releaseRun(id);
+    return ticket;
+  }
   const startedAt = new Date().toISOString();
   try {
     const { results, demo } = await ticket.run(() => runRadar(client, questions));
@@ -40,5 +50,7 @@ export async function POST(request: Request, { params }: Context) {
   } catch (error) {
     ticket.refund();
     return aiErrorResponse(error);
+  } finally {
+    releaseRun(id);
   }
 }

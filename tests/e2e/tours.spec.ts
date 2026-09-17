@@ -78,8 +78,11 @@ test("managed client: 4-step portal tour and a checklist that ticks without relo
   await brand.getByRole("button", { name: "Enviar", exact: true }).click();
   await expect(talk).toHaveAttribute("data-done", "true");
   await expect(checklist.getByTestId("activation-count")).toHaveText("1 de 4");
-  // só fecha depois de concluir
-  expect((await brand.request.post("/api/onboarding/activation", { data: { dismiss: true } })).status()).toBe(409);
+  // fecha quando quiser, mesmo no meio (e some da tela)
+  await checklist.getByTestId("activation-dismiss").click();
+  await expect(brand.getByTestId("activation-checklist")).toBeHidden();
+  await brand.reload();
+  await expect(brand.getByTestId("activation-checklist")).toBeHidden();
 
   // a agência vendo o portal não recebe o card nem o tour do cliente
   await page.goto(`/portal/client/${client.id}`);
@@ -88,8 +91,6 @@ test("managed client: 4-step portal tour and a checklist that ticks without relo
   await expect(page.getByTestId("welcome")).toBeHidden();
 
   // o funil do admin recebe o passo uma vez só
-  await brand.reload();
-  await expect(brand.getByTestId("activation-checklist")).toBeVisible();
   await login(page, "admin");
   const csv = await (await page.request.get("/api/admin/analytics?format=csv&days=7")).text();
   expect(csv).toContain("activation_step");

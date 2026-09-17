@@ -56,6 +56,9 @@ describe("landing content", () => {
       /sem taxa de intermedia|no (intermediation|middleman) fee/i,
       /\b(canva|hootsuite|mlabs|etus|rd station|trello|asana|chatgpt)\b/i,
       /\b100 ?%/,
+      // o radar é uma simulação (ver lib/ai-visibility-rules disclaimer):
+      // a landing não pode prometer o que a IA de fato responde
+      /agora você sabe|now you know/i,
     ];
     for (const [name, config] of CONFIGS) {
       for (const text of strings(config.content)) {

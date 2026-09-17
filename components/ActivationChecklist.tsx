@@ -113,14 +113,14 @@ export default function ActivationChecklist({ expect, intro }: { expect: Activat
           </li>
         ))}
       </ol>
-      {progress.complete && (
-        <div className="flex flex-wrap items-center justify-between gap-2">
-          <p className="text-sm text-muted">Tudo pronto — você já usou o essencial.</p>
-          <button type="button" onClick={dismiss} className="text-sm font-medium text-accent hover:underline" data-testid="activation-dismiss">
-            Fechar
-          </button>
-        </div>
-      )}
+      <div className="flex flex-wrap items-center justify-between gap-2">
+        <p className="text-sm text-muted">
+          {progress.complete ? "Tudo pronto — você já usou o essencial." : "Pode fechar quando quiser; os passos continuam marcando sozinhos."}
+        </p>
+        <button type="button" onClick={dismiss} className="text-sm font-medium text-accent hover:underline" data-testid="activation-dismiss">
+          {progress.complete ? "Fechar" : "Ocultar"}
+        </button>
+      </div>
       {error && <p className="text-xs text-red-500">{error}</p>}
     </Card>
   );

@@ -1,6 +1,6 @@
 import { randomUUID } from "crypto";
 import { db, tenantColumn } from "./db";
-import { sanitizeQuestions, type QuestionResult, type RadarSummary } from "./ai-visibility-rules";
+import { canRun, nextRunAt, sanitizeQuestions, type QuestionResult, type RadarSummary } from "./ai-visibility-rules";
 
 // Radar de IA: perguntas de compra de cada cliente e as rodadas (resultado
 // por pergunta + resumo com participação da marca).
@@ -39,6 +39,12 @@ db.exec(`
     demo INTEGER NOT NULL DEFAULT 0
   );
   CREATE INDEX IF NOT EXISTS idx_ai_visibility_runs_client ON ai_visibility_runs(clientId, ranAt);
+`);
+db.exec(`
+  CREATE TABLE IF NOT EXISTS ai_visibility_claims (
+    clientId TEXT PRIMARY KEY REFERENCES clients(id) ON DELETE CASCADE,
+    startedAt TEXT NOT NULL
+  );
 `);
 tenantColumn("ai_visibility_queries");
 tenantColumn("ai_visibility_runs");
@@ -80,6 +86,33 @@ export function listRuns(clientId: string, limit = 6): RadarRun[] {
 export function lastRunAt(clientId: string): string | null {
   const row = db.prepare("SELECT ranAt FROM ai_visibility_runs WHERE clientId = ? ORDER BY ranAt DESC LIMIT 1").get(clientId) as { ranAt: string } | undefined;
   return row?.ranAt ?? null;
+}
+
+// A rodada demora minutos: reserva a vez ANTES de começar, senão dois
+// cliques ao mesmo tempo passariam os dois pela regra semanal. Reserva presa
+// (processo morto no meio) vence sozinha.
+export const CLAIM_STALE_MS = 15 * 60_000;
+
+export function claimRun(clientId: string, now: Date = new Date()): { ok: true } | { ok: false; nextRunAt: string | null; running: boolean } {
+  return db
+    .transaction((): { ok: true } | { ok: false; nextRunAt: string | null; running: boolean } => {
+      const last = lastRunAt(clientId);
+      const claim = db.prepare("SELECT startedAt FROM ai_visibility_claims WHERE clientId = ?").get(clientId) as { startedAt: string } | undefined;
+      if (claim && Date.parse(claim.startedAt) > now.getTime() - CLAIM_STALE_MS) {
+        return { ok: false, nextRunAt: nextRunAt(last), running: true };
+      }
+      if (!canRun(last, now)) return { ok: false, nextRunAt: nextRunAt(last), running: false };
+      db.prepare("INSERT INTO ai_visibility_claims (clientId, startedAt) VALUES (?, ?) ON CONFLICT(clientId) DO UPDATE SET startedAt = excluded.startedAt").run(
+        clientId,
+        now.toISOString()
+      );
+      return { ok: true };
+    })
+    .immediate();
+}
+
+export function releaseRun(clientId: string): void {
+  db.prepare("DELETE FROM ai_visibility_claims WHERE clientId = ?").run(clientId);
 }
 
 export function saveRun(input: Omit<RadarRun, "id" | "shareOfVoice">): RadarRun {

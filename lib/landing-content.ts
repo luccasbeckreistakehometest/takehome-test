@@ -105,7 +105,7 @@ export const GENERAL: LandingConfig = {
           { demo: "approval", icon: "link", t: "Aprovação por link", d: "Cliente aprova pelo WhatsApp, sem senha. O post aprovado já fica agendado.", href: "/para-agencias", cta: "Ver para agências" },
           { demo: "carousel", icon: "layers", t: "Carrossel pronto", d: "Da ideia ao carrossel com a cara da marca — é só baixar e postar.", href: "/para-marcas", cta: "Ver para marcas" },
           { demo: "voice", icon: "mic", t: "Briefing falado", d: "Conte sobre sua marca como numa conversa. A IA escuta, pergunta e anota.", href: "/para-marcas", cta: "Ver para marcas" },
-          { demo: "radar", icon: "radar", t: "Radar de IA", d: "Quando alguém pergunta pra IA, sua marca aparece? Agora você sabe.", href: "/para-agencias", cta: "Ver para agências" },
+          { demo: "radar", icon: "radar", t: "Radar de IA", d: "Simule o que uma IA responde sobre o seu mercado e veja se a marca aparece.", href: "/para-agencias", cta: "Ver para agências" },
         ],
       },
       compare: {
@@ -186,7 +186,7 @@ export const GENERAL: LandingConfig = {
           { demo: "approval", icon: "link", t: "Approval by link", d: "Clients approve from a WhatsApp link — no password. Approved posts are scheduled right away.", href: "/para-agencias", cta: "See for agencies" },
           { demo: "carousel", icon: "layers", t: "Ready-to-post carousels", d: "Carousels in the brand's look — just download and post.", href: "/para-marcas", cta: "See for brands" },
           { demo: "voice", icon: "mic", t: "Spoken briefing", d: "Talk about your brand like in a conversation. The AI listens, asks and takes notes.", href: "/para-marcas", cta: "See for brands" },
-          { demo: "radar", icon: "radar", t: "AI radar", d: "When someone asks an AI, does your brand show up? Now you know.", href: "/para-agencias", cta: "See for agencies" },
+          { demo: "radar", icon: "radar", t: "AI radar", d: "Simulate what an AI answers about your market and see whether the brand shows up.", href: "/para-agencias", cta: "See for agencies" },
         ],
       },
       compare: {
@@ -262,7 +262,7 @@ export const AGENCY: LandingConfig = {
         { icon: "qr", t: "Fatura Pix sem taxa", d: "Fatura do fee com QR da sua chave Pix e lembrete pronto: o pagamento cai direto na sua conta." },
         { icon: "chart", t: "Relatório que prova resultado", d: "Relatório do mês em 1 clique com posts, cliques e vendas — e o que funciona pra cada cliente." },
         { icon: "whatsapp", t: "Atendente de WhatsApp com IA", d: "Responde os clientes de cada marca pela API oficial, no tom dela, e chama uma pessoa quando precisa." },
-        { icon: "radar", t: "Radar de IA para revender", d: "Mostre ao cliente se ele aparece quando alguém pergunta pra uma IA — e o que fazer para aparecer mais." },
+        { icon: "radar", t: "Radar de IA para revender", d: "Simule perguntas de compra numa IA e mostre ao cliente se ele aparece — e o que fazer para aparecer mais." },
       ],
       howTitle: "Como a agência opera na Marqa",
       how: [
@@ -277,7 +277,7 @@ export const AGENCY: LandingConfig = {
           { demo: "approval", icon: "link", t: "Aprovação sem login", d: "Um link no WhatsApp: o cliente aprova pelo celular e o post aprovado já fica agendado.", href: "/criar-conta?type=agency", cta: "Começar como agência" },
           { demo: "scope", icon: "package", t: "Escopo sob controle", d: "O pacote conta cada post. Passou do combinado? O cliente aprova o valor antes de você começar.", href: "/criar-conta?type=agency", cta: "Começar como agência" },
           { demo: "invoice", icon: "qr", t: "Fatura Pix sem taxa", d: "QR da sua chave Pix e lembrete pronto. O pagamento cai direto na sua conta.", href: "/criar-conta?type=agency", cta: "Começar como agência" },
-          { demo: "radar", icon: "radar", t: "Radar de IA para revender", d: "Mostre ao cliente se ele aparece quando alguém pergunta pra uma IA — e o que fazer para aparecer mais.", href: "/criar-conta?type=agency", cta: "Começar como agência" },
+          { demo: "radar", icon: "radar", t: "Radar de IA para revender", d: "Simule perguntas de compra numa IA e mostre ao cliente se ele aparece — e o que fazer para aparecer mais.", href: "/criar-conta?type=agency", cta: "Começar como agência" },
         ],
       },
       timeline: {
@@ -352,7 +352,7 @@ export const AGENCY: LandingConfig = {
         { icon: "qr", t: "Pix invoices, no fees", d: "Fee invoices with a QR for your own Pix key and a ready reminder: payment lands straight in your account." },
         { icon: "chart", t: "Reports that prove results", d: "One-click monthly report with posts, clicks and sales — and what works for each client." },
         { icon: "whatsapp", t: "AI WhatsApp attendant", d: "Answers each brand's customers through the official API, in the brand's tone, and hands over to a person when needed." },
-        { icon: "radar", t: "An AI radar you can resell", d: "Show clients whether they come up when someone asks an AI — and what to do to show up more." },
+        { icon: "radar", t: "An AI radar you can resell", d: "Simulate buying questions in an AI and show clients whether they come up — and what to do to show up more." },
       ],
       howTitle: "How an agency runs on Marqa",
       how: [
@@ -367,7 +367,7 @@ export const AGENCY: LandingConfig = {
           { demo: "approval", icon: "link", t: "Clients approve from a link — no password", d: "One WhatsApp link: the client approves on their phone and the approved post is scheduled right away.", href: "/criar-conta?type=agency", cta: "Start as an agency" },
           { demo: "scope", icon: "package", t: "Scope that counts itself", d: "The package counts every post. Over the deal? The client approves the price before you start.", href: "/criar-conta?type=agency", cta: "Start as an agency" },
           { demo: "invoice", icon: "qr", t: "Pix invoices, no fees", d: "A QR for your own Pix key and a ready reminder. Payment lands straight in your account.", href: "/criar-conta?type=agency", cta: "Start as an agency" },
-          { demo: "radar", icon: "radar", t: "An AI radar you can resell", d: "Show clients whether they come up when someone asks an AI — and what to do to show up more.", href: "/criar-conta?type=agency", cta: "Start as an agency" },
+          { demo: "radar", icon: "radar", t: "An AI radar you can resell", d: "Simulate buying questions in an AI and show clients whether they come up — and what to do to show up more.", href: "/criar-conta?type=agency", cta: "Start as an agency" },
         ],
       },
       timeline: {
