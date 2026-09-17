@@ -207,6 +207,11 @@ db.exec(`
     scheduledFor TEXT NOT NULL,
     status TEXT NOT NULL DEFAULT 'scheduled',
     publishedAt TEXT,
+    deliverableId TEXT,
+    campaignId TEXT,
+    format TEXT NOT NULL DEFAULT '',
+    hookType TEXT NOT NULL DEFAULT '',
+    imageBrief TEXT NOT NULL DEFAULT '',
     createdAt TEXT NOT NULL
   );
   CREATE TABLE IF NOT EXISTS client_assets (
@@ -225,6 +230,16 @@ const scheduledPostColumns = (
 ).map((column) => column.name);
 if (scheduledPostColumns.length > 0 && !scheduledPostColumns.includes("deliverableId")) {
   db.exec("ALTER TABLE scheduled_posts ADD COLUMN deliverableId TEXT");
+}
+// Migração: atributos do post (formato, tipo de gancho, brief da imagem) e a
+// campanha de 30 dias que o gerou — base dos "aprendizados" por cliente.
+if (scheduledPostColumns.length > 0 && !scheduledPostColumns.includes("campaignId")) {
+  db.exec(`
+    ALTER TABLE scheduled_posts ADD COLUMN campaignId TEXT;
+    ALTER TABLE scheduled_posts ADD COLUMN format TEXT NOT NULL DEFAULT '';
+    ALTER TABLE scheduled_posts ADD COLUMN hookType TEXT NOT NULL DEFAULT '';
+    ALTER TABLE scheduled_posts ADD COLUMN imageBrief TEXT NOT NULL DEFAULT '';
+  `);
 }
 const professionalColumns = (
   db.prepare("PRAGMA table_info(professionals)").all() as { name: string }[]
@@ -1058,6 +1073,11 @@ export type ScheduledPost = {
   publishedAt: string | null;
   // entrega aprovada que originou o post (arquivo em /api/files/{id})
   deliverableId: string | null;
+  // campanha de 30 dias que gerou o post (null = criado à mão / aprovação)
+  campaignId: string | null;
+  format: string; // Feed, Reels, Carrossel, Stories, Texto...
+  hookType: string; // dor, prova social, bastidores, dado, pergunta, tutorial, oferta
+  imageBrief: string; // direção de arte para a peça
   createdAt: string;
 };
 
@@ -1086,6 +1106,10 @@ export function createScheduledPost(input: {
   scheduledFor: string;
   status?: "draft" | "scheduled";
   deliverableId?: string | null;
+  campaignId?: string | null;
+  format?: string;
+  hookType?: string;
+  imageBrief?: string;
 }): ScheduledPost {
   const post: ScheduledPost = {
     clientId: input.clientId,
@@ -1098,11 +1122,15 @@ export function createScheduledPost(input: {
     status: input.status ?? "scheduled",
     publishedAt: null,
     deliverableId: input.deliverableId ?? null,
+    campaignId: input.campaignId ?? null,
+    format: input.format ?? "",
+    hookType: input.hookType ?? "",
+    imageBrief: input.imageBrief ?? "",
     createdAt: now(),
   };
   db.prepare(
-    `INSERT INTO scheduled_posts (id, clientId, title, channel, caption, hashtags, scheduledFor, status, publishedAt, deliverableId, createdAt)
-     VALUES (@id, @clientId, @title, @channel, @caption, @hashtags, @scheduledFor, @status, @publishedAt, @deliverableId, @createdAt)`
+    `INSERT INTO scheduled_posts (id, clientId, title, channel, caption, hashtags, scheduledFor, status, publishedAt, deliverableId, campaignId, format, hookType, imageBrief, createdAt)
+     VALUES (@id, @clientId, @title, @channel, @caption, @hashtags, @scheduledFor, @status, @publishedAt, @deliverableId, @campaignId, @format, @hookType, @imageBrief, @createdAt)`
   ).run({ ...post, hashtags: JSON.stringify(post.hashtags) });
   return post;
 }
@@ -1116,7 +1144,7 @@ export function getScheduledPost(id: string): ScheduledPost | null {
 
 export function updateScheduledPost(
   id: string,
-  patch: Partial<Pick<ScheduledPost, "scheduledFor" | "status" | "caption" | "title" | "channel">>
+  patch: Partial<Pick<ScheduledPost, "scheduledFor" | "status" | "caption" | "title" | "channel" | "format" | "hookType">>
 ): boolean {
   const existing = db.prepare("SELECT * FROM scheduled_posts WHERE id = ?").get(id) as
     | ScheduledPostRow
@@ -1126,8 +1154,8 @@ export function updateScheduledPost(
   const publishedAt =
     patch.status === "published" ? now() : merged.publishedAt ?? null;
   db.prepare(
-    "UPDATE scheduled_posts SET scheduledFor = ?, status = ?, caption = ?, title = ?, channel = ?, publishedAt = ? WHERE id = ?"
-  ).run(merged.scheduledFor, merged.status, merged.caption, merged.title, merged.channel, publishedAt, id);
+    "UPDATE scheduled_posts SET scheduledFor = ?, status = ?, caption = ?, title = ?, channel = ?, format = ?, hookType = ?, publishedAt = ? WHERE id = ?"
+  ).run(merged.scheduledFor, merged.status, merged.caption, merged.title, merged.channel, merged.format ?? "", merged.hookType ?? "", publishedAt, id);
   return true;
 }
 

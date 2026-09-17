@@ -10,6 +10,8 @@ const patchSchema = z.object({
   caption: z.string().trim().optional(),
   title: z.string().trim().min(1).optional(),
   channel: z.string().trim().min(1).optional(),
+  format: z.string().trim().max(40).optional(),
+  hookType: z.string().trim().max(40).optional(),
 });
 
 export async function PATCH(request: Request, { params }: Context) {

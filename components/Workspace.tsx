@@ -35,6 +35,7 @@ import ProjectsTab from "./ProjectsTab";
 import AttendantTab from "./AttendantTab";
 import TimeTab from "./TimeTab";
 import BrandVoiceCard from "./BrandVoiceCard";
+import CampaignTab from "./CampaignTab";
 import {
   CampaignPlanView,
   ClientReportView,
@@ -48,7 +49,7 @@ import {
 } from "./renderers";
 import { Button, Card, ErrorBox, Spinner, Tag } from "./ui";
 
-type TabKey = "dashboard" | "briefing" | "projects" | "sales" | "attendant" | "time" | GenerationType;
+type TabKey = "dashboard" | "briefing" | "projects" | "sales" | "attendant" | "time" | "campaign30" | GenerationType;
 
 function nextMonthLabel(): string {
   const date = new Date();
@@ -173,6 +174,7 @@ export default function Workspace({
     { key: "roi_projection", label: "ROI & Roadmap" },
     { key: "social_calendar", label: "Social" },
     { key: "post_batch", label: "Posts" },
+    { key: "campaign30", label: "30 dias" },
     { key: "visual_identity", label: "Identidade" },
     { key: "product_recs", label: "Ofertas" },
     ...(landingEnabled
@@ -544,6 +546,8 @@ export default function Workspace({
       {tab === "attendant" && <AttendantTab client={client} />}
 
       {tab === "time" && <TimeTab client={client} />}
+
+      {tab === "campaign30" && <CampaignTab client={client} />}
 
       {tab === "client_report" && (
         <GeneratorTab

@@ -160,6 +160,8 @@ export const ACTION_COST: Record<string, number> = {
   proposal: 4,
   brand_voice_check: 1, // modelo barato + cache por conteúdo
   brand_voice_rewrite: 2,
+  campaign_30d: 8, // mês inteiro de posts rascunhados de uma vez
+  learnings: 1, // leitura curta dos aprendizados do mês
 };
 export function actionCost(action: string): number {
   return ACTION_COST[action] ?? 2;

@@ -295,7 +295,10 @@ function PostPanel({
             <h3 className="font-[family-name:var(--font-display)] text-lg font-semibold">{post.title}</h3>
             <div className="mt-1 flex flex-wrap gap-1.5">
               <Tag>{post.channel}</Tag>
+              {post.format && <Tag>{post.format}</Tag>}
+              {post.hookType && <Tag>{post.hookType}</Tag>}
               <Tag>{STATUS_LABEL[post.status]}</Tag>
+              {post.campaignId && <Tag>campanha de 30 dias</Tag>}
             </div>
           </div>
           <button onClick={onClose} className="text-muted hover:text-foreground" aria-label="Fechar" data-testid="post-close">
@@ -308,6 +311,11 @@ function PostPanel({
             <img src={`/api/files/${post.deliverableId}`} alt={post.title} className="max-h-48 rounded-md border border-edge object-contain" />
             <span className="mt-1 block text-xs text-accent">Peça aprovada pelo cliente ↗</span>
           </a>
+        )}
+        {post.imageBrief && (
+          <p className="mt-3 whitespace-pre-wrap rounded-md border border-edge bg-surface-2 p-2 text-xs text-muted" data-testid="post-image-brief">
+            {post.imageBrief}
+          </p>
         )}
         <div className="mt-3 space-y-2">
           <Label>Legenda</Label>
@@ -386,6 +394,8 @@ function QuickAdd({
     when: `${date}T10:00`,
     caption: "",
     status: "scheduled" as "scheduled" | "draft",
+    format: "",
+    hookType: "",
   });
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState("");
@@ -403,6 +413,8 @@ function QuickAdd({
           hashtags: [],
           scheduledFor: form.when,
           status: form.status,
+          format: form.format,
+          hookType: form.hookType,
         }),
       });
       onCreated();
@@ -442,6 +454,24 @@ function QuickAdd({
           <div>
             <Label>Data e hora</Label>
             <Input type="datetime-local" value={form.when} onChange={(e) => setForm({ ...form, when: e.target.value })} data-testid="quick-when" />
+          </div>
+          <div>
+            <Label>Formato</Label>
+            <Select value={form.format} onChange={(e) => setForm({ ...form, format: e.target.value })}>
+              <option value="">—</option>
+              {["Feed", "Carrossel", "Reels", "Stories", "Vídeo", "Texto", "Newsletter", "Artigo"].map((f) => (
+                <option key={f}>{f}</option>
+              ))}
+            </Select>
+          </div>
+          <div>
+            <Label>Tipo de gancho</Label>
+            <Select value={form.hookType} onChange={(e) => setForm({ ...form, hookType: e.target.value })}>
+              <option value="">—</option>
+              {["dor", "prova social", "bastidores", "dado", "pergunta", "tutorial", "oferta"].map((h) => (
+                <option key={h}>{h}</option>
+              ))}
+            </Select>
           </div>
           <div className="sm:col-span-2">
             <Label>Legenda (opcional)</Label>

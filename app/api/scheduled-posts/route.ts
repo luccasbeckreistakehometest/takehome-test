@@ -11,6 +11,8 @@ const scheduleSchema = z.object({
   hashtags: z.array(z.string()).default([]),
   scheduledFor: z.string().trim().min(1),
   status: z.enum(["draft", "scheduled"]).default("scheduled"),
+  format: z.string().trim().max(40).default(""),
+  hookType: z.string().trim().max(40).default(""),
 });
 
 export async function GET(request: Request) {

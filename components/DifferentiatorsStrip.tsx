@@ -78,6 +78,14 @@ const ITEMS: { anchor: string; icon: IconName; title: string; body: string; href
     href: "/calendar",
     cta: "Checar um post",
   },
+  {
+    anchor: "diff-campaign",
+    icon: "megaphone",
+    title: "Campanha de 30 dias",
+    body: "Briefing + objetivo + canais viram um mês inteiro de posts escritos (gancho, legenda, CTA, brief da imagem), já no calendário como rascunho.",
+    href: "/clients",
+    cta: "Gerar em um cliente",
+  },
 ];
 
 export default function DifferentiatorsStrip() {
