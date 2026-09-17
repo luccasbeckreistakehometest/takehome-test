@@ -123,7 +123,8 @@ export async function guardClient(
   access: ClientAccess
 ): Promise<SessionPayload | NextResponse> {
   if (!clientId) return notFound("Cliente não encontrado");
-  if (access === "agency") return agencyOnly();
+  // Só agência/admin — e a marca precisa ser da agência da sessão.
+  if (access === "agency") return guard(["agency", "admin"], { clientId });
   return guard(["agency", "admin", "client"], {
     clientId,
     selfServe: access === "workspace",

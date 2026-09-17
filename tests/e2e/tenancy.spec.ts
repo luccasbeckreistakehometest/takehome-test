@@ -245,23 +245,23 @@ test("two agencies cannot list, open, edit or delete each other's data (includin
 });
 
 test("public pages, leads, invites and the admin filter stay per agency", async ({ browser, page }) => {
-  const sol = await newAgency(browser, "Estúdio Sol", "198.51.100.13");
-  const lua = await newAgency(browser, "Estúdio Lua", "198.51.100.14");
-  await sol.request.put("/api/settings", { data: { agencyName: "Estúdio Sol", tagline: "marcas com luz própria", accentColor: "#ff9900" } });
-  const solPage = (await (await sol.request.put("/api/agency-page", { data: { config: { published: true, headline: "Sol na sua marca" } } })).json()).config;
-  const luaPage = (await (await lua.request.put("/api/agency-page", { data: { config: { published: true, headline: "Lua na sua marca" } } })).json()).config;
-  expect(solPage.slug).toBe("estudio-sol");
-  expect(luaPage.slug).toBe("estudio-lua");
+  const sol = await newAgency(browser, "Ateliê Aurora", "198.51.100.13");
+  const lua = await newAgency(browser, "Ateliê Brisa", "198.51.100.14");
+  await sol.request.put("/api/settings", { data: { agencyName: "Ateliê Aurora", tagline: "marcas que acordam cedo", accentColor: "#ff9900" } });
+  const solPage = (await (await sol.request.put("/api/agency-page", { data: { config: { published: true, headline: "Aurora na sua marca" } } })).json()).config;
+  const luaPage = (await (await lua.request.put("/api/agency-page", { data: { config: { published: true, headline: "Brisa na sua marca" } } })).json()).config;
+  expect(solPage.slug).toBe("atelie-aurora");
+  expect(luaPage.slug).toBe("atelie-brisa");
 
   // cada endereço mostra a própria agência
   await page.goto(`/a/${solPage.slug}`);
-  await expect(page.getByTestId("agency-headline")).toHaveText("Sol na sua marca");
-  await expect(page.getByTestId("agency-page")).toContainText("Estúdio Sol");
-  await expect(page.getByTestId("agency-page")).not.toContainText("Estúdio Lua");
+  await expect(page.getByTestId("agency-headline")).toHaveText("Aurora na sua marca");
+  await expect(page.getByTestId("agency-page")).toContainText("Ateliê Aurora");
+  await expect(page.getByTestId("agency-page")).not.toContainText("Ateliê Brisa");
   await page.goto(`/a/${luaPage.slug}`);
-  await expect(page.getByTestId("agency-headline")).toHaveText("Lua na sua marca");
+  await expect(page.getByTestId("agency-headline")).toHaveText("Brisa na sua marca");
 
-  // lead da página do Sol vira prospect só do Sol
+  // lead da página da Aurora vira prospect só da Aurora
   const lead = await page.request.post(`/api/a/${solPage.slug}/lead`, {
     data: { name: "Dona Cida", whatsapp: "11987654321", need: "Quero vender bolo pelo Instagram", budgetBand: "ate-1k" },
     headers: { "x-forwarded-for": "198.51.100.15" },
@@ -273,28 +273,28 @@ test("public pages, leads, invites and the admin filter stay per agency", async 
   expect(luaProspects.map((p) => p.name)).not.toContain("Dona Cida");
   expect((await (await lua.request.get("/api/agency-page")).json()).leads).toEqual([]);
 
-  // convite do Sol: quem entra é marca do Sol e vê a marca do Sol
+  // convite da Aurora: quem entra é marca da Aurora e vê a marca dela
   const invite = (await (await sol.request.post("/api/invites", { data: { role: "client", note: "Padaria" } })).json()).invite;
   const lookup = await (await page.request.get(`/api/invites/${invite.token}`)).json();
-  expect(lookup.agency.name).toBe("Estúdio Sol");
+  expect(lookup.agency.name).toBe("Ateliê Aurora");
   const brand = await browser.newContext();
   const joined = await signupViaApi(brand.request, "client", "Padaria da Cida", { token: invite.token }, "198.51.100.16");
   expect(joined.role).toBe("client");
   const me = await (await brand.request.get("/api/auth/me")).json();
   expect((await (await sol.request.get("/api/clients")).json()).map((c: { id: string }) => c.id)).toContain(me.refId);
   expect((await (await lua.request.get("/api/clients")).json()).map((c: { id: string }) => c.id)).not.toContain(me.refId);
-  expect((await (await brand.request.get("/api/settings")).json()).agencyName).toBe("Estúdio Sol");
+  expect((await (await brand.request.get("/api/settings")).json()).agencyName).toBe("Ateliê Aurora");
   const brandPage = await brand.newPage();
   await brandPage.goto(`/portal/client/${me.refId}`);
-  await expect(brandPage.locator("header")).toContainText("Estúdio Sol");
-  // a agência Lua não abre a marca do Sol
+  await expect(brandPage.locator("header")).toContainText("Ateliê Aurora");
+  // a agência Brisa não abre a marca da Aurora
   expect(NOT_VISIBLE).toContain((await lua.request.get(`/api/clients/${me.refId}`)).status());
   await brand.close();
 
   // time: convite de agência entra na MESMA agência
   const teamInvite = (await (await sol.request.post("/api/invites", { data: { role: "agency" } })).json()).invite;
   const mate = await browser.newContext();
-  await signupViaApi(mate.request, "agency", "Sócia do Sol", { token: teamInvite.token }, "198.51.100.17");
+  await signupViaApi(mate.request, "agency", "Sócia da Aurora", { token: teamInvite.token }, "198.51.100.17");
   const mateClients = await (await mate.request.get("/api/clients")).json();
   expect(mateClients.map((c: { id: string }) => c.id)).toContain(me.refId);
   expect((await (await mate.request.get("/api/settings")).json()).agencyId).toBe((await (await sol.request.get("/api/settings")).json()).agencyId);
@@ -305,7 +305,7 @@ test("public pages, leads, invites and the admin filter stay per agency", async 
   const all = await (await page.request.get("/api/admin/overview")).json();
   const solId = (await (await sol.request.get("/api/settings")).json()).agencyId as string;
   const agencyNames = all.agencies.map((x: { name: string }) => x.name);
-  expect(agencyNames).toEqual(expect.arrayContaining(["Estúdio Sol", "Estúdio Lua"]));
+  expect(agencyNames).toEqual(expect.arrayContaining(["Ateliê Aurora", "Ateliê Brisa"]));
   expect(all.clients.map((c: { id: string }) => c.id)).toContain(me.refId);
   const filtered = await (await page.request.get(`/api/admin/overview?agency=${solId}`)).json();
   expect(filtered.clients.map((c: { id: string }) => c.id)).toEqual([me.refId]);
@@ -314,7 +314,7 @@ test("public pages, leads, invites and the admin filter stay per agency", async 
   expect(users.every((u) => u.agencyId === solId)).toBe(true);
   await page.goto("/admin");
   await page.getByTestId("admin-agency-filter").selectOption(solId);
-  await expect(page.getByTestId("admin-agencies")).toContainText("Estúdio Sol");
+  await expect(page.getByTestId("admin-agencies")).toContainText("Ateliê Aurora");
 
   await sol.context.close();
   await lua.context.close();
