@@ -41,7 +41,7 @@ test("new client by typing", async ({ page }) => {
   await expect(page.getByTestId("one-time-login")).toBeVisible();
   await expect(page.getByTestId("otp-password")).toHaveText(/^[A-Za-z2-9]{4}-[A-Za-z2-9]{4}-[A-Za-z2-9]{4}$/);
   await page.getByRole("button", { name: "Abrir o cliente" }).click();
-  await expect(page).toHaveURL(/\/clients\/[^/]+$/);
+  await expect(page).toHaveURL(/\/clients\/(?!new$)[^/]+$/);
   await expect(page.locator("h1").first()).toContainText("Padaria do Bairro");
 });
 

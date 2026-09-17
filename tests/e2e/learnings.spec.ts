@@ -112,8 +112,8 @@ test("sales import: a CSV batch stores every row (it used to store one empty sal
   expect((await single.json()).created).toBe(1);
   const list = await (await page.request.get(`/api/clients/${client.id}/sales`)).json();
   expect(list.totals).toMatchObject({ revenue: 250, units: 4, entries: 3 });
-  // uma marca não mexe nas vendas de outra
-  const other = await (await page.request.post("/api/clients", { data: { name: "Outraco" } })).json();
+  // uma marca (autônoma) não mexe nas vendas de outra
+  const other = await (await page.request.post("/api/clients", { data: { name: "Outraco", selfServe: true } })).json();
   await login(page, other.login.username, other.login.password);
   expect((await page.request.get(`/api/clients/${client.id}/sales`)).status()).toBe(403);
   expect((await page.request.delete(`/api/clients/${other.id}/sales?saleId=${list.sales[0].id}`)).status()).toBe(200);

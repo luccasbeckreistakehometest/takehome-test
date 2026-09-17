@@ -27,6 +27,8 @@ test("brand briefing by voice fills the client form", async ({ page }) => {
   await expect(page.getByPlaceholder("Ex.: Café Aurora")).toHaveValue("Café Aurora");
   await expect(page.getByText(/Preenchido por voz/)).toBeVisible();
   await page.getByTestId("save-client").click();
-  await expect(page).toHaveURL(/\/clients\/[^/]+$/);
+  await expect(page.getByTestId("one-time-login")).toBeVisible();
+  await page.getByRole("button", { name: "Abrir o cliente" }).click();
+  await expect(page).toHaveURL(/\/clients\/(?!new$)[^/]+$/);
   await expect(page.locator("h1").first()).toContainText("Café Aurora");
 });
