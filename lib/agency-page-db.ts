@@ -5,6 +5,7 @@ import { addColumnIfMissing, db, tenantColumn } from "./db";
 import { createProspect } from "./marketplace-db";
 import { createContact } from "./messaging-db";
 import { notifyAgency } from "./notify";
+import { ALLOWED_IMAGE_MIMES } from "./uploads";
 import { leadToProspectFields, type AgencyPageConfig, type Lead } from "./agency-page-rules";
 import { getAgency, getAgencyBySlug, getAgencyPageConfig, saveAgencyPageConfig, type SavePageResult } from "./agencies";
 import { scopeWhere, type TenantScope } from "./tenancy-rules";
@@ -114,8 +115,11 @@ export type ShowcaseClient = { id: string; name: string; industry: string; showc
 
 function logoAsset(clientId: string): { id: string; ext: string; mime: string } | null {
   const row = db
-    .prepare("SELECT id, ext, mime FROM client_assets WHERE clientId = ? AND kind = 'brand' AND mime LIKE 'image/%' ORDER BY createdAt DESC LIMIT 1")
-    .get(clientId) as { id: string; ext: string; mime: string } | undefined;
+    .prepare(
+      `SELECT id, ext, mime FROM client_assets WHERE clientId = ? AND kind = 'brand'
+       AND mime IN (${ALLOWED_IMAGE_MIMES.map(() => "?").join(", ")}) ORDER BY createdAt DESC LIMIT 1`
+    )
+    .get(clientId, ...ALLOWED_IMAGE_MIMES) as { id: string; ext: string; mime: string } | undefined;
   return row ?? null;
 }
 

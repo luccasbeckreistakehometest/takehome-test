@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server";
 import { createDeliverable, getProject, listDeliverables, logActivity } from "@/lib/marketplace-db";
-import { ALLOWED_IMAGE_MIMES, saveUpload, type AllowedImageMime } from "@/lib/uploads";
+import { ALLOWED_IMAGE_MIMES, looksLikeVideo, saveUpload, sniffImageMime, type AllowedImageMime } from "@/lib/uploads";
 import { guardProject, isDenied } from "@/lib/guard";
 
 type Context = { params: Promise<{ id: string }> };
@@ -49,6 +49,11 @@ export async function POST(request: Request, { params }: Context) {
   if (file.size > MAX_SIZE) {
     return NextResponse.json({ error: "Imagem acima de 15 MB" }, { status: 400 });
   }
+  const data = Buffer.from(await file.arrayBuffer());
+  // O tipo declarado precisa bater com os bytes.
+  if (isImage ? sniffImageMime(data) !== file.type : !looksLikeVideo(data)) {
+    return NextResponse.json({ error: "O conteúdo do arquivo não confere com o formato." }, { status: 400 });
+  }
   const deliverable = createDeliverable({
     projectId: id,
     title: title || file.name,
@@ -56,7 +61,7 @@ export async function POST(request: Request, { params }: Context) {
     kind,
     meaning,
   });
-  saveUpload(deliverable.id, file.type, Buffer.from(await file.arrayBuffer()));
+  saveUpload(deliverable.id, file.type, data);
   if (kind === "delivery") {
     const project = getProject(id)!;
     logActivity({

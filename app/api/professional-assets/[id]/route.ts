@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server";
 import { db } from "@/lib/db";
 import { deleteProfessionalAsset } from "@/lib/marketplace-db";
-import { deleteUpload, readUpload } from "@/lib/uploads";
+import { deleteUpload, FILE_RESPONSE_HEADERS, readUpload } from "@/lib/uploads";
 import { guardProfessional, isDenied } from "@/lib/guard";
 
 type Context = { params: Promise<{ id: string }> };
@@ -23,7 +23,7 @@ export async function GET(_request: Request, { params }: Context) {
   const data = readUpload(asset.id, asset.mime);
   if (!data) return new Response("Arquivo indisponível", { status: 404 });
   return new Response(new Uint8Array(data), {
-    headers: { "Content-Type": asset.mime, "Cache-Control": "private, max-age=3600", "X-Content-Type-Options": "nosniff" },
+    headers: { ...FILE_RESPONSE_HEADERS, "Content-Type": asset.mime, "Cache-Control": "private, max-age=3600" },
   });
 }
 

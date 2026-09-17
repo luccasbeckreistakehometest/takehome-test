@@ -1,4 +1,4 @@
-import { readUpload } from "@/lib/uploads";
+import { FILE_RESPONSE_HEADERS, readUpload } from "@/lib/uploads";
 import { guardDeliverable, isDenied } from "@/lib/guard";
 
 type Context = { params: Promise<{ id: string }> };
@@ -11,9 +11,9 @@ export async function GET(request: Request, { params }: Context) {
   const data = readUpload(deliverable.id, deliverable.mime);
   if (!data) return new Response("Arquivo indisponível", { status: 404 });
   const headers: Record<string, string> = {
+    ...FILE_RESPONSE_HEADERS,
     "Content-Type": deliverable.mime,
     "Cache-Control": "private, max-age=3600",
-    "X-Content-Type-Options": "nosniff",
   };
   // Download disponível para todos os integrantes do contrato
   // (agência, profissional e cliente)

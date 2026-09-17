@@ -4,7 +4,7 @@ import {
   getProfessional,
   listProfessionalAssets,
 } from "@/lib/marketplace-db";
-import { ALLOWED_IMAGE_MIMES, saveUpload, type AllowedImageMime } from "@/lib/uploads";
+import { ALLOWED_IMAGE_MIMES, saveUpload, sniffImageMime, type AllowedImageMime } from "@/lib/uploads";
 import { guardProfessional, isDenied } from "@/lib/guard";
 
 type Context = { params: Promise<{ id: string }> };
@@ -32,11 +32,15 @@ export async function POST(request: Request, { params }: Context) {
   if (file.size > 15 * 1024 * 1024) {
     return NextResponse.json({ error: "Imagem acima de 15 MB" }, { status: 400 });
   }
+  const data = Buffer.from(await file.arrayBuffer());
+  if (sniffImageMime(data) !== file.type) {
+    return NextResponse.json({ error: "Envie uma imagem (JPEG/PNG/WebP/GIF)" }, { status: 400 });
+  }
   const asset = createProfessionalAsset({
     professionalId: id,
     title: file.name,
     mime: file.type,
   });
-  saveUpload(asset.id, file.type, Buffer.from(await file.arrayBuffer()));
+  saveUpload(asset.id, file.type, data);
   return NextResponse.json(asset, { status: 201 });
 }

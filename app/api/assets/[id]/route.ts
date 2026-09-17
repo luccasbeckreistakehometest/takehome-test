@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server";
 import { deleteClientAsset } from "@/lib/marketplace-db";
-import { deleteGenericUpload, readGenericUpload } from "@/lib/uploads";
+import { deleteGenericUpload, FILE_RESPONSE_HEADERS, isInlineImageMime, readGenericUpload } from "@/lib/uploads";
 import { guardClientAsset, isDenied } from "@/lib/guard";
 
 type Context = { params: Promise<{ id: string }> };
@@ -15,9 +15,10 @@ export async function GET(_request: Request, { params }: Context) {
   const safe = asset.title.replace(/[^\p{L}\p{N} ._-]/gu, "").trim() || `arquivo.${asset.ext}`;
   return new Response(new Uint8Array(data), {
     headers: {
-      "Content-Type": asset.mime,
+      ...FILE_RESPONSE_HEADERS,
+      // tipo declarado só para imagens raster; o resto é download genérico
+      "Content-Type": isInlineImageMime(asset.mime) ? asset.mime : "application/octet-stream",
       "Content-Disposition": `attachment; filename="${safe}"`,
-      "X-Content-Type-Options": "nosniff",
       "Cache-Control": "private, no-store",
     },
   });

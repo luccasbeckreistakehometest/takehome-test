@@ -1,5 +1,5 @@
 import { NextResponse } from "next/server";
-import { ALLOWED_IMAGE_MIMES, readUpload, saveUpload, type AllowedImageMime } from "@/lib/uploads";
+import { ALLOWED_IMAGE_MIMES, FILE_RESPONSE_HEADERS, readUpload, saveUpload, sniffImageMime, type AllowedImageMime } from "@/lib/uploads";
 import { actingAgencyId, agencyOnly, isDenied } from "@/lib/guard";
 import { getAgency, setAgencyLogoMime } from "@/lib/agencies";
 import { getSession } from "@/lib/session";
@@ -17,7 +17,7 @@ export async function GET(request: Request) {
   const data = readUpload(agencyLogoUploadId(agency.id), agency.logoMime);
   if (!data) return NextResponse.json({ error: "sem logo" }, { status: 404 });
   return new NextResponse(new Uint8Array(data), {
-    headers: { "Content-Type": agency.logoMime, "Cache-Control": "no-cache", "X-Content-Type-Options": "nosniff" },
+    headers: { ...FILE_RESPONSE_HEADERS, "Content-Type": agency.logoMime, "Cache-Control": "no-cache" },
   });
 }
 
@@ -41,6 +41,9 @@ export async function POST(request: Request) {
     return NextResponse.json({ error: "Logo acima de 2 MB." }, { status: 400 });
   }
   const buffer = Buffer.from(await file.arrayBuffer());
+  if (sniffImageMime(buffer) !== mime) {
+    return NextResponse.json({ error: "Formato inválido (use PNG, JPEG ou WEBP)." }, { status: 400 });
+  }
   saveUpload(agencyLogoUploadId(agencyId), mime, buffer);
   setAgencyLogoMime(agencyId, mime);
   return NextResponse.json({ ok: true, logoMime: mime }, { status: 201 });

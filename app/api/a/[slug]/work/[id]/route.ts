@@ -1,5 +1,5 @@
 import { findPublishedPage, getPublicDeliverable } from "@/lib/agency-page-db";
-import { readUpload } from "@/lib/uploads";
+import { FILE_RESPONSE_HEADERS, readUpload, sniffImageMime } from "@/lib/uploads";
 
 type Context = { params: Promise<{ slug: string; id: string }> };
 
@@ -14,7 +14,9 @@ export async function GET(_request: Request, { params }: Context) {
   if (!deliverable) return new Response("Não encontrado", { status: 404 });
   const data = readUpload(deliverable.id, deliverable.mime);
   if (!data) return new Response("Arquivo indisponível", { status: 404 });
+  const mime = sniffImageMime(data);
+  if (!mime) return new Response("Não encontrado", { status: 404 });
   return new Response(new Uint8Array(data), {
-    headers: { "Content-Type": deliverable.mime, "Cache-Control": "public, max-age=3600" },
+    headers: { ...FILE_RESPONSE_HEADERS, "Content-Type": mime, "Cache-Control": "public, max-age=3600" },
   });
 }
