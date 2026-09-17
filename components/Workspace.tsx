@@ -88,6 +88,9 @@ export default function Workspace({
   const [viewerRole, setViewerRole] = useState<string>("agency");
   const [campaignFocus, setCampaignFocus] = useState(() => linkParams.get("focus") ?? "");
   const viewer = { viewerRole, landingEnabled };
+  // "Falando ou escrevendo?" enquanto o briefing está ralo; fica na tela
+  // depois de salvo (mostra a confirmação) até a próxima visita.
+  const [showVoiceStart] = useState(() => briefingCompleteness(client) < BRIEFING_READY_PCT);
   // Aba efetiva: a pedida, se este visitante pode vê-la; senão o Dashboard.
   const tab: TabKey = resolveTab(requestedTab, viewer).tab;
   const groups = visibleGroups(viewer);
@@ -347,9 +350,7 @@ export default function Workspace({
           onNavigate={(next) => setTab(resolveTab(next, viewer).tab)}
           onRunKit={runFullKit}
         >
-          {briefingCompleteness(client) < BRIEFING_READY_PCT && (
-            <BriefingVoiceStart client={client} onSaved={onClientUpdated} onWrite={() => setTab("briefing")} />
-          )}
+          {showVoiceStart && <BriefingVoiceStart client={client} onSaved={onClientUpdated} onWrite={() => setTab("briefing")} />}
           <ClicksCard clientId={client.id} onOpen={() => setTab("bio")} />
           {viewerRole !== "client" && (
             <div className="grid gap-4 lg:grid-cols-2">
@@ -362,7 +363,7 @@ export default function Workspace({
 
       {tab === "briefing" && (
         <div className="space-y-6">
-          {briefingCompleteness(client) < BRIEFING_READY_PCT && (
+          {showVoiceStart && (
             <BriefingVoiceStart key={`voice-${client.id}`} client={client} onSaved={onClientUpdated} onWrite={() => document.getElementById("briefing-form")?.scrollIntoView({ behavior: "smooth" })} />
           )}
           <div id="briefing-form" className="scroll-mt-20">
