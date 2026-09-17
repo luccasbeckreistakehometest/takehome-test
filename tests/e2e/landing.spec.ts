@@ -9,8 +9,9 @@ test.describe("landing", () => {
     expect(pt.length).toBeGreaterThan(10);
     await page.evaluate(() => { localStorage.setItem("uiLang", "en"); });
     await page.reload();
-    const en = await page.locator("h1").first().innerText();
-    expect(en).not.toEqual(pt);
+    // a tradução é client-side (após a hidratação): espera o h1 mudar em vez
+    // de ler o texto no instante do reload
+    await expect(page.locator("h1").first()).not.toHaveText(pt);
     expect(errors).toEqual([]);
   });
 

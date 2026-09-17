@@ -1,0 +1,71 @@
+"use client";
+
+import Link from "next/link";
+import { Icon, type IconName } from "./icons";
+
+// Os diferenciais da plataforma, visíveis na Hoje — cada card é âncora do
+// tour guiado e leva para onde a feature vive.
+const ITEMS: { anchor: string; icon: IconName; title: string; body: string; href: string; cta: string }[] = [
+  {
+    anchor: "diff-report",
+    icon: "doc",
+    title: "Relatório mensal em 1 clique",
+    body: "Entregas, aprovações, posts, métricas e vendas do mês com resumo da IA — imprimível e compartilhável no portal.",
+    href: "/clients",
+    cta: "Escolher cliente",
+  },
+  {
+    anchor: "diff-approval",
+    icon: "check",
+    title: "Aprovação que dispara ação",
+    body: "Cliente aprovou no portal? Peça social vira rascunho no calendário e você recebe o aviso no WhatsApp.",
+    href: "/settings",
+    cta: "Ver regras",
+  },
+  {
+    anchor: "diff-attendant",
+    icon: "whatsapp",
+    title: "Atendente de WhatsApp com IA",
+    body: "Responde os clientes de cada marca 24/7 na voz dela, sem inventar preço, e chama uma pessoa quando precisa.",
+    href: "/clients",
+    cta: "Configurar por cliente",
+  },
+  {
+    anchor: "diff-proposal",
+    icon: "send",
+    title: "Proposta pública em 5 minutos",
+    body: "De um prospect a uma página com pitch, pacotes e prazo. Ele aceita sem login e já vira cliente.",
+    href: "/prospecting",
+    cta: "Abrir prospecção",
+  },
+  {
+    anchor: "diff-calendar",
+    icon: "calendar",
+    title: "Calendário de conteúdo",
+    body: "Semana ou mês por cliente, status com um clique e aviso dos dias sem conteúdo.",
+    href: "/calendar",
+    cta: "Abrir calendário",
+  },
+];
+
+export default function DifferentiatorsStrip() {
+  return (
+    <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-5" data-testid="differentiators">
+      {ITEMS.map((item) => (
+        <Link
+          key={item.anchor}
+          href={item.href}
+          data-tour={item.anchor}
+          className="group flex flex-col gap-2 rounded-xl border border-edge bg-surface p-4 transition-colors hover:border-accent/60"
+        >
+          <span className="grid size-9 place-items-center rounded-lg bg-accent/10 text-accent">
+            <Icon name={item.icon} size={18} />
+          </span>
+          <p className="font-[family-name:var(--font-display)] text-sm font-semibold leading-tight">{item.title}</p>
+          <p className="flex-1 text-xs text-muted">{item.body}</p>
+          <span className="text-xs font-medium text-accent group-hover:underline">{item.cta} →</span>
+        </Link>
+      ))}
+    </div>
+  );
+}

@@ -7,6 +7,7 @@ import type { Client } from "@/lib/types";
 import type { TierInfo } from "@/lib/ranking";
 import TierBadge, { TierProgress } from "@/components/TierBadge";
 import OnboardingModal from "@/components/OnboardingModal";
+import DifferentiatorsStrip from "@/components/DifferentiatorsStrip";
 import { Card, SectionTitle, Spinner, Tag } from "@/components/ui";
 
 type Overview = {
@@ -73,6 +74,8 @@ export default function AgencyHome() {
           + Novo cliente
         </Link>
       </div>
+
+      <DifferentiatorsStrip />
 
       {data.agency && (
         <Card>

@@ -14,7 +14,12 @@ test("first login: welcome → anchored tour across pages → saved on the serve
   await expect(page.getByTestId("tour-step")).toHaveAttribute("data-step", "2");
   await page.getByTestId("tour-next").click();
   await page.getByTestId("tour-next").click();
+  // os diferenciais ficam na Hoje: o tour volta para "/" sozinho
   await page.getByTestId("tour-next").click();
+  await expect(page).toHaveURL(/\/$/);
+  await expect(page.getByTestId("tour-step")).toHaveAttribute("data-step", "5");
+  await expect(page.getByTestId("differentiators")).toBeVisible();
+  for (let i = 0; i < 5; i++) await page.getByTestId("tour-next").click();
   await expect(page.getByTestId("tour-step")).toBeHidden();
   const state = await page.evaluate(() => fetch("/api/onboarding").then((r) => r.json()));
   expect(state.tourCompleted).toBe(true);

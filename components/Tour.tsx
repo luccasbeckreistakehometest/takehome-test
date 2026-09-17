@@ -13,6 +13,12 @@ const STEPS: Step[] = [
   { anchor: "briefing-mode", path: "/clients/new", t: "Briefing falado", b: "Aqui você pode falar em vez de digitar: a IA escuta, pergunta o que faltar e preenche o cadastro para você revisar." },
   { anchor: "nav-production", path: "/clients/new", t: "Produção", b: "Demandas em kanban: da abertura ao pagamento, com freelancers ou equipe interna." },
   { anchor: "nav-insights", path: "/clients/new", t: "Insights", b: "Receita, campanhas, elo da agência e o que a IA recomenda fazer a seguir." },
+  // Diferenciais: cada um tem um card na Hoje que leva até onde a feature vive
+  { anchor: "diff-report", path: "/", t: "Relatório mensal em 1 clique", b: "Dentro de cada cliente, o botão Relatório mensal junta entregas, aprovações, posts, métricas e vendas do mês e a IA escreve o resumo — com link para o portal e para imprimir." },
+  { anchor: "diff-approval", path: "/", t: "Aprovação que dispara ação", b: "Quando o cliente aprova uma peça no portal, ela vira rascunho no calendário e você recebe o aviso no WhatsApp. As regras ficam em Configurações." },
+  { anchor: "diff-attendant", path: "/", t: "Atendente de WhatsApp com IA", b: "Na aba Atendente de cada cliente: rascunho ou automático, horário comercial, limite por contato e passagem para humano. Nunca inventa preço." },
+  { anchor: "diff-proposal", path: "/", t: "Proposta pública em 5 minutos", b: "Em Prospecção, cada prospect ganha uma página com pitch, pacotes e prazo. Ele aceita sem login e já vira cliente com acesso ao portal." },
+  { anchor: "nav-calendar", path: "/", t: "Calendário de conteúdo", b: "Semana ou mês por cliente, status com um clique e aviso dos dias sem conteúdo." },
 ];
 type Rect = { top: number; left: number; width: number; height: number };
 

@@ -1367,6 +1367,23 @@ export const UI_DICT: Record<string, string> = {
   "Criar post": "Create post",
   "Erro ao criar": "Could not create",
   "Ver no calendário →": "See in the calendar →",
+  // Diferenciais na Hoje + tour
+  "Relatório mensal em 1 clique": "One-click monthly report",
+  "Entregas, aprovações, posts, métricas e vendas do mês com resumo da IA — imprimível e compartilhável no portal.": "Deliveries, approvals, posts, metrics and sales for the month with an AI summary — printable and shareable in the portal.",
+  "Escolher cliente": "Pick a client",
+  "Cliente aprovou no portal? Peça social vira rascunho no calendário e você recebe o aviso no WhatsApp.": "Client approved in the portal? A social piece becomes a calendar draft and you get a WhatsApp heads-up.",
+  "Ver regras": "See rules",
+  "Responde os clientes de cada marca 24/7 na voz dela, sem inventar preço, e chama uma pessoa quando precisa.": "Answers each brand's customers 24/7 in its voice, never makes up prices, and brings in a person when needed.",
+  "Configurar por cliente": "Set up per client",
+  "Proposta pública em 5 minutos": "Public proposal in 5 minutes",
+  "De um prospect a uma página com pitch, pacotes e prazo. Ele aceita sem login e já vira cliente.": "From a prospect to a page with pitch, packages and timeline. They accept without a login and become a client on the spot.",
+  "Abrir prospecção": "Open prospecting",
+  "Semana ou mês por cliente, status com um clique e aviso dos dias sem conteúdo.": "Week or month per client, one-click status changes and a heads-up on days with no content.",
+  "Abrir calendário": "Open calendar",
+  "Dentro de cada cliente, o botão Relatório mensal junta entregas, aprovações, posts, métricas e vendas do mês e a IA escreve o resumo — com link para o portal e para imprimir.": "Inside each client, the Monthly report button gathers the month's deliveries, approvals, posts, metrics and sales and the AI writes the summary — with a portal link and a print version.",
+  "Quando o cliente aprova uma peça no portal, ela vira rascunho no calendário e você recebe o aviso no WhatsApp. As regras ficam em Configurações.": "When the client approves a piece in the portal, it becomes a calendar draft and you get a WhatsApp heads-up. The rules live in Settings.",
+  "Na aba Atendente de cada cliente: rascunho ou automático, horário comercial, limite por contato e passagem para humano. Nunca inventa preço.": "In each client's Attendant tab: draft or automatic, business hours, per-contact cap and handoff to a human. It never makes up prices.",
+  "Em Prospecção, cada prospect ganha uma página com pitch, pacotes e prazo. Ele aceita sem login e já vira cliente com acesso ao portal.": "In Prospecting, every prospect gets a page with pitch, packages and timeline. They accept without a login and become a client with portal access.",
 };
 
 // Regras para strings com interpolação (aplicadas com cautela — só padrões
