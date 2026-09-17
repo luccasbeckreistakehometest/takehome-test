@@ -57,7 +57,7 @@ function RiskBadge({ level }: { level: string }) {
 export default function PulseOverviewCard({ mode }: { mode: "home" | "full" }) {
   const [data, setData] = useState<Overview | null>(null);
   useEffect(() => {
-    api<Overview>("/api/pulse/overview").then(setData).catch(() => {});
+    api<Overview>("/api/pulse/overview").then((d) => setData((prev) => prev ?? d)).catch(() => {});
   }, []);
   if (!data) return null;
   const rows = mode === "home" ? data.atRisk : data.clients;
@@ -122,7 +122,7 @@ export function ClientPulseCard({ clientId }: { clientId: string }) {
   const lang = useUiLang();
   const [view, setView] = useState<ClientPulseView | null>(null);
   useEffect(() => {
-    api<ClientPulseView>(`/api/clients/${clientId}/pulse`).then(setView).catch(() => {});
+    api<ClientPulseView>(`/api/clients/${clientId}/pulse`).then((v) => setView((prev) => prev ?? v)).catch(() => {});
   }, [clientId]);
   if (!view) return null;
   const comments = view.recent.filter((p) => p.comment.trim());

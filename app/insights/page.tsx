@@ -92,6 +92,7 @@ export default function InsightsPage() {
     { label: "Aguardando aprovação", value: String(data.counts.awaitingApproval), icon: "check", href: "/production" },
     { label: "Reuniões futuras", value: String(data.counts.meetingsUpcoming), icon: "calendar", href: "/agenda" },
     { label: "Posts agendados", value: String(data.counts.scheduledPosts), icon: "send", href: "/agenda" },
+    { label: "Horas & margem", value: "→", icon: "clock", href: "/finance" },
   ];
 
   const funnelMax = Math.max(1, ...Object.values(data.funnel.byStatus));
@@ -126,7 +127,7 @@ export default function InsightsPage() {
       </Card>
 
       {/* KPIs */}
-      <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-6">
+      <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4 xl:grid-cols-7">
         {kpis.map((kpi, i) => (
           <Link key={kpi.label} href={kpi.href} style={{ animationDelay: `${i * 40}ms` }} className="animate-fade-in">
             <Card hover className="h-full">

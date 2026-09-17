@@ -16,7 +16,9 @@ export default function ApprovalRulesCard() {
   const [error, setError] = useState("");
 
   useEffect(() => {
-    api<Payload>("/api/automation/approval").then(setData).catch(() => {});
+    // Em dev o React monta o efeito duas vezes: a resposta mais lenta não
+    // pode sobrescrever o que a pessoa já começou a editar.
+    api<Payload>("/api/automation/approval").then((d) => setData((prev) => prev ?? d)).catch(() => {});
   }, []);
 
   if (!data) return null;

@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { api } from "@/lib/api";
 import { useUiLang } from "@/lib/i18n";
 import { BUDGET_BAND_LABELS, normalizeSlug, type AgencyPageConfig, type BudgetBand, type Testimonial } from "@/lib/agency-page-rules";
@@ -30,9 +30,13 @@ export default function AgencyPageCard({ origin }: { origin: string }) {
   const [saved, setSaved] = useState(false);
   const [error, setError] = useState("");
 
+  const loaded = useRef(false);
   useEffect(() => {
     api<Payload>("/api/agency-page")
       .then((p) => {
+        // efeito duplo do dev: a segunda resposta não sobrescreve o formulário
+        if (loaded.current) return;
+        loaded.current = true;
         setData(p);
         setConfig(p.config);
         setServicesText(p.config.services.join("\n"));

@@ -62,6 +62,14 @@ const ITEMS: { anchor: string; icon: IconName; title: string; body: string; href
     href: "/insights#pulso",
     cta: "Ver quem está em risco",
   },
+  {
+    anchor: "diff-margin",
+    icon: "clock",
+    title: "Horas e margem por cliente",
+    body: "Cronômetro por demanda, custo/hora da equipe e fee mensal: quanto cada cliente rende de verdade — e quem dá prejuízo.",
+    href: "/finance",
+    cta: "Ver margem do mês",
+  },
 ];
 
 export default function DifferentiatorsStrip() {

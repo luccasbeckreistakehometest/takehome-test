@@ -21,6 +21,7 @@ const STEPS: Step[] = [
   { anchor: "nav-calendar", path: "/", t: "Calendário de conteúdo", b: "Semana ou mês por cliente, status com um clique e aviso dos dias sem conteúdo." },
   { anchor: "diff-public-page", path: "/", t: "Página pública da agência", b: "Em Configurações → Página pública você liga /a/sua-agencia: serviços, trabalhos que o cliente autorizou, clientes e depoimentos. O formulário vira prospect e avisa você no sino e no WhatsApp." },
   { anchor: "diff-pulse", path: "/", t: "Pulso do cliente e NPS", b: "No portal, o cliente responde 😞😐😀 depois de cada aprovação e uma vez por mês, e o NPS a cada trimestre. A Hoje mostra quem está em risco (nota caindo, 😞, silêncio) e o relatório mensal traz os números." },
+  { anchor: "diff-margin", path: "/", t: "Horas e margem por cliente", b: "Na aba Horas de cada cliente você aponta tempo (cronômetro ou à mão) por demanda. Em Horas & margem, cada cliente aparece com fee, horas, custo e margem do mês — quem dá prejuízo fica em vermelho, com CSV para a contabilidade." },
 ];
 type Rect = { top: number; left: number; width: number; height: number };
 
