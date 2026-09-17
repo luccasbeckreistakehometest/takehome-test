@@ -44,3 +44,7 @@ yarn-error.log*
 *.tsbuildinfo
 next-env.d.ts
 /pitch/
+
+# artefatos do Playwright
+/playwright-report/
+/test-results/
