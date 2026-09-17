@@ -1,6 +1,6 @@
 import { randomUUID } from "crypto";
 import { addColumnIfMissing, db, tenantColumn } from "./db";
-import { billingAgencyId } from "./tenancy-rules";
+import { billingAgencyId, HOUSE_AGENCY_ID } from "./tenancy-rules";
 import {
   actionCost,
   entryPlanId,
@@ -135,6 +135,17 @@ export function isEnforced(): boolean {
     | undefined;
   return row?.enforced === 1;
 }
+// Quem é bloqueado quando o saldo acaba. Plano grátis/de entrada é SEMPRE
+// bloqueado — cadastro aberto não pode virar IA sem cota enquanto a chave
+// global está desligada. Planos pagos seguem a chave global
+// (BILLING_ENFORCED ou o admin). A agência da casa (operação do dono) só é
+// bloqueada com a chave global ligada.
+export function enforcedFor(accountType: AccountType, accountId: string, plan: Plan | undefined): boolean {
+  if (isEnforced()) return true;
+  if (accountType === "agency" && accountId === HOUSE_AGENCY_ID) return false;
+  return !isPaidPlan(plan);
+}
+
 export function setEnforced(on: boolean): void {
   db.prepare("UPDATE billing_flags SET enforced = ? WHERE id = 1").run(on ? 1 : 0);
 }
@@ -538,7 +549,7 @@ export function chargeUsage(input: {
       }
       const cost = actionCost(input.action) * Math.max(1, input.units ?? 1);
       if (cost <= 0) return { ok: true, charged: 0, balance, fromPlan: 0, fromPurchased: 0 };
-      if (balance < cost && isEnforced()) {
+      if (balance < cost && enforcedFor(input.accountType, input.accountId, plan)) {
         return {
           ok: false,
           charged: 0,

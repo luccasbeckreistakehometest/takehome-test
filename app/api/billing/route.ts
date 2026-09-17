@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server";
 import { getSession, billingAccount } from "@/lib/session";
-import { billingSummary, isEnforced, platformRevenue } from "@/lib/billing-db";
+import { billingSummary, enforcedFor, isEnforced, platformRevenue } from "@/lib/billing-db";
 import { COIN_PACKS, PERIOD_DISCOUNT, plansFor } from "@/lib/plans";
 
 // Resumo de billing da conta logada. Admin recebe visão de receita da plataforma.
@@ -27,6 +27,7 @@ export async function GET() {
     plans: plansFor(account.accountType),
     packs: COIN_PACKS,
     periods: PERIOD_DISCOUNT,
-    enforced: isEnforced(),
+    // o bloqueio por saldo vale para ESTA conta? (plano grátis: sempre)
+    enforced: enforcedFor(account.accountType, account.accountId, summary.plan),
   });
 }

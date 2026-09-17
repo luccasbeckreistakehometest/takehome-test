@@ -53,6 +53,35 @@ describe("billing lifecycle", () => {
     expect(billing.getWallet(a.accountType, a.accountId).coins).toBe(0);
   });
 
+  it("free plans block at zero even with the global switch off; paid plans and the house follow the switch", () => {
+    const free = acct();
+    billing.startAccount(free.accountType, free.accountId); // 40, plano grátis
+    for (let i = 0; i < 4; i++) expect(billing.chargeUsage({ ...free, action: "strategy_analysis" }).ok).toBe(true);
+    const blocked = billing.chargeUsage({ ...free, action: "strategy_analysis" });
+    expect(blocked.ok).toBe(false);
+    expect(billing.getWallet(free.accountType, free.accountId).coins).toBe(0);
+
+    // agência nova no plano de entrada: mesma regra
+    const agency = { accountType: "agency" as const, accountId: `ag-free-${++seq}` };
+    billing.startAccount(agency.accountType, agency.accountId); // 60
+    for (let i = 0; i < 6; i++) billing.chargeUsage({ ...agency, action: "strategy_analysis" });
+    expect(billing.chargeUsage({ ...agency, action: "strategy_analysis" }).ok).toBe(false);
+
+    // a agência da casa só bloqueia com a chave global
+    const house = { accountType: "agency" as const, accountId: "agency" };
+    for (let i = 0; i < 8; i++) expect(billing.chargeUsage({ ...house, action: "strategy_analysis" }).ok).toBe(true);
+    expect(billing.enforcedFor("agency", "agency", undefined)).toBe(false);
+
+    // plano pago: a chave global decide
+    const paid = acct();
+    billing.adminSetPlan({ ...paid, planId: "client_starter", months: 1 });
+    for (let i = 0; i < 41; i++) billing.chargeUsage({ ...paid, action: "strategy_analysis" });
+    expect(billing.chargeUsage({ ...paid, action: "strategy_analysis" }).ok).toBe(true);
+    billing.setEnforced(true);
+    expect(billing.chargeUsage({ ...paid, action: "strategy_analysis" }).ok).toBe(false);
+    expect(billing.enforcedFor("agency", "agency", undefined)).toBe(true);
+  });
+
   it("uses plan coins before purchased coins", () => {
     const a = acct();
     billing.startAccount(a.accountType, a.accountId);

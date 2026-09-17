@@ -191,7 +191,7 @@ export default function AdminPage() {
         </div>
         <p className="mt-2 text-xs text-muted">
           {spendPct >= 100 ? "Teto atingido: a IA está pausada até amanhã (UTC). " : ""}
-          Ajuste com AI_DAILY_SPEND_LIMIT_USD no servidor. Cobrança por saldo: {data.billing.enforced ? "ligada" : "desligada"}.
+          Ajuste com AI_DAILY_SPEND_LIMIT_USD no servidor. Bloqueio por saldo: {data.billing.enforced ? "ligado para todos" : "planos grátis sempre bloqueiam; pagos e a agência da casa, livres"}.
           {!data.ai.keyConfigured && " ANTHROPIC_API_KEY não está definida no ambiente."}
         </p>
       </Card>

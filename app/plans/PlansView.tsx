@@ -144,10 +144,13 @@ export default function PlansView() {
             <p className="text-xs uppercase text-muted">Bloqueio de IA por saldo</p>
             <div className="mt-2 flex items-center gap-2">
               <Button variant={data.enforced ? "danger" : "ghost"} onClick={toggleEnforce}>
-                {data.enforced ? "Ligado (cobrando)" : "Desligado (livre)"}
+                {data.enforced ? "Ligado para todos" : "Só planos grátis"}
               </Button>
             </div>
-            <p className="mt-2 text-xs text-muted">Com BILLING_ENFORCED=true no servidor, fica sempre ligado.</p>
+            <p className="mt-2 text-xs text-muted">
+              Planos grátis param quando os coins acabam, sempre. Ligado, vale também para planos pagos e para a agência da
+              casa. Com BILLING_ENFORCED=true no servidor, fica sempre ligado.
+            </p>
           </Card>
         </div>
         <Card>
