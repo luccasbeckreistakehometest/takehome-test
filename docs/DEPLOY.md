@@ -71,13 +71,15 @@ Gere segredos **no servidor** (`openssl rand -hex 32`), nunca no repositório.
 | `SEED_PASSWORD` | senha forte das contas seed `admin` e `agencia` (só usada se elas ainda não existirem). |
 | `ANTHROPIC_API_KEY` | chave do console da Anthropic com crédito. Uma chave salva em Configurações (admin) tem prioridade sobre esta. |
 | `MP_ACCESS_TOKEN` | token de produção do Mercado Pago (`APP_USR-...`). |
-| `BILLING_ENFORCED` | `true` para bloquear IA sem saldo. Antes de ligar, dê um plano à agência da casa em **/admin → Usuários**. |
+| `BILLING_ENFORCED` | Planos grátis/de entrada **sempre** param quando os coins acabam. `true` estende o bloqueio aos planos pagos e à agência da casa. Antes de ligar, dê um plano à agência da casa em **/admin → Usuários**. |
 
 ### Custos e limites (têm padrão; ajuste se precisar)
 
 | Variável | Padrão | Efeito |
 |---|---|---|
-| `AI_DAILY_SPEND_LIMIT_USD` | `20` | teto diário de gasto de IA (estimado pelos tokens). Atingiu → IA pausa até o dia seguinte (UTC). `0` desliga a IA. |
+| `AI_DAILY_SPEND_LIMIT_USD` | `20` | teto diário GLOBAL de gasto de IA (estimado pelos tokens, voz e imagem incluídas). Atingiu → IA pausa para todos até o dia seguinte (UTC). `0` desliga a IA. |
+| `AI_FREE_DAILY_SPEND_LIMIT_USD` | 25% do global | bolso diário de todas as contas grátis juntas. Esgotou → só as contas grátis param; pagas e a casa seguem. |
+| `AI_FREE_ACCOUNT_DAILY_SPEND_LIMIT_USD` / `AI_PAID_ACCOUNT_DAILY_SPEND_LIMIT_USD` | `1` / 50% do global | teto diário de uma conta grátis / paga (a agência da casa só tem o global). |
 | `AI_RATE_LIMIT_PER_10MIN` / `AI_RATE_LIMIT_PER_IP_10MIN` | `40` / `80` | pedidos de IA por conta / por IP. |
 | `TTS_RATE_LIMIT_PER_10MIN` / `TTS_RATE_LIMIT_PER_IP_10MIN` | `30` / `60` | voz por conta / por IP. |
 | `LOGIN_RATE_LIMIT_PER_IP` / `LOGIN_RATE_LIMIT_PER_ACCOUNT` | `30` / `8` (15 min) | tentativas de login. |
@@ -89,8 +91,8 @@ Gere segredos **no servidor** (`openssl rand -hex 32`), nunca no repositório.
 
 | Variável | Uso |
 |---|---|
-| `AGENCY_SELF_SIGNUP` | Cadastro público de agências. Padrão: aberto — cada agência nova ganha o próprio workspace (clientes, carteira, whitelabel, página pública), isolado das outras. `false` fecha o cadastro (agências pedem acesso pelo formulário). |
-| `LEGAL_NAME`, `LEGAL_DOCUMENT`, `LEGAL_ADDRESS`, `LEGAL_EMAIL` | razão social, CNPJ/CPF, endereço e e-mail nas páginas legais e no rodapé. Vazios → as linhas somem e as páginas apontam para o formulário de contato. |
+| `AGENCY_SELF_SIGNUP` | Cadastro público de agências. Padrão: aberto — cada agência nova ganha o próprio workspace (clientes, carteira, whitelabel, página pública), isolado das outras — **desde que** `LEGAL_NAME`, `LEGAL_DOCUMENT` e `LEGAL_EMAIL` estejam preenchidos (sem o controlador identificado na política de privacidade, o cadastro de agências fica fechado em produção). `false` fecha o cadastro (agências pedem acesso pelo formulário). |
+| `LEGAL_NAME`, `LEGAL_DOCUMENT`, `LEGAL_ADDRESS`, `LEGAL_EMAIL` | razão social, CNPJ/CPF, endereço e e-mail nas páginas legais e no rodapé. Vazios → as linhas somem, as páginas apontam para o formulário de contato e o cadastro público de agências fica fechado. O /admin avisa enquanto faltarem. |
 | `SUPPORT_EMAIL`, `SUPPORT_WHATSAPP` | canais extras na página de contato (só aparecem se definidos; WhatsApp com DDI, só dígitos). |
 
 ### Integrações opcionais
@@ -99,6 +101,7 @@ Gere segredos **no servidor** (`openssl rand -hex 32`), nunca no repositório.
 |---|---|
 | `META_APP_SECRET` | App Secret do app da Meta. Sem ele, o webhook `/api/webhooks/meta` recusa todo POST. |
 | `META_VERIFY_TOKEN` | token do handshake do webhook (aleatório, ≥ 16 caracteres; o antigo valor público não vale mais). |
+| `META_GRAPH_VERIFY` | deixe vazio. Ao salvar uma conexão ou o número de um atendente, a Graph API confirma que o token enxerga aquele id (e um id só pode estar em uma agência). `off` existe só para o e2e. |
 | `SALES_WEBHOOK_SECRET` | token global opcional (≥ 16) para `/api/webhooks/sales/<clienteId>`. O normal é o token por cliente, gerado na aba **Vendas & Dados**. |
 | `ELEVENLABS_API_KEY`, `ELEVENLABS_VOICE_ID` / `OPENAI_API_KEY` | voz da IA no briefing falado. Sem nenhum, a interface mostra só o texto. |
 | `GOOGLE_AI_API_KEY`, `TOGETHER_API_KEY`, `HF_API_KEY` | imagens (também configuráveis pelo admin). |
@@ -140,7 +143,11 @@ As contas trocadas entram com a senha provisória e precisam criar uma nova no p
 2. **/admin → Usuários**: dê à agência da casa (conta `agencia`) o plano que ela deve ter (sem
    cobrança). Agências novas começam no plano grátis delas (60 coins/mês).
 3. **Configurações** (admin): modo de IA, landing pages e chaves.
-4. Só então ligue `BILLING_ENFORCED=true` e rode `docker compose up -d marqa`.
+4. Só então ligue `BILLING_ENFORCED=true` e rode `docker compose up -d marqa`. (Planos grátis já
+   param ao zerar os coins mesmo com a chave desligada.)
+5. Páginas públicas de agências novas ficam fora do Google (noindex, fora do sitemap) até você
+   liberar em **/admin → Agências → Liberar no Google** ou a agência ter plano pago. O mesmo
+   quadro tem **Despublicar** para denúncias.
 
 ## Build local
 

@@ -40,8 +40,10 @@ plataforma não guarda nem repassa esse dinheiro. Domínio próprio para agênci
   obrigatório em produção, scrypt assíncrono, limites de tentativa em login, cadastro e contato.
 - Middleware nega por padrão às marcas e profissionais tudo o que não é do portal deles; cada rota
   checa a posse do recurso e a agência da sessão (id de outra agência responde 404).
-- Toda rota de IA passa por limite de taxa, disjuntor de gasto diário (`AI_DAILY_SPEND_LIMIT_USD`) e
-  cobrança de coins com estorno em falha.
+- Toda rota de IA passa por limite de taxa, tetos diários de gasto (global, bolso das contas grátis e
+  por conta) e cobrança de coins com estorno em falha. Plano grátis para sempre ao zerar os coins.
+- Arquivos enviados só saem como imagem quando os bytes provam (SVG/HTML viram download) e toda
+  resposta de arquivo vai com CSP `sandbox`.
 - Webhooks autenticados (assinatura da Meta, token por cliente nas vendas; o do Mercado Pago relê o
   pagamento na API).
 - HTML gerado por IA servido com CSP `sandbox`.
