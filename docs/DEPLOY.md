@@ -28,6 +28,36 @@ Tudo a partir de `/srv/apps/stack` (detalhes no `DEPLOY.md` do stack):
 - **Saúde**: `curl -s https://marqa.online/api/health` → `{"ok":true,"db":"ok"}` (também usado pelo
   `HEALTHCHECK` da imagem).
 
+## Multi-agência (uma agência por workspace)
+
+Cada agência é um *tenant* (tabela `agencies`): clientes, demandas, entregas, propostas, prospecção,
+mensagens, reuniões, horas, convites, página pública, whitelabel, regras de automação, conexões de
+WhatsApp/Instagram, carteira e plano são dela. Chaves de IA, teto de qualidade, provedor de imagem,
+landing pages e o bloqueio por saldo continuam **globais** e só o admin muda.
+
+- **Migração automática**: na primeira subida da nova versão, ao abrir o banco, o app cria a agência da
+  casa (id `agency`, com o nome/cor/logo/página que estavam nas configurações), atribui a ela **todas**
+  as linhas existentes e marca `tenancy-v1` em `schema_migrations`. Ela roda uma vez só (e com lock,
+  então workers do build não brigam). Faça o backup antes (`bin/backup.sh`).
+- **Contas antigas**: `agencia` vira dona da casa; quem se cadastrou sozinho como agência (em produção,
+  `cachaca`) ganha uma agência própria e vazia; o que ele tenha criado no workspace compartilhado fica na
+  casa. Profissionais auto-cadastrados viram freelancers do marketplace aberto (sem agência).
+- **Conferir depois do deploy** (somente leitura):
+  ```bash
+  cd /srv/apps/stack
+  sqlite3 volumes/marqa/data/agencyhub.db "SELECT id, appliedAt, detail FROM schema_migrations;"
+  sqlite3 volumes/marqa/data/agencyhub.db "SELECT id, name, slug, (SELECT username FROM users WHERE id = ownerUserId) FROM agencies;"
+  ```
+- **Profissionais**: cada agência vê os dela, os do marketplace aberto e quem já se candidatou ou foi
+  escalado em demandas dela. Demandas "marketplace" aparecem para freelancers de qualquer agência.
+- **Marcas auto-cadastradas** (sem convite) ficam na agência da casa, como antes.
+- **Modo sessão do WhatsApp** (worker local) só existe para a agência da casa; as outras usam a API
+  oficial da Meta. O webhook da Meta roteia a mensagem pelo `phone_number_id` (atendente da marca ou
+  conexão da agência); número desconhecido fica sem agência.
+- **Admin**: `/admin` lista as agências (dono, equipe, clientes, plano, coins) e filtra tudo por agência.
+- **Excluir conta**: o dono que sai sozinho leva o workspace inteiro da agência (a casa nunca é apagada);
+  com mais gente no time, a agência passa para outro membro.
+
 ## Variáveis de ambiente
 
 Gere segredos **no servidor** (`openssl rand -hex 32`), nunca no repositório.
@@ -107,7 +137,8 @@ As contas trocadas entram com a senha provisória e precisam criar uma nova no p
 ## Primeiro acesso
 
 1. Entre como `admin` (senha = `SEED_PASSWORD`) e troque a senha em **Minha conta**.
-2. **/admin → Usuários**: dê à agência da casa o plano que ela deve ter (sem cobrança).
+2. **/admin → Usuários**: dê à agência da casa (conta `agencia`) o plano que ela deve ter (sem
+   cobrança). Agências novas começam no plano grátis delas (60 coins/mês).
 3. **Configurações** (admin): modo de IA, landing pages e chaves.
 4. Só então ligue `BILLING_ENFORCED=true` e rode `docker compose up -d marqa`.
 

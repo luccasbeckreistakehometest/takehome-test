@@ -20,6 +20,9 @@ Interface em português (nativo) e inglês. Em produção em <https://marqa.onli
   atendente que rascunha respostas (pedido de humano, preço ou promessa nunca saem sozinhos).
 - **Marcas autônomas** operam o próprio workspace; **marcas gerenciadas** acompanham, aprovam e pedem
   pelo portal; **profissionais** têm perfil, portfólio, candidaturas e elo (Bronze → Platina).
+- **Multi-agência**: cada agência que se cadastra ganha o próprio workspace, isolado das outras
+  (clientes, demandas, propostas, mensagens, relatórios, página pública, marca, carteira e plano). O
+  time entra por convite na mesma agência; o admin vê todas e filtra por agência.
 - **Marca da agência** (logo, cores, nome) para os clientes e profissionais que ela convida.
 - **Planos pré-pagos e coins** pelo Mercado Pago (Pix, cartão, boleto), sem renovação automática; cota
   mensal de coins; ações de IA que falham não cobram.
@@ -36,7 +39,7 @@ plataforma não guarda nem repassa esse dinheiro. Domínio próprio para agênci
 - Sessões assinadas com expiração e revogação (versão por usuário), cookie `Secure`, `AUTH_SECRET`
   obrigatório em produção, scrypt assíncrono, limites de tentativa em login, cadastro e contato.
 - Middleware nega por padrão às marcas e profissionais tudo o que não é do portal deles; cada rota
-  checa a posse do recurso.
+  checa a posse do recurso e a agência da sessão (id de outra agência responde 404).
 - Toda rota de IA passa por limite de taxa, disjuntor de gasto diário (`AI_DAILY_SPEND_LIMIT_USD`) e
   cobrança de coins com estorno em falha.
 - Webhooks autenticados (assinatura da Meta, token por cliente nas vendas; o do Mercado Pago relê o
