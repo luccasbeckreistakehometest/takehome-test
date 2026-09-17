@@ -1,7 +1,7 @@
 import { afterEach, describe, expect, it, vi } from "vitest";
 import * as pt from "../../lib/legal-content-pt";
 import * as en from "../../lib/legal-content-en";
-import { agencySelfSignupEnabled, legalIdentity, supportChannels } from "../../lib/legal";
+import { agencySelfSignupEnabled, legalIdentity, legalIdentityComplete, supportChannels } from "../../lib/legal";
 
 describe("legal documents", () => {
   afterEach(() => vi.unstubAllEnvs());
@@ -49,6 +49,24 @@ describe("legal documents", () => {
     vi.stubEnv("AGENCY_SELF_SIGNUP", "false");
     expect(agencySelfSignupEnabled()).toBe(false);
     vi.stubEnv("AGENCY_SELF_SIGNUP", " FALSE ");
+    expect(agencySelfSignupEnabled()).toBe(false);
+  });
+
+  it("in production, agency signup opens only once the data controller is identified", () => {
+    vi.stubEnv("NODE_ENV", "production");
+    vi.stubEnv("AGENCY_SELF_SIGNUP", "");
+    for (const name of ["LEGAL_NAME", "LEGAL_DOCUMENT", "LEGAL_ADDRESS", "LEGAL_EMAIL"]) vi.stubEnv(name, "");
+    expect(legalIdentityComplete()).toBe(false);
+    expect(agencySelfSignupEnabled()).toBe(false);
+    vi.stubEnv("AGENCY_SELF_SIGNUP", "true");
+    expect(agencySelfSignupEnabled()).toBe(false);
+    vi.stubEnv("LEGAL_NAME", "Empresa Exemplo LTDA");
+    vi.stubEnv("LEGAL_DOCUMENT", "documento de teste");
+    expect(agencySelfSignupEnabled()).toBe(false);
+    vi.stubEnv("LEGAL_EMAIL", "contato@example.test");
+    expect(legalIdentityComplete()).toBe(true);
+    expect(agencySelfSignupEnabled()).toBe(true);
+    vi.stubEnv("AGENCY_SELF_SIGNUP", "false");
     expect(agencySelfSignupEnabled()).toBe(false);
   });
 });

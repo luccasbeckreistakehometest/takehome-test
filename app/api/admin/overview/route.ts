@@ -19,6 +19,7 @@ import {
 import { inboxCounts } from "@/lib/contact-db";
 import { isEnforced, platformRevenue, viewAccount } from "@/lib/billing-db";
 import { agencyPageIndexable, getAgencyPageConfig, listAgencies } from "@/lib/agencies";
+import { agencySelfSignupEnabled, legalIdentityComplete } from "@/lib/legal";
 import { getPlan } from "@/lib/plans";
 import { scopeWhere } from "@/lib/tenancy-rules";
 import "@/lib/agency-page-db";
@@ -55,6 +56,9 @@ export async function GET(request: Request) {
 
   return NextResponse.json({
     agencyFilter,
+    // LGPD: sem LEGAL_NAME/DOCUMENT/EMAIL a política não identifica o controlador
+    // e o cadastro público de agências fica fechado em produção.
+    legal: { identityComplete: legalIdentityComplete(), agencySignupOpen: agencySelfSignupEnabled() },
     agencies: agencies.map((a) => {
       const { subscription, wallet } = viewAccount("agency", a.billingAccountId);
       return {

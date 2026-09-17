@@ -9,7 +9,10 @@ export NODE_OPTIONS="--max-old-space-size=3072"
 # definidas no processo (mesmo vazias) têm prioridade. Nenhuma chave real entra.
 export ANTHROPIC_API_KEY="" MP_ACCESS_TOKEN="" MP_PUBLIC_KEY="" ELEVENLABS_API_KEY="" OPENAI_API_KEY=""
 export GOOGLE_AI_API_KEY="" TOGETHER_API_KEY="" HF_API_KEY="" SALES_WEBHOOK_SECRET="" SUPPORT_EMAIL="" SUPPORT_WHATSAPP=""
-export LEGAL_NAME="" LEGAL_DOCUMENT="" LEGAL_ADDRESS="" LEGAL_EMAIL="" AGENCY_SELF_SIGNUP=""
+export LEGAL_ADDRESS="" AGENCY_SELF_SIGNUP=""
+# identidade FICTÍCIA só para o e2e: em produção o cadastro de agência só
+# abre com o controlador identificado (lib/legal.ts)
+export LEGAL_NAME="Operadora de Teste E2E" LEGAL_DOCUMENT="documento-de-teste" LEGAL_EMAIL="legal@example.test"
 export AUTH_SECRET="e2e-only-auth-secret-not-for-production-0123456789"
 export APP_URL="http://localhost:3200"
 if [ "${E2E_SKIP_BUILD:-0}" != "1" ]; then

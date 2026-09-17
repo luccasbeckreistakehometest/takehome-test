@@ -34,11 +34,21 @@ export function supportChannels(): SupportChannels {
   return { email: clean(process.env.SUPPORT_EMAIL), whatsapp: whatsapp && whatsapp.length >= 10 ? whatsapp : null };
 }
 
+// A política de privacidade identifica o controlador (LGPD art. 9)? Nome,
+// documento e e-mail precisam estar no ambiente.
+export function legalIdentityComplete(): boolean {
+  const id = legalIdentity();
+  return Boolean(id.name && id.document && id.email);
+}
+
 // Cadastro público de agência: LIGADO (cada agência nasce com o próprio
 // workspace isolado). AGENCY_SELF_SIGNUP=false fecha o cadastro de novo
-// (vira "pedir acesso") — um interruptor de emergência.
+// (vira "pedir acesso") — um interruptor de emergência. Em produção ele só
+// abre com o controlador identificado (LEGAL_NAME, LEGAL_DOCUMENT e
+// LEGAL_EMAIL); até lá, agência entra por convite ou pedido de acesso.
 export function agencySelfSignupEnabled(): boolean {
-  return (process.env.AGENCY_SELF_SIGNUP ?? "").trim().toLowerCase() !== "false";
+  if ((process.env.AGENCY_SELF_SIGNUP ?? "").trim().toLowerCase() === "false") return false;
+  return process.env.NODE_ENV !== "production" || legalIdentityComplete();
 }
 
 export function appBaseUrl(): string {

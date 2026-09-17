@@ -27,6 +27,7 @@ type AgencyRow = {
 
 type Overview = {
   agencyFilter: string | null;
+  legal?: { identityComplete: boolean; agencySignupOpen: boolean };
   agencies: AgencyRow[];
   totals: {
     agencies: number;
@@ -211,6 +212,15 @@ export default function AdminPage() {
           {!data.ai.keyConfigured && " ANTHROPIC_API_KEY não está definida no ambiente."}
         </p>
       </Card>
+
+      {data.legal && !data.legal.identityComplete && (
+        <Card className="border-amber-500/60" data-testid="admin-legal-warning">
+          <p className="text-sm">
+            Defina LEGAL_NAME, LEGAL_DOCUMENT e LEGAL_EMAIL no servidor: sem eles a política de privacidade não identifica o
+            controlador (LGPD art. 9) e o cadastro público de agências fica fechado (entram por convite ou pedido de acesso).
+          </p>
+        </Card>
+      )}
 
       <Card data-testid="admin-agencies">
         <SectionTitle>Agências ({data.agencies.length})</SectionTitle>
