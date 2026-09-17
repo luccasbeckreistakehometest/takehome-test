@@ -1,5 +1,6 @@
 import type { NextConfig } from "next";
 import { PHASE_PRODUCTION_BUILD } from "next/constants";
+import { FILE_RESPONSE_HEADERS } from "./lib/uploads";
 
 // Cabeçalhos de segurança aplicados a todas as respostas. Em produção o Caddy
 // do repo `stack` define os mesmos (com `defer`, o valor dele prevalece), então
@@ -20,8 +21,22 @@ const securityHeaders = [
 ];
 
 // CSP enxuta para o app. A landing gerada por IA (/api/generations/:id/html)
-// tem a própria CSP com `sandbox` e fica fora desta regra.
+// tem a própria CSP com `sandbox` e fica fora desta regra; os arquivos
+// enviados também (recebem a CSP de arquivo abaixo). O cabeçalho daqui
+// substitui o que a rota define, por isso a exclusão.
 const appCsp = { key: "Content-Security-Policy", value: "frame-ancestors 'self'; base-uri 'self'; object-src 'none'" };
+const APP_CSP_SOURCE =
+  "/((?!api/generations/[^/]+/html|api/assets/|api/files/|api/professional-assets/|api/a/[^/]+/logo/|api/a/[^/]+/work/|api/settings/logo).*)";
+// Rotas que servem arquivos enviados: sandbox + nada carrega de fora.
+const FILE_ROUTES = [
+  "/api/assets/:id",
+  "/api/files/:id",
+  "/api/professional-assets/:id",
+  "/api/a/:slug/logo/:clientId",
+  "/api/a/:slug/work/:id",
+  "/api/settings/logo",
+];
+const fileCsp = { key: "Content-Security-Policy", value: FILE_RESPONSE_HEADERS["Content-Security-Policy"] };
 
 export default function config(phase: string): NextConfig {
   // O middleware inlina AUTH_SECRET no build: um build de produção sem o
@@ -40,7 +55,8 @@ export default function config(phase: string): NextConfig {
     async headers() {
       return [
         { source: "/:path*", headers: securityHeaders },
-        { source: "/((?!api/generations/[^/]+/html).*)", headers: [appCsp] },
+        { source: APP_CSP_SOURCE, headers: [appCsp] },
+        ...FILE_ROUTES.map((source) => ({ source, headers: [fileCsp] })),
       ];
     },
   };
