@@ -123,3 +123,27 @@ test("a freelancer keeps using profile, portfolio and applications under enforce
   await expect(page.getByRole("heading", { level: 1 })).toBeVisible();
   await agency.close();
 });
+
+test("a new agency spends its own entry-plan coins and never the house agency's", async ({ page, browser }) => {
+  const house = await browser.newContext();
+  const housePage = await house.newPage();
+  await login(housePage, "agencia");
+  const houseBefore = (await (await house.request.get("/api/billing")).json()).wallet.coins;
+
+  await signupViaApi(page.request, "agency", "Agência Enxuta", {}, "198.51.100.40");
+  const start = await (await page.request.get("/api/billing")).json();
+  expect(start.plan.id).toBe("agency_free");
+  expect(start.wallet.coins).toBe(60);
+  const client = await (await page.request.post("/api/clients", { data: { name: "Cliente Enxuto", channels: ["Instagram"] } })).json();
+  for (let i = 0; i < 6; i++) {
+    const ok = await page.request.post("/api/generate", { data: { clientId: client.id, type: "strategy_analysis", params: {} } });
+    expect(ok.status()).toBe(201); // 10 coins cada
+  }
+  const blocked = await page.request.post("/api/generate", { data: { clientId: client.id, type: "strategy_analysis", params: {} } });
+  expect(blocked.status()).toBe(402);
+  expect((await blocked.json()).code).toBe("no_coins");
+  expect((await (await page.request.get("/api/billing")).json()).wallet.coins).toBe(0);
+  // a casa não pagou nada disso
+  expect((await (await house.request.get("/api/billing")).json()).wallet.coins).toBe(houseBefore);
+  await house.close();
+});

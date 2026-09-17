@@ -271,7 +271,7 @@ function UserPanel({ user, onChanged, onClose }: { user: AdminUser; onChanged: (
             </Button>
           </form>
           <p className="text-xs text-muted">
-            Contas de agência compartilham a mesma carteira (&quot;agency&quot;) até o isolamento por agência.
+            Plano e coins de uma conta de agência são da agência dela: todo o time usa a mesma carteira.
           </p>
         </>
       )}

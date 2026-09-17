@@ -370,11 +370,15 @@ export default function SettingsPage() {
         </div>
       </Card>
 
-      <AgencyPageCard origin={origin} />
+      <div id="pagina-publica" className="scroll-mt-20">
+        <AgencyPageCard origin={origin} />
+      </div>
 
       <ApprovalRulesCard />
 
-      <InviteGenerator origin={origin} />
+      <div id="convites" className="scroll-mt-20">
+        <InviteGenerator origin={origin} />
+      </div>
 
       <Card className="space-y-3">
         <SectionTitle>Integrações</SectionTitle>

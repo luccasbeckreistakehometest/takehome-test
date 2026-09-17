@@ -23,7 +23,7 @@ const ROLE_INFO: Record<Role, { label: string; icon: IconName; blurb: string }> 
   agency: {
     label: "Agência",
     icon: "users",
-    blurb: "Gerencio clientes e uma rede de profissionais.",
+    blurb: "Gerencio clientes e uma rede de profissionais, num espaço só da minha agência.",
   },
 };
 
@@ -40,7 +40,7 @@ export default function RegistrationForm({
   fixedRole?: Role;
   initialRole?: Role; // pré-seleciona (mas deixa trocar); vindo do funil (?type=)
   token?: string;
-  agencySignupOpen?: boolean; // AGENCY_SELF_SIGNUP (sem convite, agência pede acesso)
+  agencySignupOpen?: boolean; // AGENCY_SELF_SIGNUP=false fecha o cadastro (agência pede acesso)
   plan?: string; // plano escolhido na página de preços → vai direto ao pagamento
   period?: string;
 }) {
@@ -116,8 +116,8 @@ export default function RegistrationForm({
     </>
   );
 
-  // Agência sem convite: cadastro por pedido de acesso (até o isolamento
-  // por agência ficar pronto).
+  // Agência sem convite com o cadastro fechado (AGENCY_SELF_SIGNUP=false):
+  // vira pedido de acesso.
   if (role === "agency" && !token && !agencySignupOpen) {
     return (
       <div className="space-y-3">

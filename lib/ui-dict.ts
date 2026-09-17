@@ -3,6 +3,27 @@
 // da UI — textos de entregáveis não batem com o dicionário e passam intocados
 // (eles já são localizados por cliente na geração).
 export const UI_DICT: Record<string, string> = {
+  // Multi-agência (workspace próprio, primeiros passos, convites, admin)
+  "Primeiros passos": "First steps",
+  "Seu espaço está pronto e é só seu. Comece por aqui:": "Your workspace is ready and it's all yours. Start here:",
+  "Cadastre o primeiro cliente": "Add your first client",
+  "Digite ou fale o briefing. Dele saem a estratégia, o calendário e os posts.": "Type or speak the briefing. The strategy, calendar and posts come from it.",
+  "Coloque a sua marca": "Add your brand",
+  "Nome, cor e logo da agência. É isso que seus clientes veem no portal.": "Agency name, colour and logo. It's what your clients see in their portal.",
+  "Publique sua página": "Publish your page",
+  "Um endereço seu para mostrar trabalhos e receber pedidos pelo WhatsApp.": "Your own address to show your work and get requests on WhatsApp.",
+  "Chame o time e os clientes": "Bring in your team and clients",
+  "Gere convites: cada pessoa entra direto no seu espaço.": "Create invites: everyone lands straight in your workspace.",
+  "Sua carteira está vazia. O primeiro cliente aparece aqui.": "Your portfolio is empty. Your first client will show up here.",
+  "equipe da agência": "agency team",
+  "Convite de": "Invitation from",
+  "Todas as agências": "All agencies",
+  "Agências": "Agencies",
+  "Dono": "Owner",
+  "Equipe": "Team",
+  "Criada em": "Created on",
+  "Esse endereço já é de outra agência. Escolha outro.": "That address already belongs to another agency. Pick another one.",
+  "Esse endereço não está disponível. Escolha outro.": "That address isn't available. Pick another one.",
   // Briefing falado / tour
   "Digitar o briefing": "Type the briefing",
   "🎙 Falar o briefing": "🎙 Speak the briefing",
@@ -1118,7 +1139,7 @@ export const UI_DICT: Record<string, string> = {
   "Cliente / Marca": "Client / Brand",
   "Quero estratégia, campanhas e materiais para a minha marca.": "I want strategy, campaigns, and materials for my brand.",
   "Sou fotógrafo(a) ou designer e quero receber demandas.": "I'm a photographer or designer and want to receive jobs.",
-  "Gerencio clientes e uma rede de profissionais.": "I manage clients and a network of professionals.",
+  "Gerencio clientes e uma rede de profissionais, num espaço só da minha agência.": "I manage clients and a network of professionals, in a workspace that's just my agency's.",
   "Erro ao criar conta": "Error creating account",
   "Que tipo de conta você quer criar?": "What type of account do you want to create?",
   "← trocar tipo de conta": "← change account type",

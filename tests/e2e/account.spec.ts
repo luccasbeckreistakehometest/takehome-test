@@ -97,20 +97,22 @@ test("signup requires e-mail, consent and a real password; duplicate e-mails are
   expect(bot.status()).toBe(400);
 });
 
-test("agency self-signup is closed: the form becomes an access request the admin sees", async ({ page }) => {
-  const api = await page.request.post("/api/auth/register", {
-    data: { role: "agency", name: "Agência Nova", email: "agencia.nova@example.com", password: "senha-forte-123", acceptTerms: true },
+test("agency signup is open (access page redirects to it); access requests still reach the admin inbox", async ({ page }) => {
+  await page.goto("/pedir-acesso");
+  await expect(page).toHaveURL(/\/criar-conta\?type=agency$/);
+  await expect(page.getByTestId("reg-name")).toBeVisible();
+  // o formulário de pedido de acesso (usado quando AGENCY_SELF_SIGNUP=false) continua chegando ao admin
+  const sent = await page.request.post("/api/contact", {
+    data: {
+      kind: "access_request",
+      name: "Rita Agência",
+      email: "rita@agencia-nova.example.com",
+      company: "Agência Nova",
+      message: "Atendemos 12 clientes de varejo e queremos organizar a produção.",
+    },
+    headers: { "x-forwarded-for": "198.51.100.77" },
   });
-  expect(api.status()).toBe(403);
-  expect((await api.json()).code).toBe("agency_access_request");
-
-  await page.goto("/criar-conta?type=agency");
-  await page.getByLabel("Seu nome").fill("Rita Agência");
-  await page.getByLabel("E-mail para resposta").fill("rita@agencia-nova.example.com");
-  await page.getByLabel("Nome da agência").fill("Agência Nova");
-  await page.getByLabel(/Quantos clientes/).fill("Atendemos 12 clientes de varejo e queremos organizar a produção.");
-  await page.getByTestId("contact-submit").click();
-  await expect(page.getByTestId("contact-sent")).toBeVisible();
+  expect(sent.status()).toBe(201);
 
   await login(page, "admin");
   await page.goto("/admin");

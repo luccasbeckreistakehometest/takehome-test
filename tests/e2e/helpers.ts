@@ -44,16 +44,19 @@ export const E2E_META_APP_SECRET = "e2e-meta-app-secret";
 
 let signupSeq = 0;
 /** Cadastro pela API (o navegador guarda o cookie da sessão nova). */
+// `ip` usa um X-Forwarded-For próprio (não gasta o limite de cadastros do IP compartilhado).
 export async function signupViaApi(
   request: APIRequestContext,
-  role: "client" | "professional",
+  role: "client" | "professional" | "agency",
   name: string,
-  extra: Record<string, unknown> = {}
+  extra: Record<string, unknown> = {},
+  ip?: string
 ) {
   signupSeq += 1;
-  const email = `${name.toLowerCase().replace(/[^a-z0-9]+/g, ".")}.${Date.now()}.${signupSeq}@example.com`;
+  const email = `${name.toLowerCase().normalize("NFD").replace(/[^a-z0-9]+/g, ".")}.${Date.now()}.${signupSeq}@example.com`;
   const response = await request.post("/api/auth/register", {
     data: { role, name, email, password: "senha-forte-123", acceptTerms: true, ...extra },
+    headers: ip ? { "x-forwarded-for": ip } : undefined,
   });
   expect(response.status(), await response.text()).toBe(201);
   return { ...(await response.json()), email, password: "senha-forte-123" } as {

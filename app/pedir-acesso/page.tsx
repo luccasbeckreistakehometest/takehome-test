@@ -1,5 +1,7 @@
 import type { Metadata } from "next";
 import Link from "next/link";
+import { redirect } from "next/navigation";
+import { agencySelfSignupEnabled } from "@/lib/legal";
 import AccessRequestForm from "@/components/AccessRequestForm";
 import { Card } from "@/components/ui";
 
@@ -9,7 +11,11 @@ export const metadata: Metadata = {
   alternates: { canonical: "/pedir-acesso" },
 };
 
+export const dynamic = "force-dynamic";
+
+// Com o cadastro de agências aberto, o pedido de acesso vira cadastro direto.
 export default function Page() {
+  if (agencySelfSignupEnabled()) redirect("/criar-conta?type=agency");
   return (
     <div className="mx-auto max-w-2xl space-y-6 py-6">
       <div>
