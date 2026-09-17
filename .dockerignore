@@ -29,5 +29,6 @@ playwright.config.ts
 vitest.config.ts
 scripts/pitch-screenshots.mjs
 scripts/build-pitch.mjs
+scripts/e2e-server.sh
 .dockerignore
 .claude
