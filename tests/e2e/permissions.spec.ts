@@ -100,7 +100,8 @@ test("anonymous access: 401 on APIs, public pages open, unknown pages 404, token
   expect(invite.headers()["x-robots-tag"]).toContain("noindex");
   const proposal = await request.get("/proposta/token-qualquer");
   expect(proposal.headers()["x-robots-tag"]).toContain("noindex");
-  expect((await request.get("/api/auth/users")).status()).toBe(200); // dev: lista de logins
+  // lista de logins do /login: só em desenvolvimento (o e2e roda o build de produção)
+  expect([401, 404]).toContain((await request.get("/api/auth/users")).status());
   // cookie de sessão com assinatura forjada não entra
   const forged = await request.get("/api/clients", { headers: { cookie: "agencyhub_session=eyJ1c2VySWQiOiJ4Iiwicm9sZSI6ImFkbWluIn0.abc" } });
   expect(forged.status()).toBe(401);

@@ -113,13 +113,16 @@ export async function verifySession(
   }
 }
 
-// Opções do cookie de sessão. Secure em produção (o Caddy serve só HTTPS).
+// Opções do cookie de sessão. Secure em produção (o Caddy serve só HTTPS); a
+// única exceção é um build de produção servido em http:// local (APP_URL
+// explicitamente http, como no e2e), onde o navegador não mandaria o cookie.
 export function sessionCookieOptions() {
+  const plainHttp = (process.env.APP_URL ?? "").startsWith("http://");
   return {
     httpOnly: true,
     sameSite: "lax" as const,
     path: "/",
-    secure: process.env.NODE_ENV === "production",
+    secure: process.env.NODE_ENV === "production" && !plainHttp,
     maxAge: SESSION_MAX_AGE_SECONDS,
   };
 }

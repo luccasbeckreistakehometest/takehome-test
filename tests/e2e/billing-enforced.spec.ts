@@ -21,8 +21,9 @@ test("enforcement is on and paid plans or free coins cannot be taken without pay
   expect(paid.status()).toBe(402);
   const crossType = await page.request.post("/api/billing/subscribe", { data: { planId: "agency_scale" } });
   expect(crossType.status()).toBe(400);
+  // a rota de coins grátis não existe mais (o middleware nem deixa a marca chegar lá)
   const freeCoins = await page.request.post("/api/billing/coins", { data: { packId: "pack_2000" } });
-  expect([404, 405]).toContain(freeCoins.status());
+  expect([403, 404, 405]).toContain(freeCoins.status());
   // sem MP_ACCESS_TOKEN no e2e: checkout indisponível, nada é creditado
   const checkout = await page.request.post("/api/billing/checkout", { data: { kind: "coins", packId: "pack_100" } });
   expect(checkout.status()).toBe(503);
@@ -80,12 +81,16 @@ test("the agency uses its plan quota for clients (report, campaign, match) under
       data: { clientId: client.id, title: "Ensaio da coleção", brief: "fotos de produto", skillsNeeded: ["Fotografia de produto"], location: "", budget: "", deadline: "" },
     })
   ).json();
+  // proposta comercial para um prospect (4 coins)
+  const prospect = await (await page.request.post("/api/prospects/manual", { data: { name: "Prospect Pago", segment: "padaria" } })).json();
+  const proposal = await page.request.post(`/api/prospects/${prospect.id}/proposal`, { data: { services: "gestão de Instagram" } });
+  expect(proposal.status()).toBe(201);
   const match = await page.request.post(`/api/projects/${project.id}/match`);
   // sem profissionais cadastrados a rota responde 400 antes de cobrar; com eles, 200
   expect([200, 400]).toContain(match.status());
   const after = (await (await page.request.get("/api/billing")).json()).wallet.coins;
   expect(after).toBeLessThan(before);
-  expect(before - after).toBeGreaterThanOrEqual(3 + 8);
+  expect(before - after).toBeGreaterThanOrEqual(3 + 8 + 4);
 });
 
 test("a freelancer keeps using profile, portfolio and applications under enforcement", async ({ page, browser }) => {

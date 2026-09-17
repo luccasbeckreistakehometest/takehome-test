@@ -1,6 +1,7 @@
 import { defineConfig, devices } from "@playwright/test";
 
-// E2E contra o dev server real com IA mockada (AI_MOCK=1) e banco descartável.
+// E2E contra o build de produção (next start) com IA mockada (AI_MOCK=1) e
+// banco descartável — o next dev consumia memória demais nesta máquina.
 // O banco é apagado NO PRÓPRIO comando do servidor, antes do boot: o Playwright
 // sobe o webServer antes do globalSetup, então um wipe no globalSetup apagava
 // o arquivo que o servidor já tinha aberto (os dados iam para um inode órfão
@@ -15,14 +16,11 @@ import { defineConfig, devices } from "@playwright/test";
 //  - mobile: largura de celular, nenhuma tela principal com rolagem lateral.
 // Limites de login/cadastro/IA ficam altos aqui (todos os testes saem do mesmo
 // IP); as specs de limite usam X-Forwarded-For próprio ou contas próprias.
-export const E2E_META_APP_SECRET = "e2e-meta-app-secret";
-
 const AI_SPECS = [
   "report.spec.ts",
   "campaign.spec.ts",
   "brand-voice.spec.ts",
   "learnings.spec.ts",
-  "proposal.spec.ts",
   "voice.spec.ts",
 ];
 
@@ -60,25 +58,10 @@ export default defineConfig({
     },
   ],
   webServer: {
-    command: [
-      'rm -rf "$PWD/data/e2e" "$PWD/.next/dev" &&',
-      "NEXT_DEV_FS_CACHE=0",
-      "AI_MOCK=1",
-      'DATA_DIR="$PWD/data/e2e"',
-      "SEED_PASSWORD=e2e-pass",
-      "BILLING_ENFORCED=false",
-      `META_APP_SECRET=${E2E_META_APP_SECRET}`,
-      "META_VERIFY_TOKEN=e2e-verify-token-0123",
-      "LOGIN_RATE_LIMIT_PER_IP=10000",
-      "REGISTER_RATE_LIMIT_PER_HOUR=30",
-      "AI_RATE_LIMIT_PER_10MIN=10000",
-      "AI_RATE_LIMIT_PER_IP_10MIN=10000",
-      "AI_DAILY_SPEND_LIMIT_USD=1000",
-      "APP_URL=http://localhost:3200",
-      "npx next dev -p 3200",
-    ].join(" "),
-    url: "http://localhost:3200/login",
+    // build de produção + next start (ver scripts/e2e-server.sh)
+    command: "sh scripts/e2e-server.sh",
+    url: "http://localhost:3200/api/health",
     reuseExistingServer: false,
-    timeout: 180_000,
+    timeout: 900_000,
   },
 });

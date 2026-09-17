@@ -13,7 +13,8 @@ const securityHeaders = [
   { key: "X-Frame-Options", value: "SAMEORIGIN" },
   // Microfone só para o próprio site (briefing falado); câmera e localização, nunca.
   { key: "Permissions-Policy", value: "microphone=(self), camera=(), geolocation=()" },
-  ...(process.env.NODE_ENV === "production"
+  // (o e2e roda o build de produção em http://localhost: APP_URL http → sem HSTS)
+  ...(process.env.NODE_ENV === "production" && !(process.env.APP_URL ?? "").startsWith("http://")
     ? [{ key: "Strict-Transport-Security", value: "max-age=31536000; includeSubDomains" }]
     : []),
 ];
@@ -36,9 +37,6 @@ export default function config(phase: string): NextConfig {
     // próprio app, servidos por rotas com checagem de acesso) e já teve falhas
     // críticas — desligado para não expor o endpoint /_next/image.
     images: { unoptimized: true },
-    // O e2e desliga o cache em disco do Turbopack (a máquina de testes tem
-    // pouco espaço e cada run começa do zero de qualquer forma).
-    experimental: { turbopackFileSystemCacheForDev: process.env.NEXT_DEV_FS_CACHE !== "0" },
     async headers() {
       return [
         { source: "/:path*", headers: securityHeaders },
