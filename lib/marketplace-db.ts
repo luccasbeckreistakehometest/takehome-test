@@ -706,6 +706,8 @@ if (meetingColumns.length > 0 && !meetingColumns.includes("clientId")) {
   `);
 }
 
+tenantColumn("meetings");
+
 export type Meeting = {
   id: string;
   agencyId: string;
