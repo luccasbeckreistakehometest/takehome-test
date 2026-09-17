@@ -6,7 +6,8 @@ export function Card({
   children,
   className = "",
   hover = false,
-}: {
+  ...rest
+}: React.HTMLAttributes<HTMLDivElement> & {
   children: React.ReactNode;
   className?: string;
   hover?: boolean;
@@ -16,6 +17,7 @@ export function Card({
       className={`rounded-xl border border-edge bg-surface p-5 shadow-sm ${
         hover ? "card-hover" : ""
       } ${className}`}
+      {...rest}
     >
       {children}
     </div>

@@ -10,6 +10,7 @@ const PUBLIC_PAGES = [
   "/criar-conta",
   "/convite",
   "/print",
+  "/proposta", // proposta comercial pública por token
   "/para-", // landings de funil públicas (/para-agencias, /para-marcas, ...)
 ];
 
@@ -39,6 +40,9 @@ function isPublicApi(pathname: string, method: string): boolean {
   if (method === "GET" && /^\/api\/invites\/[^/]+$/.test(pathname)) return true;
   // Relatório mensal por token (link imprimível/compartilhável) — só leitura.
   if (method === "GET" && /^\/api\/reports\/[^/]+$/.test(pathname)) return true;
+  // Proposta pública: leitura pelo token e aceite (o token é o segredo).
+  if (method === "GET" && /^\/api\/proposals\/[^/]+$/.test(pathname)) return true;
+  if (method === "POST" && /^\/api\/proposals\/[^/]+\/accept$/.test(pathname)) return true;
   return false;
 }
 

@@ -5,6 +5,7 @@ import Link from "next/link";
 import { api } from "@/lib/api";
 import { PROSPECT_STATUS_LABELS, type Prospect } from "@/lib/marketplace-types";
 import { Button, Card, ErrorBox, Input, Label, Spinner, Tag } from "@/components/ui";
+import ProposalPanel from "@/components/ProposalPanel";
 
 export default function ProspectingPage() {
   const [prospects, setProspects] = useState<Prospect[] | null>(null);
@@ -18,6 +19,26 @@ export default function ProspectingPage() {
   const [searching, setSearching] = useState(false);
   const [summary, setSummary] = useState("");
   const [error, setError] = useState("");
+  const [proposalFor, setProposalFor] = useState<string | null>(null);
+  const [manual, setManual] = useState({ name: "", segment: "", location: "", website: "", instagram: "", notes: "" });
+  const [manualOpen, setManualOpen] = useState(false);
+  const [manualSaving, setManualSaving] = useState(false);
+
+  async function addManual() {
+    if (!manual.name.trim()) return;
+    setManualSaving(true);
+    setError("");
+    try {
+      await api("/api/prospects/manual", { method: "POST", body: JSON.stringify(manual) });
+      setManual({ name: "", segment: "", location: "", website: "", instagram: "", notes: "" });
+      setManualOpen(false);
+      load();
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "Erro ao adicionar");
+    } finally {
+      setManualSaving(false);
+    }
+  }
 
   const load = () =>
     api<{ prospects: Prospect[]; lastSearch: typeof lastSearch }>("/api/prospects").then(
@@ -100,14 +121,36 @@ export default function ProspectingPage() {
             />
           </div>
         </div>
-        <div className="flex items-center gap-3">
+        <div className="flex flex-wrap items-center gap-3">
           <Button onClick={discover} disabled={searching || !form.niche || !form.region}>
             {searching ? "Pesquisando..." : "🔎 Descobrir potenciais clientes"}
           </Button>
+          <button
+            onClick={() => setManualOpen((v) => !v)}
+            className="text-sm text-muted underline-offset-2 hover:text-foreground hover:underline"
+            data-testid="manual-prospect-toggle"
+          >
+            + Adicionar um prospect à mão
+          </button>
           {searching && (
             <Spinner label="Varrendo a web em busca de empresas reais do nicho (2-4 min)..." />
           )}
         </div>
+        {manualOpen && (
+          <div className="grid gap-2 rounded-lg border border-edge bg-surface-2 p-3 sm:grid-cols-3" data-testid="manual-prospect-form">
+            <Input value={manual.name} onChange={(e) => setManual((m) => ({ ...m, name: e.target.value }))} placeholder="Nome do negócio *" data-testid="manual-name" />
+            <Input value={manual.segment} onChange={(e) => setManual((m) => ({ ...m, segment: e.target.value }))} placeholder="Segmento" data-testid="manual-segment" />
+            <Input value={manual.location} onChange={(e) => setManual((m) => ({ ...m, location: e.target.value }))} placeholder="Cidade" />
+            <Input value={manual.website} onChange={(e) => setManual((m) => ({ ...m, website: e.target.value }))} placeholder="Site" />
+            <Input value={manual.instagram} onChange={(e) => setManual((m) => ({ ...m, instagram: e.target.value }))} placeholder="@instagram" />
+            <Input value={manual.notes} onChange={(e) => setManual((m) => ({ ...m, notes: e.target.value }))} placeholder="Por que é um bom fit" />
+            <div className="sm:col-span-3">
+              <Button onClick={addManual} disabled={manualSaving || !manual.name.trim()} data-testid="manual-save">
+                {manualSaving ? "Salvando..." : "Adicionar prospect"}
+              </Button>
+            </div>
+          </div>
+        )}
         {error && <ErrorBox message={error} />}
         {summary && <p className="text-sm text-muted">{summary}</p>}
         {!summary && lastSearch && (
@@ -178,6 +221,13 @@ export default function ProspectingPage() {
                     </Link>
                   ) : (
                     <>
+                      <button
+                        className="font-medium text-accent hover:underline"
+                        onClick={() => setProposalFor((v) => (v === prospect.id ? null : prospect.id))}
+                        data-testid="proposal-toggle"
+                      >
+                        ✦ Proposta em 5 min
+                      </button>
                       {prospect.status === "new" && (
                         <button
                           className="text-muted hover:text-foreground"
@@ -207,6 +257,7 @@ export default function ProspectingPage() {
                   )}
                 </span>
               </div>
+              {proposalFor === prospect.id && <ProposalPanel prospectId={prospect.id} onAccepted={load} />}
             </Card>
           ))}
         </div>
