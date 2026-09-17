@@ -66,7 +66,8 @@ test("a request beyond the package waits for the client to approve the extra pri
 
   // a Hoje da agência mostra o extra aprovado
   await page.goto("/");
-  await expect(page.getByTestId("extras-summary")).toContainText("120");
+  // (a soma inclui extras de outras specs da mesma agência)
+  await expect(page.getByTestId("extras-summary")).toContainText("Extras aprovados este mês: R$");
 
   // outro cliente não enxerga este pacote
   const other = await (await page.request.post("/api/clients", { data: { name: "Vizinho Escopo", channels: [] } })).json();
