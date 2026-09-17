@@ -248,7 +248,11 @@ export function createSale(input: Omit<SaleEntry, "id" | "createdAt">): SaleEntr
   return sale;
 }
 
-export function deleteSale(id: string): void {
+export function deleteSale(id: string, clientId?: string): void {
+  if (clientId) {
+    db.prepare("DELETE FROM sales_entries WHERE id = ? AND clientId = ?").run(id, clientId);
+    return;
+  }
   db.prepare("DELETE FROM sales_entries WHERE id = ?").run(id);
 }
 
