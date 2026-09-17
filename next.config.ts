@@ -1,6 +1,5 @@
 import type { NextConfig } from "next";
 import { PHASE_PRODUCTION_BUILD } from "next/constants";
-import { FILE_RESPONSE_HEADERS } from "./lib/uploads";
 
 // Cabeçalhos de segurança aplicados a todas as respostas. Em produção o Caddy
 // do repo `stack` define os mesmos (com `defer`, o valor dele prevalece), então
@@ -36,7 +35,10 @@ const FILE_ROUTES = [
   "/api/a/:slug/work/:id",
   "/api/settings/logo",
 ];
-const fileCsp = { key: "Content-Security-Policy", value: FILE_RESPONSE_HEADERS["Content-Security-Policy"] };
+// Igual a FILE_RESPONSE_HEADERS em lib/uploads.ts (um teste confere). Sem
+// import local: a imagem de produção copia só este arquivo, sem lib/.
+const FILE_CSP = "default-src 'none'; img-src 'self' data:; media-src 'self'; style-src 'unsafe-inline'; sandbox";
+const fileCsp = { key: "Content-Security-Policy", value: FILE_CSP };
 
 export default function config(phase: string): NextConfig {
   // O middleware inlina AUTH_SECRET no build: um build de produção sem o
