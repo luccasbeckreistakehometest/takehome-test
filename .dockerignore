@@ -1,3 +1,8 @@
+# Nada de segredo, dado local ou artefato de teste na imagem.
+# O .env NÃO entra: o compose injeta as variáveis em runtime (env_file) e o
+# AUTH_SECRET chega ao build como build arg (o middleware o inlina).
+# Hoje nenhuma NEXT_PUBLIC_* é necessária no build; se um dia for, passe como
+# build arg no Dockerfile/compose em vez de copiar o .env.
 node_modules
 .next
 out
@@ -12,7 +17,16 @@ pitch
 .DS_Store
 npm-debug.log*
 *.tsbuildinfo
+next-env.d.ts
 README.md
 docs
+tests
+playwright-report
+test-results
+coverage
+playwright.config.ts
+vitest.config.ts
 scripts/pitch-screenshots.mjs
 scripts/build-pitch.mjs
+.dockerignore
+.claude
