@@ -12,6 +12,9 @@ type Billing = {
   renewsAt: string;
   coins: number;
   usageThisMonth: number;
+  spendTodayUsd: number;
+  capUsd: number | null;
+  capOverrideUsd: number | null;
 } | null;
 
 type AdminUser = {
@@ -142,9 +145,11 @@ function UserPanel({ user, onChanged, onClose }: { user: AdminUser; onChanged: (
   const [coins, setCoins] = useState("");
   const [note, setNote] = useState("");
   const [email, setEmail] = useState(user.email ?? "");
+  const [cap, setCap] = useState(user.billing?.capOverrideUsd != null ? String(user.billing.capOverrideUsd) : "");
+  const [confirmDelete, setConfirmDelete] = useState("");
   const plans = PLAN_OPTIONS[user.billing?.accountType ?? ""] ?? [];
 
-  async function act(body: Record<string, unknown>, success: string) {
+  async function act(body: Record<string, unknown>, success: string): Promise<boolean> {
     setMsg("");
     setError("");
     try {
@@ -155,8 +160,10 @@ function UserPanel({ user, onChanged, onClose }: { user: AdminUser; onChanged: (
       if (result.password) setOtp(result.password);
       setMsg(success);
       onChanged();
+      return true;
     } catch (e) {
       setError(e instanceof Error ? e.message : "Erro");
+      return false;
     }
   }
 
@@ -252,10 +259,12 @@ function UserPanel({ user, onChanged, onClose }: { user: AdminUser; onChanged: (
           </form>
           <form
             className="flex flex-col gap-2 sm:flex-row sm:items-end"
-            onSubmit={(e) => {
+            onSubmit={async (e) => {
               e.preventDefault();
-              act({ action: "grant_coins", coins: Math.trunc(Number(coins)), note }, "Coins ajustados.");
-              setCoins("");
+              if (await act({ action: "grant_coins", coins: Math.trunc(Number(coins)), note }, "Coins ajustados.")) {
+                setCoins("");
+                setNote("");
+              }
             }}
           >
             <label className="w-32 text-xs text-muted" htmlFor="admin-coins">
@@ -264,7 +273,7 @@ function UserPanel({ user, onChanged, onClose }: { user: AdminUser; onChanged: (
             </label>
             <label className="flex-1 text-xs text-muted" htmlFor="admin-coins-note">
               Motivo
-              <Input id="admin-coins-note" value={note} onChange={(e) => setNote(e.target.value)} placeholder="cortesia, ajuste..." />
+              <Input id="admin-coins-note" value={note} onChange={(e) => setNote(e.target.value)} placeholder="cortesia, ajuste..." required minLength={3} />
             </label>
             <Button type="submit" variant="ghost" data-testid="admin-grant-coins">
               Lançar coins
@@ -273,8 +282,53 @@ function UserPanel({ user, onChanged, onClose }: { user: AdminUser; onChanged: (
           <p className="text-xs text-muted">
             Plano e coins de uma conta de agência são da agência dela: todo o time usa a mesma carteira.
           </p>
+          <form
+            className="flex flex-col gap-2 sm:flex-row sm:items-end"
+            onSubmit={(e) => {
+              e.preventDefault();
+              act({ action: "set_cap", usd: cap.trim() === "" ? null : Number(cap) }, "Teto de IA salvo.");
+            }}
+          >
+            <label className="flex-1 text-xs text-muted" htmlFor="admin-cap">
+              {`Teto diário de IA (US$) · hoje US$ ${user.billing.spendTodayUsd.toFixed(3)} de ${
+                user.billing.capUsd === null ? "sem teto próprio" : `US$ ${user.billing.capUsd.toFixed(2)}`
+              }`}
+              <Input id="admin-cap" type="number" min={0} max={1000} step="0.01" value={cap} onChange={(e) => setCap(e.target.value)} placeholder="vazio = padrão do plano" data-testid="admin-cap" />
+            </label>
+            <Button type="submit" variant="ghost" data-testid="admin-set-cap">
+              Salvar teto
+            </Button>
+          </form>
         </>
       )}
+
+      <div className="space-y-2 border-t border-edge pt-4" data-testid="admin-lgpd">
+        <p className="text-sm font-medium">Dados pessoais (LGPD)</p>
+        <div className="flex flex-wrap items-end gap-2">
+          <a
+            href={`/api/admin/users/${user.id}/export`}
+            className="rounded-md border border-edge bg-surface-2 px-3.5 py-2 text-sm hover:border-accent"
+            data-testid="admin-export"
+          >
+            Exportar dados da conta
+          </a>
+          <label className="text-xs text-muted" htmlFor="admin-delete-confirm">
+            Para excluir, digite <span className="font-mono">{user.username}</span>
+            <Input id="admin-delete-confirm" value={confirmDelete} onChange={(e) => setConfirmDelete(e.target.value)} data-testid="admin-delete-confirm" />
+          </label>
+          <Button
+            variant="danger"
+            disabled={confirmDelete !== user.username}
+            onClick={async () => {
+              if (await act({ action: "delete_account", confirm: confirmDelete }, "Conta excluída. Lançamentos financeiros ficam sem vínculo pessoal.")) onClose();
+            }}
+            data-testid="admin-delete-account"
+          >
+            Excluir conta
+          </Button>
+        </div>
+        <p className="text-xs text-muted">A exclusão apaga a conta e o que é só dela; pagamentos e custos ficam para a contabilidade, sem vínculo com a pessoa.</p>
+      </div>
     </Card>
   );
 }

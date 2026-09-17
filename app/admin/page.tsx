@@ -55,6 +55,9 @@ type Overview = {
     byDay: { day: string; costUsd: number; calls: number }[];
     byAccount: { accountType: string | null; accountId: string | null; name: string; calls: number; costUsd: number; lastAt: string }[];
     errors: { id: string; createdAt: string; action: string; kind: string; detail: string }[];
+    byActionModel: { action: string; provider: string; model: string; calls: number; costUsd: number; webSearches: number }[];
+    usdBrlRate: number;
+    margins: { accountType: string; accountId: string; name: string; revenueBrl: number; costUsd: number; costBrl: number; marginBrl: number; marginPct: number | null; calls: number }[];
   };
   inbox: { new: number; in_progress: number; done: number };
   leads: { total: number; last30: number; recent: { id: string; slug: string; name: string; need: string; budgetBand: string; createdAt: string }[] };
@@ -68,7 +71,7 @@ const TABS: { key: AdminTab; label: string }[] = [
   { key: "users", label: "Usuários" },
   { key: "payments", label: "Pagamentos" },
   { key: "inbox", label: "Caixa de entrada" },
-  { key: "ai", label: "Uso de IA" },
+  { key: "ai", label: "Custos de IA" },
 ];
 const usd = (n: number) => `US$ ${n.toFixed(2)}`;
 
@@ -436,6 +439,84 @@ export default function AdminPage() {
 function AiUsage({ ai }: { ai: Overview["ai"] }) {
   return (
     <div className="space-y-4">
+      <Card data-testid="admin-ai-margins">
+        <SectionTitle>Margem por conta (30 dias)</SectionTitle>
+        <p className="mb-2 text-xs text-muted">
+          Receita confirmada (R$) menos o custo real de IA convertido a R$ {ai.usdBrlRate.toFixed(2)} por dólar (USD_BRL_RATE). Quem dá prejuízo aparece primeiro.
+        </p>
+        <div className="overflow-x-auto">
+          <table className="w-full min-w-[560px] text-left text-sm">
+            <thead className="text-xs uppercase text-muted">
+              <tr>
+                <th className="py-2 pr-3">Conta</th>
+                <th className="py-2 pr-3 text-right">Receita</th>
+                <th className="py-2 pr-3 text-right">Custo IA</th>
+                <th className="py-2 pr-3 text-right">Margem</th>
+                <th className="py-2 text-right">Chamadas</th>
+              </tr>
+            </thead>
+            <tbody className="divide-y divide-edge">
+              {ai.margins.map((m) => (
+                <tr key={`${m.accountType}-${m.accountId}`}>
+                  <td className="py-1.5 pr-3">
+                    {m.name} <span className="text-xs text-muted">{m.accountType}</span>
+                  </td>
+                  <td className="py-1.5 pr-3 text-right">R$ {m.revenueBrl.toFixed(2)}</td>
+                  <td className="py-1.5 pr-3 text-right">
+                    {usd(m.costUsd)} <span className="text-xs text-muted">(R$ {m.costBrl.toFixed(2)})</span>
+                  </td>
+                  <td className={`py-1.5 pr-3 text-right font-medium ${m.marginBrl < 0 ? "text-red-500" : ""}`}>
+                    R$ {m.marginBrl.toFixed(2)}
+                    {m.marginPct !== null && <span className="ml-1 text-xs text-muted">{m.marginPct}%</span>}
+                  </td>
+                  <td className="py-1.5 text-right">{m.calls}</td>
+                </tr>
+              ))}
+              {ai.margins.length === 0 && (
+                <tr>
+                  <td colSpan={5} className="py-2 text-muted">
+                    Sem receita nem uso de IA nos últimos 30 dias.
+                  </td>
+                </tr>
+              )}
+            </tbody>
+          </table>
+        </div>
+      </Card>
+      <Card data-testid="admin-ai-actions">
+        <SectionTitle>Custo por ação e modelo (30 dias)</SectionTitle>
+        <div className="overflow-x-auto">
+          <table className="w-full min-w-[520px] text-left text-sm">
+            <thead className="text-xs uppercase text-muted">
+              <tr>
+                <th className="py-2 pr-3">Ação</th>
+                <th className="py-2 pr-3">Modelo</th>
+                <th className="py-2 pr-3 text-right">Chamadas</th>
+                <th className="py-2 pr-3 text-right">Buscas</th>
+                <th className="py-2 text-right">Custo</th>
+              </tr>
+            </thead>
+            <tbody className="divide-y divide-edge">
+              {ai.byActionModel.map((r) => (
+                <tr key={`${r.action}-${r.provider}-${r.model}`}>
+                  <td className="py-1.5 pr-3 font-mono text-xs">{r.action}</td>
+                  <td className="py-1.5 pr-3 text-xs text-muted">{r.provider === "anthropic" ? r.model : `${r.provider} ${r.model}`}</td>
+                  <td className="py-1.5 pr-3 text-right">{r.calls}</td>
+                  <td className="py-1.5 pr-3 text-right">{r.webSearches ?? 0}</td>
+                  <td className="py-1.5 text-right">{usd(r.costUsd)}</td>
+                </tr>
+              ))}
+              {ai.byActionModel.length === 0 && (
+                <tr>
+                  <td colSpan={5} className="py-2 text-muted">
+                    Nenhum uso de IA registrado.
+                  </td>
+                </tr>
+              )}
+            </tbody>
+          </table>
+        </div>
+      </Card>
       <Card>
         <SectionTitle>Gasto por dia (US$, estimado pelo uso de tokens)</SectionTitle>
         <div className="overflow-x-auto">

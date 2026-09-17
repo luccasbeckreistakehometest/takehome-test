@@ -12,7 +12,9 @@ import {
   aiFreePoolLimitUsd,
   aiFreePoolSpendTodayUsd,
   aiSpendTodayUsd,
+  costAndRevenueByAccount,
   recentAiErrors,
+  usageByActionModel,
   spendByDay,
   usageByAccount,
 } from "@/lib/ai-spend";
@@ -22,6 +24,7 @@ import { agencyPageIndexable, getAgencyPageConfig, listAgencies } from "@/lib/ag
 import { agencySelfSignupEnabled, legalIdentityComplete } from "@/lib/legal";
 import { getPlan } from "@/lib/plans";
 import { scopeWhere } from "@/lib/tenancy-rules";
+import { computeMargins, usdBrlRate } from "@/lib/ai-margin";
 import "@/lib/agency-page-db";
 import "@/lib/proposals-db";
 import "@/lib/pulse-db";
@@ -131,6 +134,14 @@ export async function GET(request: Request) {
         agencyName: row.agencyId ? (agencyName.get(row.agencyId) ?? "") : "",
       })),
       errors: recentAiErrors(20, agencyFilter),
+      byActionModel: usageByActionModel(30, agencyFilter),
+      usdBrlRate: usdBrlRate(),
+      margins: (() => {
+        const { costs, revenue } = costAndRevenueByAccount(30, agencyFilter);
+        return computeMargins(revenue, costs, usdBrlRate())
+          .slice(0, 50)
+          .map((row) => ({ ...row, name: accountName(row.accountType, row.accountId) }));
+      })(),
       keyConfigured: Boolean(process.env.ANTHROPIC_API_KEY),
     },
     inbox: inboxCounts(),

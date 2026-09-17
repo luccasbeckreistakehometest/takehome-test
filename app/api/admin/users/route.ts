@@ -3,6 +3,8 @@ import { listUsers } from "@/lib/auth";
 import { billingSummary } from "@/lib/billing-db";
 import { guard, isDenied } from "@/lib/guard";
 import { listAgencies } from "@/lib/agencies";
+import { accountCapFor, accountCapOverride, accountSpendTodayUsd } from "@/lib/ai-spend";
+import { accountSpendTier } from "@/lib/billing-db";
 import type { AccountType } from "@/lib/plans";
 
 // Usuários com agência, plano e saldo (admin). ?agency=<id> filtra.
@@ -29,6 +31,9 @@ export async function GET(request: Request) {
         renewsAt: summary.subscription.renewsAt,
         coins: summary.wallet.coins,
         usageThisMonth: summary.usageThisMonth,
+        spendTodayUsd: accountSpendTodayUsd(accountType, accountId),
+        capUsd: accountCapFor(accountType, accountId, accountSpendTier(accountType, accountId)),
+        capOverrideUsd: accountCapOverride(accountType, accountId),
       },
     };
   });
