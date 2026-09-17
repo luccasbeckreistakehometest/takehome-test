@@ -4,10 +4,13 @@ import { getAgencyStats, getClientStats } from "@/lib/marketplace-db";
 import { agencySalesTotal } from "@/lib/integrations-db";
 import { agencyTier, clientTier } from "@/lib/ranking";
 import { PROJECT_STATUSES, type ProjectStatus } from "@/lib/marketplace-types";
+import { agencyOnly, isDenied } from "@/lib/guard";
 
 // Insights: painel de andamento geral. Agrega demandas por status (funil),
 // carteira de clientes, campanhas e sinais de produção — tudo em uma request.
 export async function GET() {
+  const auth = await agencyOnly();
+  if (isDenied(auth)) return auth;
   const count = (sql: string, ...p: unknown[]) =>
     (db.prepare(sql).get(...p) as { c: number }).c;
 

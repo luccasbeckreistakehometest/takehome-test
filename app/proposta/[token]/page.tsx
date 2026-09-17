@@ -41,6 +41,8 @@ export default function PublicProposalPage({ params }: { params: Promise<{ token
     api<Payload>(`/api/proposals/${token}`)
       .then((p) => {
         setData(p);
+        // registra a primeira abertura (o GET não grava nada)
+        if (p.state === "open") fetch(`/api/proposals/${token}`, { method: "POST" }).catch(() => {});
         const recommended = p.proposal.content.packages.find((x) => x.recommended) ?? p.proposal.content.packages[0];
         if (recommended) setSelected(recommended.name);
       })

@@ -20,7 +20,7 @@ const schema = z.object({
 // mensagens reais chegam pelo webhook da Meta e seguem o mesmo fluxo.
 export async function POST(request: Request, { params }: Context) {
   const { id } = await params;
-  const auth = await guard(["agency", "admin", "client"], { clientId: id });
+  const auth = await guard(["agency", "admin"]);
   if (isDenied(auth)) return auth;
   if (!getClient(id)) return NextResponse.json({ error: "Cliente não encontrado" }, { status: 404 });
   const parsed = schema.safeParse(await request.json().catch(() => null));

@@ -193,6 +193,7 @@ export const ACTION_COST: Record<string, number> = {
   meeting_recs: 2,
   voice_briefing: 1, // uma rodada do briefing falado
   tts: 0, // voz: limitada por taxa, não por coins
+  attendant_reply: 1, // rascunho do atendente de WhatsApp (pago pela agência)
 };
 export function actionCost(action: string): number {
   return ACTION_COST[action] ?? 2;

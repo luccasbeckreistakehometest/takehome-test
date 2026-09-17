@@ -3,7 +3,7 @@ import { z } from "zod";
 import { getClient } from "@/lib/db";
 import { guard, isDenied } from "@/lib/guard";
 import { GenerationError } from "@/lib/claude";
-import { chargeUsage } from "@/lib/billing-db";
+import { aiErrorResponse, beginAi } from "@/lib/metering";
 import { createJob, finishJob, logActivity } from "@/lib/marketplace-db";
 import { todayKey } from "@/lib/calendar-utils";
 import { sanitizeCampaignInput } from "@/lib/campaign-rules";
@@ -44,11 +44,11 @@ export async function POST(request: Request, { params }: Context) {
   const parsed = schema.safeParse(await request.json().catch(() => null));
   if (!parsed.success) return NextResponse.json({ error: parsed.error.issues[0]?.message ?? "Dados inválidos" }, { status: 400 });
   const input = sanitizeCampaignInput(parsed.data, client.channels, todayKey());
-  const charge = chargeUsage({ accountType: "client", accountId: id, action: "campaign_30d" });
-  if (!charge.ok) return NextResponse.json({ error: charge.reason }, { status: 402 });
+  const ticket = await beginAi(request, auth, "campaign_30d");
+  if (isDenied(ticket)) return ticket;
   const job = createJob({ kind: "campaign_30d", label: `Campanha de ${input.days} dias — ${client.name}`, clientId: id });
   try {
-    const plan = await generateCampaignPlan(client, input);
+    const plan = await ticket.run(() => generateCampaignPlan(client, input));
     const { campaign, posts } = createCampaignFromPlan({ clientId: id, input, plan, demo: isAiMock() });
     finishJob(job.id, "done");
     logActivity({
@@ -59,8 +59,8 @@ export async function POST(request: Request, { params }: Context) {
     });
     return NextResponse.json({ campaign, posts }, { status: 201 });
   } catch (error) {
-    const message = error instanceof GenerationError ? error.message : "Erro ao gerar a campanha.";
-    finishJob(job.id, "error", message);
-    return NextResponse.json({ error: message }, { status: error instanceof GenerationError ? error.status : 500 });
+    ticket.refund();
+    finishJob(job.id, "error", error instanceof GenerationError ? error.message : "erro");
+    return aiErrorResponse(error);
   }
 }

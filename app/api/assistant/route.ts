@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server";
 import Anthropic from "@anthropic-ai/sdk";
 import { z } from "zod";
-import { pickModel } from "@/lib/claude";
+import { aiMockEnabled, assertAiAvailable, getAnthropicClient, pickModel, translateError } from "@/lib/claude";
 import { getClient, listClients } from "@/lib/db";
 import {
   createMeeting,
@@ -11,7 +11,9 @@ import {
   listProjects,
   logActivity,
 } from "@/lib/marketplace-db";
-import { getSettings } from "@/lib/settings";
+import { recordAiUsage } from "@/lib/ai-spend";
+import { meterAi } from "@/lib/metering";
+import { agencyOnly, isDenied } from "@/lib/guard";
 
 export const maxDuration = 300;
 
@@ -130,32 +132,44 @@ function runTool(name: string, input: Record<string, string>): string {
 }
 
 export async function POST(request: Request) {
+  const auth = await agencyOnly();
+  if (isDenied(auth)) return auth;
   const parsed = z
     .object({
-      messages: z.array(
-        z.object({ role: z.enum(["user", "assistant"]), content: z.string() })
-      ),
+      messages: z
+        .array(z.object({ role: z.enum(["user", "assistant"]), content: z.string().min(1).max(4000) }))
+        .min(1)
+        .max(30),
     })
     .safeParse(await request.json().catch(() => null));
   if (!parsed.success) {
     return NextResponse.json({ error: "Requisição inválida" }, { status: 400 });
   }
 
-  const key = getSettings().anthropicApiKey;
-  const client = key ? new Anthropic({ apiKey: key }) : new Anthropic();
-  let messages: Anthropic.MessageParam[] = parsed.data.messages;
-  const actions: string[] = [];
-
-  try {
+  return meterAi(request, auth, "assistant", async () => {
+    if (aiMockEnabled()) {
+      return NextResponse.json({ reply: "Modo de teste: nenhuma ação executada.", actions: [] });
+    }
+    const client = getAnthropicClient();
+    let messages: Anthropic.MessageParam[] = parsed.data.messages;
+    const actions: string[] = [];
+    const model = pickModel("standard");
     for (let i = 0; i < 6; i++) {
-      const response = await client.messages.create({
-        model: pickModel("standard"),
-        max_tokens: 4000,
-        system:
-          "Você é o assistente operacional de uma plataforma de agência de marketing. Você EXECUTA ações via tools (criar demandas, agendar reuniões e posts) e responde em português do Brasil, direto e humano. Sempre chame get_context antes de usar ids. Datas relativas ('sábado', 'amanhã'): calcule a partir do campo today do contexto. Ao final, resuma o que fez com links quando houver.",
-        tools: TOOLS,
-        messages,
-      });
+      assertAiAvailable();
+      let response: Anthropic.Message;
+      try {
+        response = await client.messages.create({
+          model,
+          max_tokens: 4000,
+          system:
+            "Você é o assistente operacional de uma plataforma de agência de marketing. Você EXECUTA ações via tools (criar demandas, agendar reuniões e posts) e responde em português do Brasil, direto e humano. Sempre chame get_context antes de usar ids. Datas relativas ('sábado', 'amanhã'): calcule a partir do campo today do contexto. Ao final, resuma o que fez com links quando houver.",
+          tools: TOOLS,
+          messages,
+        });
+      } catch (error) {
+        translateError(error);
+      }
+      recordAiUsage(model, response.usage);
       if (response.stop_reason !== "tool_use") {
         const text = response.content
           .filter((block): block is Anthropic.TextBlock => block.type === "text")
@@ -174,7 +188,5 @@ export async function POST(request: Request) {
       messages = [...messages, { role: "user", content: results }];
     }
     return NextResponse.json({ reply: "Cheguei ao limite de passos — tente dividir o pedido.", actions });
-  } catch {
-    return NextResponse.json({ error: "Erro no assistente. Verifique a chave da API." }, { status: 500 });
-  }
+  });
 }

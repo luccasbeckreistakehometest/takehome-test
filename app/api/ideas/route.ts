@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server";
 import { z } from "zod";
-import { GenerationError, generateStructured } from "@/lib/claude";
+import { generateStructured } from "@/lib/claude";
 import { getClient, listClients, listGenerations } from "@/lib/db";
 import {
   createIdeaBatch,
@@ -14,6 +14,8 @@ import {
 import { ideasSchema, type IdeasResult } from "@/lib/marketplace-schemas";
 import { clientContext } from "@/lib/prompts";
 import { professionalTier } from "@/lib/ranking";
+import { aiErrorResponse, beginAi } from "@/lib/metering";
+import { agencyOnly, isDenied } from "@/lib/guard";
 
 export const maxDuration = 300;
 
@@ -23,6 +25,8 @@ const requestSchema = z.object({
 });
 
 export async function GET(request: Request) {
+  const auth = await agencyOnly();
+  if (isDenied(auth)) return auth;
   const url = new URL(request.url);
   const audience = url.searchParams.get("audience");
   if (audience !== "agency" && audience !== "client" && audience !== "professional") {
@@ -46,6 +50,8 @@ function professionalsSummary(): string {
 // profissional, fundamentadas em tendências reais (web search) e conectadas
 // às pessoas/contas já cadastradas na plataforma quando houver fit.
 export async function POST(request: Request) {
+  const auth = await agencyOnly();
+  if (isDenied(auth)) return auth;
   const parsed = requestSchema.safeParse(await request.json().catch(() => null));
   if (!parsed.success) {
     return NextResponse.json({ error: "Requisição inválida" }, { status: 400 });
@@ -112,7 +118,10 @@ ${professionalsSummary() || "nenhum"}
 Pesquise as tendências mais recentes de marketing digital e proponha 4 a 6 ideias de negócio para a agência: novas campanhas para clientes específicos da carteira (cite o cliente em "linkedTo"), novos serviços para ofertar, nichos quentes para prospectar e formas de ativar os profissionais parceiros. Para cada ideia: tendência real que a sustenta (com fonte), próximo passo concreto e prioridade pelo potencial de receita.`;
   }
 
+  const ticket = await beginAi(request, auth, "ideas");
+  if (isDenied(ticket)) return ticket;
   try {
+    return await ticket.run(async () => {
     const result = await generateStructured<IdeasResult>({
       system:
         "Você é um estrategista de marketing sênior que transforma tendências reais de mercado em oportunidades acionáveis. Nunca proponha genérico: cada ideia deve citar a tendência/dado real que a sustenta. Responda em português do Brasil.",
@@ -128,10 +137,9 @@ Pesquise as tendências mais recentes de marketing digital e proponha 4 a 6 idei
       content: JSON.stringify(result),
     });
     return NextResponse.json(batch, { status: 201 });
+    });
   } catch (error) {
-    if (error instanceof GenerationError) {
-      return NextResponse.json({ error: error.message }, { status: error.status });
-    }
-    return NextResponse.json({ error: "Erro inesperado ao gerar ideias." }, { status: 500 });
+    ticket.refund();
+    return aiErrorResponse(error);
   }
 }

@@ -1,23 +1,25 @@
 import { NextResponse } from "next/server";
 import { getClient } from "@/lib/db";
 import { createSale } from "@/lib/integrations-db";
+import { salesTokenAccepted } from "@/lib/webhook-auth";
+import { checkLimits, clientIp } from "@/lib/rate-limit";
 
 type Context = { params: Promise<{ clientId: string }> };
 
 // Webhook GENÉRICO de vendas: recebe pedidos de marketplaces/lojas (Shopify,
 // Mercado Livre, loja própria) e registra como venda do cliente, alimentando
 // ROI e Insights. Funciona para produto OU serviço.
-// Configure na origem: URL = /api/webhooks/sales/<clientId> (+ ?token= se
-// SALES_WEBHOOK_SECRET estiver definido). Assinatura HMAC real = deploy.
+// Configure na origem: URL = /api/webhooks/sales/<clientId>?token=<token do
+// cliente> (ou o cabeçalho X-Webhook-Token). Sem token válido, nada entra.
 export async function POST(request: Request, { params }: Context) {
   const { clientId } = await params;
-  if (!getClient(clientId)) {
-    return NextResponse.json({ error: "cliente não encontrado" }, { status: 404 });
+  if (!checkLimits([["webhookPerIp", clientIp(request)]]).ok) {
+    return NextResponse.json({ error: "rate limited" }, { status: 429 });
   }
-  const secret = process.env.SALES_WEBHOOK_SECRET;
-  if (secret) {
-    const token = new URL(request.url).searchParams.get("token");
-    if (token !== secret) return NextResponse.json({ error: "token inválido" }, { status: 403 });
+  const presented = request.headers.get("x-webhook-token") ?? new URL(request.url).searchParams.get("token");
+  // Mesmo erro para cliente inexistente e token errado (não revela ids).
+  if (!getClient(clientId) || !salesTokenAccepted(clientId, presented)) {
+    return NextResponse.json({ error: "token inválido" }, { status: 403 });
   }
 
   const payload = await request.json().catch(() => null);
@@ -54,7 +56,7 @@ export async function POST(request: Request, { params }: Context) {
     kind = payload.kind === "service" ? "service" : "product";
   }
 
-  if (!revenue) {
+  if (!Number.isFinite(revenue) || !revenue || revenue < 0 || revenue > 100_000_000) {
     return NextResponse.json({ error: "sem valor de venda no payload" }, { status: 400 });
   }
   const today = new Date().toISOString().slice(0, 10);

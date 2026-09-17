@@ -3,16 +3,20 @@ import { z } from "zod";
 import { GenerationError, generateStructured } from "@/lib/claude";
 import { createJob, createProspect, createProspectSearch, finishJob, latestProspectSearch, listProspects } from "@/lib/marketplace-db";
 import { prospectingSchema, type ProspectingResult } from "@/lib/marketplace-schemas";
+import { aiErrorResponse, beginAi } from "@/lib/metering";
+import { agencyOnly, isDenied } from "@/lib/guard";
 
 export const maxDuration = 300;
 
 const searchSchema = z.object({
-  niche: z.string().trim().min(1, "Informe o nicho"),
-  region: z.string().trim().min(1, "Informe a região"),
-  notes: z.string().trim().default(""),
+  niche: z.string().trim().min(1, "Informe o nicho").max(200),
+  region: z.string().trim().min(1, "Informe a região").max(200),
+  notes: z.string().trim().max(2000).default(""),
 });
 
 export async function GET() {
+  const auth = await agencyOnly();
+  if (isDenied(auth)) return auth;
   return NextResponse.json({
     prospects: listProspects(),
     lastSearch: latestProspectSearch(),
@@ -22,6 +26,8 @@ export async function GET() {
 // Prospecção ativa: a IA pesquisa na web negócios reais do nicho/região que
 // são potenciais clientes da agência — mesmo sem cadastro na plataforma.
 export async function POST(request: Request) {
+  const auth = await agencyOnly();
+  if (isDenied(auth)) return auth;
   const parsed = searchSchema.safeParse(await request.json().catch(() => null));
   if (!parsed.success) {
     return NextResponse.json(
@@ -30,9 +36,11 @@ export async function POST(request: Request) {
     );
   }
   const { niche, region, notes } = parsed.data;
+  const ticket = await beginAi(request, auth, "prospecting");
+  if (isDenied(ticket)) return ticket;
   const job = createJob({ kind: "prospecting", label: `Prospecção: ${niche} — ${region}` });
-
   try {
+    return await ticket.run(async () => {
     const result = await generateStructured<ProspectingResult>({
       system:
         "Você é o head de novos negócios de uma agência de marketing. Você encontra empresas REAIS pesquisando na web e qualifica cada lead com critério. Nunca invente empresas: liste apenas negócios que você encontrou na pesquisa, com os dados que conseguiu confirmar (deixe campos vazios quando não encontrar). Responda em português do Brasil.",
@@ -65,11 +73,10 @@ Priorize empresas com maior probabilidade de fechar: dor visível + capacidade d
     });
     finishJob(job.id, "done");
     return NextResponse.json({ summary: result.summary, prospects: saved }, { status: 201 });
+    });
   } catch (error) {
+    ticket.refund();
     finishJob(job.id, "error", error instanceof GenerationError ? error.message : "erro");
-    if (error instanceof GenerationError) {
-      return NextResponse.json({ error: error.message }, { status: error.status });
-    }
-    return NextResponse.json({ error: "Erro inesperado na prospecção." }, { status: 500 });
+    return aiErrorResponse(error);
   }
 }

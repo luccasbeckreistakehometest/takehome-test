@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { createDeliverable, getProject, listDeliverables, logActivity } from "@/lib/marketplace-db";
 import { ALLOWED_IMAGE_MIMES, saveUpload, type AllowedImageMime } from "@/lib/uploads";
+import { guardProject, isDenied } from "@/lib/guard";
 
 type Context = { params: Promise<{ id: string }> };
 
@@ -8,11 +9,15 @@ const MAX_SIZE = 15 * 1024 * 1024; // 15 MB
 
 export async function GET(_request: Request, { params }: Context) {
   const { id } = await params;
+  const auth = await guardProject(id, "view");
+  if (isDenied(auth)) return auth;
   return NextResponse.json(listDeliverables(id));
 }
 
 export async function POST(request: Request, { params }: Context) {
   const { id } = await params;
+  const auth = await guardProject(id, "workspace");
+  if (isDenied(auth)) return auth;
   if (!getProject(id)) {
     return NextResponse.json({ error: "Demanda não encontrada" }, { status: 404 });
   }

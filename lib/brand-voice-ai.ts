@@ -59,7 +59,7 @@ export async function checkBrandVoice(input: {
   policy: BrandVoicePolicy;
   text: string;
   kind: CheckKind;
-  charge?: () => { ok: boolean; reason?: string };
+  charge?: () => { ok: boolean; reason?: string; status?: number } | Promise<{ ok: boolean; reason?: string; status?: number }>;
 }): Promise<{ result: CheckResult } | { error: string; status: number }> {
   const text = input.text.trim().slice(0, 4000);
   const issues = ruleChecks(text, input.policy, input.kind);
@@ -67,8 +67,8 @@ export async function checkBrandVoice(input: {
   const cached = readCache<{ ai: AiVoiceAssessment; demo: boolean }>(hash);
   if (cached) return { result: mergeCheck(cached.ai, issues, { cached: true, demo: cached.demo }) };
   if (input.charge) {
-    const charge = input.charge();
-    if (!charge.ok) return { error: charge.reason ?? "Sem créditos de IA.", status: 402 };
+    const charge = await input.charge();
+    if (!charge.ok) return { error: charge.reason ?? "Sem créditos de IA.", status: charge.status ?? 402 };
   }
   let ai: AiVoiceAssessment;
   let demo = false;
@@ -106,15 +106,15 @@ export async function rewriteInBrandVoice(input: {
   policy: BrandVoicePolicy;
   text: string;
   kind: CheckKind;
-  charge?: () => { ok: boolean; reason?: string };
+  charge?: () => { ok: boolean; reason?: string; status?: number } | Promise<{ ok: boolean; reason?: string; status?: number }>;
 }): Promise<{ text: string; cached: boolean; demo: boolean } | { error: string; status: number }> {
   const text = input.text.trim().slice(0, 4000);
   const hash = contentHash({ op: "rewrite", clientId: input.client.id, kind: input.kind, text, policy: input.policy, tone: input.client.tone });
   const cached = readCache<{ text: string; demo: boolean }>(hash);
   if (cached) return { text: cached.text, cached: true, demo: cached.demo };
   if (input.charge) {
-    const charge = input.charge();
-    if (!charge.ok) return { error: charge.reason ?? "Sem créditos de IA.", status: 402 };
+    const charge = await input.charge();
+    if (!charge.ok) return { error: charge.reason ?? "Sem créditos de IA.", status: charge.status ?? 402 };
   }
   let out: string;
   let demo = false;

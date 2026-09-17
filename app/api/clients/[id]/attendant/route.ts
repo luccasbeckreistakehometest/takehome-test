@@ -29,7 +29,7 @@ function view(clientId: string) {
 // própria marca.
 export async function GET(_request: Request, { params }: Context) {
   const { id } = await params;
-  const auth = await guard(["agency", "admin", "client"], { clientId: id });
+  const auth = await guard(["agency", "admin"]);
   if (isDenied(auth)) return auth;
   if (!getClient(id)) return NextResponse.json({ error: "Cliente não encontrado" }, { status: 404 });
   return NextResponse.json(view(id));
@@ -52,7 +52,7 @@ const schema = z.object({
 
 export async function PUT(request: Request, { params }: Context) {
   const { id } = await params;
-  const auth = await guard(["agency", "admin", "client"], { clientId: id });
+  const auth = await guard(["agency", "admin"]);
   if (isDenied(auth)) return auth;
   if (!getClient(id)) return NextResponse.json({ error: "Cliente não encontrado" }, { status: 404 });
   const parsed = schema.safeParse(await request.json().catch(() => null));

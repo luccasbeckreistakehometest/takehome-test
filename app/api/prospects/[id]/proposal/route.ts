@@ -2,7 +2,7 @@ import { NextResponse } from "next/server";
 import { z } from "zod";
 import { guard, isDenied } from "@/lib/guard";
 import { GenerationError } from "@/lib/claude";
-import { chargeUsage } from "@/lib/billing-db";
+import { aiErrorResponse, beginAi } from "@/lib/metering";
 import { createJob, finishJob, getProspect } from "@/lib/marketplace-db";
 import { createProposal, listProposalsForProspect } from "@/lib/proposals-db";
 import { generateProposalContent } from "@/lib/proposal-ai";
@@ -39,18 +39,18 @@ export async function POST(request: Request, { params }: Context) {
   if (!parsed.success) {
     return NextResponse.json({ error: parsed.error.issues[0]?.message ?? "Dados inválidos" }, { status: 400 });
   }
-  const charge = chargeUsage({ accountType: "agency", accountId: "agency", action: "proposal" });
-  if (!charge.ok) return NextResponse.json({ error: charge.reason }, { status: 402 });
+  const ticket = await beginAi(request, auth, "proposal");
+  if (isDenied(ticket)) return ticket;
 
   const job = createJob({ kind: "proposal", label: `Proposta — ${prospect.name}` });
   try {
-    const content = await generateProposalContent({
+    const content = await ticket.run(() => generateProposalContent({
       prospect,
       services: parsed.data.services,
       notes: parsed.data.notes,
       lang: parsed.data.lang,
       currency: parsed.data.currency.toUpperCase(),
-    });
+    }));
     const proposal = createProposal({
       prospectId: prospect.id,
       prospectName: prospect.name,
@@ -63,8 +63,8 @@ export async function POST(request: Request, { params }: Context) {
     finishJob(job.id, "done");
     return NextResponse.json({ proposal, url: `/proposta/${proposal.token}` }, { status: 201 });
   } catch (error) {
-    const message = error instanceof GenerationError ? error.message : "Erro ao gerar a proposta.";
-    finishJob(job.id, "error", message);
-    return NextResponse.json({ error: message }, { status: error instanceof GenerationError ? error.status : 500 });
+    ticket.refund();
+    finishJob(job.id, "error", error instanceof GenerationError ? error.message : "erro");
+    return aiErrorResponse(error);
   }
 }

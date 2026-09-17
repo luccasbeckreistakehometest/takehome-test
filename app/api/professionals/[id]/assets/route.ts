@@ -5,17 +5,22 @@ import {
   listProfessionalAssets,
 } from "@/lib/marketplace-db";
 import { ALLOWED_IMAGE_MIMES, saveUpload, type AllowedImageMime } from "@/lib/uploads";
+import { guardProfessional, isDenied } from "@/lib/guard";
 
 type Context = { params: Promise<{ id: string }> };
 
 // Portfolio hospedado do profissional (imagens na plataforma)
 export async function GET(_request: Request, { params }: Context) {
   const { id } = await params;
+  const auth = await guardProfessional(id);
+  if (isDenied(auth)) return auth;
   return NextResponse.json(listProfessionalAssets(id));
 }
 
 export async function POST(request: Request, { params }: Context) {
   const { id } = await params;
+  const auth = await guardProfessional(id);
+  if (isDenied(auth)) return auth;
   if (!getProfessional(id)) {
     return NextResponse.json({ error: "Profissional não encontrado" }, { status: 404 });
   }

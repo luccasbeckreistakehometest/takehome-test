@@ -1,5 +1,5 @@
 import { NextResponse } from "next/server";
-import { GenerationError, generateStructured } from "@/lib/claude";
+import { generateStructured } from "@/lib/claude";
 import { listClients, listGenerations } from "@/lib/db";
 import {
   getProfessional,
@@ -7,12 +7,16 @@ import {
   listProjects,
 } from "@/lib/marketplace-db";
 import { meetingRecsSchema, type MeetingRecs } from "@/lib/marketplace-schemas";
+import { aiErrorResponse, beginAi } from "@/lib/metering";
+import { agencyOnly, isDenied } from "@/lib/guard";
 
 export const maxDuration = 300;
 
 // Agenda inteligente: a IA olha o estado real de todas as contas e demandas
 // e recomenda as reuniões da semana — cada uma com o porquê (reasoning).
-export async function POST() {
+export async function POST(request: Request) {
+  const auth = await agencyOnly();
+  if (isDenied(auth)) return auth;
   const clients = listClients();
   if (clients.length === 0) {
     return NextResponse.json({ error: "Nenhum cliente cadastrado ainda." }, { status: 400 });
@@ -40,7 +44,10 @@ export async function POST() {
     .map((meeting) => `- ${meeting.scheduledAt} · ${meeting.title} (${meeting.clientName ?? "geral"})`)
     .join("\n");
 
+  const ticket = await beginAi(request, auth, "meeting_recs");
+  if (isDenied(ticket)) return ticket;
   try {
+    return await ticket.run(async () => {
     const result = await generateStructured<MeetingRecs>({
       system:
         "Você é o gerente de contas sênior de uma agência de marketing. Você decide quais reuniões realmente valem ser feitas — poucas, com objetivo claro. Escreva como um profissional humano, direto. Responda em português do Brasil.",
@@ -62,10 +69,9 @@ Para cada uma: clientId EXATO da lista; projectId EXATO se for sobre uma demanda
       maxTokens: 8000,
     });
     return NextResponse.json(result);
+    });
   } catch (error) {
-    if (error instanceof GenerationError) {
-      return NextResponse.json({ error: error.message }, { status: error.status });
-    }
-    return NextResponse.json({ error: "Erro ao recomendar reuniões." }, { status: 500 });
+    ticket.refund();
+    return aiErrorResponse(error);
   }
 }

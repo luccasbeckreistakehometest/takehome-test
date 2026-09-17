@@ -2,8 +2,7 @@ import { NextResponse } from "next/server";
 import { z } from "zod";
 import { getClient } from "@/lib/db";
 import { guard, isDenied } from "@/lib/guard";
-import { GenerationError } from "@/lib/claude";
-import { chargeUsage } from "@/lib/billing-db";
+import { aiErrorResponse, beginAi } from "@/lib/metering";
 import { currentMonth, isValidMonth } from "@/lib/report-aggregate";
 import { getReading, learningsHash, loadLearnings, saveReading } from "@/lib/learnings-db";
 import { generateLearningsReading } from "@/lib/learnings-ai";
@@ -48,14 +47,15 @@ export async function POST(request: Request, { params }: Context) {
   const hash = learningsHash(learnings);
   const saved = getReading(id, month, hash);
   if (saved && !saved.stale) return NextResponse.json({ learnings, reading: saved.reading, cached: true });
-  const charge = chargeUsage({ accountType: "client", accountId: id, action: "learnings" });
-  if (!charge.ok) return NextResponse.json({ error: charge.reason }, { status: 402 });
+  const ticket = await beginAi(request, auth, "learnings");
+  if (isDenied(ticket)) return ticket;
   try {
-    const reading = await generateLearningsReading(client, learnings);
+    const reading = await ticket.run(() => generateLearningsReading(client, learnings));
+    if (reading.demo && process.env.AI_MOCK !== "1") ticket.refund();
     saveReading(id, month, hash, reading);
     return NextResponse.json({ learnings, reading: { ...reading, createdAt: new Date().toISOString() }, cached: false }, { status: 201 });
   } catch (error) {
-    const message = error instanceof GenerationError ? error.message : "Erro ao gerar a leitura.";
-    return NextResponse.json({ error: message }, { status: error instanceof GenerationError ? error.status : 500 });
+    ticket.refund();
+    return aiErrorResponse(error);
   }
 }

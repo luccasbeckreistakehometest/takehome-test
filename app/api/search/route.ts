@@ -1,8 +1,11 @@
 import { NextResponse } from "next/server";
 import { db } from "@/lib/db";
+import { agencyOnly, isDenied } from "@/lib/guard";
 
 // Busca global ⌘K: clientes, demandas, profissionais e entregáveis
 export async function GET(request: Request) {
+  const auth = await agencyOnly();
+  if (isDenied(auth)) return auth;
   const q = new URL(request.url).searchParams.get("q")?.trim() ?? "";
   if (q.length < 2) return NextResponse.json([]);
   const like = `%${q}%`;

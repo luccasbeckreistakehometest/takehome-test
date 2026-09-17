@@ -2,7 +2,7 @@ import { NextResponse } from "next/server";
 import type { SessionPayload } from "./auth-shared";
 import { chargeUsage, getSubscription, refundUsage } from "./billing-db";
 import { AI_UNAVAILABLE, assertAiAvailable, GenerationError } from "./claude";
-import { recordAiError, runWithAiContext } from "./ai-spend";
+import { recordAiError, runWithAiContext, type AiContext } from "./ai-spend";
 import { getPlan, type AccountType } from "./plans";
 import { checkLimits, clientIp, retryAfterHeader, type LimitName } from "./rate-limit";
 import { billingAccount } from "./session";
@@ -44,6 +44,66 @@ export type AiTicket = {
   refund: () => void;
 };
 
+export type AiGate =
+  | { ok: true; refund: () => void }
+  | { ok: false; status: number; reason: string; headers?: Record<string, string> };
+
+// Contexto de atribuição (quem paga, teto de qualidade do plano).
+export function aiContextFor(session: SessionPayload, action: string): AiContext {
+  const payer = payerFor(session);
+  const quality = payer ? (getPlan(getSubscription(payer.accountType, payer.accountId).planId)?.quality ?? null) : null;
+  return {
+    action,
+    accountType: payer?.accountType ?? null,
+    accountId: payer?.accountId ?? null,
+    userId: session.userId,
+    quality,
+  };
+}
+
+// Limites + disjuntor + reserva de coins, sem executar nada. Para libs que só
+// cobram quando a IA roda de verdade (cache antes).
+export function gateAi(
+  request: Request,
+  session: SessionPayload,
+  action: string,
+  opts: { units?: number; limits?: [LimitName, LimitName] } = {}
+): AiGate {
+  const [perAccount, perIp] = opts.limits ?? ["aiPerAccount", "aiPerIp"];
+  if (session.role !== "admin") {
+    const verdict = checkLimits([
+      [perAccount, session.userId],
+      [perIp, clientIp(request)],
+    ]);
+    if (!verdict.ok) {
+      return {
+        ok: false,
+        status: 429,
+        reason: "Muitos pedidos de IA em pouco tempo. Espere alguns minutos e tente de novo.",
+        headers: retryAfterHeader(verdict),
+      };
+    }
+  }
+  try {
+    assertAiAvailable();
+  } catch (error) {
+    const status = error instanceof GenerationError ? error.status : 503;
+    return { ok: false, status, reason: error instanceof Error ? error.message : AI_UNAVAILABLE };
+  }
+  const payer = payerFor(session);
+  const charge = payer ? chargeUsage({ ...payer, action, units: opts.units }) : null;
+  if (charge && !charge.ok) return { ok: false, status: 402, reason: charge.reason ?? NO_COINS };
+  let refunded = false;
+  return {
+    ok: true,
+    refund: () => {
+      if (refunded || !payer || !charge) return;
+      refunded = true;
+      refundUsage(payer, action, charge);
+    },
+  };
+}
+
 // Checa limites, disjuntor e saldo; reserva os coins. Quem chama executa com
 // ticket.run(...) e chama ticket.refund() se a geração falhar.
 export async function beginAi(
@@ -52,45 +112,17 @@ export async function beginAi(
   action: string,
   opts: { units?: number; limits?: [LimitName, LimitName] } = {}
 ): Promise<NextResponse | AiTicket> {
-  const [perAccount, perIp] = opts.limits ?? ["aiPerAccount", "aiPerIp"];
-  if (session.role !== "admin") {
-    const verdict = checkLimits([
-      [perAccount, session.userId],
-      [perIp, clientIp(request)],
-    ]);
-    if (!verdict.ok) {
-      return NextResponse.json(
-        { error: "Muitos pedidos de IA em pouco tempo. Espere alguns minutos e tente de novo." },
-        { status: 429, headers: retryAfterHeader(verdict) }
-      );
-    }
+  const gate = gateAi(request, session, action, opts);
+  if (!gate.ok) {
+    return NextResponse.json(
+      { error: gate.reason, ...(gate.status === 402 ? { code: "no_coins" } : {}) },
+      { status: gate.status, headers: gate.headers }
+    );
   }
-  try {
-    assertAiAvailable();
-  } catch (error) {
-    return aiErrorResponse(error);
-  }
-  const payer = payerFor(session);
-  const charge = payer ? chargeUsage({ ...payer, action, units: opts.units }) : null;
-  if (charge && !charge.ok) {
-    return NextResponse.json({ error: charge.reason ?? NO_COINS, code: "no_coins" }, { status: 402 });
-  }
-  const quality = payer ? (getPlan(getSubscription(payer.accountType, payer.accountId).planId)?.quality ?? null) : null;
-  const ctx = {
-    action,
-    accountType: payer?.accountType ?? null,
-    accountId: payer?.accountId ?? null,
-    userId: session.userId,
-    quality,
-  };
-  let refunded = false;
+  const ctx = aiContextFor(session, action);
   return {
     run: (fn) => runWithAiContext(ctx, fn),
-    refund: () => {
-      if (refunded || !payer || !charge) return;
-      refunded = true;
-      refundUsage(payer, action, charge);
-    },
+    refund: gate.refund,
   };
 }
 

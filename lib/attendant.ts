@@ -18,6 +18,9 @@ import {
 } from "./attendant-rules";
 import { draftAttendantReply } from "./attendant-ai";
 import type { Client } from "./types";
+import { chargeUsage, refundUsage } from "./billing-db";
+import { runWithAiContext } from "./ai-spend";
+import { GenerationError } from "./claude";
 
 // Orquestra o atendente para UMA mensagem recebida: guardrails primeiro,
 // IA depois, e o modo do cliente decide se a resposta sai sozinha (auto),
@@ -87,10 +90,23 @@ export async function handleInbound(inbound: InboundMessage): Promise<AttendantR
     return row;
   }
 
-  // 2) Rascunho da IA
+  // 2) Rascunho da IA — pago pela agência (quem opera o atendente); sem
+  // coins com cobrança ligada, a mensagem fica para resposta manual.
+  const payer = { accountType: "agency" as const, accountId: "agency" };
+  const charge = chargeUsage({ ...payer, action: "attendant_reply" });
+  if (!charge.ok) {
+    const row = logReply({ ...base, status: "skipped", reply: "", intent: "", confidence: 0, reason: "no_coins" });
+    logActivity({
+      audience: "agency",
+      clientId: client.id,
+      text: `⚠️ Sem coins para o atendente responder ${contact} (${client.name}) — responda manualmente`,
+      href: attendantHref(client.id),
+    });
+    return row;
+  }
   let draft;
   try {
-    draft = await draftAttendantReply({
+    draft = await runWithAiContext({ action: "attendant_reply", ...payer }, () => draftAttendantReply({
       client: client as Client,
       config: cfg,
       text: inbound.body,
@@ -99,15 +115,16 @@ export async function handleInbound(inbound: InboundMessage): Promise<AttendantR
         .filter((m) => m.id !== inbound.id)
         .reverse()
         .map((m) => ({ body: m.body, receivedAt: m.receivedAt })),
-    });
+    }));
   } catch (error) {
+    refundUsage(payer, "attendant_reply", charge);
     const row = logReply({
       ...base,
       status: "skipped",
       reply: "",
       intent: "",
       confidence: 0,
-      reason: `ai_error: ${error instanceof Error ? error.message.slice(0, 160) : "erro"}`,
+      reason: `ai_error: ${error instanceof GenerationError ? error.detail.slice(0, 160) || error.message : error instanceof Error ? error.message.slice(0, 160) : "erro"}`,
     });
     logActivity({
       audience: "agency",

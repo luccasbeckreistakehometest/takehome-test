@@ -869,10 +869,19 @@ export function listActivities(filter: {
     .all(params) as Activity[];
 }
 
-export function markActivitiesRead(audience: Activity["audience"]): void {
-  db.prepare(
-    "UPDATE activities SET readAt = ? WHERE readAt IS NULL AND (audience = ? OR audience = 'all')"
-  ).run(now(), audience);
+export function markActivitiesRead(
+  audience: Activity["audience"],
+  scope: { clientId?: string; professionalId?: string } = {}
+): void {
+  const clauses = ["readAt IS NULL", "(audience = @audience OR audience = 'all')"];
+  if (scope.clientId) clauses.push("clientId = @clientId");
+  if (scope.professionalId) clauses.push("professionalId = @professionalId");
+  db.prepare(`UPDATE activities SET readAt = @at WHERE ${clauses.join(" AND ")}`).run({
+    at: now(),
+    audience,
+    clientId: scope.clientId ?? null,
+    professionalId: scope.professionalId ?? null,
+  });
 }
 
 // ---------- Chat da conta (cliente ↔ agência) ----------

@@ -1,17 +1,19 @@
-import { getDeliverable } from "@/lib/marketplace-db";
 import { readUpload } from "@/lib/uploads";
+import { guardDeliverable, isDenied } from "@/lib/guard";
 
 type Context = { params: Promise<{ id: string }> };
 
 export async function GET(request: Request, { params }: Context) {
   const { id } = await params;
-  const deliverable = getDeliverable(id);
-  if (!deliverable) return new Response("Não encontrado", { status: 404 });
+  const auth = await guardDeliverable(id, "view");
+  if (isDenied(auth)) return auth;
+  const deliverable = auth.deliverable;
   const data = readUpload(deliverable.id, deliverable.mime);
   if (!data) return new Response("Arquivo indisponível", { status: 404 });
   const headers: Record<string, string> = {
     "Content-Type": deliverable.mime,
     "Cache-Control": "private, max-age=3600",
+    "X-Content-Type-Options": "nosniff",
   };
   // Download disponível para todos os integrantes do contrato
   // (agência, profissional e cliente)

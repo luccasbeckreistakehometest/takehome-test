@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { z } from "zod";
 import { createMeeting, getProject, listMeetings } from "@/lib/marketplace-db";
+import { guardProject, isDenied } from "@/lib/guard";
 
 type Context = { params: Promise<{ id: string }> };
 
@@ -13,11 +14,15 @@ const meetingSchema = z.object({
 
 export async function GET(_request: Request, { params }: Context) {
   const { id } = await params;
+  const auth = await guardProject(id, "view");
+  if (isDenied(auth)) return auth;
   return NextResponse.json(listMeetings(id));
 }
 
 export async function POST(request: Request, { params }: Context) {
   const { id } = await params;
+  const auth = await guardProject(id, "workspace");
+  if (isDenied(auth)) return auth;
   const project = getProject(id);
   if (!project) {
     return NextResponse.json({ error: "Demanda não encontrada" }, { status: 404 });

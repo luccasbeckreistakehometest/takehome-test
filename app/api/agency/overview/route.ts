@@ -7,9 +7,12 @@ import {
   listScheduledPosts,
 } from "@/lib/marketplace-db";
 import { agencyTier, clientTier } from "@/lib/ranking";
+import { agencyOnly, isDenied } from "@/lib/guard";
 
 // Home operacional da agência: "o que preciso fazer hoje" cross-contas
 export async function GET() {
+  const auth = await agencyOnly();
+  if (isDenied(auth)) return auth;
   const pendingApplications = db
     .prepare(
       `SELECT a.id, a.projectId, p.title AS projectTitle, p.clientId, pr.name AS professionalName

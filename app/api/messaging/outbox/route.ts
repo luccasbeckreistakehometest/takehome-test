@@ -6,8 +6,11 @@ import {
   getConnection,
   listOutbox,
 } from "@/lib/messaging-db";
+import { agencyOnly, isDenied } from "@/lib/guard";
 
 export async function GET() {
+  const auth = await agencyOnly();
+  if (isDenied(auth)) return auth;
   return NextResponse.json({ outbox: listOutbox() });
 }
 
@@ -21,6 +24,8 @@ const schema = z.object({
 
 // Enfileira mensagem individual (contactIds) ou transmissão (listId).
 export async function POST(request: Request) {
+  const auth = await agencyOnly();
+  if (isDenied(auth)) return auth;
   const parsed = schema.safeParse(await request.json().catch(() => null));
   if (!parsed.success) {
     return NextResponse.json({ error: parsed.error.issues[0]?.message ?? "Dados inválidos" }, { status: 400 });

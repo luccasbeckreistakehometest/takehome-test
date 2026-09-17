@@ -23,7 +23,7 @@ export function pickModel(tier: ModelTier): string {
 
 // Cliente por chamada: usa a chave salva nos Settings se existir; senão a do
 // ambiente (.env.local ou perfil)
-function getAnthropicClient(): Anthropic {
+export function getAnthropicClient(): Anthropic {
   const key = getSettings().anthropicApiKey;
   return key ? new Anthropic({ apiKey: key }) : new Anthropic();
 }
@@ -78,7 +78,7 @@ function extractText(message: Anthropic.Message): string {
   return text;
 }
 
-function translateError(error: unknown): never {
+export function translateError(error: unknown): never {
   if (error instanceof GenerationError) {
     if (error.detail !== "daily_ceiling") recordAiError("generation", error.detail || error.message);
     throw error;

@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import { z } from "zod";
 import { createClient } from "@/lib/db";
 import { deleteProspect, getProspect, updateProspect } from "@/lib/marketplace-db";
+import { agencyOnly, isDenied } from "@/lib/guard";
 
 type Context = { params: Promise<{ id: string }> };
 
@@ -10,6 +11,8 @@ const patchSchema = z.object({
 });
 
 export async function PATCH(request: Request, { params }: Context) {
+  const auth = await agencyOnly();
+  if (isDenied(auth)) return auth;
   const { id } = await params;
   const prospect = getProspect(id);
   if (!prospect) {
@@ -52,6 +55,8 @@ export async function PATCH(request: Request, { params }: Context) {
 }
 
 export async function DELETE(_request: Request, { params }: Context) {
+  const auth = await agencyOnly();
+  if (isDenied(auth)) return auth;
   const { id } = await params;
   if (!deleteProspect(id)) {
     return NextResponse.json({ error: "Prospect não encontrado" }, { status: 404 });

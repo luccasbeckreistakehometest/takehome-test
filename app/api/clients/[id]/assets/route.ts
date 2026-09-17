@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import { getClient } from "@/lib/db";
 import { createClientAsset, listClientAssets } from "@/lib/marketplace-db";
 import { sanitizeExt, saveGenericUpload } from "@/lib/uploads";
+import { guardClient, isDenied } from "@/lib/guard";
 
 type Context = { params: Promise<{ id: string }> };
 
@@ -9,6 +10,8 @@ const MAX_SIZE = 100 * 1024 * 1024; // 100 MB (PSD/AI são pesados)
 
 export async function GET(_request: Request, { params }: Context) {
   const { id } = await params;
+  const auth = await guardClient(id, "view");
+  if (isDenied(auth)) return auth;
   return NextResponse.json(listClientAssets(id));
 }
 
@@ -16,6 +19,8 @@ export async function GET(_request: Request, { params }: Context) {
 // Illustrator (.ai), PDFs, ZIPs...
 export async function POST(request: Request, { params }: Context) {
   const { id } = await params;
+  const auth = await guardClient(id, "workspace");
+  if (isDenied(auth)) return auth;
   if (!getClient(id)) {
     return NextResponse.json({ error: "Cliente não encontrado" }, { status: 404 });
   }

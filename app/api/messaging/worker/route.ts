@@ -2,8 +2,11 @@ import { NextResponse } from "next/server";
 import { z } from "zod";
 import { getWorkerStatus, startWorker, stopWorker } from "@/lib/messaging/worker-manager";
 import { enqueueDirect, getConnection } from "@/lib/messaging-db";
+import { agencyOnly, isDenied } from "@/lib/guard";
 
 export async function GET() {
+  const auth = await agencyOnly();
+  if (isDenied(auth)) return auth;
   return NextResponse.json(getWorkerStatus());
 }
 
@@ -19,6 +22,8 @@ const schema = z.object({
 // - stop: encerra o worker
 // - test: enfileira uma mensagem de teste para o worker enviar já
 export async function POST(request: Request) {
+  const auth = await agencyOnly();
+  if (isDenied(auth)) return auth;
   const parsed = schema.safeParse(await request.json().catch(() => null));
   if (!parsed.success) {
     return NextResponse.json({ error: parsed.error.issues[0]?.message ?? "Dados inválidos" }, { status: 400 });

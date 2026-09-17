@@ -1,10 +1,13 @@
 import { NextResponse } from "next/server";
-import { generateStructured } from "@/lib/claude";
+import { AI_UNAVAILABLE, GenerationError, generateStructured } from "@/lib/claude";
 import { getClient } from "@/lib/db";
-import { createDeliverable, getProject, listDeliverables } from "@/lib/marketplace-db";
+import { createDeliverable, listDeliverables } from "@/lib/marketplace-db";
 import { getSettings } from "@/lib/settings";
 import { generateConceptImages } from "@/lib/images";
 import { readUpload, saveUpload } from "@/lib/uploads";
+import { aiErrorResponse, beginAi } from "@/lib/metering";
+import { guardProject, isDenied } from "@/lib/guard";
+import { envUsd, recordExternalSpend } from "@/lib/ai-spend";
 
 export const maxDuration = 300;
 
@@ -16,9 +19,11 @@ type Context = { params: Promise<{ id: string }> };
 // produto/modelo reais, use a rota /mockup (Gemini).
 export async function POST(request: Request, { params }: Context) {
   const { id } = await params;
-  const project = getProject(id);
-  const client = project ? getClient(project.clientId) : null;
-  if (!project || !client) {
+  const auth = await guardProject(id, "workspace");
+  if (isDenied(auth)) return auth;
+  const project = auth.project;
+  const client = getClient(project.clientId);
+  if (!client) {
     return NextResponse.json({ error: "Demanda não encontrada" }, { status: 404 });
   }
 
@@ -26,6 +31,10 @@ export async function POST(request: Request, { params }: Context) {
   const count = Math.max(1, Math.min(Number(body?.count) || 4, 6));
   const settings = getSettings();
 
+  const ticket = await beginAi(request, auth.session, "concepts");
+  if (isDenied(ticket)) return ticket;
+  try {
+    return await ticket.run(async () => {
   // Referências REAIS enviadas (modelo, produto, cenário) — exclui as próprias
   // imagens que a IA gerou antes para não realimentar o ciclo.
   const references = listDeliverables(id)
@@ -86,6 +95,9 @@ export async function POST(request: Request, { params }: Context) {
       togetherApiKey: settings.togetherApiKey,
       hfApiKey: settings.hfApiKey,
     });
+    if (settings.imageProvider !== "pollinations") {
+      recordExternalSpend(`image_${settings.imageProvider}`, images.length, images.length * envUsd("CONCEPT_USD_PER_IMAGE", 0.003));
+    }
     const saved = images.map((image, i) => {
       const deliverable = createDeliverable({
         projectId: id,
@@ -107,9 +119,12 @@ export async function POST(request: Request, { params }: Context) {
       { status: 201 }
     );
   } catch (error) {
-    return NextResponse.json(
-      { error: error instanceof Error ? error.message : "Falha ao gerar conceitos." },
-      { status: 502 }
-    );
+    if (error instanceof GenerationError) throw error;
+    throw new GenerationError(AI_UNAVAILABLE, 502, `imagens: ${error instanceof Error ? error.message : String(error)}`);
+  }
+    });
+  } catch (error) {
+    ticket.refund();
+    return aiErrorResponse(error);
   }
 }

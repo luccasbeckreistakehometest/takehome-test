@@ -7,11 +7,14 @@ import {
 } from "@/lib/marketplace-db";
 import { clientTier } from "@/lib/ranking";
 import { GENERATION_TYPES } from "@/lib/types";
+import { guardClient, isDenied } from "@/lib/guard";
 
 type Context = { params: Promise<{ id: string }> };
 
 export async function GET(_request: Request, { params }: Context) {
   const { id } = await params;
+  const auth = await guardClient(id, "view");
+  if (isDenied(auth)) return auth;
   const client = getClient(id);
   if (!client) {
     return NextResponse.json({ error: "Cliente não encontrado" }, { status: 404 });

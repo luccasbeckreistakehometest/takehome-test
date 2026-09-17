@@ -1,9 +1,12 @@
 import { NextResponse } from "next/server";
-import { generateStructured } from "@/lib/claude";
+import { AI_BAD_OUTPUT, AI_UNAVAILABLE, GenerationError, generateStructured } from "@/lib/claude";
 import { getClient } from "@/lib/db";
-import { createDeliverable, getProject, listDeliverables } from "@/lib/marketplace-db";
+import { createDeliverable, listDeliverables } from "@/lib/marketplace-db";
 import { getSettings } from "@/lib/settings";
 import { readUpload, saveUpload } from "@/lib/uploads";
+import { aiErrorResponse, beginAi } from "@/lib/metering";
+import { guardProject, isDenied } from "@/lib/guard";
+import { envUsd, recordExternalSpend } from "@/lib/ai-spend";
 
 export const maxDuration = 300;
 
@@ -12,21 +15,23 @@ type Context = { params: Promise<{ id: string }> };
 // Mockup fotorrealista via Google AI (Gemini image): compõe as fotos de
 // referência reais (modelo + peça + cenário) na cena descrita pelo brief.
 // Requer a chave do Google AI Studio salva em Configurações.
-export async function POST(_request: Request, { params }: Context) {
+export async function POST(request: Request, { params }: Context) {
   const { id } = await params;
+  const auth = await guardProject(id, "workspace");
+  if (isDenied(auth)) return auth;
   const googleKey = getSettings().googleAiApiKey;
   if (!googleKey) {
     return NextResponse.json(
       {
         error:
-          "Configure a chave do Google AI em Configurações → Chaves de API (crie em aistudio.google.com → Get API key; começa com AIza).",
+          "O mockup fotorrealista ainda não está disponível neste servidor. Use \"Gerar conceitos\" enquanto isso.",
       },
       { status: 400 }
     );
   }
-  const project = getProject(id);
-  const client = project ? getClient(project.clientId) : null;
-  if (!project || !client) {
+  const project = auth.project;
+  const client = getClient(project.clientId);
+  if (!client) {
     return NextResponse.json({ error: "Demanda não encontrada" }, { status: 404 });
   }
   const references = listDeliverables(id)
@@ -52,6 +57,10 @@ export async function POST(_request: Request, { params }: Context) {
     ];
   });
 
+  const ticket = await beginAi(request, auth.session, "mockup");
+  if (isDenied(ticket)) return ticket;
+  try {
+    return await ticket.run(async () => {
   // Etapa 1 — a Claude ANALISA as imagens de referência (o que é a peça,
   // como é a modelo, cores, caimento, cenário) e escreve o prompt exato de
   // geração; a imagem final sai fiel ao que foi enviado.
@@ -98,12 +107,7 @@ Marca: ${client.name} (${client.industry || "n/d"})`,
     );
     const payload = await response.json();
     if (!response.ok) {
-      return NextResponse.json(
-        {
-          error: `Google AI: ${payload?.error?.message ?? `erro ${response.status}`}`,
-        },
-        { status: 502 }
-      );
+      throw new GenerationError(AI_UNAVAILABLE, 502, `Google AI: ${payload?.error?.message ?? `erro ${response.status}`}`);
     }
     type Part = {
       inline_data?: { mime_type?: string; data?: string };
@@ -115,11 +119,9 @@ Marca: ${client.name} (${client.industry || "n/d"})`,
     const mime =
       imagePart?.inline_data?.mime_type ?? imagePart?.inlineData?.mimeType ?? "image/png";
     if (!base64) {
-      return NextResponse.json(
-        { error: "O Google AI não retornou imagem — tente novamente." },
-        { status: 502 }
-      );
+      throw new GenerationError(AI_BAD_OUTPUT, 502, "Google AI não retornou imagem");
     }
+    recordExternalSpend("google_image", 1, envUsd("IMAGE_USD_PER_IMAGE", 0.04), "gemini-2.5-flash-image");
     const deliverable = createDeliverable({
       projectId: id,
       title: `Mockup IA — ${project.title.slice(0, 50)}`,
@@ -129,10 +131,13 @@ Marca: ${client.name} (${client.industry || "n/d"})`,
     });
     saveUpload(deliverable.id, deliverable.mime, Buffer.from(base64, "base64"));
     return NextResponse.json(deliverable, { status: 201 });
-  } catch {
-    return NextResponse.json(
-      { error: "Falha ao chamar o Google AI. Verifique a chave e tente de novo." },
-      { status: 502 }
-    );
+  } catch (error) {
+    if (error instanceof GenerationError) throw error;
+    throw new GenerationError(AI_UNAVAILABLE, 502, `Google AI: ${error instanceof Error ? error.message : String(error)}`);
+  }
+    });
+  } catch (error) {
+    ticket.refund();
+    return aiErrorResponse(error);
   }
 }

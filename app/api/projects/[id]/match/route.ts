@@ -1,9 +1,8 @@
 import { NextResponse } from "next/server";
-import { GenerationError, generateStructured } from "@/lib/claude";
+import { generateStructured } from "@/lib/claude";
 import { getClient, listGenerations } from "@/lib/db";
 import {
   getProfessionalStats,
-  getProject,
   listProfessionalAssets,
   listProfessionals,
   updateProject,
@@ -13,6 +12,8 @@ import { clientContext } from "@/lib/prompts";
 import { professionalTier } from "@/lib/ranking";
 import { ROLE_LABELS } from "@/lib/marketplace-types";
 import { ALLOWED_IMAGE_MIMES, readUpload, type AllowedImageMime } from "@/lib/uploads";
+import { aiErrorResponse, beginAi } from "@/lib/metering";
+import { guardProject, isDenied } from "@/lib/guard";
 
 // Visão do portfólio: além do histórico textual, deixamos a IA OLHAR peças
 // reais do portfólio dos candidatos mais aderentes. Imagens custam muitos
@@ -29,12 +30,11 @@ type Context = { params: Promise<{ id: string }> };
 // o melhor resultado para ESTE cliente e ESTA demanda — considerando skills,
 // localização, especialidade, portfolio e o track record real na plataforma
 // (nota média das entregas analisadas pela IA e demandas concluídas).
-export async function POST(_request: Request, { params }: Context) {
+export async function POST(request: Request, { params }: Context) {
   const { id } = await params;
-  const project = getProject(id);
-  if (!project) {
-    return NextResponse.json({ error: "Demanda não encontrada" }, { status: 404 });
-  }
+  const auth = await guardProject(id, "workspace");
+  if (isDenied(auth)) return auth;
+  const project = auth.project;
   const client = getClient(project.clientId);
   if (!client) {
     return NextResponse.json({ error: "Cliente não encontrado" }, { status: 404 });
@@ -129,7 +129,10 @@ export async function POST(_request: Request, { params }: Context) {
 
   const latestStrategy = listGenerations(project.clientId, "strategy_analysis")[0];
 
+  const ticket = await beginAi(request, auth.session, "match");
+  if (isDenied(ticket)) return ticket;
   try {
+    return await ticket.run(async () => {
     const result = await generateStructured<MatchResult>({
       system:
         "Você é o diretor de operações de uma agência de marketing, especialista em alocar o profissional certo para cada job. Seja criterioso e honesto: fit alto só quando os dados sustentam. Quando houver imagens do portfólio anexadas, analise-as por visão e pese a qualidade visual e a aderência estética ao brief. Responda em português do Brasil.",
@@ -160,10 +163,9 @@ Rankeie TODOS os profissionais pela propensão a entregar o melhor resultado par
 
     updateProject(id, { matchResult: JSON.stringify(result) });
     return NextResponse.json(result);
+    });
   } catch (error) {
-    if (error instanceof GenerationError) {
-      return NextResponse.json({ error: error.message }, { status: error.status });
-    }
-    return NextResponse.json({ error: "Erro inesperado no match." }, { status: 500 });
+    ticket.refund();
+    return aiErrorResponse(error);
   }
 }

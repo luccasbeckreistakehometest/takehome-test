@@ -35,6 +35,13 @@ export function getOnboarding(userId: string): OnboardingRow {
   return row;
 }
 
+// Leitura sem efeito colateral (GET não grava): sem linha ainda = tour não
+// começado. A linha nasce no primeiro POST.
+export function peekOnboarding(userId: string): Pick<OnboardingRow, "tourCompleted" | "tourStep"> & { firstSeenAt: string | null } {
+  const row = db.prepare("SELECT * FROM onboarding WHERE userId = ?").get(userId) as OnboardingRow | undefined;
+  return row ?? { tourCompleted: 0, tourStep: 0, firstSeenAt: null };
+}
+
 export function recordOnboardingEvent(userId: string, type: string, meta?: Record<string, unknown>): void {
   const row = getOnboarding(userId);
   const events = JSON.parse(row.events) as OnboardingEvent[];
@@ -51,7 +58,9 @@ export function setTourProgress(userId: string, step: number, completed: boolean
 }
 
 export function saveVoiceBriefing(input: { id: string; userId: string; lang: string; transcript: string; extracted: unknown }): void {
-  const existing = db.prepare("SELECT transcript FROM voice_briefings WHERE id = ?").get(input.id) as { transcript: string } | undefined;
+  // Só continua um briefing da própria pessoa (id de outra conta é ignorado).
+  const existing = db.prepare("SELECT transcript FROM voice_briefings WHERE id = ? AND userId = ?").get(input.id, input.userId) as { transcript: string } | undefined;
+  if (!existing && db.prepare("SELECT 1 FROM voice_briefings WHERE id = ?").get(input.id)) return;
   const transcript = existing ? `${existing.transcript}\n${input.transcript}` : input.transcript;
   db.prepare(`INSERT INTO voice_briefings (id,userId,lang,transcript,extracted,createdAt) VALUES (?,?,?,?,?,?)
     ON CONFLICT(id) DO UPDATE SET transcript = excluded.transcript, extracted = excluded.extracted`)

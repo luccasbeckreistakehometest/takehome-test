@@ -9,11 +9,14 @@ import {
   updateProfessional,
 } from "@/lib/marketplace-db";
 import { professionalTier } from "@/lib/ranking";
+import { agencyOnly, guardProfessional, isDenied } from "@/lib/guard";
 
 type Context = { params: Promise<{ id: string }> };
 
 export async function GET(_request: Request, { params }: Context) {
   const { id } = await params;
+  const auth = await guardProfessional(id);
+  if (isDenied(auth)) return auth;
   const professional = getProfessional(id);
   if (!professional) {
     return NextResponse.json({ error: "Profissional não encontrado" }, { status: 404 });
@@ -39,6 +42,8 @@ export async function GET(_request: Request, { params }: Context) {
 
 export async function PUT(request: Request, { params }: Context) {
   const { id } = await params;
+  const auth = await guardProfessional(id);
+  if (isDenied(auth)) return auth;
   const parsed = professionalSchema.safeParse(await request.json().catch(() => null));
   if (!parsed.success) {
     return NextResponse.json(
@@ -46,7 +51,10 @@ export async function PUT(request: Request, { params }: Context) {
       { status: 400 }
     );
   }
-  const updated = updateProfessional(id, parsed.data);
+  // O vínculo (freelancer x funcionário) é decisão da agência.
+  const current = getProfessional(id)!;
+  const data = auth.role === "professional" ? { ...parsed.data, employmentType: current.employmentType } : parsed.data;
+  const updated = updateProfessional(id, data);
   if (!updated) {
     return NextResponse.json({ error: "Profissional não encontrado" }, { status: 404 });
   }
@@ -55,6 +63,8 @@ export async function PUT(request: Request, { params }: Context) {
 
 export async function DELETE(_request: Request, { params }: Context) {
   const { id } = await params;
+  const auth = await agencyOnly();
+  if (isDenied(auth)) return auth;
   if (!deleteProfessional(id)) {
     return NextResponse.json({ error: "Profissional não encontrado" }, { status: 404 });
   }

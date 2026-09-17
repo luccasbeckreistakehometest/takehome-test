@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import { z } from "zod";
 import { getClient } from "@/lib/db";
 import { createScheduledPost, listScheduledPosts } from "@/lib/marketplace-db";
+import { guard, isDenied } from "@/lib/guard";
 
 const scheduleSchema = z.object({
   clientId: z.string().min(1),
@@ -16,7 +17,11 @@ const scheduleSchema = z.object({
 });
 
 export async function GET(request: Request) {
-  const clientId = new URL(request.url).searchParams.get("clientId") ?? undefined;
+  const auth = await guard(["agency", "admin", "client"]);
+  if (isDenied(auth)) return auth;
+  // A marca só vê a própria fila.
+  const clientId =
+    auth.role === "client" ? (auth.refId ?? "-") : (new URL(request.url).searchParams.get("clientId") ?? undefined);
   return NextResponse.json(listScheduledPosts(clientId));
 }
 
@@ -28,6 +33,8 @@ export async function POST(request: Request) {
   if (!parsed.success) {
     return NextResponse.json({ error: "Dados inválidos" }, { status: 400 });
   }
+  const auth = await guard(["agency", "admin", "client"], { clientId: parsed.data.clientId, selfServe: true });
+  if (isDenied(auth)) return auth;
   if (!getClient(parsed.data.clientId)) {
     return NextResponse.json({ error: "Cliente não encontrado" }, { status: 404 });
   }

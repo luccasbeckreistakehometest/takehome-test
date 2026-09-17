@@ -28,7 +28,7 @@ const schema = z.object({
 
 export async function PUT(request: Request, { params }: Context) {
   const { id } = await params;
-  const auth = await guard(["agency", "admin", "client"], { clientId: id });
+  const auth = await guard(["agency", "admin", "client"], { clientId: id, selfServe: true });
   if (isDenied(auth)) return auth;
   const client = getClient(id);
   if (!client) return NextResponse.json({ error: "Cliente não encontrado" }, { status: 404 });

@@ -1,6 +1,13 @@
 import { NextResponse } from "next/server";
 import { z } from "zod";
-import { deleteScheduledPost, updateScheduledPost } from "@/lib/marketplace-db";
+import { deleteScheduledPost, getScheduledPost, updateScheduledPost } from "@/lib/marketplace-db";
+import { guardClient, isDenied, notFound } from "@/lib/guard";
+
+async function authorize(id: string) {
+  const post = getScheduledPost(id);
+  if (!post) return notFound("Agendamento não encontrado");
+  return guardClient(post.clientId, "workspace");
+}
 
 type Context = { params: Promise<{ id: string }> };
 
@@ -16,6 +23,8 @@ const patchSchema = z.object({
 
 export async function PATCH(request: Request, { params }: Context) {
   const { id } = await params;
+  const auth = await authorize(id);
+  if (isDenied(auth)) return auth;
   const parsed = patchSchema.safeParse(await request.json().catch(() => null));
   if (!parsed.success) {
     return NextResponse.json({ error: "Dados inválidos" }, { status: 400 });
@@ -28,6 +37,8 @@ export async function PATCH(request: Request, { params }: Context) {
 
 export async function DELETE(_request: Request, { params }: Context) {
   const { id } = await params;
+  const auth = await authorize(id);
+  if (isDenied(auth)) return auth;
   if (!deleteScheduledPost(id)) {
     return NextResponse.json({ error: "Agendamento não encontrado" }, { status: 404 });
   }
