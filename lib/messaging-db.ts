@@ -403,13 +403,15 @@ export function markInboundRead(scope: TenantScope): void {
   db.prepare(`UPDATE inbound_messages SET readAt = ? WHERE readAt IS NULL AND ${where.sql}`).run(now(), ...where.params);
 }
 
-// Agência dona de um número de WhatsApp/conta do Instagram conectado.
+// Agência dona de um número de WhatsApp/conta do Instagram conectado. Id em
+// mais de uma agência (dado antigo, antes da checagem de posse) = ninguém:
+// a mensagem fica sem agência (só o admin vê) em vez de ir para a errada.
 export function findAgencyByAccountId(channel: MessageChannel, accountId: string): string | null {
   if (!accountId) return null;
-  const row = db
-    .prepare("SELECT agencyId FROM channel_connections WHERE channel = ? AND apiAccountId = ? AND apiAccountId != '' ORDER BY updatedAt DESC LIMIT 1")
-    .get(channel, accountId) as { agencyId: string } | undefined;
-  return row?.agencyId ?? null;
+  const rows = db
+    .prepare("SELECT DISTINCT agencyId FROM channel_connections WHERE channel = ? AND apiAccountId = ? AND apiAccountId != '' LIMIT 2")
+    .all(channel, accountId) as { agencyId: string }[];
+  return rows.length === 1 ? rows[0].agencyId : null;
 }
 
 export function saveConnection(input: {

@@ -6,6 +6,13 @@ export const UI_DICT: Record<string, string> = {
   // Endurecimento do lançamento (modo da marca, uploads, cobrança)
   "Quem muda o modo da sua marca é a sua agência.": "Your agency decides how your brand is managed.",
   "O conteúdo do arquivo não confere com o formato.": "The file's content doesn't match its format.",
+  "A Meta não confirmou que este token tem acesso a essa conta. Confira o ID e o token.":
+    "Meta didn't confirm that this token can access that account. Check the ID and the token.",
+  "Não deu para confirmar a conta na Meta agora. Tente de novo em instantes.":
+    "We couldn't confirm the account with Meta right now. Try again in a moment.",
+  "Informe o token da conta para confirmarmos que ela é sua.": "Enter the account's token so we can confirm it's yours.",
+  "Essa conta já está conectada em outra agência. Se ela é sua, fale com o suporte.":
+    "This account is already connected to another agency. If it's yours, contact support.",
   "A IA do plano grátis chegou ao limite de hoje. Volte amanhã ou escolha um plano para seguir agora.":
     "The free plan's AI has reached today's limit. Come back tomorrow or pick a plan to keep going now.",
   "Sua conta chegou ao limite de uso de IA de hoje. Volte amanhã ou fale com o suporte.":

@@ -24,6 +24,8 @@ export SEED_PASSWORD="e2e-pass"
 export BILLING_ENFORCED=false
 export META_APP_SECRET="e2e-meta-app-secret"
 export META_VERIFY_TOKEN="e2e-verify-token-0123"
+# o e2e não fala com a Meta: a checagem de posse do id fica nos testes unitários
+export META_GRAPH_VERIFY=off
 export LOGIN_RATE_LIMIT_PER_IP=10000
 export REGISTER_RATE_LIMIT_PER_HOUR=30
 export AI_RATE_LIMIT_PER_10MIN=10000

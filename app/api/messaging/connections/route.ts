@@ -1,6 +1,8 @@
 import { NextResponse } from "next/server";
 import { z } from "zod";
-import { listConnections, saveConnection } from "@/lib/messaging-db";
+import { getConnection, listConnections, saveConnection } from "@/lib/messaging-db";
+import { accountIdClaimedElsewhere } from "@/lib/attendant-db";
+import { META_ACCOUNT_TAKEN, verifyMetaAccount } from "@/lib/messaging/meta-verify";
 import { actingAgencyId, agencyOnly, isDenied } from "@/lib/guard";
 import { sessionModeAvailableFor } from "@/lib/messaging/worker-manager";
 
@@ -39,6 +41,20 @@ export async function POST(request: Request) {
       { error: "O modo sessão não está disponível neste servidor. Use a API oficial da Meta." },
       { status: 400 }
     );
+  }
+  // O id da conta roteia as mensagens recebidas: um dono só, e só quem tem
+  // um token com acesso a ele.
+  const accountId = parsed.data.apiAccountId;
+  if (accountId) {
+    if (accountIdClaimedElsewhere(parsed.data.channel, accountId, agencyId)) {
+      return NextResponse.json({ error: META_ACCOUNT_TAKEN }, { status: 409 });
+    }
+    const current = getConnection(agencyId, parsed.data.channel);
+    const changed = !current || current.apiAccountId !== accountId || current.apiToken !== parsed.data.apiToken;
+    if (changed) {
+      const verdict = await verifyMetaAccount(accountId, parsed.data.apiToken);
+      if (!verdict.ok) return NextResponse.json({ error: verdict.error }, { status: verdict.status });
+    }
   }
   const conn = saveConnection({ ...parsed.data, agencyId });
   return NextResponse.json({ connection: { ...conn, apiToken: conn.apiToken ? "•••• configurado" : "" } }, { status: 201 });

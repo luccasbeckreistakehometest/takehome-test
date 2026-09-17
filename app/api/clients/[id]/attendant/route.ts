@@ -3,7 +3,9 @@ import { z } from "zod";
 import { clientAgencyId, getClient } from "@/lib/db";
 import { agencyScope } from "@/lib/tenancy-rules";
 import { guard, isDenied } from "@/lib/guard";
-import { attendantStats, getAttendant, listReplies, saveAttendant } from "@/lib/attendant-db";
+import { accountIdClaimedElsewhere, attendantStats, getAttendant, listReplies, saveAttendant } from "@/lib/attendant-db";
+import { META_ACCOUNT_TAKEN, verifyMetaAccount } from "@/lib/messaging/meta-verify";
+import { getConnection } from "@/lib/messaging-db";
 import { DEFAULT_ATTENDANT_CONFIG } from "@/lib/attendant-rules";
 import { resolveSendMode } from "@/lib/attendant";
 import { listInbound } from "@/lib/messaging-db";
@@ -64,6 +66,18 @@ export async function PUT(request: Request, { params }: Context) {
   const current = getAttendant(id) ?? DEFAULT_ATTENDANT_CONFIG;
   const { apiToken, ...rest } = parsed.data;
   const token = apiToken === undefined || apiToken === "" ? current.apiToken : apiToken.toLowerCase() === "clear" ? "" : apiToken;
+  // Número próprio da marca: um dono só, e só com token que tenha acesso a ele
+  // (o do atendente ou, sem ele, o da conexão de WhatsApp da agência).
+  const phoneNumberId = (rest.phoneNumberId ?? current.phoneNumberId).trim();
+  if (phoneNumberId && (phoneNumberId !== current.phoneNumberId || token !== current.apiToken)) {
+    const agencyId = clientAgencyId(id) ?? "";
+    if (accountIdClaimedElsewhere("whatsapp", phoneNumberId, agencyId)) {
+      return NextResponse.json({ error: META_ACCOUNT_TAKEN }, { status: 409 });
+    }
+    const verifyToken = token || getConnection(agencyId, "whatsapp")?.apiToken || "";
+    const verdict = await verifyMetaAccount(phoneNumberId, verifyToken);
+    if (!verdict.ok) return NextResponse.json({ error: verdict.error }, { status: verdict.status });
+  }
   saveAttendant(id, { ...rest, apiToken: token });
   return NextResponse.json(view(id));
 }

@@ -101,16 +101,43 @@ export function saveAttendant(clientId: string, input: Partial<AttendantConfig>)
   return cfg;
 }
 
+// Outra agência já usa este id de conta (conexão da agência ou atendente de
+// uma marca dela)? O webhook roteia pelo id: ele não pode ter dois donos.
+export function accountIdClaimedElsewhere(channel: "whatsapp" | "instagram", accountId: string, agencyId: string): boolean {
+  const id = accountId.trim();
+  if (!id) return false;
+  const hasConnections = Boolean(db.prepare("SELECT 1 FROM sqlite_master WHERE type = 'table' AND name = 'channel_connections'").get());
+  if (
+    hasConnections &&
+    db
+      .prepare("SELECT 1 FROM channel_connections WHERE channel = ? AND apiAccountId = ? AND COALESCE(agencyId, '') != ? LIMIT 1")
+      .get(channel, id, agencyId)
+  ) {
+    return true;
+  }
+  if (channel !== "whatsapp") return false;
+  return Boolean(
+    db
+      .prepare(
+        `SELECT 1 FROM attendants a JOIN clients c ON c.id = a.clientId
+         WHERE a.phoneNumberId = ? AND COALESCE(c.agencyId, '') != ? LIMIT 1`
+      )
+      .get(id, agencyId)
+  );
+}
+
 // Roteia uma mensagem recebida pelo phone_number_id do número (WhatsApp Cloud).
 export function findClientByPhoneNumberId(phoneNumberId: string): { clientId: string; agencyId: string | null } | null {
   if (!phoneNumberId) return null;
-  const row = db
+  const rows = db
     .prepare(
       `SELECT a.clientId, c.agencyId FROM attendants a JOIN clients c ON c.id = a.clientId
-       WHERE a.phoneNumberId = ? AND a.phoneNumberId != '' ORDER BY a.updatedAt DESC LIMIT 1`
+       WHERE a.phoneNumberId = ? AND a.phoneNumberId != '' ORDER BY a.updatedAt DESC`
     )
-    .get(phoneNumberId) as { clientId: string; agencyId: string | null } | undefined;
-  return row ?? null;
+    .all(phoneNumberId) as { clientId: string; agencyId: string | null }[];
+  // Mesmo número em agências diferentes (dado antigo): não roteia para nenhuma.
+  if (new Set(rows.map((r) => r.agencyId ?? "")).size > 1) return null;
+  return rows[0] ?? null;
 }
 
 export function logReply(input: Omit<AttendantReply, "id" | "createdAt">): AttendantReply {
