@@ -37,6 +37,8 @@ function isPublicApi(pathname: string, method: string): boolean {
   // um segmento de token depois de /api/invites/ ; criar/listar/revogar (sem
   // token, em /api/invites) continua protegido.
   if (method === "GET" && /^\/api\/invites\/[^/]+$/.test(pathname)) return true;
+  // Relatório mensal por token (link imprimível/compartilhável) — só leitura.
+  if (method === "GET" && /^\/api\/reports\/[^/]+$/.test(pathname)) return true;
   return false;
 }
 

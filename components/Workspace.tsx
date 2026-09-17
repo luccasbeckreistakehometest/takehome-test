@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { api } from "@/lib/api";
 import {
@@ -196,9 +197,18 @@ export default function Workspace({
             ))}
           </div>
         </div>
-        <Button onClick={runFullKit} disabled={kitRunning}>
-          {kitRunning ? "Gerando kit..." : "✦ Gerar kit completo"}
-        </Button>
+        <div className="flex flex-wrap items-center gap-2">
+          <Link
+            href={`/clients/${client.id}/report`}
+            data-testid="open-monthly-report"
+            className="inline-flex items-center gap-1.5 rounded-md border border-edge bg-surface-2 px-3.5 py-2 text-sm transition-colors hover:border-accent hover:text-accent"
+          >
+            📊 Relatório mensal
+          </Link>
+          <Button onClick={runFullKit} disabled={kitRunning}>
+            {kitRunning ? "Gerando kit..." : "✦ Gerar kit completo"}
+          </Button>
+        </div>
       </div>
 
       {kitSteps && (

@@ -9,7 +9,8 @@
     "lint": "eslint",
     "messaging-worker": "node scripts/messaging-worker.mjs",
     "e2e": "playwright test",
-    "browsers:install": "playwright install chromium"
+    "browsers:install": "playwright install chromium",
+    "test:unit": "vitest run"
   },
   "dependencies": {
     "@anthropic-ai/sdk": "^0.115.0",
@@ -20,6 +21,7 @@
     "zod": "^4.4.3"
   },
   "devDependencies": {
+    "@playwright/test": "1.55.0",
     "@tailwindcss/postcss": "^4",
     "@types/better-sqlite3": "^9.6.0",
     "@types/node": "^20",
@@ -30,6 +32,6 @@
     "playwright": "1.55.0",
     "tailwindcss": "^4",
     "typescript": "^5",
-    "@playwright/test": "1.55.0"
+    "vitest": "3.2.4"
   }
 }

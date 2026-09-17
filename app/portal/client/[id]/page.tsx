@@ -179,6 +179,22 @@ export default function ClientPortalPage({
 
       <MarcaModeChoice id={client.id} open={chooserOpen} onClose={() => setChooserOpen(false)} />
 
+      <Card className="flex flex-wrap items-center justify-between gap-3">
+        <div>
+          <SectionTitle>Relatório mensal</SectionTitle>
+          <p className="text-sm text-muted">
+            O que foi entregue, aprovado e publicado no mês, com resumo e recomendações — pronto para salvar em PDF.
+          </p>
+        </div>
+        <a
+          href={`/portal/client/${client.id}/report`}
+          data-testid="portal-monthly-report"
+          className="inline-flex items-center gap-1.5 rounded-md bg-accent px-4 py-2 text-sm font-medium text-accent-ink transition-opacity hover:opacity-90"
+        >
+          📊 Ver relatório do mês →
+        </a>
+      </Card>
+
       <Card>
         <SectionTitle>Produções em andamento</SectionTitle>
         {projects.length === 0 ? (

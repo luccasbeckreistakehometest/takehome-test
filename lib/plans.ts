@@ -156,6 +156,7 @@ export const ACTION_COST: Record<string, number> = {
   mockup: 4,
   assistant: 1,
   message_draft: 1,
+  monthly_report: 3,
 };
 export function actionCost(action: string): number {
   return ACTION_COST[action] ?? 2;
