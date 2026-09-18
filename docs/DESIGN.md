@@ -39,6 +39,7 @@ código.
 | D7 | Medida de leitura | Parágrafos no workspace ocupam os 1050px do cartão ≈ **140 caracteres por linha** (o confortável é 60–75). |
 | D8 | Um estilo, quatro papéis | `text-[11px] uppercase tracking-wide` é usado ao mesmo tempo como título de seção, rótulo de KPI, cabeçalho de tabela **e** label de formulário. |
 | D9 | Escala tipográfica | Toda a interface vive em 3 tamanhos de uma família só (Space Grotesk 30 / 15 / 11px). Sem contraste editorial, sem escala documentada. |
+| D10 | Comprimento da landing | **6.939px** em 1440 e **12.050px** em 390 — 14 telas de rolagem no celular, com `py-24` idêntico em todas as seções. Nada acelera, nada desacelera; a tabela comparativa cai para ~330px de largura e fica ilegível. |
 
 ### 2.2 Tudo que é da lista proibida e está no produto hoje
 
