@@ -945,6 +945,7 @@ export function Table<R>({
   empty,
   loading = false,
   total,
+  minWidth = 640,
 }: {
   columns: Array<Column<R>>;
   rows: R[];
@@ -953,12 +954,14 @@ export function Table<R>({
   empty?: ReactNode;
   loading?: boolean;
   total?: ReactNode[];
+  /** Abaixo disto a tabela ROLA; ela nunca se espreme até truncar o cabeçalho. */
+  minWidth?: number;
 }) {
   if (!loading && rows.length === 0 && empty) return <>{empty}</>;
   return (
     // Só a tabela rola, nunca a página.
     <div className="w-full overflow-x-auto">
-      <table className="w-full table-fixed border-collapse">
+      <table style={{ minWidth }} className="w-full table-fixed border-collapse">
         <caption className="sr-only">{caption}</caption>
         <colgroup>
           {columns.map((c) => (
@@ -967,7 +970,7 @@ export function Table<R>({
         </colgroup>
         <thead>
           <tr>
-            {columns.map((c) => (
+            {columns.map((c, i) => (
               <th
                 key={c.key}
                 scope="col"
@@ -977,6 +980,7 @@ export function Table<R>({
                   "t5 sticky top-0 z-10 whitespace-nowrap bg-surface px-[var(--pad-x)] py-2 font-medium text-text-muted",
                   "shadow-[inset_0_-1px_0_var(--edge)]",
                   c.align === "right" ? "text-right" : "text-left",
+                  i === 0 && "left-0 z-20",
                 )}
               >
                 {c.header}
@@ -997,8 +1001,8 @@ export function Table<R>({
                 </tr>
               ))
             : rows.map((r) => (
-                <tr key={rowKey(r)} className="transition-colors duration-[var(--dur-1)] hover:bg-surface-sunken">
-                  {columns.map((c) => (
+                <tr key={rowKey(r)} className="group transition-colors duration-[var(--dur-1)] hover:bg-surface-sunken">
+                  {columns.map((c, i) => (
                     <td
                       key={c.key}
                       className={cx(
@@ -1006,6 +1010,8 @@ export function Table<R>({
                         c.align === "right"
                           ? "n3 text-right text-text"
                           : "t4 truncate text-text",
+                        // A coluna de texto gruda; a numérica JAMAIS trunca.
+                        i === 0 && "sticky left-0 bg-surface group-hover:bg-surface-sunken",
                       )}
                     >
                       {c.cell(r)}

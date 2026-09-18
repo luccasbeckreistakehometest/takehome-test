@@ -569,6 +569,12 @@ hr {
 .marquee-track {
   animation: none !important;
 }
+/* A mancha de cor borrada atrás do hero e do CTA existe SÓ por causa desta
+   classe: desligar a animação deixaria o borrão parado, que é o item proibido.
+   O elemento em si sai junto com a reescrita da landing (bloco 10). */
+.glow-pulse {
+  display: none !important;
+}
 .hero-gradient-text {
   background: none;
   -webkit-background-clip: border-box;
