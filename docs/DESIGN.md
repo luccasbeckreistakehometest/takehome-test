@@ -294,3 +294,124 @@ Proibido: `rounded-xl`, `rounded-2xl`, `rounded-3xl`. A "pílula" de navegação
 sublinhada da §11).
 
 ---
+
+## 5. Cor
+
+Uma rampa neutra, três cores semânticas e **uma** cor expressiva — a da agência. Todos os contrastes
+abaixo foram medidos (WCAG 2.1, fórmula de luminância relativa); o script vive em
+`lib/brand-ramp.ts` e os pisos são verificados por teste unitário.
+
+### 5.1 A rampa neutra "Tinta"
+
+Cinza quente, não o preto-azulado de hoje. Papel tem temperatura; cinza frio é o cinza que todo
+gerador de tema entrega.
+
+| Token | Hex | sobre `n-0` | sobre `n-950` |
+|---|---|---|---|
+| `n-0` | `#FFFFFF` | 1,00 | 19,15 |
+| `n-25` | `#FBFAF8` | 1,04 | 18,36 |
+| `n-50` | `#F5F3EF` | 1,11 | 17,28 |
+| `n-100` | `#EAE7E1` | 1,23 | 15,52 |
+| `n-150` | `#DCD8D0` | 1,42 | 13,47 |
+| `n-200` | `#C9C4BA` | 1,74 | 11,02 |
+| `n-300` | `#ABA599` | 2,45 | 7,82 |
+| `n-400` | `#8B857A` | 3,66 | 5,23 |
+| `n-500` | `#6D675E` | 5,60 | 3,42 |
+| `n-600` | `#524D46` | 8,37 | 2,29 |
+| `n-700` | `#3B3733` | 11,80 | 1,62 |
+| `n-800` | `#292623` | 15,05 | 1,27 |
+| `n-850` | `#201E1C` | 16,62 | 1,15 |
+| `n-900` | `#171514` | 18,20 | 1,05 |
+| `n-950` | `#100F0E` | 19,15 | 1,00 |
+
+### 5.2 Papéis, nos dois temas — todos medidos
+
+Os dois temas são de primeira classe. O escuro não é o claro invertido: as bordas trocam de degrau
+porque contraste não é simétrico.
+
+| Papel | Claro | medido | Escuro | medido |
+|---|---|---|---|---|
+| `canvas` (fundo da página) | `n-50` | — | `n-950` | — |
+| `surface` (painel, documento) | `n-0` | 1,11 sobre canvas | `n-900` | 1,05 sobre canvas |
+| `surface-sunken` (campo, célula par) | `n-50` | — | `n-850` | — |
+| `text` | `n-900` | **18,20** sobre surface | `n-50` | **16,42** sobre surface |
+| `text-muted` | `n-500` | **5,60** | `n-400` | **4,97** |
+| `text-faint` (placeholder, `—`) | `n-400` | **3,66** | `n-500` | **3,25** |
+| `rule` (hairline decorativa) | `n-150` | **1,42** | `n-700` | **1,54** |
+| `edge` (borda estrutural: input, seleção, régua de cabeçalho) | `n-400` | **3,66** | `n-500` | **3,25** |
+
+**Pisos, e a razão de cada um.** Texto ≥ 4,5:1 (AA). Texto grande (≥ `d3`) e texto esmaecido
+não-essencial ≥ 3:1. **Borda estrutural ≥ 3:1** (WCAG 1.4.11: a borda que delimita um input ou marca
+uma seleção carrega informação). **Régua decorativa ≥ 1,4:1** — e, justamente por ser fraca,
+`rule` **nunca pode ser o único recurso de hierarquia**; vem sempre acompanhada de um degrau tonal,
+de espaço ou de peso tipográfico. É a regra que impede o defeito D3 de voltar.
+
+### 5.3 Semântica — só estado, nunca decoração
+
+| Papel | Claro | sobre `n-0` | Escuro | sobre `n-900` |
+|---|---|---|---|---|
+| `positive` (aprovado, margem positiva, pago) | `#1B6B44` | **6,50** | `#57C98D` | **8,79** |
+| `negative` (recusado, prejuízo, vencido, erro) | `#A32B22` | **7,18** | `#FF8A7E` | **7,96** |
+| `caution` (aguardando, vence em breve, limite perto) | `#7A5200` | **6,92** | `#E4A83C` | **8,64** |
+
+Cada um tem `-wash` (campo chapado, ~8% de tinta) e `-edge` (a própria cor a 3:1).
+**Não existe azul de "info".** A informação é a cor da marca — é o que faz a marca significar algo.
+
+Proibido: cor semântica em qualquer coisa que não seja estado. Um KPI não é verde porque é um KPI.
+
+### 5.4 Whitelabel — a cor da agência com garantia
+
+O problema real: a agência escolhe **um hex**, e esse hex pode ser `#FFD400` ou `#FFFFFF`. O sistema
+não pode "esperar que dê certo". Ele deriva, a cada request (a marca já vem de `resolveBrand`), seis
+tokens com piso de contraste verificado, e emite como `style` inline no `<html>` — exatamente onde
+hoje sai o `--accent` cru.
+
+| Token derivado | Regra | Uso |
+|---|---|---|
+| `--brand` | o hex cru | campo grande, fundo de capa, marca d'água |
+| `--brand-solid` | `--brand` com L deslocado em OKLCH até que preto **ou** branco alcance 4,5:1 | fundo do botão primário, barra de capa |
+| `--brand-ink` | preto `n-950` ou branco `n-0`, o que vencer sobre `--brand-solid` | rótulo em cima de `--brand-solid` |
+| `--brand-text` | matiz preservado, L movido até 4,5:1 contra a `surface` **do tema corrente** | link, valor em destaque, marcador ativo |
+| `--brand-edge` | mesma ideia, piso 3:1 | borda de seleção, anel de foco, sublinhado de aba ativa |
+| `--brand-wash` | matiz a L 0,965 (claro) / 0,24 (escuro), croma limitado | campo chapado de destaque — **nunca** gradiente |
+
+Derivação em OKLCH: só o **L** se move (a matiz é da agência, não nossa), e o croma é cortado para o
+máximo em gamut naquele L por busca binária. Se a cor crua já passa no piso, ela é usada como está —
+a marca aparece de verdade quando pode.
+
+Resultados medidos, incluindo os casos patológicos:
+
+| Marca | `--brand-solid` + `--brand-ink` | `--brand-text` claro | escuro | `--brand-edge` claro | escuro |
+|---|---|---|---|---|---|
+| `#F76B15` (Marqa) | `#F76B15` + preto — **6,45** | `#C75100` 4,56 | `#F76B15` 6,13 | `#F56911` 3,04 | `#F76B15` 6,13 |
+| `#0F62FE` | `#0F62FE` + branco — **5,00** | `#0F62FE` 5,00 | `#3378FF` 4,57 | `#0F62FE` 5,00 | `#0F62FE` 3,64 |
+| `#00A86B` | `#00A86B` + preto — **6,21** | `#008755` 4,57 | `#00A86B` 5,91 | `#00A86B` 3,08 | `#00A86B` 5,91 |
+| `#FFD400` | `#FFD400` + preto — **13,38** | `#8D7400` 4,53 | `#FFD400` 12,71 | `#B09100` 3,05 | `#FFD400` 12,71 |
+| `#E91E63` | `#EC2365` + preto — **4,55** ← o sólido precisou mover | `#E51760` 4,54 | `#F02969` 4,53 | `#E91E63` 4,35 | `#E91E63` 4,19 |
+| `#7C3AED` | `#7C3AED` + branco — **5,70** | `#7C3AED` 5,70 | `#915FFF` 4,58 | `#7C3AED` 5,70 | `#7C3AED` 3,19 |
+| `#00E5FF` | `#00E5FF` + preto — **12,45** | `#008291` 4,56 | `#00E5FF` 11,83 | `#00A3B6` 3,04 | `#00E5FF` 11,83 |
+| `#FFFFFF` | `#FFFFFF` + preto — **19,15** | `#100F0E` 19,15 | `#FFFFFF` 18,20 | — | — |
+| `#000000` | `#000000` + branco — **21,00** | `#000000` 21,00 | `#FFFFFF` 18,20 | — | — |
+
+Duas leituras honestas desta tabela. **`#E91E63`** prova que a derivação é necessária: o rosa cru dá
+4,40:1 com tinta preta, reprova, e o sólido é deslocado para `#EC2365`. **`#FFFFFF`** mostra o limite:
+não existe texto branco legível em papel branco, então `--brand-text` cai para tinta — a marca
+continua visível como **campo** (`--brand-solid` branco com tinta preta), só não como texto. Isso é
+correto, e precisa estar documentado para ninguém "consertar" depois.
+
+Teste unitário obrigatório: para um conjunto que inclua os nove hexes acima, `--brand-ink` sobre
+`--brand-solid` ≥ 4,5, `--brand-text` sobre a surface do tema ≥ 4,5 e `--brand-edge` ≥ 3,0, nos dois
+temas.
+
+### 5.5 Orçamento de cor por tela
+
+Regra dura, e é o coração da tese: **um elemento expressivo por tela.** Numa tela, a cor da marca
+aparece em no máximo **um** destes papéis ao mesmo tempo: o botão primário, **ou** o marcador de
+navegação ativo, **ou** a régua de capa do documento. Tudo o mais é neutro. Estado usa semântica.
+Ícone herda `currentColor` e nunca é colorido por decoração.
+
+Consequência direta, que mata o D2 e o "laranja em tudo": título de seção é `text` (não marca),
+número de KPI é `text` (não marca), eyebrow é `text-muted` (não marca), ícone de lista é
+`text-faint` (não marca).
+
+---
