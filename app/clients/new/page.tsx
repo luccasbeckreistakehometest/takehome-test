@@ -10,7 +10,7 @@ export default function NewClientPage() {
   const router = useRouter();
   const [created, setCreated] = useState<{ client: Client; login: OneTimeLoginData } | null>(null);
   return (
-    <div className="mx-auto max-w-3xl space-y-6">
+    <div className="max-w-[46rem] space-y-6">
       <div>
         <h1 className="d3">Novo cliente</h1>
         <p className="t3 measure-lede mt-2 text-text-muted">

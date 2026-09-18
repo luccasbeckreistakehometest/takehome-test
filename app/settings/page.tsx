@@ -11,7 +11,7 @@ type SettingsView = AgencySettings & {
   hasTogetherKey?: boolean;
   hasHfKey?: boolean;
 };
-import { Button, Card, ErrorBox, Input, Label, SectionTitle } from "@/components/ui";
+import { Button, ErrorBox, Input, Label, PageHeader, SectionTitle, Textarea } from "@/components/ui";
 import InviteGenerator from "@/components/InviteGenerator";
 import ApprovalRulesCard from "@/components/ApprovalRulesCard";
 import AgencyPageCard from "@/components/AgencyPageCard";
@@ -77,12 +77,13 @@ export default function SettingsPage() {
   }
 
   return (
-    <div className="mx-auto max-w-3xl space-y-6">
-      <h1 className="d3">
-        Configurações
-      </h1>
+    // Ajustes é formulário longo: coluna de trabalho estreita (o campo não
+    // precisa de 1000px) e seções separadas por régua em vez de dois cartões
+    // gigantes empilhados.
+    <div className="max-w-[46rem]">
+      <PageHeader eyebrow="Agência" title="Configurações" />
 
-      <Card className="space-y-4">
+      <section className="space-y-4 border-t border-edge pt-5">
         <SectionTitle>Whitelabel — a plataforma com a sua marca</SectionTitle>
         <div className="grid gap-4 sm:grid-cols-3">
           <div>
@@ -237,11 +238,11 @@ export default function SettingsPage() {
         )}
         <div className="border-t border-edge pt-4">
           <Label>Estilo da casa (injetado em todas as gerações de IA)</Label>
-          <textarea
+          <Textarea
             value={settings.houseStyle}
             onChange={(e) => setSettings({ ...settings, houseStyle: e.target.value })}
             placeholder="Diretrizes da agência que valem para todos os clientes: tom, o que nunca fazer, formatos preferidos..."
-            className="min-h-20 w-full rounded-md border border-edge bg-surface-sunken px-3 py-2 t3 outline-none focus:border-edge"
+            className="min-h-20"
           />
         </div>
         {settings.canManagePlatform && (
@@ -369,7 +370,7 @@ export default function SettingsPage() {
           </Button>
           {saved && <span className="t3 text-text">Aplicado ✓</span>}
         </div>
-      </Card>
+      </section>
 
       <div id="pagina-publica" className="scroll-mt-20">
         <AgencyPageCard origin={origin} />
@@ -385,7 +386,7 @@ export default function SettingsPage() {
         <InviteGenerator origin={origin} />
       </div>
 
-      <Card className="space-y-3">
+      <section className="space-y-3 border-t border-edge pt-5">
         <SectionTitle>Integrações</SectionTitle>
         <p className="t3 text-text-muted">
           <span className="text-positive">Ativo</span> = já funciona com sua credencial.{" "}
@@ -417,7 +418,7 @@ export default function SettingsPage() {
             );
           })}
         </div>
-      </Card>
+      </section>
     </div>
   );
 }

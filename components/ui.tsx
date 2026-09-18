@@ -290,7 +290,10 @@ const CONTROL = cx(
   "border-edge hover:border-text-faint",
   "aria-invalid:border-negative",
   "disabled:cursor-not-allowed disabled:border-rule disabled:bg-surface-sunken disabled:text-text-faint",
-  "read-only:border-transparent read-only:bg-surface-sunken",
+  // `:read-only` do CSS casa com QUALQUER elemento que não seja editável — e
+  // isso inclui todo <select>. Era por isso que o select aparecia rebaixado ao
+  // lado de um input branco no mesmo formulário. O atributo é o que importa.
+  "[&[readonly]]:border-transparent [&[readonly]]:bg-surface-sunken",
 );
 
 export function Input({ className = "", ...props }: React.InputHTMLAttributes<HTMLInputElement>) {
