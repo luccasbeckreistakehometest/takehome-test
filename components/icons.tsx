@@ -1,8 +1,21 @@
-// Biblioteca de ícones outlined (stroke currentColor) — substitui os emojis
-// espalhados pela UI por um traço consistente e profissional.
+// Sprite local endurecido — docs/DESIGN.md §8. Sem pacote de ícones.
+//
+// Regras, e são três:
+//  1. UMA espessura: 1,5px na viewBox de 24. O tamanho 16 sobe para 1,75px
+//     para o traço não sumir no retina.
+//  2. TRÊS tamanhos, e só três: 16 (denso, tabela e lista), 20 (padrão de UI),
+//     24 (marcador de seção e estado vazio). Os sete tamanhos que existiam
+//     (12, 13, 14, 15, 17, 18, 22…) são arredondados para o mais próximo aqui
+//     dentro, em vez de exigir uma varredura de 150 chamadas.
+//  3. Ícone NUNCA tem cor própria: herda currentColor, e quem decide a cor é o
+//     texto ao lado.
+//
+// Nenhum ícone de "IA": sem varinha, sem cérebro. Ação de IA é dita por verbo.
+// `sparkle` continua no sprite só enquanto as 20 chamadas antigas existirem
+// (bloco 3 da §13 as remove) — não use em código novo.
 import type { SVGProps } from "react";
 
-const PATHS: Record<string, React.ReactNode> = {
+const PATHS = {
   home: <path d="M3 10.5 12 3l9 7.5M5 9.5V21h14V9.5" />,
   users: (
     <>
@@ -179,29 +192,60 @@ const PATHS: Record<string, React.ReactNode> = {
     </>
   ),
   download: <path d="M12 4v11M7 10l5 5 5-5M4 20h16" />,
-};
+  "chevron-down": <path d="m6 9.5 6 6 6-6" />,
+  "chevron-up": <path d="m6 14.5 6-6 6 6" />,
+  "chevron-left": <path d="m14.5 6-6 6 6 6" />,
+  "chevron-right": <path d="m9.5 6 6 6-6 6" />,
+  "arrow-up": <path d="M12 19V5M6 11l6-6 6 6" />,
+  "arrow-down": <path d="M12 5v14M6 13l6 6 6-6" />,
+  minus: <path d="M5 12h14" />,
+  info: (
+    <>
+      <circle cx="12" cy="12" r="9" />
+      <path d="M12 11v5M12 7.6v.4" />
+    </>
+  ),
+  alert: (
+    <>
+      <path d="M12 4.5 2.8 20h18.4L12 4.5Z" />
+      <path d="M12 10v4M12 17.4v.2" />
+    </>
+  ),
+  external: <path d="M14 4h6v6M20 4l-8.5 8.5M18 14v4a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4" />,
+  filter: <path d="M3 5h18l-7 8v6l-4 2v-8L3 5Z" />,
+} as const;
 
 export type IconName = keyof typeof PATHS;
 
+/** Três tamanhos e só três: o que chegar é arredondado para o mais próximo. */
+function snap(size: number): 16 | 20 | 24 {
+  if (size <= 18) return 16;
+  if (size <= 22) return 20;
+  return 24;
+}
+
 export function Icon({
   name,
-  size = 18,
+  size = 20,
   className = "",
-  strokeWidth = 1.8,
+  strokeWidth,
   ...props
 }: {
   name: IconName;
   size?: number;
   strokeWidth?: number;
 } & Omit<SVGProps<SVGSVGElement>, "name">) {
+  const px = snap(size);
+  // 1,75px no 16 para o traço não sumir; 1,5px nos demais.
+  const stroke = strokeWidth ?? (px === 16 ? 1.75 : 1.5);
   return (
     <svg
-      width={size}
-      height={size}
+      width={px}
+      height={px}
       viewBox="0 0 24 24"
       fill="none"
       stroke="currentColor"
-      strokeWidth={strokeWidth}
+      strokeWidth={stroke}
       strokeLinecap="round"
       strokeLinejoin="round"
       className={className}
