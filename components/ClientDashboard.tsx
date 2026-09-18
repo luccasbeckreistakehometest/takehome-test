@@ -254,7 +254,7 @@ export default function ClientDashboard({
           <section className="mt-8">
             <h2 className="t6 border-b border-edge pb-2 text-text-muted">Ações</h2>
             <div className="mt-3 flex flex-col items-start gap-2">
-              <Button onClick={onRunKit} className="w-full">
+              <Button variant="secondary" onClick={onRunKit} className="w-full">
                 Gerar kit completo
               </Button>
               {[

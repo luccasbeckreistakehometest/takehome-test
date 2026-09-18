@@ -58,7 +58,7 @@ export default function BriefingVoiceStart({
           <p className="d4">Como prefere contar sobre sua marca?</p>
           <p className="t3 measure-lede mt-2 text-text-muted">Fale como numa conversa: quando você para, a IA entende que é a vez dela e pergunta o que faltar.</p>
           <div className="mt-4 flex flex-wrap gap-2">
-            <button type="button" onClick={() => setTalking(true)} className="inline-flex items-center gap-2 rounded-md bg-brand-solid px-4 py-2 t3 font-medium text-brand-ink" data-testid="briefing-talk" data-tour="briefing-talk">
+            <button type="button" onClick={() => setTalking(true)} className="t3 inline-flex items-center gap-2 rounded-sm border border-edge bg-surface px-4 py-2 font-medium transition-colors duration-[var(--dur-1)] hover:bg-surface-sunken" data-testid="briefing-talk" data-tour="briefing-talk">
               <Icon name="mic" size={16} /> Falando
             </button>
             <button type="button" onClick={onWrite} className="inline-flex items-center gap-2 rounded-md border border-edge bg-surface px-4 py-2 t3" data-testid="briefing-write">
