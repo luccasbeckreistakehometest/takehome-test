@@ -817,8 +817,28 @@ A fundação (bloco 1 da §13) e as primitivas (bloco 2) estão no código, na b
   uma troca mecânica como a §13 supunha.
 - Nenhuma tela de produto foi redesenhada (blocos 4 a 12).
 - Nenhum teste com leitor de tela, nenhum PDF realmente impresso, e nenhuma medição de CLS/LCP
-  com as fontes novas. O peso real do par Fraunces + Archivo (risco 1 da §14) continua **não
-  medido**.
+  com as fontes novas.
+
+**O peso das fontes — medido, e acima do gatilho da §14.1**
+
+Lido do build de produção (`.next/static/media/*.woff2`, agrupado pelo `unicode-range` de cada
+`@font-face`):
+
+| Subset | Fraunces | Archivo | Soma |
+|---|---|---|---|
+| latin (o que o pt-BR baixa) | **118,0 KB** | **88,0 KB** | **206,0 KB** |
+| latin-ext (só se o texto pedir) | 103,0 KB | 83,8 KB | 186,8 KB |
+| vietnamese (idem) | 33,5 KB | 33,6 KB | 67,1 KB |
+
+O `subsets: ["latin"]` não impede o Next de emitir os três arquivos; ele emite os três e deixa o
+navegador escolher pelo `unicode-range`. Uma página em pt-BR baixa **206 KB**, contra o gatilho de
+~180 KB que a §14.1 tinha estipulado para acionar o plano B (travar `SOFT`/`WONK` e servir Fraunces
+só nos passos de display). Está acima, e por uma margem pequena.
+
+Decisão tomada: **manter os quatro eixos por enquanto**, com `display: swap` e as métricas de
+fallback ligadas, e reavaliar com uma medição de LCP real em vez de um número de KB — que é o
+critério que interessa. O plano B continua escrito e continua disponível; o que falta é o dado que
+justifica acioná-lo.
 
 ---
 
