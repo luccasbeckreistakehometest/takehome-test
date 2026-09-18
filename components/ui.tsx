@@ -114,6 +114,21 @@ export function Button({
   );
 }
 
+/**
+ * As mesmas variantes do <Button>, para quando o alvo é um link de verdade
+ * (`<Link href>`): navegação não pode ser um <button>. Uma fonte só de estilo
+ * evita o CTA da landing divergir do botão do app — que é exatamente como o
+ * produto chegou a ter cinco botões diferentes.
+ */
+export function buttonClass(variant: ButtonVariant = "primary", size: "md" | "lg" = "md") {
+  return cx(
+    "t3 relative inline-flex items-center justify-center gap-2 rounded-sm font-medium",
+    size === "lg" ? "h-12 px-6 text-[15px]" : "h-[var(--ui-h)] px-4",
+    "transition-[background-color,border-color,color,filter] duration-[var(--dur-1)] ease-[var(--ease)]",
+    BUTTON_VARIANTS[variant],
+  );
+}
+
 /** Quadrado, alvo mínimo de 40×40, aria-label obrigatório. */
 export function IconButton({
   name,

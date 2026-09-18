@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import Link from "next/link";
-import { Icon } from "@/components/icons";
+import { buttonClass } from "@/components/ui";
 import {
   ACTION_COST,
   COIN_PACKS,
@@ -97,29 +97,36 @@ export default function Pricing({
   const hasPaid = plans.some((p) => p.monthlyPrice > 0);
 
   return (
-    <section className="border-t border-edge px-4 py-24" id="planos">
-      <div className="mx-auto max-w-6xl">
-        <div className="reveal mx-auto max-w-2xl text-center">
-          <h2 className="font-[family-name:var(--font-display)] text-4xl font-extrabold tracking-tight">
-            {t.title}
-          </h2>
-          <p className="mt-4 text-muted">{cardSubscription ? t.subCard : t.sub}</p>
-          {cardSubscription && hasPaid && (
-            <p className="mt-3 inline-flex items-center gap-1.5 rounded-full border border-accent/40 bg-accent/10 px-3 py-1 text-xs font-medium text-accent" data-testid="pricing-card-line">
-              <Icon name="check" size={13} /> {t.card}
-            </p>
-          )}
+    // Tabela de preço editorial: colunas separadas por régua, sem cartão e sem
+    // sombra, preço em figura tabular. A marca aparece UMA vez — no CTA do
+    // plano recomendado (§5.5) — e o recomendado se distingue por peso de
+    // régua e por um olho, não por cor.
+    <section className="sec border-t border-rule" id="planos">
+      <div className="ed">
+        <div className="ed-grid">
+          <div className="c5 reveal">
+            <h2 className="d3">{t.title}</h2>
+          </div>
+          <div className="c7 reveal">
+            <p className="t2 measure-prose text-text-muted">{cardSubscription ? t.subCard : t.sub}</p>
+            {cardSubscription && hasPaid && (
+              <p className="t5 measure-prose mt-3 text-text-muted" data-testid="pricing-card-line">
+                {t.card}
+              </p>
+            )}
+          </div>
         </div>
 
-        {/* Toggle de período (só faz sentido com plano pago) */}
-        <div className={`reveal mt-8 flex justify-center ${hasPaid ? "" : "hidden"}`}>
-          <div className="inline-flex flex-wrap justify-center gap-1 rounded-full border border-edge bg-surface-2 p-1">
+        {/* Período: controle segmentado, régua de 1px entre os passos */}
+        <div className={`reveal mt-10 ${hasPaid ? "" : "hidden"}`}>
+          <div className="inline-flex overflow-hidden rounded-sm border border-edge">
             {(Object.keys(PERIOD_DISCOUNT) as BillingPeriod[]).map((p) => (
               <button
                 key={p}
                 onClick={() => setPeriod(p)}
-                className={`rounded-full px-4 py-1.5 text-sm font-medium transition-colors ${
-                  period === p ? "bg-accent text-accent-ink" : "text-muted hover:text-foreground"
+                aria-pressed={period === p}
+                className={`t5 h-9 border-r border-rule px-4 font-medium transition-colors duration-[var(--dur-1)] last:border-r-0 ${
+                  period === p ? "bg-text text-canvas" : "text-text-muted hover:bg-surface-sunken"
                 }`}
               >
                 {PERIOD_DISCOUNT[p].label}
@@ -128,43 +135,42 @@ export default function Pricing({
           </div>
         </div>
 
-        {/* Cards de plano */}
-        <div className={`reveal mt-12 grid gap-6 ${plans.length >= 3 ? "lg:grid-cols-3" : "sm:grid-cols-2 lg:max-w-3xl lg:mx-auto"}`}>
+        {/* Colunas de plano */}
+        <div
+          // Uma coluna por plano: com quatro planos e três colunas o último
+          // caía sozinho numa segunda linha, sem régua à direita e sem par.
+          className="reveal mt-10 grid border-t border-edge sm:grid-cols-2"
+          style={{ ["--plan-cols" as string]: plans.length }}
+        >
           {plans.map((plan) => {
             const total = periodPrice(plan.monthlyPrice, period);
             return (
               <div
                 key={plan.id}
-                className={`card-hover relative flex flex-col rounded-2xl border bg-surface p-7 ${
-                  plan.recommended ? "border-accent shadow-xl shadow-accent/10" : "border-edge"
-                }`}
+                className="plan-col flex flex-col border-b border-rule py-7"
               >
-                {plan.recommended && (
-                  <span className="absolute -top-3 left-1/2 -translate-x-1/2 rounded-full bg-accent px-3 py-1 text-[10px] font-bold tracking-wide text-accent-ink">
-                    {t.recommended}
-                  </span>
-                )}
-                <p className="text-sm font-semibold uppercase tracking-wide text-muted">{plan.name}</p>
-                <p className="mt-3 font-[family-name:var(--font-display)] text-4xl font-extrabold">
+                <div className="flex items-baseline justify-between gap-2">
+                  <p className="t5 font-medium">{plan.name}</p>
+                  {plan.recommended && <p className="t6 text-text-muted">{t.recommended}</p>}
+                </div>
+                <p className="n1 mt-4">
                   {plan.monthlyPrice === 0 ? (
                     t.free
                   ) : (
                     <>
                       {brl(total)}
-                      <span className="text-base font-normal text-muted">
+                      <span className="t5 font-normal text-text-muted">
                         {t.per(PERIOD_DISCOUNT[period].months)}
                       </span>
                     </>
                   )}
                 </p>
-                <span className="mt-3 inline-flex w-fit items-center gap-1.5 rounded-full border border-edge bg-surface-2 px-2.5 py-0.5 text-xs text-muted">
-                  <Icon name="sparkle" size={12} className="text-accent" />
+                <p className="t5 mt-2 border-t border-rule pt-2 text-text-muted">
                   {plan.unlimited ? t.unlimited : t.quality[plan.quality]}
-                </span>
-                <ul className="mt-5 flex-1 space-y-2 text-sm">
+                </p>
+                <ul className="mt-5 flex-1">
                   {plan.highlights.map((h) => (
-                    <li key={h} className="flex items-start gap-2 text-muted">
-                      <Icon name="check" size={15} className="mt-0.5 shrink-0 text-accent" />
+                    <li key={h} className="t4 measure-prose border-b border-rule py-2 text-text-muted">
                       {h}
                     </li>
                   ))}
@@ -178,11 +184,7 @@ export default function Pricing({
                   data-testid={`pricing-cta-${plan.id}`}
                   data-track="cta_click"
                   data-track-label={plan.id}
-                  className={`mt-6 inline-flex items-center justify-center gap-1.5 rounded-xl px-5 py-3 font-semibold transition-transform hover:-translate-y-0.5 ${
-                    plan.recommended
-                      ? "bg-accent text-accent-ink shadow-lg shadow-accent/20"
-                      : "border border-edge bg-surface-2 hover:border-accent"
-                  }`}
+                  className={`${buttonClass(plan.recommended ? "primary" : "secondary")} mt-6 w-full`}
                 >
                   {plan.monthlyPrice === 0 ? t.current : t.subscribe}
                 </Link>
@@ -191,63 +193,71 @@ export default function Pricing({
           })}
         </div>
 
-        {/* Coins on-demand */}
-        <div className="reveal mt-10 rounded-2xl border border-edge bg-surface p-7">
-          <div className="flex flex-wrap items-end justify-between gap-3">
-            <div>
-              <h3 className="text-lg font-bold">{t.coinsTitle}</h3>
-              <p className="mt-1 text-sm text-muted">{t.coinsSub}</p>
-            </div>
+        {/* Coins avulsos + custo por ação: split doc (7+5) */}
+        <div className="ed-grid mt-16">
+          <div className="c7 reveal">
+            <h3 className="d4">{t.coinsTitle}</h3>
+            <p className="t3 measure-prose mt-2 text-text-muted">{t.coinsSub}</p>
+            <table className="mt-5 w-full table-fixed border-collapse text-left">
+              <thead>
+                <tr className="border-b border-edge">
+                  <th className="t6 pb-2 text-text-muted">{t.coins}</th>
+                  <th className="t6 pb-2 text-right text-text-muted">R$</th>
+                  <th className="t6 pb-2 text-right text-text-muted" />
+                </tr>
+              </thead>
+              <tbody>
+                {COIN_PACKS.map((pack) => (
+                  <tr key={pack.id} className="border-b border-rule">
+                    <td className="n3 py-3">
+                      {pack.coins}
+                      {pack.bonus > 0 && (
+                        <span className="t5 ml-2 font-normal text-positive">
+                          +{pack.bonus} {t.bonus}
+                        </span>
+                      )}
+                    </td>
+                    <td className="n3 py-3 text-right">{brl(pack.price)}</td>
+                    <td className="py-3 text-right">
+                      <Link
+                        href={`/criar-conta?type=${accountType}`}
+                        className="t5 font-medium underline-offset-4 hover:underline"
+                      >
+                        {t.buy}
+                      </Link>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
           </div>
-          <div className="mt-5 grid gap-3 sm:grid-cols-3">
-            {COIN_PACKS.map((pack) => (
-              <div key={pack.id} className="rounded-xl border border-edge bg-surface-2 p-4 text-center">
-                <p className="font-[family-name:var(--font-display)] text-2xl font-bold text-accent">
-                  {pack.coins}
-                  {pack.bonus > 0 && <span className="text-sm text-emerald-500"> +{pack.bonus}</span>}
-                </p>
-                <p className="text-xs text-muted">
-                  {t.coins}
-                  {pack.bonus > 0 && ` (${t.bonus})`}
-                </p>
-                <p className="mt-2 text-lg font-semibold">{brl(pack.price)}</p>
-                <Link
-                  href={`/criar-conta?type=${accountType}`}
-                  className="mt-3 inline-block rounded-lg border border-edge px-4 py-1.5 text-sm transition-colors hover:border-accent"
-                >
-                  {t.buy}
-                </Link>
-              </div>
-            ))}
+
+          <div className="c5 reveal" data-testid="pricing-action-costs">
+            <h3 className="d4">{t.costsTitle}</h3>
+            <p className="t3 measure-prose mt-2 text-text-muted">{t.costsSub}</p>
+            <dl className="mt-5 border-t border-edge">
+              {Object.entries(t.costs).map(([action, label]) => (
+                <div key={action} className="flex items-baseline justify-between gap-4 border-b border-rule py-2">
+                  <dt className="t4 min-w-0 flex-1 truncate text-text-muted">{label}</dt>
+                  <dd className="n3 shrink-0">{`${ACTION_COST[action]} ${t.coins}`}</dd>
+                </div>
+              ))}
+            </dl>
           </div>
         </div>
 
-        {/* Transparência: custo fixo por ação */}
-        <div className="reveal mt-6 rounded-2xl border border-edge bg-surface p-6" data-testid="pricing-action-costs">
-          <h3 className="font-bold">{t.costsTitle}</h3>
-          <p className="mt-1 text-sm text-muted">{t.costsSub}</p>
-          <ul className="mt-4 grid gap-2 sm:grid-cols-2 lg:grid-cols-3">
-            {Object.entries(t.costs).map(([action, label]) => (
-              <li key={action} className="flex items-center justify-between gap-3 rounded-lg border border-edge bg-surface-2 px-3 py-2 text-sm">
-                <span>{label}</span>
-                <span className="shrink-0 font-semibold tabular-nums text-accent">{`${ACTION_COST[action]} ${t.coins}`}</span>
-              </li>
+        <div className="ed-grid mt-12">
+          <p className="c7 t5 measure-prose reveal text-text-muted">
+            {cardSubscription ? t.prepaidCard : t.prepaid}
+          </p>
+          <div className="c5 reveal flex flex-wrap items-baseline gap-x-4 gap-y-2">
+            <span className="t6 text-text-muted">{t.pay}</span>
+            {["Pix", "Visa", "Mastercard", "Elo", "Boleto"].map((m) => (
+              <span key={m} className="t5 font-medium">
+                {m}
+              </span>
             ))}
-          </ul>
-        </div>
-
-        <p className="reveal mx-auto mt-6 max-w-2xl text-center text-xs text-muted">{cardSubscription ? t.prepaidCard : t.prepaid}</p>
-
-        {/* Métodos de pagamento (confiança) */}
-        <div className="reveal mt-8 flex flex-wrap items-center justify-center gap-x-6 gap-y-2 text-sm text-muted">
-          <span className="inline-flex items-center gap-1.5">
-            <Icon name="check" size={14} className="text-accent" /> {t.pay}
-          </span>
-          {["Pix", "Visa", "Mastercard", "Elo", "Boleto"].map((m) => (
-            <span key={m} className="rounded-md border border-edge bg-surface-2 px-3 py-1 text-xs font-semibold">
-              {m}
-            </span>
-          ))}
+          </div>
         </div>
       </div>
     </section>

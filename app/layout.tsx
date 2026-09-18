@@ -171,7 +171,7 @@ export default async function RootLayout({
             </div>
           </div>
         </header>
-        <main className="mx-auto w-full max-w-6xl flex-1 px-4 py-8">
+        <main className="main-shell">
           {session?.mustChangePassword && (
             <p role="alert" data-testid="must-change-password" className="mb-6 rounded-md border border-amber-500/60 bg-amber-500/10 px-3 py-2 text-sm">
               Você entrou com uma senha provisória. <Link href="/conta?trocar=1" className="font-medium text-accent hover:underline">Troque a senha</Link> para usar a plataforma.
