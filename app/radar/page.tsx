@@ -3,7 +3,6 @@ import { redirect } from "next/navigation";
 import { getSession } from "@/lib/session";
 import { scopeForSession } from "@/lib/tenancy-rules";
 import { agencyRadarOverview } from "@/lib/ai-visibility-db";
-import { Icon } from "@/components/icons";
 
 export const dynamic = "force-dynamic";
 export const metadata = { title: "Radar de IA" };

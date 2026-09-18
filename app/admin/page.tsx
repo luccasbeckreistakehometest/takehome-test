@@ -4,7 +4,7 @@ import { useEffect, useState } from "react";
 import Link from "next/link";
 import { api } from "@/lib/api";
 import { Card, SectionTitle, Skeleton, Tag } from "@/components/ui";
-import { Icon, type IconName } from "@/components/icons";
+import { type IconName } from "@/components/icons";
 import { fmtMoney, useUiLang } from "@/lib/i18n";
 import AdminUsers from "./AdminUsers";
 import AdminPayments from "./AdminPayments";

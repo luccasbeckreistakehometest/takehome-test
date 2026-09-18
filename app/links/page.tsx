@@ -3,7 +3,6 @@ import { redirect } from "next/navigation";
 import { getSession } from "@/lib/session";
 import { scopeForSession } from "@/lib/tenancy-rules";
 import { agencyLinksOverview } from "@/lib/links-db";
-import { Icon } from "@/components/icons";
 
 export const dynamic = "force-dynamic";
 export const metadata = { title: "Links & bio" };

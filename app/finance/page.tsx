@@ -8,7 +8,7 @@ import { currentMonth, shiftMonth } from "@/lib/report-aggregate";
 import { formatHours } from "@/lib/finance-rules";
 import type { MarginReport } from "@/lib/finance-db";
 import { MARGIN_LABEL, MARGIN_STYLE } from "@/components/TimeTab";
-import { Button, Card, ErrorBox, Input, Label, SectionTitle, Spinner } from "@/components/ui";
+import { Button, ErrorBox, Input, Label, SectionTitle, Spinner } from "@/components/ui";
 import { Icon } from "@/components/icons";
 
 function monthLabel(month: string, lang: "pt" | "en"): string {
