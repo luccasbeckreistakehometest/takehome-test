@@ -586,3 +586,108 @@ existem dentro de uma peça de cliente; a pré-visualização na tela usa a mesm
 papel (mesma mancha, mesmas quebras), então o que se vê é o que sai.
 
 ---
+
+## 11. Inventário de componentes
+
+Estados obrigatórios em **tudo** que é interativo: `default`, `hover`, `active`, `focus-visible`,
+`disabled`, e, quando couber, `loading`, `selected`, `invalid`, `readonly`.
+
+**Foco.** `focus-visible` é anel de 2px em `--brand-edge` (≥3:1 garantido pela §5.4) com 2px de
+offset e `border-radius` herdado. No escuro, anel de 2px em `n-50` com 1px interno em `--brand-edge`,
+para o anel não sumir sobre uma marca escura. `outline: none` só existe acompanhado de substituto.
+Ordem de tabulação segue a ordem visual; nada de `tabindex` positivo.
+
+### 11.1 Ação
+
+| Componente | Variantes | Observações |
+|---|---|---|
+| `Button` | `primary` (`--brand-solid` + `--brand-ink`), `secondary` (borda `edge`, fundo `surface`), `quiet` (só texto, hover em `surface-sunken`), `danger` (texto `negative`, borda `negative-edge`) | altura 32 (`compact`) / 40 (`comfortable`); `r-sm`; **um `primary` por região**; `loading` troca o rótulo por spinner **mantendo a largura**; `disabled` é `text-faint` sobre `surface-sunken`, sem opacidade global (opacidade quebra contraste) |
+| `ButtonGroup` | — | régua interna de 1px, cantos externos `r-sm` |
+| `Link` | `default`, `quiet` | `--brand-text`, sublinhado com `text-underline-offset: 2px`; **sublinhado sempre visível** em prosa, só no hover em UI |
+| `IconButton` | idem `Button` | quadrado, alvo mínimo 40×40, `aria-label` obrigatório |
+| `Menu` / `MenuItem` | — | `e1`, `r-md`, item 32px, separador `rule`, item perigoso em `negative` |
+
+### 11.2 Entrada
+
+| Componente | Estados extras |
+|---|---|
+| `Field` (invólucro) | `label` `t5` caixa de sentença · `hint` `t5` `text-muted` **acima** do controle · `error` `t5` `negative` abaixo · `required` marcado por texto "obrigatório" no hint, não por `*` · contador de caracteres em campo longo |
+| `Input`, `Textarea` | `invalid` (borda `negative`, ícone, `aria-invalid`), `readonly` (fundo `surface-sunken`, sem borda), `disabled`, `with-prefix/suffix` (ex. `R$`, `%`, `@`) |
+| `Select` | **customizado**, nunca o `<select>` nativo cru; mesma altura e borda dos inputs; teclado completo |
+| `Combobox` | `loading`, `no-results`, `creating` |
+| `Checkbox`, `Radio`, `Switch` | `indeterminate` no checkbox; o switch só para efeito imediato, nunca dentro de formulário com Salvar |
+| `ChipGroup` | `selected` = `--brand-wash` + borda `--brand-edge` + `aria-pressed`; nunca só cor de fundo |
+| `FileDrop` | `idle`, `dragover`, `uploading` (progresso real), `error`, `preview` |
+| `DateNav` | setas com `aria-label` do período, rótulo em `t3`, hoje marcado com ponto |
+
+**Largura de campo comunica.** A largura segue o conteúdo esperado: `%` = 88px, moeda = 160px,
+data = 160px, nome = 320px, e-mail/URL = 100% da coluna. Formulário longo ganha barra de ação fixa
+(`e3`) com Salvar/Cancelar e aviso de alteração não salva.
+
+### 11.3 Estrutura e navegação
+
+| Componente | Observações |
+|---|---|
+| `AppRail` | 248px, **4 grupos** com rótulo `t6`, item 32px com ícone 20 + `t3`; ativo = fundo `surface-sunken` + barra de 2px em `--brand-edge` à esquerda; colapsa para 64px (só ícone + tooltip) e vira gaveta em ≤900px. Substitui os 12 itens + "Mais" |
+| `TopBar` | 48px: caminho/`d3` da página à esquerda, busca no centro, utilitários à direita agrupados num único `Menu` |
+| `Tabs` | **uma metáfora só**: sublinhado de 2px em `--brand-edge`, rótulo `t3`; rolagem horizontal com máscara no mobile — **acabam** as duas fileiras e os `<select>` nativos |
+| `Breadcrumb` | `t5`, separador `/` em `text-faint` |
+| `Panel` | o único "cartão": `surface`, `r-md`, `rule` de 1px, **sem sombra**; cabeçalho opcional com `d4` + ações à direita, régua `rule` sob o cabeçalho |
+| `ListRow` | altura `--row-h`, régua `rule` embaixo, hover `surface-sunken`, ação revelada no hover mas **sempre presente para o teclado** |
+| `Dialog` | `e2`, largura 480/640/800, foco preso, `Esc` fecha, título `d4` |
+| `Drawer` | `e2`, lateral direita, 420px, mesma regra de foco |
+| `Toast` | `e1`, canto inferior direito, 5s, pausa no hover, nunca carrega a única via de desfazer |
+| `Banner` | dentro do fluxo, `positive`/`caution`/`negative`/neutro, com `-wash` + `-edge` |
+| `Tooltip` | só para texto curto; nunca a única fonte de uma informação |
+
+### 11.4 Dados e conteúdo
+
+`Table` (§9.1) · `Figure`/`KPI` (rótulo `t5` + valor `n1` + delta) · `Delta` · `StatusDot` ·
+`Badge` (`t5`, `r-sm`, `-wash` + `-edge`) · `Progress` (barra de 4px, `rule` + `--brand-edge`) ·
+`Skeleton` (mesma caixa do conteúdo final) · `EmptyState` (§9.4) · `Avatar` (`r-full`, iniciais em
+`t5` sobre `surface-sunken`) · `BrandLockup` (marca da agência + "por Marqa" quando for whitelabel) ·
+`Timeline` (aprovações) · `Comment` · `KanbanColumn`/`KanbanCard` · `CalendarCell` ·
+`DocumentBlock` (§10) · `PrintHeader`/`PrintFooter`.
+
+---
+
+## 12. Do / Don't
+
+**Proibido — porque é exatamente o que faz a tela parecer feita por IA:**
+
+- Gradiente decorativo (roxo-para-azul ou qualquer outro), inclusive em texto.
+- *Glassmorphism*, `backdrop-blur` como estética.
+- Manchas de cor borradas ao fundo.
+- Emoji como ícone ou marcador de lista.
+- Hero de "texto centrado + dois botões + três cartões iguais".
+- `rounded-2xl` uniforme em tudo.
+- Sombra como único recurso de profundidade.
+- Iconografia de "faísca de IA".
+- Copy tipo "✨ Powered by AI".
+- Dashboard falso nas capturas.
+- Texto de enchimento estilo *lorem*.
+
+**Também proibido aqui:**
+
+- Cor da marca em mais de um papel na mesma tela (§5.5).
+- Caixa alta fora do `t6`.
+- Prosa sem `max-width` em `ch`.
+- Número não tabular em coluna.
+- `0` no lugar de "sem dado".
+- Animação em loop.
+- `<select>` nativo cru convivendo com input customizado.
+- Um estilo de rótulo servindo a mais de um papel.
+- Componente sem `focus-visible` visível.
+
+**Faça:**
+
+- Deixe o tipo carregar a hierarquia: tamanho, peso e família antes de caixa, cor ou moldura.
+- Alterne os splits da grade entre seções seguidas.
+- Alinhe a linha de base de rótulo e valor.
+- Declare largura de coluna e alinhe número à direita.
+- Desenhe o estado vazio antes do cheio.
+- Escolha a densidade pela natureza da tela e mude só o token.
+- Teste a marca da agência com `#FFD400` e `#FFFFFF` antes de dizer que funciona.
+- Imprima o relatório em PDF antes de chamá-lo de pronto.
+
+---
