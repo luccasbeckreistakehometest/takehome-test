@@ -4,7 +4,12 @@ import { use, useEffect, useState } from "react";
 import { api } from "@/lib/api";
 import { fmtCurrency, useUiLang } from "@/lib/i18n";
 import type { ProposalContent, ProposalState } from "@/lib/proposal-rules";
-import { Button, Card, ErrorBox, Input, Label, Spinner } from "@/components/ui";
+import { Button, ErrorBox, Input, Label, Spinner } from "@/components/ui";
+import { buttonClass } from "@/lib/button-class";
+import { brandStyle } from "@/lib/brand-ramp";
+
+/** SOFT do Fraunces na capa de peça pública (§3.1). */
+const SOFT_20 = { "--soft": 20 } as React.CSSProperties;
 
 type Payload = {
   state: ProposalState;
@@ -70,8 +75,8 @@ export default function PublicProposalPage({ params }: { params: Promise<{ token
   if (notFound) {
     return (
       <div className="mx-auto max-w-md py-16 text-center">
-        <h1 className="font-[family-name:var(--font-display)] text-2xl font-bold">Proposta não encontrada</h1>
-        <p className="mt-3 text-muted">O link pode estar errado ou a proposta foi removida.</p>
+        <h1 className="d3">Proposta não encontrada</h1>
+        <p className="t3 mt-3 text-text-muted">O link pode estar errado ou a proposta foi removida.</p>
       </div>
     );
   }
@@ -87,74 +92,77 @@ export default function PublicProposalPage({ params }: { params: Promise<{ token
   const money = (v: number) => fmtCurrency(v, proposal.currency, lang);
 
   return (
-    <div className="mx-auto max-w-3xl space-y-8 py-6" style={{ ["--accent" as string]: agency.accentColor }} data-testid="proposal-page">
-      <div className="flex items-center gap-3">
-        {agency.hasLogo && agency.logoUrl ? (
-          // eslint-disable-next-line @next/next/no-img-element
-          <img src={agency.logoUrl} alt={agency.name} className="size-10 rounded-md object-contain" />
-        ) : (
-          <span className="grid size-10 place-items-center rounded-md bg-accent font-[family-name:var(--font-display)] text-lg font-bold text-accent-ink">
-            {agency.name.charAt(0).toUpperCase()}
-          </span>
-        )}
-        <div>
-          <p className="font-[family-name:var(--font-display)] text-lg font-semibold">{agency.name}</p>
-          <p className="text-xs text-muted">{agency.tagline}</p>
+    // A proposta é uma PEÇA, não um formulário com cartões: capa, régua da
+    // marca, seções numeradas e tabela de pacote na mancha de 160mm — a mesma
+    // do relatório e da fatura, para as três se reconhecerem como do mesmo
+    // estúdio.
+    <article
+      className="doc my-8 px-8 py-10 sm:px-12"
+      style={brandStyle(agency.accentColor) as React.CSSProperties}
+      data-testid="proposal-page"
+    >
+      <header className="doc-cover">
+        <div className="doc-rule" />
+        <div className="mt-4 flex items-center gap-3">
+          {agency.hasLogo && agency.logoUrl ? (
+            // eslint-disable-next-line @next/next/no-img-element
+            <img src={agency.logoUrl} alt={agency.name} className="size-8 rounded-xs object-contain" />
+          ) : null}
+          <p className="t6 text-n-500">{agency.name}</p>
+          <span className="t5 ml-auto text-n-500">{proposal.validity}</span>
         </div>
-        <span className="ml-auto rounded-full border border-edge px-3 py-1 text-xs text-muted">{proposal.validity}</span>
-      </div>
-
-      <div>
-        <p className="text-xs uppercase tracking-widest text-text">Proposta para {proposal.prospectName}</p>
-        <h1 className="mt-1 font-[family-name:var(--font-display)] text-3xl font-bold tracking-tight" data-testid="proposal-headline">
+        <p className="t5 mt-8 text-n-500">Proposta para {proposal.prospectName}</p>
+        <h1 className="d2 mt-2" style={SOFT_20} data-testid="proposal-headline">
           {c.headline}
         </h1>
-        <p className="mt-4 whitespace-pre-line text-base leading-relaxed text-foreground/90">{c.pitch}</p>
-      </div>
+        <p className="t1 prose-doc mt-5 whitespace-pre-line">{c.pitch}</p>
+      </header>
 
       {data.state === "expired" && (
-        <Card className="border-caution/40">
-          <p className="font-medium">Esta proposta expirou.</p>
-          <p className="mt-1 text-sm text-muted">Fale com a agência para receber uma versão atualizada.</p>
-        </Card>
+        <p className="t3 mt-8 border-l-2 border-caution bg-caution-wash px-4 py-3">
+          Esta proposta expirou. Fale com a agência para receber uma versão atualizada.
+        </p>
       )}
       {data.state === "accepted" && !accepted && (
-        <Card className="border-positive/40">
-          <p className="font-medium">Esta proposta já foi aceita.</p>
-          <p className="mt-1 text-sm text-muted">
-            <span>Pacote escolhido:</span> {proposal.acceptedPackage}
-          </p>
-        </Card>
+        <p className="t3 mt-8 border-l-2 border-positive bg-positive-wash px-4 py-3">
+          Esta proposta já foi aceita. Pacote escolhido: {proposal.acceptedPackage}.
+        </p>
       )}
 
-      <div className="grid gap-6 md:grid-cols-2">
-        <Card>
-          <p className="mb-2 text-xs font-semibold uppercase tracking-wider text-muted">O que a gente viu</p>
-          <ul className="space-y-1.5 text-sm">
-            {c.painPoints.map((p, i) => (
-              <li key={i} className="flex gap-2">
-                <span className="text-text">•</span>
-                <span>{p}</span>
-              </li>
-            ))}
-          </ul>
-        </Card>
-        <Card>
-          <p className="mb-2 text-xs font-semibold uppercase tracking-wider text-muted">O que está incluído</p>
-          <ul className="space-y-1.5 text-sm">
-            {c.scope.map((s, i) => (
-              <li key={i} className="flex gap-2">
-                <span className="text-text">✓</span>
-                <span>{s}</span>
-              </li>
-            ))}
-          </ul>
-        </Card>
-      </div>
+      <section className="doc-figure mt-12 border-t border-edge pt-4">
+        <div className="flex items-baseline gap-3">
+          <span className="idx t5 w-8 shrink-0">01</span>
+          <h2 className="d4">O que a gente viu</h2>
+        </div>
+        <ul className="mt-3 sm:pl-11">
+          {c.painPoints.map((p, i) => (
+            <li key={i} className="t2 prose-doc border-b border-rule py-2">
+              {p}
+            </li>
+          ))}
+        </ul>
+      </section>
 
-      <div>
-        <p className="mb-3 text-xs font-semibold uppercase tracking-wider text-muted">Escolha o pacote</p>
-        <div className="grid gap-3 md:grid-cols-3">
+      <section className="doc-figure mt-10 border-t border-edge pt-4">
+        <div className="flex items-baseline gap-3">
+          <span className="idx t5 w-8 shrink-0">02</span>
+          <h2 className="d4">O que está incluído</h2>
+        </div>
+        <ul className="mt-3 sm:pl-11">
+          {c.scope.map((item, i) => (
+            <li key={i} className="t2 prose-doc border-b border-rule py-2">
+              {item}
+            </li>
+          ))}
+        </ul>
+      </section>
+
+      <section className="doc-figure mt-10 border-t border-edge pt-4">
+        <div className="flex items-baseline gap-3">
+          <span className="idx t5 w-8 shrink-0">03</span>
+          <h2 className="d4">Escolha o pacote</h2>
+        </div>
+        <div className="mt-4 grid border-t border-edge sm:pl-11 md:grid-cols-3">
           {c.packages.map((pkg) => {
             const active = selected === pkg.name;
             return (
@@ -163,100 +171,159 @@ export default function PublicProposalPage({ params }: { params: Promise<{ token
                 type="button"
                 disabled={data.state !== "open" || Boolean(accepted)}
                 onClick={() => setSelected(pkg.name)}
-                className={`rounded-xl border p-4 text-left transition-colors ${active ? "border-edge bg-surface-sunken" : "border-edge bg-surface hover:border-muted"} disabled:cursor-default`}
+                aria-pressed={active}
+                className={`flex flex-col border-b border-rule py-4 pr-6 text-left transition-colors duration-[var(--dur-1)] disabled:cursor-default ${
+                  active ? "bg-surface-sunken pl-4" : "hover:bg-surface-sunken"
+                }`}
                 data-testid="proposal-package"
                 data-name={pkg.name}
               >
-                <div className="flex items-center justify-between">
-                  <p className="font-semibold">{pkg.name}</p>
-                  {pkg.recommended && <span className="rounded-full bg-accent px-2 py-0.5 text-[10px] font-semibold uppercase text-accent-ink">Recomendado</span>}
-                </div>
-                <p className="mt-2 font-[family-name:var(--font-display)] text-2xl font-bold">
+                <span className="flex items-baseline justify-between gap-2">
+                  <span className="t5 font-medium">{pkg.name}</span>
+                  {pkg.recommended && <span className="t6 text-n-500">Recomendado</span>}
+                </span>
+                <span className="n2 mt-3">
                   {money(pkg.price)}
-                  <span className="text-sm font-normal text-muted"> / {pkg.period}</span>
-                </p>
-                <ul className="mt-3 space-y-1 text-xs text-muted">
+                  <span className="t5 font-normal text-n-500"> / {pkg.period}</span>
+                </span>
+                <ul className="mt-3">
                   {pkg.items.map((item, i) => (
-                    <li key={i}>· {item}</li>
+                    <li key={i} className="t5 border-b border-rule py-1 text-n-500">
+                      {item}
+                    </li>
                   ))}
                 </ul>
               </button>
             );
           })}
         </div>
-        {c.validityNote && <p className="mt-2 text-xs text-muted">{c.validityNote}</p>}
-      </div>
+        {c.validityNote && <p className="t5 mt-2 text-n-500 sm:pl-11">{c.validityNote}</p>}
+      </section>
 
-      <Card>
-        <p className="mb-3 text-xs font-semibold uppercase tracking-wider text-muted">Como vai acontecer</p>
-        <div className="grid gap-3 md:grid-cols-3">
+      <section className="doc-figure mt-10 border-t border-edge pt-4">
+        <div className="flex items-baseline gap-3">
+          <span className="idx t5 w-8 shrink-0">04</span>
+          <h2 className="d4">Como vai acontecer</h2>
+        </div>
+        <div className="mt-3 sm:pl-11">
           {c.timeline.map((t, i) => (
-            <div key={i} className="rounded-lg border border-edge bg-surface-2 p-3 text-sm">
-              <p className="font-semibold">{t.phase}</p>
-              <p className="text-xs text-text">{t.weeks}</p>
-              <ul className="mt-2 space-y-0.5 text-xs text-muted">
+            <div key={i} className="grid grid-cols-[1fr] gap-1 border-b border-rule py-3 sm:grid-cols-[10rem_1fr] sm:gap-4">
+              <div>
+                <p className="t3 font-medium">{t.phase}</p>
+                <p className="t5 tnum text-n-500">{t.weeks}</p>
+              </div>
+              <ul>
                 {t.deliverables.map((d, j) => (
-                  <li key={j}>· {d}</li>
+                  <li key={j} className="t4 measure-prose text-n-500">
+                    {d}
+                  </li>
                 ))}
               </ul>
             </div>
           ))}
         </div>
-      </Card>
+      </section>
 
       {accepted ? (
-        <Card className="space-y-3 border-positive/40" data-testid="proposal-accepted">
-          <p className="font-[family-name:var(--font-display)] text-xl font-semibold">Proposta aceita! </p>
-          <p className="text-sm text-muted">A agência já foi avisada e vai entrar em contato para o kickoff.</p>
+        <section className="doc-figure mt-10 border-t border-edge pt-4" data-testid="proposal-accepted">
+          <h2 className="d4">Proposta aceita</h2>
+          <p className="t2 prose-doc mt-2">
+            A agência já foi avisada e vai entrar em contato para o kickoff.
+          </p>
           {accepted.login ? (
-            <div className="rounded-md border border-edge bg-surface-2 p-3 text-sm">
-              <p className="font-medium">Seu acesso ao portal do cliente</p>
-              <p className="mt-1">
-                <span className="text-muted">Usuário:</span> <code data-testid="proposal-username">{accepted.login.username}</code>
+            <div className="mt-4 border border-edge p-4">
+              <p className="t6 text-n-500">Seu acesso ao portal do cliente</p>
+              <dl className="mt-2">
+                <div className="flex items-baseline justify-between gap-4 border-b border-rule py-1.5">
+                  <dt className="t5 text-n-500">Usuário</dt>
+                  <dd className="t4 font-mono" data-testid="proposal-username">
+                    {accepted.login.username}
+                  </dd>
+                </div>
+                <div className="flex items-baseline justify-between gap-4 border-b border-rule py-1.5">
+                  <dt className="t5 text-n-500">Senha</dt>
+                  <dd className="t4 font-mono">{accepted.login.password}</dd>
+                </div>
+              </dl>
+              <p className="t5 mt-2 text-n-500">
+                Guarde estes dados — você pode trocar a senha depois de entrar.
               </p>
-              <p>
-                <span className="text-muted">Senha:</span> <code>{accepted.login.password}</code>
-              </p>
-              <p className="mt-2 text-xs text-muted">Guarde estes dados — você pode trocar a senha depois de entrar.</p>
-              <a href="/login" className="mt-3 inline-block rounded-md bg-accent px-4 py-2 text-sm font-medium text-accent-ink">
-                Entrar no portal →
+              <a href="/login" className={`${buttonClass("primary")} mt-4`}>
+                Entrar no portal
               </a>
             </div>
           ) : (
-            <a href="/login" className="inline-block rounded-md bg-accent px-4 py-2 text-sm font-medium text-accent-ink">
-              Entrar no portal →
+            <a href="/login" className={`${buttonClass("primary")} mt-4`}>
+              Entrar no portal
             </a>
           )}
-        </Card>
+        </section>
       ) : (
         data.state === "open" && (
-          <Card className="space-y-3">
-            <p className="font-[family-name:var(--font-display)] text-lg font-semibold">Aceitar a proposta</p>
-            <p className="text-sm text-muted">
-              <span>Pacote selecionado:</span> <strong>{selected}</strong>
-            </p>
-            <div className="grid gap-3 sm:grid-cols-2">
-              <div>
-                <Label>Seu nome</Label>
-                <Input value={name} onChange={(e) => setName(e.target.value)} placeholder="Como devemos te chamar" data-testid="proposal-name" />
-              </div>
-              <div>
-                <Label>WhatsApp ou e-mail</Label>
-                <Input value={contact} onChange={(e) => setContact(e.target.value)} placeholder="(11) 99999-9999" data-testid="proposal-contact" />
-              </div>
+          <section className="doc-figure mt-10 border-t border-edge pt-4">
+            <div className="flex items-baseline gap-3">
+              <span className="idx t5 w-8 shrink-0">05</span>
+              <h2 className="d4">Aceitar a proposta</h2>
             </div>
-            {error && <ErrorBox message={error} />}
-            <Button onClick={accept} disabled={accepting || !selected || name.trim().length < 2 || contact.trim().length < 5} data-testid="proposal-accept">
-              {accepting ? "Confirmando..." : "Aceitar proposta ✓"}
-            </Button>
-            <ul className="space-y-0.5 text-xs text-muted">
-              {c.nextSteps.map((s, i) => (
-                <li key={i}>→ {s}</li>
-              ))}
-            </ul>
-          </Card>
+            <div className="mt-3 sm:pl-11">
+              <p className="t3 text-n-500">
+                Pacote selecionado: <strong className="font-medium text-n-900">{selected}</strong>
+              </p>
+              <div className="mt-4 grid gap-4 sm:grid-cols-2">
+                <div>
+                  <Label>Seu nome</Label>
+                  <Input
+                    value={name}
+                    onChange={(e) => setName(e.target.value)}
+                    placeholder="Como devemos te chamar"
+                    data-testid="proposal-name"
+                  />
+                </div>
+                <div>
+                  <Label>WhatsApp ou e-mail</Label>
+                  <Input
+                    value={contact}
+                    onChange={(e) => setContact(e.target.value)}
+                    placeholder="(11) 99999-9999"
+                    data-testid="proposal-contact"
+                  />
+                </div>
+              </div>
+              {error && (
+                <div className="mt-3">
+                  <ErrorBox message={error} />
+                </div>
+              )}
+              <div className="mt-4">
+                <Button
+                  onClick={accept}
+                  disabled={
+                    accepting || !selected || name.trim().length < 2 || contact.trim().length < 5
+                  }
+                  data-testid="proposal-accept"
+                >
+                  {accepting ? "Confirmando..." : "Aceitar proposta"}
+                </Button>
+              </div>
+              <ol className="mt-5">
+                {c.nextSteps.map((s, i) => (
+                  <li key={i} className="t5 flex items-baseline gap-3 border-b border-rule py-1.5 text-n-500">
+                    <span className="idx w-5 shrink-0">{String(i + 1).padStart(2, "0")}</span>
+                    {s}
+                  </li>
+                ))}
+              </ol>
+            </div>
+          </section>
         )
       )}
-    </div>
+
+      <footer className="mt-12 border-t border-edge pt-3">
+        <p className="t5 text-n-500">
+          {agency.name}
+          {agency.tagline ? ` — ${agency.tagline}` : ""}
+        </p>
+      </footer>
+    </article>
   );
 }

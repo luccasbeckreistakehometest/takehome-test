@@ -27,17 +27,8 @@ import {
 } from "@/components/renderers";
 import { Spinner } from "@/components/ui";
 
-// Tema claro para impressão/PDF — sobrescreve os tokens do tema escuro
-const PRINT_THEME: Record<string, string> = {
-  "--background": "#ffffff",
-  "--surface": "#ffffff",
-  "--surface-2": "#f4f5f7",
-  "--edge": "#d9dce2",
-  "--foreground": "#16181d",
-  "--muted": "#4b5058",
-  "--accent": "#3f6212",
-  "--accent-ink": "#ffffff",
-};
+// O mapa de hex do tema claro saiu daqui: `.doc` (globals.css §10) já
+// redeclara os papéis, então a peça é papel nos dois temas e no papel.
 
 export default function PrintGenerationPage({
   params,
@@ -105,29 +96,33 @@ export default function PrintGenerationPage({
   })();
 
   return (
-    <div style={PRINT_THEME as React.CSSProperties} className="rounded-xl bg-background p-6 text-foreground">
+    // Mesma anatomia do relatório: capa com régua da marca, mancha de 160mm e
+    // folha de impressão de verdade.
+    <article className="doc my-8 px-8 py-10 sm:px-12">
       <button
         onClick={() => window.print()}
-        className="fixed bottom-6 right-6 z-50 rounded-full bg-[#3f6212] px-5 py-3 font-medium text-white shadow-lg transition-opacity hover:opacity-90 print:hidden"
-      >Salvar como PDF
+        className="no-print fixed bottom-6 right-6 z-50 h-10 rounded-sm bg-brand-solid px-4 font-medium text-brand-ink shadow-e1 transition-[filter] hover:brightness-95"
+      >
+        Salvar como PDF
       </button>
-      <div className="mb-6 border-b-2 border-foreground pb-4">
-        <p className="text-xs font-bold uppercase tracking-widest text-[#3f6212]">
-          {agencyName}
-        </p>
-        <h1 className="mt-1 font-[family-name:var(--font-display)] text-2xl font-bold">
+      <header className="doc-cover">
+        <div className="doc-rule" />
+        <p className="t6 mt-4 text-n-500">{agencyName}</p>
+        <h1 className="d2 mt-3" style={{ ["--soft" as string]: 20 }}>
           {generation.title}
         </h1>
-        <p className="mt-1 text-sm text-muted">
-          {client.name} · {GENERATION_LABELS[generation.type]} ·{" "}
+        <p className="t1 mt-2 text-n-700">
+          {client.name} · {GENERATION_LABELS[generation.type]}
+        </p>
+        <p className="t5 tnum mt-6 text-n-500">
           {new Date(generation.createdAt).toLocaleDateString("pt-BR", {
             day: "2-digit",
             month: "long",
             year: "numeric",
           })}
         </p>
-      </div>
-      {content}
-    </div>
+      </header>
+      <div className="mt-10">{content}</div>
+    </article>
   );
 }
