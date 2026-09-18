@@ -492,7 +492,10 @@ export function Panel({
 }) {
   return (
     <div
-      className={cx("rounded-md border border-rule bg-surface", className)}
+      // `panel` é o gancho do documento: dentro de `.doc` (globals.css §10) um
+      // painel deixa de ser caixa e vira seção com régua — o documento não tem
+      // cartões, tem seções.
+      className={cx("panel rounded-md border border-rule bg-surface", className)}
       {...rest}
     >
       {(title || actions) && (

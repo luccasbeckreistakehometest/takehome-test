@@ -862,6 +862,26 @@ hr {
   --caution-wash: #f4f1eb;
   color: var(--text);
 }
+/* Um documento não tem cartões: tem seções. Todo <Panel>/<Card> que cair
+   dentro de `.doc` (os entregáveis de IA renderizados em /print/[id] são
+   dezenas deles) perde a caixa e ganha régua — sem reescrever os 1365 linhas
+   do renderizador. */
+.doc .panel {
+  border: 0;
+  border-top: 1px solid var(--edge);
+  border-radius: 0;
+  background: transparent;
+  margin-top: var(--space-3xl);
+  break-inside: avoid;
+}
+.doc .panel > div {
+  padding-inline: 0;
+  padding-block: var(--space-md) 0;
+}
+.doc .panel > div:first-child {
+  border-bottom: 0;
+}
+
 .doc-rule {
   height: 3px;
   background: var(--brand-solid);
