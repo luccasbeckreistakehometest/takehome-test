@@ -61,7 +61,10 @@ function Section({
         <div className="md:col-span-2">
           <p className="n3 text-text-faint">{n}</p>
         </div>
-        <div className="md:col-span-10">
+        {/* min-w-0: um item de grade tem min-width:auto e estica a coluna para
+            caber o conteúdo mais largo — é o que faz a peça de 160mm empurrar a
+            página inteira para o lado no celular. */}
+        <div className="min-w-0 md:col-span-10">
           <h2 className="d3 mb-2">{title}</h2>
           {lede && <p className="t2 measure-prose text-text-muted">{lede}</p>}
           <div className="mt-8 grid gap-8">{children}</div>
@@ -130,7 +133,7 @@ export default function Gallery() {
     <div className="mx-auto w-full max-w-[1280px] px-4 pb-24 md:px-8">
       {/* Abertura — grade `lead` 7+5: manchete à esquerda, dado à direita. */}
       <header className="grid gap-x-6 gap-y-8 pt-12 pb-16 md:grid-cols-12">
-        <div className="md:col-span-7">
+        <div className="min-w-0 md:col-span-7">
           <p className="t6 mb-4 text-text-muted">Marqa · sistema de desenho</p>
           <h1 className="d1">Estúdio editorial</h1>
           <p className="t1 measure-lede mt-6 text-text-muted">
@@ -138,7 +141,7 @@ export default function Gallery() {
             uma vez por tela — no lugar que decide.
           </p>
         </div>
-        <div className="grid content-end gap-4 md:col-span-4 md:col-start-9">
+        <div className="grid min-w-0 content-end gap-4 md:col-span-4 md:col-start-9">
           <div className="border-t border-edge pt-3">
             <p className="t5 text-text-muted">Famílias</p>
             <p className="t3 text-text">Fraunces · Archivo</p>

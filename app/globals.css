@@ -648,8 +648,12 @@ hr {
    pré-visualização na tela usa a MESMA mancha do papel, então o que se vê é o
    que sai. */
 .doc {
+  /* 160mm de mancha (§4.1C). `max-width` sozinho não basta: dentro de uma
+     grade ou de um flex o pai tem min-width:auto e estica para caber os
+     605px — e a página ganha rolagem lateral no celular. */
   width: var(--doc-measure);
   max-width: 100%;
+  min-width: 0;
   margin-inline: auto;
   background: var(--n-0);
   color: var(--n-900);
