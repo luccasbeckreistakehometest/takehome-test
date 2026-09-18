@@ -5,7 +5,7 @@ import { api } from "@/lib/api";
 import { useUiLang } from "@/lib/i18n";
 import { BUDGET_BAND_LABELS, normalizeSlug, type AgencyPageConfig, type BudgetBand, type Testimonial } from "@/lib/agency-page-rules";
 import type { LeadRecord, PortfolioItem, ShowcaseClient } from "@/lib/agency-page-db";
-import { Button, Card, CopyButton, ErrorBox, Input, Label, SectionTitle, Textarea } from "./ui";
+import { Button, CopyButton, ErrorBox, Input, Label, SectionTitle, Textarea } from "./ui";
 
 type Payload = {
   config: AgencyPageConfig;
@@ -82,7 +82,7 @@ export default function AgencyPageCard({ origin }: { origin: string }) {
     setConfig((prev) => (prev ? { ...prev, testimonials: prev.testimonials.map((t, i) => (i === index ? { ...t, ...patch } : t)) } : prev));
 
   return (
-    <Card className="space-y-5" id="pagina-publica" data-testid="agency-page-card" data-tour="settings-agency-page">
+    <section className="space-y-5 border-t border-edge pt-5" id="pagina-publica" data-testid="agency-page-card" data-tour="settings-agency-page">
       <div>
         <SectionTitle>Página pública da agência</SectionTitle>
         <p className="t3 text-text-muted">
@@ -239,6 +239,6 @@ export default function AgencyPageCard({ origin }: { origin: string }) {
           </div>
         )}
       </div>
-    </Card>
+    </section>
   );
 }

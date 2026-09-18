@@ -83,7 +83,7 @@ export default function SettingsPage() {
     <div className="max-w-[46rem]">
       <PageHeader eyebrow="Agência" title="Configurações" />
 
-      <section className="space-y-4 border-t border-edge pt-5">
+      <section className="space-y-4">
         <SectionTitle>Whitelabel — a plataforma com a sua marca</SectionTitle>
         <div className="grid gap-4 sm:grid-cols-3">
           <div>
