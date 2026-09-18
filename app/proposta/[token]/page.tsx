@@ -105,7 +105,7 @@ export default function PublicProposalPage({ params }: { params: Promise<{ token
       </div>
 
       <div>
-        <p className="text-xs uppercase tracking-widest text-accent">Proposta para {proposal.prospectName}</p>
+        <p className="text-xs uppercase tracking-widest text-text">Proposta para {proposal.prospectName}</p>
         <h1 className="mt-1 font-[family-name:var(--font-display)] text-3xl font-bold tracking-tight" data-testid="proposal-headline">
           {c.headline}
         </h1>
@@ -113,13 +113,13 @@ export default function PublicProposalPage({ params }: { params: Promise<{ token
       </div>
 
       {data.state === "expired" && (
-        <Card className="border-amber-500/40">
+        <Card className="border-caution/40">
           <p className="font-medium">Esta proposta expirou.</p>
           <p className="mt-1 text-sm text-muted">Fale com a agência para receber uma versão atualizada.</p>
         </Card>
       )}
       {data.state === "accepted" && !accepted && (
-        <Card className="border-emerald-500/40">
+        <Card className="border-positive/40">
           <p className="font-medium">Esta proposta já foi aceita.</p>
           <p className="mt-1 text-sm text-muted">
             <span>Pacote escolhido:</span> {proposal.acceptedPackage}
@@ -133,7 +133,7 @@ export default function PublicProposalPage({ params }: { params: Promise<{ token
           <ul className="space-y-1.5 text-sm">
             {c.painPoints.map((p, i) => (
               <li key={i} className="flex gap-2">
-                <span className="text-accent">•</span>
+                <span className="text-text">•</span>
                 <span>{p}</span>
               </li>
             ))}
@@ -144,7 +144,7 @@ export default function PublicProposalPage({ params }: { params: Promise<{ token
           <ul className="space-y-1.5 text-sm">
             {c.scope.map((s, i) => (
               <li key={i} className="flex gap-2">
-                <span className="text-accent">✓</span>
+                <span className="text-text">✓</span>
                 <span>{s}</span>
               </li>
             ))}
@@ -163,7 +163,7 @@ export default function PublicProposalPage({ params }: { params: Promise<{ token
                 type="button"
                 disabled={data.state !== "open" || Boolean(accepted)}
                 onClick={() => setSelected(pkg.name)}
-                className={`rounded-xl border p-4 text-left transition-colors ${active ? "border-accent bg-accent/10" : "border-edge bg-surface hover:border-muted"} disabled:cursor-default`}
+                className={`rounded-xl border p-4 text-left transition-colors ${active ? "border-edge bg-surface-sunken" : "border-edge bg-surface hover:border-muted"} disabled:cursor-default`}
                 data-testid="proposal-package"
                 data-name={pkg.name}
               >
@@ -193,7 +193,7 @@ export default function PublicProposalPage({ params }: { params: Promise<{ token
           {c.timeline.map((t, i) => (
             <div key={i} className="rounded-lg border border-edge bg-surface-2 p-3 text-sm">
               <p className="font-semibold">{t.phase}</p>
-              <p className="text-xs text-accent">{t.weeks}</p>
+              <p className="text-xs text-text">{t.weeks}</p>
               <ul className="mt-2 space-y-0.5 text-xs text-muted">
                 {t.deliverables.map((d, j) => (
                   <li key={j}>· {d}</li>
@@ -205,7 +205,7 @@ export default function PublicProposalPage({ params }: { params: Promise<{ token
       </Card>
 
       {accepted ? (
-        <Card className="space-y-3 border-emerald-500/40" data-testid="proposal-accepted">
+        <Card className="space-y-3 border-positive/40" data-testid="proposal-accepted">
           <p className="font-[family-name:var(--font-display)] text-xl font-semibold">Proposta aceita! </p>
           <p className="text-sm text-muted">A agência já foi avisada e vai entrar em contato para o kickoff.</p>
           {accepted.login ? (

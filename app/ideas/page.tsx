@@ -160,7 +160,7 @@ function IdeasContent() {
                   {idea.trendBasis}
                 </p>
                 <p className="text-sm">
-                  <span className="font-semibold text-accent">Próximo passo: </span>
+                  <span className="font-semibold text-text">Próximo passo: </span>
                   <span className="text-muted">{idea.action}</span>
                 </p>
                 {targetClient && (

@@ -62,7 +62,7 @@ export default function MonthlyReportView({
               <ul className="space-y-1 text-sm">
                 {summary.highlights.map((h, i) => (
                   <li key={i} className="flex gap-2">
-                    <span className="text-accent">✓</span>
+                    <span className="text-text">✓</span>
                     <span>{h}</span>
                   </li>
                 ))}
@@ -73,7 +73,7 @@ export default function MonthlyReportView({
               <ul className="space-y-1 text-sm">
                 {summary.recommendations.map((r, i) => (
                   <li key={i} className="flex gap-2">
-                    <span className="text-accent">→</span>
+                    <span className="text-text">→</span>
                     <span>{r}</span>
                   </li>
                 ))}

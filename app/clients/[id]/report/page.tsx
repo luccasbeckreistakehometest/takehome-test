@@ -69,7 +69,7 @@ export default function ClientMonthlyReportPage({ params }: { params: Promise<{ 
     <div className="space-y-6">
       <div className="flex flex-wrap items-start justify-between gap-4">
         <div>
-          <Link href={`/clients/${id}`} className="text-sm text-accent hover:underline">
+          <Link href={`/clients/${id}`} className="text-sm text-text hover:underline">
             ← Voltar ao cliente
           </Link>
           <h1 className="mt-1 font-[family-name:var(--font-display)] text-3xl font-bold tracking-tight">
@@ -80,7 +80,7 @@ export default function ClientMonthlyReportPage({ params }: { params: Promise<{ 
         <div className="flex items-center gap-2">
           <button
             onClick={() => setMonth((m) => shiftMonth(m, -1))}
-            className="grid size-9 place-items-center rounded-md border border-edge bg-surface-2 hover:border-accent"
+            className="grid size-9 place-items-center rounded-md border border-edge bg-surface-2 hover:border-edge"
             aria-label="Mês anterior"
             data-testid="report-prev"
           >
@@ -91,7 +91,7 @@ export default function ClientMonthlyReportPage({ params }: { params: Promise<{ 
           </span>
           <button
             onClick={() => setMonth((m) => shiftMonth(m, 1))}
-            className="grid size-9 place-items-center rounded-md border border-edge bg-surface-2 hover:border-accent"
+            className="grid size-9 place-items-center rounded-md border border-edge bg-surface-2 hover:border-edge"
             aria-label="Próximo mês"
             data-testid="report-next"
           >
@@ -123,7 +123,7 @@ export default function ClientMonthlyReportPage({ params }: { params: Promise<{ 
                 href={`/print/report/${payload.report.token}`}
                 target="_blank"
                 rel="noreferrer"
-                className="inline-flex items-center gap-1.5 rounded-md border border-edge bg-surface-2 px-3 py-2 text-sm hover:border-accent"
+                className="inline-flex items-center gap-1.5 rounded-md border border-edge bg-surface-2 px-3 py-2 text-sm hover:border-edge"
                 data-testid="report-print-link"
               >
                 <Icon name="doc" size={15} /> Versão para imprimir / PDF
@@ -154,7 +154,7 @@ export default function ClientMonthlyReportPage({ params }: { params: Promise<{ 
               <button
                 key={h.month}
                 onClick={() => setMonth(h.month)}
-                className={`rounded-md border px-3 py-1 text-sm ${h.month === month ? "border-accent text-accent" : "border-edge text-muted hover:border-accent"}`}
+                className={`rounded-md border px-3 py-1 text-sm ${h.month === month ? "border-edge text-text" : "border-edge text-muted hover:border-edge"}`}
               >
                 {monthTitle(h.month, lang)}
               </button>

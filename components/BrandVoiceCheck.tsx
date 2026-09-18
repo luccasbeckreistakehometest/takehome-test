@@ -9,9 +9,9 @@ import { Icon } from "./icons";
 
 const VERDICT_LABEL: Record<Verdict, string> = { ok: "No tom da marca", review: "Revisar antes de publicar", block: "Fora da política" };
 const VERDICT_STYLE: Record<Verdict, string> = {
-  ok: "border-emerald-500/40 bg-emerald-500/10 text-emerald-500",
-  review: "border-amber-500/40 bg-amber-500/10 text-amber-500",
-  block: "border-red-500/40 bg-red-500/10 text-red-500",
+  ok: "border-positive/40 bg-positive-wash text-positive",
+  review: "border-caution/40 bg-caution-wash text-caution",
+  block: "border-negative/40 bg-negative-wash text-negative",
 };
 
 export function issueText(issue: RuleIssue): string {
@@ -107,12 +107,12 @@ export default function BrandVoiceCheck({
       {result && !stale && (
         <div className={`rounded-md border p-3 text-xs ${compact ? "" : "space-y-2"}`} data-testid="voice-result">
           <div className="h-1.5 w-full overflow-hidden rounded-full bg-surface-2">
-            <div className={`h-full rounded-full ${result.toneScore >= 70 ? "bg-emerald-500" : result.toneScore >= 50 ? "bg-amber-500" : "bg-red-500"}`} style={{ width: `${result.toneScore}%` }} />
+            <div className={`h-full rounded-full ${result.toneScore >= 70 ? "bg-positive" : result.toneScore >= 50 ? "bg-caution" : "bg-negative"}`} style={{ width: `${result.toneScore}%` }} />
           </div>
           {result.issues.length > 0 && (
             <ul className="mt-2 space-y-0.5" data-testid="voice-issues">
               {result.issues.map((issue, i) => (
-                <li key={i} className={issue.severity === "block" ? "text-red-500" : "text-amber-500"} data-code={issue.code}>
+                <li key={i} className={issue.severity === "block" ? "text-negative" : "text-caution"} data-code={issue.code}>
                   • {issueText(issue)}
                 </li>
               ))}
@@ -126,7 +126,7 @@ export default function BrandVoiceCheck({
             </ul>
           )}
           {result.claims.length > 0 && (
-            <ul className="mt-2 space-y-0.5 text-amber-500">
+            <ul className="mt-2 space-y-0.5 text-caution">
               {result.claims.map((c, i) => (
                 <li key={i}>“{c.text}” — <span className="text-muted">{c.why}</span>
                 </li>
@@ -142,7 +142,7 @@ export default function BrandVoiceCheck({
           )}
           <p className="mt-2 flex items-center gap-2 text-[10px] uppercase tracking-wide text-muted">
             {result.demo && <Tag>exemplo — sem chave de IA</Tag>}
-            <Link href={`/clients/${clientId}?tab=briefing#voz-da-marca`} className="text-accent hover:underline">
+            <Link href={`/clients/${clientId}?tab=briefing#voz-da-marca`} className="text-text hover:underline">
               Regras da voz →
             </Link>
           </p>

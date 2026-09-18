@@ -186,7 +186,7 @@ export default function GeneratorTab({
                 onClick={() => setSelectedId(generation.id)}
                 className={`rounded-md border px-3 py-1.5 text-xs transition-colors ${
                   generation.id === selectedId
-                    ? "border-accent bg-accent/10 text-accent"
+                    ? "border-edge bg-surface-sunken text-text"
                     : "border-edge bg-surface text-muted hover:border-muted"
                 }`}
               >
@@ -204,7 +204,7 @@ export default function GeneratorTab({
                   href={`/print/${selected.id}`}
                   target="_blank"
                   rel="noreferrer"
-                  className="rounded-md border border-edge bg-surface px-2.5 py-1 text-xs text-muted transition-colors hover:border-accent hover:text-accent"
+                  className="rounded-md border border-edge bg-surface px-2.5 py-1 text-xs text-muted transition-colors hover:border-edge hover:text-text"
                 >PDF
                 </a>
                 <Button variant="danger" className="!px-2.5 !py-1 text-xs" onClick={removeSelected}>

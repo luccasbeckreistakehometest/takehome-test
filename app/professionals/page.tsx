@@ -56,7 +56,7 @@ export default function ProfessionalsPage() {
         <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
           {professionals.map((professional) => (
             <Link key={professional.id} href={`/professionals/${professional.id}`}>
-              <Card className="h-full transition-colors hover:border-accent/60">
+              <Card className="h-full transition-colors hover:border-edge">
                 <div className="flex items-start justify-between gap-2">
                   <div>
                     <p className="font-[family-name:var(--font-display)] text-lg font-semibold">

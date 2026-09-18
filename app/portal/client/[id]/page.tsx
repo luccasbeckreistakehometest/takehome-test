@@ -141,7 +141,7 @@ export default function ClientPortalPage({
   return (
     <div className="space-y-6">
       <div>
-        <p className="text-xs uppercase tracking-widest text-accent">Portal do cliente</p>
+        <p className="text-xs uppercase tracking-widest text-text">Portal do cliente</p>
         <div className="flex flex-wrap items-center gap-3">
           <h1 className="font-[family-name:var(--font-display)] text-3xl font-bold tracking-tight">
             {client.name}
@@ -250,7 +250,7 @@ export default function ClientPortalPage({
                             <div className="flex flex-wrap items-center justify-between gap-2">
                               <a
                                 href={`/api/files/${deliverable.id}?download=1`}
-                                className="text-xs text-muted transition-colors hover:text-accent"
+                                className="text-xs text-muted transition-colors hover:text-text"
                               >{deliverable.title}
                               </a>
                               <div className="flex flex-wrap items-center gap-1.5">
@@ -287,7 +287,7 @@ export default function ClientPortalPage({
                   </div>
                 )}
                 {project.status === "client_approval" && (
-                  <div className="mt-3 rounded-md border border-accent/40 bg-accent/5 p-3">
+                  <div className="mt-3 rounded-md border border-edge bg-surface-sunken p-3">
                     <p className="text-sm font-medium">
                       Esta entrega aguarda a SUA aprovação:
                     </p>
@@ -329,7 +329,7 @@ export default function ClientPortalPage({
                 key={message.id}
                 className={`max-w-[85%] rounded-lg px-3 py-2 text-sm ${
                   message.sender === "client"
-                    ? "ml-auto bg-accent/15"
+                    ? "ml-auto bg-surface-sunken"
                     : "bg-surface-2"
                 }`}
               >
@@ -370,13 +370,13 @@ export default function ClientPortalPage({
                   href={`/api/generations/${landing.id}/html`}
                   target="_blank"
                   rel="noreferrer"
-                  className="rounded-md border border-edge bg-surface-2 px-3 py-1.5 text-sm text-muted transition-colors hover:border-accent hover:text-accent"
+                  className="rounded-md border border-edge bg-surface-2 px-3 py-1.5 text-sm text-muted transition-colors hover:border-edge hover:text-text"
                 >
                   {landing.title} ↗
                 </a>
                 <a
                   href={`/api/generations/${landing.id}/html?download=1`}
-                  className="rounded-md border border-edge bg-surface-2 px-2 py-1.5 text-sm text-muted transition-colors hover:border-accent hover:text-accent"
+                  className="rounded-md border border-edge bg-surface-2 px-2 py-1.5 text-sm text-muted transition-colors hover:border-edge hover:text-text"
                   title="Baixar HTML"
                 ></a>
               </span>
@@ -395,7 +395,7 @@ export default function ClientPortalPage({
               href={`/print/${report.id}`}
               target="_blank"
               rel="noreferrer"
-              className="rounded-md border border-edge bg-surface-2 px-3 py-1.5 text-sm text-muted transition-colors hover:border-accent hover:text-accent"
+              className="rounded-md border border-edge bg-surface-2 px-3 py-1.5 text-sm text-muted transition-colors hover:border-edge hover:text-text"
             >Salvar em PDF
             </a>
           </div>

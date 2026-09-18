@@ -83,7 +83,7 @@ export default function InviteGenerator({ origin }: { origin: string }) {
             value={note}
             onChange={(e) => setNote(e.target.value)}
             placeholder="Ex.: Fotógrafo indicado pela Ana"
-            className="w-full rounded-md border border-edge bg-surface-2 px-3 py-2 text-sm outline-none focus:border-accent"
+            className="w-full rounded-md border border-edge bg-surface-2 px-3 py-2 text-sm outline-none focus:border-edge"
           />
         </div>
         <div>
@@ -92,7 +92,7 @@ export default function InviteGenerator({ origin }: { origin: string }) {
             type="number"
             value={expires}
             onChange={(e) => setExpires(e.target.value)}
-            className="w-20 rounded-md border border-edge bg-surface-2 px-3 py-2 text-sm outline-none focus:border-accent"
+            className="w-20 rounded-md border border-edge bg-surface-2 px-3 py-2 text-sm outline-none focus:border-edge"
           />
         </div>
         <Button onClick={create} disabled={creating}>
@@ -120,7 +120,7 @@ export default function InviteGenerator({ origin }: { origin: string }) {
                   <CopyButton text={link} label="Copiar" />
                   <button
                     onClick={() => revoke(invite.id)}
-                    className="text-xs text-muted transition-colors hover:text-red-500"
+                    className="text-xs text-muted transition-colors hover:text-negative"
                   >
                     Revogar
                   </button>

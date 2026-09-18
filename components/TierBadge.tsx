@@ -17,6 +17,9 @@ export default function TierBadge({
   // Chave única por entidade no localStorage (ex.: `levelup_client_<id>`).
   celebrateKey?: string;
 }) {
+  // O elo é um DADO, não um estado de sistema: o metal fica no ponto de 8px —
+  // o único lugar onde uma cor fora da rampa é legítima — e o rótulo é tinta.
+  // Antes a pílula inteira era do metal, e "Bronze" saía a 2,6:1 no claro.
   const color = TIER_COLORS[info.tier];
   return (
     <>
@@ -24,19 +27,18 @@ export default function TierBadge({
         <LevelUpCelebration tier={info.tier} storageKey={celebrateKey} />
       )}
       <span className="inline-flex flex-col gap-0.5">
-      <span
-        className="inline-flex w-fit items-center gap-1.5 rounded-full border px-2.5 py-0.5 text-xs font-semibold"
-        style={{ borderColor: color, color }}
-        title={`${info.reason} · ${info.nextStep}`}
-      >
-        <span className="size-2 rounded-full" style={{ backgroundColor: color }} />
-        {info.tier}
-      </span>
-      {detailed && (
-        <span className="text-xs text-muted">
-          {info.reason} · <span className="text-foreground/70">{info.nextStep}</span>
+        <span
+          className="t5 inline-flex w-fit items-center gap-1.5 rounded-xs border border-rule px-2 py-0.5 font-medium"
+          title={`${info.reason} · ${info.nextStep}`}
+        >
+          <span className="size-2 rounded-full" style={{ backgroundColor: color }} />
+          {info.tier}
         </span>
-      )}
+        {detailed && (
+          <span className="t5 text-text-muted">
+            {info.reason} · <span className="text-text">{info.nextStep}</span>
+          </span>
+        )}
       </span>
     </>
   );
@@ -57,36 +59,37 @@ export function TierProgress({
   // Chave única por entidade no localStorage (ex.: `levelup_agency`).
   celebrateKey?: string;
 }) {
-  const color = TIER_COLORS[info.tier];
   return (
-    <div className="space-y-1.5">
+    <div>
       {celebrate && celebrateKey && (
         <LevelUpCelebration tier={info.tier} storageKey={celebrateKey} />
       )}
-      <div className="flex items-center justify-between text-xs text-muted">
+      <div className="t5 flex items-baseline justify-between text-text-muted">
         <span>Progresso para o próximo elo</span>
-        <span className="font-semibold text-foreground">{info.progress}%</span>
+        <span className="tnum font-medium text-text">{info.progress}%</span>
       </div>
-      <div className="h-1.5 overflow-hidden rounded-full bg-surface-2">
+      <div className="mt-1 h-0.5 overflow-hidden bg-surface-sunken">
         <div
-          className="h-full rounded-full transition-all duration-700"
-          style={{ width: `${Math.max(info.progress, 2)}%`, backgroundColor: color }}
+          className="h-full bg-text transition-[width] duration-[var(--dur-3)] ease-[var(--ease)]"
+          style={{ width: `${Math.max(info.progress, 2)}%` }}
         />
       </div>
-      <p className="text-xs text-muted">{info.nextStep}</p>
+      <p className="t5 mt-1 text-text-muted">{info.nextStep}</p>
       {!compact && info.metrics?.length > 0 && (
-        <div className="flex flex-wrap gap-1.5 pt-1">
+        <dl className="mt-2">
           {info.metrics.map((metric) => (
-            <span
+            <div
               key={metric.label}
-              className="rounded-md border border-edge bg-surface-2 px-2 py-1 text-[11px] text-muted"
+              className="flex items-baseline justify-between gap-3 border-b border-rule py-1"
             >
-              {metric.label}:{" "}
-              <span className="font-semibold text-foreground">{metric.value}</span>
-              {metric.target != null && <span> / {metric.target}</span>}
-            </span>
+              <dt className="t5 text-text-muted">{metric.label}</dt>
+              <dd className="t5 tnum font-medium">
+                {metric.value}
+                {metric.target != null && <span className="text-text-muted"> / {metric.target}</span>}
+              </dd>
+            </div>
           ))}
-        </div>
+        </dl>
       )}
     </div>
   );

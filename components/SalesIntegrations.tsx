@@ -160,7 +160,7 @@ export default function SalesIntegrations({ clientId }: { clientId: string }) {
         <div className="grid gap-3 sm:grid-cols-3">
           <Card>
             <p className="text-xs uppercase tracking-wide text-muted">Receita total</p>
-            <p className="mt-1 font-[family-name:var(--font-display)] text-3xl font-bold text-accent">
+            <p className="mt-1 font-[family-name:var(--font-display)] text-3xl font-bold text-text">
               {brl(totals.revenue, totals.currency)}
             </p>
           </Card>
@@ -173,9 +173,9 @@ export default function SalesIntegrations({ clientId }: { clientId: string }) {
           <Card>
             <p className="text-xs uppercase tracking-wide text-muted">Produto vs serviço</p>
             <p className="mt-1 text-sm">
-              <span className="text-accent">{brl(totals.byKind.product, totals.currency)}</span> produto
+              <span className="text-text">{brl(totals.byKind.product, totals.currency)}</span> produto
               <br />
-              <span className="text-accent">{brl(totals.byKind.service, totals.currency)}</span> serviço
+              <span className="text-text">{brl(totals.byKind.service, totals.currency)}</span> serviço
             </p>
           </Card>
         </div>
@@ -223,7 +223,7 @@ export default function SalesIntegrations({ clientId }: { clientId: string }) {
               <Button onClick={addSale} disabled={!form.revenue}>
                 <Icon name="plus" size={15} /> Adicionar
               </Button>
-              <label className="cursor-pointer rounded-md border border-edge bg-surface-2 px-3 py-2 text-sm transition-colors hover:border-accent">
+              <label className="cursor-pointer rounded-md border border-edge bg-surface-2 px-3 py-2 text-sm transition-colors hover:border-edge">
                 Importar CSV
                 <input
                   type="file"
@@ -295,14 +295,14 @@ export default function SalesIntegrations({ clientId }: { clientId: string }) {
                   </span>
                 </span>
                 <span className="flex items-center gap-3">
-                  <span className="font-semibold text-accent">{brl(s.revenue, s.currency)}</span>
+                  <span className="font-semibold text-text">{brl(s.revenue, s.currency)}</span>
                   <span className="text-xs text-muted">{s.units} un.</span>
                   <button
                     onClick={async () => {
                       await api(`/api/clients/${clientId}/sales?saleId=${s.id}`, { method: "DELETE" });
                       load();
                     }}
-                    className="text-muted transition-colors hover:text-red-500"
+                    className="text-muted transition-colors hover:text-negative"
                   >
                     <Icon name="trash" size={15} />
                   </button>
@@ -341,18 +341,18 @@ function ConnectionRow({
         <span className="font-medium">{platform.label}</span>
         <span className="flex items-center gap-2">
           {conn?.status === "connected" ? (
-            <span className="text-xs text-emerald-500">conectado ✓</span>
+            <span className="text-xs text-positive">conectado ✓</span>
           ) : conn?.status === "error" ? (
-            <span className="text-xs text-red-500">erro</span>
+            <span className="text-xs text-negative">erro</span>
           ) : (
             <span className="text-xs text-muted">não conectado</span>
           )}
-          <button onClick={() => setOpen(!open)} className="text-xs text-accent hover:underline">
+          <button onClick={() => setOpen(!open)} className="text-xs text-text hover:underline">
             {open ? "fechar" : "configurar"}
           </button>
         </span>
       </div>
-      {conn?.lastError && <p className="mt-1 text-xs text-red-500">{conn.lastError}</p>}
+      {conn?.lastError && <p className="mt-1 text-xs text-negative">{conn.lastError}</p>}
       {open && (
         <div className="mt-2 space-y-2">
           <Input value={accountId} onChange={(e) => setAccountId(e.target.value)} placeholder={platform.account} />

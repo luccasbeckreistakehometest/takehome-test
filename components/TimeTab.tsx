@@ -30,10 +30,10 @@ export const MARGIN_LABEL: Record<ClientMargin["status"], string> = {
   idle: "Sem horas no mês",
 };
 export const MARGIN_STYLE: Record<ClientMargin["status"], string> = {
-  ok: "border-emerald-500/40 bg-emerald-500/10 text-emerald-500",
-  thin: "border-amber-500/40 bg-amber-500/10 text-amber-500",
-  loss: "border-red-500/40 bg-red-500/10 text-red-500",
-  no_fee: "border-amber-500/40 bg-amber-500/10 text-amber-500",
+  ok: "border-positive/40 bg-positive-wash text-positive",
+  thin: "border-caution/40 bg-caution-wash text-caution",
+  loss: "border-negative/40 bg-negative-wash text-negative",
+  no_fee: "border-caution/40 bg-caution-wash text-caution",
   idle: "border-edge text-muted",
 };
 
@@ -169,9 +169,9 @@ export default function TimeTab({ client }: { client: Client }) {
           <p className="mt-1 text-sm text-muted">O que esta conta paga por mês contra o que ela custa em horas da equipe.</p>
         </div>
         <div className="flex items-center gap-2">
-          <button onClick={() => setMonth((m) => shiftMonth(m, -1))} className="grid size-8 place-items-center rounded-md border border-edge hover:border-accent" aria-label="Mês anterior">‹</button>
+          <button onClick={() => setMonth((m) => shiftMonth(m, -1))} className="grid size-8 place-items-center rounded-md border border-edge hover:border-edge" aria-label="Mês anterior">‹</button>
           <span className="min-w-36 text-center text-sm font-medium capitalize" data-testid="time-month">{monthLabel(month, lang)}</span>
-          <button onClick={() => setMonth((m) => shiftMonth(m, 1))} className="grid size-8 place-items-center rounded-md border border-edge hover:border-accent" aria-label="Próximo mês">›</button>
+          <button onClick={() => setMonth((m) => shiftMonth(m, 1))} className="grid size-8 place-items-center rounded-md border border-edge hover:border-edge" aria-label="Próximo mês">›</button>
         </div>
       </div>
 
@@ -198,21 +198,21 @@ export default function TimeTab({ client }: { client: Client }) {
         </Card>
         <Card>
           <p className="text-[11px] font-semibold uppercase tracking-wider text-muted">Margem</p>
-          <p className={`mt-1 font-[family-name:var(--font-display)] text-2xl font-bold ${data.margin.margin < 0 ? "text-red-500" : ""}`} data-testid="client-margin-value">{money(data.margin.margin)}</p>
+          <p className={`mt-1 font-[family-name:var(--font-display)] text-2xl font-bold ${data.margin.margin < 0 ? "text-negative" : ""}`} data-testid="client-margin-value">{money(data.margin.margin)}</p>
           {data.margin.marginPct !== null && <p className="text-xs text-muted">{data.margin.marginPct}%</p>}
         </Card>
         <Card>
           <p className="text-[11px] font-semibold uppercase tracking-wider text-muted">Situação</p>
           <span className={`mt-1 inline-block rounded-full border px-2 py-0.5 text-xs font-medium ${MARGIN_STYLE[data.margin.status]}`}>{MARGIN_LABEL[data.margin.status]}</span>
           {data.margin.effectiveHourlyRate !== null && <p className="mt-1 text-xs text-muted">{money(data.margin.effectiveHourlyRate)}/h efetivo</p>}
-          <Link href="/finance" className="mt-1 block text-xs text-accent hover:underline">Ver todos os clientes →</Link>
+          <Link href="/finance" className="mt-1 block text-xs text-text hover:underline">Ver todos os clientes →</Link>
         </Card>
       </div>
 
       <Card className="space-y-3">
         <SectionTitle>Cronômetro</SectionTitle>
         {running ? (
-          <div className="flex flex-wrap items-center justify-between gap-3 rounded-md border border-accent/40 bg-accent/5 p-3" data-testid="timer-running">
+          <div className="flex flex-wrap items-center justify-between gap-3 rounded-md border border-edge bg-surface-sunken p-3" data-testid="timer-running">
             <div>
               <p className="font-[family-name:var(--font-display)] text-2xl font-bold tabular-nums" data-testid="timer-clock">{formatHours(entryMinutes(running))}</p>
               <p className="text-xs text-muted">
@@ -253,7 +253,7 @@ export default function TimeTab({ client }: { client: Client }) {
           </div>
         )}
         {runningElsewhere && (
-          <p className="text-xs text-amber-500">Você tem um cronômetro rodando em outro cliente — iniciar aqui fecha o outro.</p>
+          <p className="text-xs text-caution">Você tem um cronômetro rodando em outro cliente — iniciar aqui fecha o outro.</p>
         )}
       </Card>
 
@@ -322,11 +322,11 @@ export default function TimeTab({ client }: { client: Client }) {
                 <div className="flex items-center gap-2">
                   <Tag>{entry.endedAt ? formatHours(entry.minutes) : "rodando"}</Tag>
                   {entry.endedAt ? (
-                    <button onClick={() => remove(entry.id)} className="text-xs text-muted hover:text-red-400" aria-label="Excluir apontamento">
+                    <button onClick={() => remove(entry.id)} className="text-xs text-muted hover:text-negative" aria-label="Excluir apontamento">
                       <Icon name="trash" size={14} />
                     </button>
                   ) : (
-                    <button onClick={() => stop(entry.id)} className="text-xs text-accent hover:underline">Parar</button>
+                    <button onClick={() => stop(entry.id)} className="text-xs text-text hover:underline">Parar</button>
                   )}
                 </div>
               </div>

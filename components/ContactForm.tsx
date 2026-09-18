@@ -56,7 +56,7 @@ export default function ContactForm({
 
   if (sent) {
     return (
-      <div role="status" className="rounded-lg border border-accent/40 bg-accent/5 p-4 text-sm" data-testid="contact-sent">
+      <div role="status" className="rounded-lg border border-edge bg-surface-sunken p-4 text-sm" data-testid="contact-sent">
         <p className="font-semibold text-foreground">{access ? "Pedido recebido." : "Mensagem recebida."}</p>
         <p className="mt-1 text-muted">
           {access
@@ -117,7 +117,7 @@ export default function ContactForm({
         <input id={id("fax")} tabIndex={-1} autoComplete="off" value={form.fax} onChange={(e) => setForm({ ...form, fax: e.target.value })} />
       </div>
       <p className="text-xs text-muted">
-        Usamos estes dados só para responder você (veja a <a href="/privacidade" className="text-accent hover:underline">Política de Privacidade</a>).
+        Usamos estes dados só para responder você (veja a <a href="/privacidade" className="text-text hover:underline">Política de Privacidade</a>).
       </p>
       {error && <ErrorBox message={error} />}
       <Button type="submit" disabled={busy} className="w-full sm:w-auto" data-testid="contact-submit">

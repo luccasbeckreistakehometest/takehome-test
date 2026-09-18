@@ -107,7 +107,7 @@ export default function OnboardingModal({
     <div className="fixed inset-0 z-[80] grid place-items-center bg-black/50 p-4 backdrop-blur-sm" data-testid="welcome">
       <div className="w-full max-w-lg animate-pop-in rounded-2xl border border-edge bg-surface p-6 shadow-2xl [transform-origin:center]">
         <div className="mb-4 flex items-center justify-between">
-          <p className="text-xs font-semibold uppercase tracking-widest text-accent">{flow.title}</p>
+          <p className="text-xs font-semibold uppercase tracking-widest text-text">{flow.title}</p>
           <button onClick={() => close("skip")} aria-label="Fechar" className="text-muted transition-colors hover:text-foreground">
             <Icon name="x" size={18} />
           </button>
@@ -116,7 +116,7 @@ export default function OnboardingModal({
         {showLogin && <WelcomeLogin />}
 
         <div className="flex gap-4">
-          <span className="grid size-12 shrink-0 place-items-center rounded-xl bg-accent/10 text-accent">
+          <span className="grid size-12 shrink-0 place-items-center rounded-xl bg-surface-sunken text-text">
             <Icon name={current.icon} size={24} />
           </span>
           <div>
@@ -125,7 +125,7 @@ export default function OnboardingModal({
             {current.href && (
               <a
                 href={current.href}
-                className="mt-3 inline-block text-sm font-medium text-accent hover:underline"
+                className="mt-3 inline-block text-sm font-medium text-text hover:underline"
               >
                 {current.cta} →
               </a>
@@ -140,7 +140,7 @@ export default function OnboardingModal({
               <span
                 key={i}
                 className={`h-1.5 rounded-full transition-all ${
-                  i === step ? "w-6 bg-accent" : "w-1.5 bg-edge"
+                  i === step ? "w-6 bg-text" : "w-1.5 bg-rule"
                 }`}
               />
             ))}

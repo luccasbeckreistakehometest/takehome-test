@@ -196,6 +196,7 @@ const PATHS = {
   "chevron-up": <path d="m6 14.5 6-6 6 6" />,
   "chevron-left": <path d="m14.5 6-6 6 6 6" />,
   "chevron-right": <path d="m9.5 6 6 6-6 6" />,
+  menu: <path d="M4 7h16M4 12h16M4 17h16" />,
   "arrow-right": <path d="M5 12h14M13 6l6 6-6 6" />,
   "arrow-left": <path d="M19 12H5M11 6l-6 6 6 6" />,
   "arrow-up": <path d="M12 19V5M6 11l6-6 6 6" />,

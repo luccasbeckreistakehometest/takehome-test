@@ -103,7 +103,7 @@ export default function InvoicePayView({
           // eslint-disable-next-line @next/next/no-img-element
           <img src={agency.logoUrl} alt={agency.name} className="size-11 rounded-lg object-contain" />
         ) : (
-          <span className="grid size-11 place-items-center rounded-lg bg-accent font-[family-name:var(--font-display)] text-lg font-bold text-accent-ink">
+          <span className="grid size-11 place-items-center rounded-sm bg-surface-sunken font-[family-name:var(--font-display)] text-lg font-bold text-text">
             {agency.name.charAt(0).toUpperCase()}
           </span>
         )}
@@ -120,7 +120,7 @@ export default function InvoicePayView({
       ) : (
         <>
           <section className="rounded-2xl border border-edge bg-surface p-5">
-            <p className="text-xs font-semibold uppercase tracking-widest text-accent">
+            <p className="text-xs font-semibold uppercase tracking-widest text-text">
               {t.invoice} {invoice.month} · {t.for} {clientName}
             </p>
             <ul className="mt-3 divide-y divide-edge text-sm">
@@ -137,22 +137,22 @@ export default function InvoicePayView({
                 {brl(invoice.total, lang)}
               </span>
             </div>
-            <p className={`mt-1 text-right text-sm ${current === "overdue" ? "font-medium text-red-500" : "text-muted"}`}>
+            <p className={`mt-1 text-right text-sm ${current === "overdue" ? "font-medium text-negative" : "text-muted"}`}>
               {t.due} {due}
             </p>
             {current === "overdue" && (
-              <p className="mt-2 rounded-lg border border-red-500/40 bg-red-500/10 px-3 py-2 text-sm" data-testid="invoice-overdue">
+              <p className="mt-2 rounded-lg border border-negative/40 bg-negative-wash px-3 py-2 text-sm" data-testid="invoice-overdue">
                 {t.overdue} {lateNote}
               </p>
             )}
           </section>
 
           {current === "paid" ? (
-            <p className="rounded-2xl border border-emerald-500/40 bg-emerald-500/10 p-4 text-center font-medium" data-testid="invoice-paid">
+            <p className="rounded-2xl border border-positive/40 bg-positive-wash p-4 text-center font-medium" data-testid="invoice-paid">
               {t.paid}
             </p>
           ) : current === "paid_claimed" ? (
-            <p className="rounded-2xl border border-accent/40 bg-accent/10 p-4 text-center text-sm" data-testid="invoice-claimed">
+            <p className="rounded-2xl border border-edge bg-surface-sunken p-4 text-center text-sm" data-testid="invoice-claimed">
               {t.claimed}
             </p>
           ) : null}
@@ -171,7 +171,7 @@ export default function InvoicePayView({
               <button type="button" onClick={claim} className="w-full rounded-xl border border-edge px-4 py-3 font-medium" data-testid="invoice-claim">
                 {t.claim}
               </button>
-              {error && <p className="text-sm text-red-500">{error}</p>}
+              {error && <p className="text-sm text-negative">{error}</p>}
               <p className="text-xs text-muted">
                 {beneficiary ? `${t.receiver}: ${beneficiary}. ` : ""}
                 {t.direct}

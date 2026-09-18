@@ -21,7 +21,7 @@ const ROLE_LABEL: Record<string, string> = { admin: "Admin", agency: "Agência",
 
 function Notice({ text }: { text: string }) {
   return (
-    <p role="status" className="rounded-md border border-accent/40 bg-accent/5 px-3 py-2 text-sm text-accent">
+    <p role="status" className="rounded-md border border-edge bg-surface-sunken px-3 py-2 text-sm text-text">
       {text}
     </p>
   );
@@ -47,11 +47,11 @@ export default function AccountSettings() {
       <div>
         <h1 className="font-[family-name:var(--font-display)] text-2xl font-bold tracking-tight">Minha conta</h1>
         <p className="mt-1 text-sm text-muted">
-          {ROLE_LABEL[account.role] ?? account.role} · usuário <span className="font-mono text-accent">{account.username}</span>
+          {ROLE_LABEL[account.role] ?? account.role} · usuário <span className="font-mono text-text">{account.username}</span>
         </p>
       </div>
       {(forced || account.mustChangePassword) && (
-        <p role="alert" className="rounded-md border border-amber-500/50 bg-amber-500/10 px-3 py-2 text-sm">
+        <p role="alert" className="rounded-md border border-caution/50 bg-caution-wash px-3 py-2 text-sm">
           Você entrou com uma senha provisória. Crie a sua senha agora.
         </p>
       )}
@@ -197,7 +197,7 @@ function DataCard({ account }: { account: Account }) {
         {account.consentAt
           ? `Termos aceitos em ${new Date(account.consentAt).toLocaleDateString("pt-BR")} (versão ${account.consentVersion}).`
           : "Conta criada antes do aceite registrado dos termos."}{" "}
-        <Link href="/privacidade" className="text-accent hover:underline">
+        <Link href="/privacidade" className="text-text hover:underline">
           Política de Privacidade
         </Link>
       </p>
@@ -210,7 +210,7 @@ function DataCard({ account }: { account: Account }) {
       </a>
 
       <form className="mt-6 space-y-3 border-t border-edge pt-4" onSubmit={remove} aria-label="Excluir minha conta">
-        <p className="text-sm font-medium text-red-500">Excluir minha conta</p>
+        <p className="text-sm font-medium text-negative">Excluir minha conta</p>
         <p className="text-sm text-muted">
           {account.role === "client"
             ? "Se você criou a marca sozinho, tudo dela é apagado. Se a conta foi criada por uma agência, só o seu acesso sai; os arquivos do trabalho continuam com a agência."

@@ -63,7 +63,7 @@ export default function PanelTester({
 
   if (!open) {
     return (
-      <button type="button" onClick={() => { setVariants([initial, ""]); setOpen(true); }} className="inline-flex items-center gap-1.5 text-xs font-medium text-accent hover:underline" data-testid="panel-open">
+      <button type="button" onClick={() => { setVariants([initial, ""]); setOpen(true); }} className="inline-flex items-center gap-1.5 text-xs font-medium text-text hover:underline" data-testid="panel-open">
         <Icon name="users" size={13} /> {label}
       </button>
     );
@@ -86,7 +86,7 @@ export default function PanelTester({
       ))}
       <div className="flex flex-wrap items-center gap-2">
         {variants.length < 3 && (
-          <button type="button" className="text-xs text-accent hover:underline" onClick={() => setVariants([...variants, ""])}>
+          <button type="button" className="text-xs text-text hover:underline" onClick={() => setVariants([...variants, ""])}>
             + Versão C
           </button>
         )}
@@ -152,9 +152,9 @@ export default function PanelTester({
             </Button>
             {test.variants.map((_, v) =>
               scheduled.includes(v) ? (
-                <span key={v} className="text-xs text-accent">{`Versão ${LETTERS[v]} no calendário ✓`}</span>
+                <span key={v} className="text-xs text-text">{`Versão ${LETTERS[v]} no calendário ✓`}</span>
               ) : (
-                <button key={v} type="button" className="text-xs text-accent hover:underline" onClick={() => schedule(v)}>
+                <button key={v} type="button" className="text-xs text-text hover:underline" onClick={() => schedule(v)}>
                   {`Agendar versão ${LETTERS[v]} para comparar`}
                 </button>
               )

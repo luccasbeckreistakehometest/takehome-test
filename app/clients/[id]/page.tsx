@@ -43,7 +43,7 @@ export default function ClientPage({
           >
             Tentar de novo
           </button>
-          <Link href="/" className="text-accent hover:underline">
+          <Link href="/" className="text-text hover:underline">
             ← Voltar para clientes
           </Link>
         </div>

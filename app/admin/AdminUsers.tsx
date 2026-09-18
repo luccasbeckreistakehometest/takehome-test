@@ -106,7 +106,7 @@ export default function AdminUsers({ agency = "" }: { agency?: string }) {
               {visible.map((u) => (
                 <tr key={u.id} className={u.disabledAt ? "opacity-60" : ""}>
                   <td className="py-2 pr-3">
-                    <p className="font-mono text-accent">{u.username}</p>
+                    <p className="font-mono text-text">{u.username}</p>
                     <p className="text-xs text-muted">
                       {u.name}
                       {u.email ? ` · ${u.email}` : ""}
@@ -115,7 +115,7 @@ export default function AdminUsers({ agency = "" }: { agency?: string }) {
                   </td>
                   <td className="py-2 pr-3">
                     <Tag>{ROLE_LABEL[u.role] ?? u.role}</Tag>
-                    {u.disabledAt && <span className="ml-1 text-xs text-red-500">desativada</span>}
+                    {u.disabledAt && <span className="ml-1 text-xs text-negative">desativada</span>}
                   </td>
                   <td className="py-2 pr-3">{u.billing ? `${u.billing.planName} · até ${fmt(u.billing.renewsAt)}` : "—"}</td>
                   <td className="py-2 pr-3">{u.billing ? Math.floor(u.billing.coins) : "—"}</td>
@@ -168,11 +168,11 @@ function UserPanel({ user, onChanged, onClose }: { user: AdminUser; onChanged: (
   }
 
   return (
-    <Card className="space-y-4 border-accent" data-testid="admin-user-panel">
+    <Card className="space-y-4 border-edge" data-testid="admin-user-panel">
       <div className="flex flex-wrap items-start justify-between gap-2">
         <div>
           <p className="font-semibold">
-            {user.name} <span className="font-mono text-sm text-accent">({user.username})</span>
+            {user.name} <span className="font-mono text-sm text-text">({user.username})</span>
           </p>
           <p className="text-xs text-muted">
             criada em {fmt(user.createdAt)} · {user.mustChangePassword ? "senha provisória pendente" : "senha própria"}
@@ -185,12 +185,12 @@ function UserPanel({ user, onChanged, onClose }: { user: AdminUser; onChanged: (
       </div>
       {error && <ErrorBox message={error} />}
       {msg && (
-        <p role="status" className="text-sm text-accent">
+        <p role="status" className="text-sm text-text">
           {msg}
         </p>
       )}
       {otp && (
-        <p className="rounded-md border border-accent/40 bg-accent/5 px-3 py-2 text-sm" data-testid="admin-otp">
+        <p className="rounded-md border border-edge bg-surface-sunken px-3 py-2 text-sm" data-testid="admin-otp">
           Senha provisória (mostrada só agora): <strong className="font-mono">{otp}</strong>
         </p>
       )}
@@ -307,7 +307,7 @@ function UserPanel({ user, onChanged, onClose }: { user: AdminUser; onChanged: (
         <div className="flex flex-wrap items-end gap-2">
           <a
             href={`/api/admin/users/${user.id}/export`}
-            className="rounded-md border border-edge bg-surface-2 px-3.5 py-2 text-sm hover:border-accent"
+            className="rounded-md border border-edge bg-surface-2 px-3.5 py-2 text-sm hover:border-edge"
             data-testid="admin-export"
           >
             Exportar dados da conta

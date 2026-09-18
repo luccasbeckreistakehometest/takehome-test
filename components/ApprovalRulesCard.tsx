@@ -105,9 +105,9 @@ export default function ApprovalRulesCard() {
             A mensagem entra na fila de envio (Mensagens → Conexões). Sem canal conectado, o aviso aparece só no sino do painel.
           </span>
           {data.whatsappConnected ? (
-            <span className="mt-1 block text-xs text-emerald-500">WhatsApp conectado ✓</span>
+            <span className="mt-1 block text-xs text-positive">WhatsApp conectado ✓</span>
           ) : (
-            <span className="mt-1 block text-xs text-amber-500">WhatsApp ainda não conectado — o aviso vai só para o painel.</span>
+            <span className="mt-1 block text-xs text-caution">WhatsApp ainda não conectado — o aviso vai só para o painel.</span>
           )}
         </span>
       </label>
@@ -125,7 +125,7 @@ export default function ApprovalRulesCard() {
         <Button onClick={save} disabled={saving} data-testid="rules-save">
           {saving ? "Salvando..." : "Salvar regras"}
         </Button>
-        {saved && <span className="text-sm text-accent">Aplicado ✓</span>}
+        {saved && <span className="text-sm text-text">Aplicado ✓</span>}
       </div>
     </Card>
   );

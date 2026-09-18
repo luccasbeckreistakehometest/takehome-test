@@ -52,7 +52,7 @@ export default function ProposalPanel({ prospectId, onAccepted }: { prospectId: 
   const fmt = (iso: string) => new Date(iso).toLocaleDateString(lang === "en" ? "en-US" : "pt-BR", { day: "2-digit", month: "short" });
 
   return (
-    <div className="space-y-3 rounded-lg border border-accent/30 bg-accent/5 p-3" data-testid="proposal-panel">
+    <div className="space-y-3 rounded-lg border border-edge bg-surface-sunken p-3" data-testid="proposal-panel">
       <div>
         <Label>Sua oferta e preços (opcional — a IA usa exatamente o que você escrever)</Label>
         <Textarea
@@ -104,12 +104,12 @@ export default function ProposalPanel({ prospectId, onAccepted }: { prospectId: 
               </div>
               <div className="flex items-center gap-1.5">
                 <Tag>{STATE_LABEL[p.state]}</Tag>
-                <a href={`/proposta/${p.token}`} target="_blank" rel="noreferrer" className="rounded border border-edge bg-surface-2 px-2 py-0.5 text-xs text-muted hover:border-accent hover:text-accent" data-testid="proposal-open">
+                <a href={`/proposta/${p.token}`} target="_blank" rel="noreferrer" className="rounded border border-edge bg-surface-2 px-2 py-0.5 text-xs text-muted hover:border-edge hover:text-text" data-testid="proposal-open">
                   Abrir ↗
                 </a>
                 <CopyButton text={`${origin}/proposta/${p.token}`} label="Copiar link" />
                 {p.state === "accepted" && p.clientId && (
-                  <a href={`/clients/${p.clientId}`} className="text-xs text-accent hover:underline" onClick={onAccepted}>
+                  <a href={`/clients/${p.clientId}`} className="text-xs text-text hover:underline" onClick={onAccepted}>
                     Abrir cliente →
                   </a>
                 )}

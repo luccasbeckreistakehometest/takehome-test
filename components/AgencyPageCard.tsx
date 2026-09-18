@@ -107,7 +107,7 @@ export default function AgencyPageCard({ origin }: { origin: string }) {
         <span className="font-mono" data-testid="page-url">{publicUrl}</span>
         <CopyButton text={publicUrl} label="Copiar link" />
         {config.published && data.config.slug && (
-          <a href={`/a/${data.config.slug}`} target="_blank" rel="noreferrer" className="text-accent hover:underline" data-testid="page-open">
+          <a href={`/a/${data.config.slug}`} target="_blank" rel="noreferrer" className="text-text hover:underline" data-testid="page-open">
             Abrir página ↗
           </a>
         )}
@@ -143,7 +143,7 @@ export default function AgencyPageCard({ origin }: { origin: string }) {
           <p className="text-xs font-semibold uppercase tracking-wider text-muted">Depoimentos</p>
           <button
             type="button"
-            className="text-xs text-accent hover:underline"
+            className="text-xs text-text hover:underline"
             onClick={() => setConfig({ ...config, testimonials: [...config.testimonials, { author: "", role: "", text: "" }] })}
             data-testid="testimonial-add"
           >
@@ -155,7 +155,7 @@ export default function AgencyPageCard({ origin }: { origin: string }) {
           <div key={i} className="grid gap-2 rounded-md border border-edge bg-surface-2 p-3 sm:grid-cols-[1fr_1fr_auto]" data-testid="testimonial-row">
             <Input value={t.author} onChange={(e) => setTestimonial(i, { author: e.target.value })} placeholder="Quem disse" data-testid="testimonial-author" />
             <Input value={t.role} onChange={(e) => setTestimonial(i, { role: e.target.value })} placeholder="Cargo / empresa" />
-            <button type="button" className="text-xs text-muted hover:text-red-400" onClick={() => setConfig({ ...config, testimonials: config.testimonials.filter((_, j) => j !== i) })}>
+            <button type="button" className="text-xs text-muted hover:text-negative" onClick={() => setConfig({ ...config, testimonials: config.testimonials.filter((_, j) => j !== i) })}>
               Remover
             </button>
             <div className="sm:col-span-3">
@@ -198,7 +198,7 @@ export default function AgencyPageCard({ origin }: { origin: string }) {
               <label key={client.id} className="flex items-center gap-2 rounded-md border border-edge bg-surface-2 px-2.5 py-1.5 text-sm" data-testid="showcase-option">
                 <input type="checkbox" checked={clientIds.includes(client.id)} onChange={() => setClientIds((l) => toggle(l, client.id))} className="accent-[var(--accent)]" />
                 <span className="min-w-0 flex-1 truncate">{client.name}</span>
-                {client.hasLogo && <span className="text-[10px] uppercase tracking-wide text-accent">logo</span>}
+                {client.hasLogo && <span className="text-[10px] uppercase tracking-wide text-text">logo</span>}
               </label>
             ))}
           </div>
@@ -210,7 +210,7 @@ export default function AgencyPageCard({ origin }: { origin: string }) {
         <Button onClick={save} disabled={saving} data-testid="page-save">
           {saving ? "Salvando..." : "Salvar página"}
         </Button>
-        {saved && <span className="text-sm text-accent">Aplicado ✓</span>}
+        {saved && <span className="text-sm text-text">Aplicado ✓</span>}
       </div>
 
       <div className="space-y-2 border-t border-edge pt-4">
@@ -233,7 +233,7 @@ export default function AgencyPageCard({ origin }: { origin: string }) {
                 </div>
               </div>
             ))}
-            <a href="/prospecting" className="inline-block text-xs text-accent hover:underline">
+            <a href="/prospecting" className="inline-block text-xs text-text hover:underline">
               Ver na prospecção →
             </a>
           </div>

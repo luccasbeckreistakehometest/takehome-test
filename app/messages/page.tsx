@@ -45,11 +45,11 @@ const TABS: { key: string; label: string; icon: IconName }[] = [
 ];
 
 const STATUS_STYLE: Record<string, string> = {
-  queued: "text-amber-500",
-  scheduled: "text-sky-500",
-  sending: "text-sky-500",
-  sent: "text-emerald-500",
-  failed: "text-red-500",
+  queued: "text-caution",
+  scheduled: "text-text-muted",
+  sending: "text-text-muted",
+  sent: "text-positive",
+  failed: "text-negative",
 };
 
 export default function MessagesPage() {
@@ -87,7 +87,7 @@ export default function MessagesPage() {
     <div className="space-y-6">
       <div>
         <h1 className="flex items-center gap-2 font-[family-name:var(--font-display)] text-2xl font-bold tracking-tight">
-          <Icon name="message" size={24} className="text-accent" />
+          <Icon name="message" size={24} className="text-text" />
           Mensagens
         </h1>
         <p className="mt-1 text-sm text-muted">
@@ -102,7 +102,7 @@ export default function MessagesPage() {
             onClick={() => setTab(t.key)}
             className={`flex items-center gap-1.5 whitespace-nowrap border-b-2 px-3 py-2 text-sm transition-colors ${
               tab === t.key
-                ? "border-accent text-foreground"
+                ? "border-edge text-foreground"
                 : "border-transparent text-muted hover:text-foreground"
             }`}
           >
@@ -165,8 +165,8 @@ function Inbox() {
       {items.length === 0 ? (
         <p className="text-sm text-muted">
           Nenhuma mensagem recebida ainda. Respostas chegam aqui quando o webhook da Meta estiver
-          configurado (Conexões → API oficial): Callback URL <code className="text-accent">/api/webhooks/meta</code>,
-          verify token <code className="text-accent">agencyhub-verify</code>.
+          configurado (Conexões → API oficial): Callback URL <code className="text-text">/api/webhooks/meta</code>,
+          verify token <code className="text-text">agencyhub-verify</code>.
         </p>
       ) : (
         <div className="space-y-1.5">
@@ -177,7 +177,7 @@ function Inbox() {
                   <Icon name={m.channel === "whatsapp" ? "whatsapp" : "instagram"} size={14} />
                   {m.fromName || m.fromAddress}
                   {m.clientName && (
-                    <a href={`/clients/${m.clientId}?tab=attendant`} className="rounded-full border border-edge px-2 py-0.5 text-[10px] font-normal text-muted hover:border-accent hover:text-accent">
+                    <a href={`/clients/${m.clientId}?tab=attendant`} className="rounded-full border border-edge px-2 py-0.5 text-[10px] font-normal text-muted hover:border-edge hover:text-text">
                       {m.clientName}
                     </a>
                   )}
@@ -365,7 +365,7 @@ function Compose({
 
           {error && <ErrorBox message={error} />}
           {status && (
-            <div className="rounded-md border border-emerald-500/40 bg-emerald-500/10 px-3 py-2 text-sm text-emerald-500">
+            <div className="rounded-md border border-positive/40 bg-positive-wash px-3 py-2 text-sm text-positive">
               {status}
             </div>
           )}
@@ -400,7 +400,7 @@ function Compose({
                 <button
                   key={i}
                   onClick={() => setBody(v)}
-                  className="block w-full rounded-md border border-edge bg-surface-2 px-3 py-2 text-left text-sm transition-colors hover:border-accent"
+                  className="block w-full rounded-md border border-edge bg-surface-2 px-3 py-2 text-left text-sm transition-colors hover:border-edge"
                 >
                   {v}
                 </button>
@@ -483,7 +483,7 @@ function Contacts({ contacts, onChange }: { contacts: Contact[]; onChange: () =>
                   </span>
                   {c.tags && <span className="ml-2"><Tag>{c.tags}</Tag></span>}
                 </div>
-                <button onClick={() => remove(c.id)} className="text-muted transition-colors hover:text-red-500" title="Remover">
+                <button onClick={() => remove(c.id)} className="text-muted transition-colors hover:text-negative" title="Remover">
                   <Icon name="trash" size={16} />
                 </button>
               </div>
@@ -589,7 +589,7 @@ function Lists({
                     {l.channel === "whatsapp" ? "WhatsApp" : "Instagram"} · {l.contactIds.length} contatos
                   </span>
                 </span>
-                <button onClick={() => remove(l.id)} className="text-muted transition-colors hover:text-red-500">
+                <button onClick={() => remove(l.id)} className="text-muted transition-colors hover:text-negative">
                   <Icon name="trash" size={16} />
                 </button>
               </div>
@@ -643,7 +643,7 @@ function Outbox({ outbox, onRefresh }: { outbox: OutboxMessage[]; onRefresh: () 
                 </span>
               </div>
               <p className="mt-1 line-clamp-2 text-foreground/80">{m.body}</p>
-              {m.error && <p className="mt-0.5 text-xs text-red-500">{m.error}</p>}
+              {m.error && <p className="mt-0.5 text-xs text-negative">{m.error}</p>}
             </div>
           ))}
         </div>
@@ -760,7 +760,7 @@ function ConnectionCard({
           </p>
         )}
         {conn?.mode === "session" && !sessionAvailable && (
-          <p role="alert" className="rounded-md border border-amber-500/50 bg-amber-500/10 p-3 text-xs">
+          <p role="alert" className="rounded-md border border-caution/50 bg-caution-wash p-3 text-xs">
             Esta conexão estava no modo sessão, que não funciona neste servidor. Configure a API oficial e salve para as
             mensagens da fila saírem.
           </p>
@@ -803,13 +803,13 @@ function SessionWorker({ onSavedConnection }: { onSavedConnection: () => void })
 
   const STATE_LABEL: Record<string, { text: string; cls: string }> = {
     idle: { text: "Desconectado", cls: "text-muted" },
-    starting: { text: "Iniciando…", cls: "text-sky-500" },
-    installing: { text: "Instalando motor (1ª vez)…", cls: "text-sky-500" },
-    awaiting_login: { text: "Aguardando login (escaneie o QR)", cls: "text-amber-500" },
-    connected: { text: "Conectado ✓", cls: "text-emerald-500" },
-    draining: { text: "Enviando…", cls: "text-emerald-500" },
+    starting: { text: "Iniciando…", cls: "text-text-muted" },
+    installing: { text: "Instalando motor (1ª vez)…", cls: "text-text-muted" },
+    awaiting_login: { text: "Aguardando login (escaneie o QR)", cls: "text-caution" },
+    connected: { text: "Conectado ✓", cls: "text-positive" },
+    draining: { text: "Enviando…", cls: "text-positive" },
     stopped: { text: "Parado", cls: "text-muted" },
-    error: { text: "Erro", cls: "text-red-500" },
+    error: { text: "Erro", cls: "text-negative" },
   };
   const label = STATE_LABEL[status.state] ?? STATE_LABEL.idle;
 
@@ -895,7 +895,7 @@ function SessionWorker({ onSavedConnection }: { onSavedConnection: () => void })
           <Icon name="send" size={15} /> Testar
         </Button>
       </div>
-      {note && <p className="text-xs text-accent">{note}</p>}
+      {note && <p className="text-xs text-text">{note}</p>}
     </div>
   );
 }

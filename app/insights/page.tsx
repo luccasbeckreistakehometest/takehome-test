@@ -103,7 +103,7 @@ export default function InsightsPage() {
       <div className="flex flex-wrap items-center justify-between gap-3">
         <div>
           <h1 className="flex items-center gap-2 font-[family-name:var(--font-display)] text-2xl font-bold tracking-tight">
-            <Icon name="chart" size={24} className="text-accent" />
+            <Icon name="chart" size={24} className="text-text" />
             Insights
           </h1>
           <p className="mt-1 text-sm text-muted">
@@ -131,7 +131,7 @@ export default function InsightsPage() {
         {kpis.map((kpi, i) => (
           <Link key={kpi.label} href={kpi.href} style={{ animationDelay: `${i * 40}ms` }} className="animate-fade-in">
             <Card hover className="h-full">
-              <Icon name={kpi.icon} size={20} className="text-accent" />
+              <Icon name={kpi.icon} size={20} className="text-text" />
               <p className="mt-2 font-[family-name:var(--font-display)] text-2xl font-bold">
                 {kpi.value}
               </p>
@@ -158,7 +158,7 @@ export default function InsightsPage() {
                     </span>
                     <div className="h-5 flex-1 overflow-hidden rounded bg-surface-2">
                       <div
-                        className="flex h-full items-center justify-end rounded bg-accent px-2 text-[11px] font-semibold text-accent-ink transition-all duration-700"
+                        className="flex h-full items-center justify-end rounded-xs bg-text px-2 text-[11px] font-medium text-canvas transition-all duration-700"
                         style={{ width: `${Math.max((value / funnelMax) * 100, value ? 8 : 0)}%` }}
                       >
                         {value > 0 && value}
@@ -182,7 +182,7 @@ export default function InsightsPage() {
                 <div key={day.day} className="flex flex-1 flex-col items-center gap-1.5">
                   <div className="flex w-full flex-1 items-end">
                     <div
-                      className="w-full rounded-t bg-accent/80 transition-all duration-700 hover:bg-accent"
+                      className="w-full rounded-t bg-surface-sunken transition-all duration-700 hover:bg-surface-sunken"
                       style={{ height: `${(day.c / activityMax) * 100}%` }}
                       title={`${day.c} ações`}
                     />
@@ -209,7 +209,7 @@ export default function InsightsPage() {
                   className="rounded-lg border border-edge bg-surface-2 px-3 py-2 text-sm"
                 >
                   {TYPE_LABELS[t.type] ?? t.type}{" "}
-                  <span className="font-semibold text-accent">{t.c}</span>
+                  <span className="font-semibold text-text">{t.c}</span>
                 </span>
               ))}
             </div>
@@ -231,7 +231,7 @@ export default function InsightsPage() {
                 <Link
                   key={o.id}
                   href={`/production?project=${o.id}`}
-                  className="flex items-center justify-between rounded-md border border-red-500/30 bg-red-500/5 px-3 py-2 text-sm transition-colors hover:border-red-500/60"
+                  className="flex items-center justify-between rounded-md border border-negative/30 bg-negative-wash px-3 py-2 text-sm transition-colors hover:border-negative/60"
                 >
                   <span className="truncate">
                     <span className="font-medium">{o.title}</span>
@@ -259,7 +259,7 @@ export default function InsightsPage() {
                 <Link
                   key={c.id}
                   href={`/clients/${c.id}`}
-                  className="flex items-center justify-between gap-3 rounded-md border border-edge bg-surface-2 px-3 py-2 text-sm transition-colors hover:border-accent/60"
+                  className="flex items-center justify-between gap-3 rounded-md border border-edge bg-surface-2 px-3 py-2 text-sm transition-colors hover:border-edge"
                 >
                   <span className="flex items-center gap-2">
                     <span
@@ -288,7 +288,7 @@ export default function InsightsPage() {
                 <Link
                   key={p.id}
                   href={`/professionals/${p.id}`}
-                  className="flex items-center justify-between gap-3 rounded-md border border-edge bg-surface-2 px-3 py-2 text-sm transition-colors hover:border-accent/60"
+                  className="flex items-center justify-between gap-3 rounded-md border border-edge bg-surface-2 px-3 py-2 text-sm transition-colors hover:border-edge"
                 >
                   <span className="flex items-center gap-2">
                     <Icon name="user" size={15} className="text-muted" />

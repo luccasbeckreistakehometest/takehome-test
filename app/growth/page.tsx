@@ -37,7 +37,7 @@ export default async function GrowthPage() {
     <div className="space-y-6">
       <div>
         <h1 className="flex items-center gap-2 font-[family-name:var(--font-display)] text-2xl font-bold tracking-tight">
-          <Icon name="trend" size={24} className="text-accent" /> Crescimento
+          <Icon name="trend" size={24} className="text-text" /> Crescimento
         </h1>
         <p className="mt-1 text-sm text-muted">Onde a agência encontra cliente novo e vende mais para quem já está com você.</p>
       </div>
@@ -50,12 +50,12 @@ export default async function GrowthPage() {
             className="card-hover flex flex-col rounded-xl border border-edge bg-surface p-5 shadow-sm"
           >
             <span className="flex items-center gap-2 font-medium">
-              <Icon name={card.icon} size={18} className="text-accent" /> {card.title}
+              <Icon name={card.icon} size={18} className="text-text" /> {card.title}
             </span>
             <span className="mt-2 flex-1 text-sm text-muted">{card.body}</span>
             <span className="mt-4 flex items-center justify-between text-xs">
               <span className="text-muted">{card.stat(stats)}</span>
-              <span className="font-medium text-accent">{card.cta} →</span>
+              <span className="font-medium text-text">{card.cta} →</span>
             </span>
           </Link>
         ))}

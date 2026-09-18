@@ -113,7 +113,7 @@ export default function BrandVoiceCard({ clientId }: { clientId: string }) {
         <Button onClick={save} disabled={saving} data-testid="voice-save">
           {saving ? "Salvando..." : "Salvar regras da voz"}
         </Button>
-        {saved && <span className="text-sm text-accent">Aplicado ✓</span>}
+        {saved && <span className="text-sm text-text">Aplicado ✓</span>}
         <span className="text-xs text-muted">
           {data.stats.checks} checagens · {data.stats.rewrites} reescritas em cache
         </span>

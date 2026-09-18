@@ -96,7 +96,7 @@ export default function AgendaPage() {
                 <div className="flex items-center gap-2">
                   <Tag>{new Date(rec.suggestedAt).toLocaleString("pt-BR")}</Tag>
                   {scheduled.has(index) ? (
-                    <span className="text-xs text-accent">✓ Agendada</span>
+                    <span className="text-xs text-text">✓ Agendada</span>
                   ) : (
                     <Button className="!px-2.5 !py-1 text-xs" onClick={() => schedule(index)}>
                       Agendar
@@ -109,7 +109,7 @@ export default function AgendaPage() {
                 {rec.participants}
               </p>
               <p className="mt-1 text-xs text-muted">
-                <span className="font-semibold text-accent">Por quê: </span>
+                <span className="font-semibold text-text">Por quê: </span>
                 {rec.reasoning}
               </p>
             </div>
@@ -120,7 +120,7 @@ export default function AgendaPage() {
       <Card className="space-y-3">
         <div className="flex items-center justify-between">
           <SectionTitle>Fila de publicações</SectionTitle>
-          <a href="/calendar" className="text-xs text-accent hover:underline">
+          <a href="/calendar" className="text-xs text-text hover:underline">
             Ver no calendário →
           </a>
         </div>
@@ -144,7 +144,7 @@ export default function AgendaPage() {
                   <div
                     key={post.id}
                     className={`rounded-md border px-3 py-2 text-sm ${
-                      due ? "border-amber-700/60 bg-amber-950/30" : "border-edge bg-surface-2"
+                      due ? "border-caution/60 bg-caution-wash" : "border-edge bg-surface-2"
                     }`}
                   >
                     <div className="flex flex-wrap items-center justify-between gap-2">
@@ -155,13 +155,13 @@ export default function AgendaPage() {
                           {new Date(post.scheduledFor).toLocaleString("pt-BR")}
                         </span>
                         {post.status === "published" && (
-                          <span className="ml-2 text-xs text-accent">✓ Publicado</span>
+                          <span className="ml-2 text-xs text-text">✓ Publicado</span>
                         )}
                         {post.status === "draft" && (
-                          <span className="ml-2 text-xs text-amber-400">rascunho — confirme a data no Calendário</span>
+                          <span className="ml-2 text-xs text-caution">rascunho — confirme a data no Calendário</span>
                         )}
                         {due && (
-                          <span className="ml-2 text-xs font-semibold text-amber-400">
+                          <span className="ml-2 text-xs font-semibold text-caution">
                             ⏰ Na hora — publicar agora
                           </span>
                         )}
@@ -182,7 +182,7 @@ export default function AgendaPage() {
                           </button>
                         )}
                         <button
-                          className="text-muted hover:text-red-400"
+                          className="text-muted hover:text-negative"
                           onClick={async () => {
                             await api(`/api/scheduled-posts/${post.id}`, { method: "DELETE" });
                             load();
@@ -302,7 +302,7 @@ function MeetingRow({
 
   if (editing) {
     return (
-      <div className="rounded-md border border-accent/40 bg-surface-2 px-3 py-2">
+      <div className="rounded-md border border-edge bg-surface-2 px-3 py-2">
         <div className="grid gap-2 sm:grid-cols-4">
           <Input
             value={form.title}
@@ -358,7 +358,7 @@ function MeetingRow({
         </p>
         <span className="flex items-center gap-2 text-xs">
           {meeting.link && (
-            <a href={meeting.link} target="_blank" rel="noreferrer" className="text-accent hover:underline">
+            <a href={meeting.link} target="_blank" rel="noreferrer" className="text-text hover:underline">
               entrar ↗
             </a>
           )}
@@ -366,15 +366,15 @@ function MeetingRow({
             href={googleCalendarUrl(meeting)}
             target="_blank"
             rel="noreferrer"
-            className="text-muted hover:text-accent"
+            className="text-muted hover:text-text"
             title="Adicionar ao Google Calendar"
           >Calendar
           </a>
-          <button className="text-muted hover:text-accent" onClick={() => setEditing(true)}>
+          <button className="text-muted hover:text-text" onClick={() => setEditing(true)}>
             Editar
           </button>
           <button
-            className="text-muted hover:text-red-400"
+            className="text-muted hover:text-negative"
             onClick={async () => {
               await api(`/api/meetings/${meeting.id}`, { method: "DELETE" });
               onChanged();
@@ -386,7 +386,7 @@ function MeetingRow({
       </div>
       {meeting.reasoning && (
         <p className="mt-1 text-xs text-muted">
-          <span className="text-accent">Por quê: </span>
+          <span className="text-text">Por quê: </span>
           {meeting.reasoning}
         </p>
       )}

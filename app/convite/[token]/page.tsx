@@ -49,7 +49,7 @@ export default function ConvitePage({ params }: { params: Promise<{ token: strin
               ? "Este convite já foi utilizado."
               : "Convite não encontrado ou revogado."}
         </p>
-        <Link href="/criar-conta" className="mt-4 inline-block text-accent hover:underline">
+        <Link href="/criar-conta" className="mt-4 inline-block text-text hover:underline">
           Criar uma conta →
         </Link>
       </div>
@@ -62,7 +62,7 @@ export default function ConvitePage({ params }: { params: Promise<{ token: strin
       style={data.agency ? { ["--accent" as string]: data.agency.accentColor } : undefined}
     >
       <div className="text-center">
-        <p className="text-xs uppercase tracking-widest text-accent">Você foi convidado</p>
+        <p className="text-xs uppercase tracking-widest text-text">Você foi convidado</p>
         {data.agency && (
           <p className="mt-2 text-sm text-muted" data-testid="invite-agency">
             Convite de <strong className="text-foreground">{data.agency.name}</strong>

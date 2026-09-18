@@ -95,7 +95,7 @@ export default function ApprovalLinkPanel({ clientId }: { clientId: string }) {
     <div className="space-y-4" data-testid="approval-link-panel">
       {error && <ErrorBox message={error} />}
       {created && (
-        <div className="space-y-3 rounded-xl border border-accent/40 bg-accent/5 p-4" data-testid="approval-link-created">
+        <div className="space-y-3 rounded-xl border border-edge bg-surface-sunken p-4" data-testid="approval-link-created">
           <p className="text-sm font-medium">Link pronto. O cliente abre no celular e aprova sem senha.</p>
           <p className="break-all rounded-md border border-edge bg-surface px-2 py-1.5 font-mono text-xs" data-testid="approval-link-url">
             {created.url}
@@ -134,7 +134,7 @@ export default function ApprovalLinkPanel({ clientId }: { clientId: string }) {
               const key = `${c.kind}:${c.id}`;
               return (
                 <li key={key}>
-                  <label className="flex cursor-pointer items-center gap-2 rounded-md border border-edge bg-surface-2 px-3 py-2 text-sm hover:border-accent/60">
+                  <label className="flex cursor-pointer items-center gap-2 rounded-md border border-edge bg-surface-2 px-3 py-2 text-sm hover:border-edge">
                     <input type="checkbox" checked={picked.has(key)} onChange={() => toggle(key)} data-testid="approval-candidate" data-kind={c.kind} />
                     <span className="min-w-0 flex-1">
                       <span className="block truncate font-medium">{c.title}</span>
@@ -182,11 +182,11 @@ export default function ApprovalLinkPanel({ clientId }: { clientId: string }) {
                 </span>
                 {link.state === "open" && (
                   <span className="flex gap-2">
-                    <button type="button" className="text-accent hover:underline" onClick={() => resend(link)}>
+                    <button type="button" className="text-text hover:underline" onClick={() => resend(link)}>
                       Reenviar
                     </button>
                     <CopyButton text={link.url} label="Copiar" />
-                    <button type="button" className="text-red-500 hover:underline" onClick={() => close(link)}>
+                    <button type="button" className="text-negative hover:underline" onClick={() => close(link)}>
                       Encerrar
                     </button>
                   </span>
@@ -252,7 +252,7 @@ export function ApprovalLinkCard({ clientId, clientName }: { clientId: string; c
     <div className="flex flex-wrap items-center justify-between gap-3 rounded-xl border border-edge bg-surface p-5 shadow-sm" data-testid="approval-link-card">
       <div>
         <p className="flex items-center gap-2 font-medium">
-          <Icon name="check" size={16} className="text-accent" /> Aprovação por link
+          <Icon name="check" size={16} className="text-text" /> Aprovação por link
         </p>
         <p className="mt-1 text-sm text-muted">Mande posts e entregas pelo WhatsApp. O cliente aprova sem senha e o post já entra na agenda.</p>
       </div>

@@ -89,19 +89,19 @@ export default function AiRadarTab({ client }: { client: Client }) {
           {draft.map((q, i) => (
             <div key={i} className="flex items-center gap-2">
               <Input value={q} onChange={(e) => setDraft(draft.map((x, j) => (j === i ? e.target.value : x)))} aria-label={`Pergunta ${i + 1}`} data-testid="radar-question" />
-              <button type="button" aria-label="Remover pergunta" onClick={() => setDraft(draft.filter((_, j) => j !== i))} className="px-1 text-muted hover:text-red-500">
+              <button type="button" aria-label="Remover pergunta" onClick={() => setDraft(draft.filter((_, j) => j !== i))} className="px-1 text-muted hover:text-negative">
                 ×
               </button>
             </div>
           ))}
           <div className="flex flex-wrap gap-2">
             {draft.length < data.maxQuestions && (
-              <button type="button" className="text-sm text-accent hover:underline" onClick={() => setDraft([...draft, ""])}>
+              <button type="button" className="text-sm text-text hover:underline" onClick={() => setDraft([...draft, ""])}>
                 + Pergunta
               </button>
             )}
             {data.aiAvailable && (
-              <button type="button" className="text-sm text-accent hover:underline" onClick={() => act("suggest")} disabled={busy !== ""} data-testid="radar-suggest">
+              <button type="button" className="text-sm text-text hover:underline" onClick={() => act("suggest")} disabled={busy !== ""} data-testid="radar-suggest">
                 {busy === "suggest" ? "Pensando nas perguntas..." : "Sugerir perguntas com IA (1 coin)"}
               </button>
             )}
@@ -141,8 +141,8 @@ function RadarResult({ run, trend, sample = false }: { run: Run; trend: number |
       <div className="grid gap-3 sm:grid-cols-3">
         <Card>
           <p className="text-xs uppercase tracking-wide text-muted">Participação da marca</p>
-          <p className="mt-1 font-[family-name:var(--font-display)] text-4xl font-bold text-accent" data-testid="radar-sov">{`${fmtNum(s.shareOfVoice, lang)}%`}</p>
-          {trend !== null && <p className={`text-xs ${trend >= 0 ? "text-emerald-500" : "text-red-500"}`}>{`${trend >= 0 ? "+" : ""}${fmtNum(trend, lang)} p.p. desde a rodada anterior`}</p>}
+          <p className="mt-1 font-[family-name:var(--font-display)] text-4xl font-bold text-text" data-testid="radar-sov">{`${fmtNum(s.shareOfVoice, lang)}%`}</p>
+          {trend !== null && <p className={`text-xs ${trend >= 0 ? "text-positive" : "text-negative"}`}>{`${trend >= 0 ? "+" : ""}${fmtNum(trend, lang)} p.p. desde a rodada anterior`}</p>}
         </Card>
         <Card>
           <p className="text-xs uppercase tracking-wide text-muted">Respostas que citam a marca</p>

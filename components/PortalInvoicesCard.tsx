@@ -43,12 +43,12 @@ export default function PortalInvoicesCard({ clientId }: { clientId: string }) {
           <li key={row.id}>
             <a
               href={`/fatura/${row.token}`}
-              className="flex items-center justify-between gap-2 rounded-md border border-edge bg-surface-2 px-3 py-2 hover:border-accent/60"
+              className="flex items-center justify-between gap-2 rounded-md border border-edge bg-surface-2 px-3 py-2 hover:border-edge"
               data-state={row.state}
             >
               <span>
                 <span className="font-medium">{row.month}</span>{" "}
-                <span className={`text-xs ${row.state === "overdue" ? "text-red-500" : "text-muted"}`}>· {LABEL[row.state]}</span>
+                <span className={`text-xs ${row.state === "overdue" ? "text-negative" : "text-muted"}`}>· {LABEL[row.state]}</span>
               </span>
               <span className="tabular-nums">{fmtMoney(row.total, lang)}</span>
             </a>

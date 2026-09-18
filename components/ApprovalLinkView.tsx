@@ -143,7 +143,7 @@ export default function ApprovalLinkView({
           // eslint-disable-next-line @next/next/no-img-element
           <img src={agency.logoUrl} alt={agency.name} className="size-11 rounded-lg object-contain" />
         ) : (
-          <span className="grid size-11 place-items-center rounded-lg bg-accent font-[family-name:var(--font-display)] text-lg font-bold text-accent-ink">
+          <span className="grid size-11 place-items-center rounded-sm bg-surface-sunken font-[family-name:var(--font-display)] text-lg font-bold text-text">
             {agency.name.charAt(0).toUpperCase()}
           </span>
         )}
@@ -163,7 +163,7 @@ export default function ApprovalLinkView({
       ) : (
         <>
           <section>
-            <p className="text-xs font-semibold uppercase tracking-widest text-accent">
+            <p className="text-xs font-semibold uppercase tracking-widest text-text">
               {t.for} {clientName}
             </p>
             <h1 className="mt-1 font-[family-name:var(--font-display)] text-2xl font-bold leading-tight">{t.intro}</h1>
@@ -182,13 +182,13 @@ export default function ApprovalLinkView({
                 if (!approver) setApprover(storedName());
               }}
               placeholder={t.whoPh}
-              className="mt-1 w-full rounded-lg border border-edge bg-surface-2 px-3 py-2.5 text-base outline-none focus:border-accent"
+              className="mt-1 w-full rounded-lg border border-edge bg-surface-2 px-3 py-2.5 text-base outline-none focus:border-edge"
               data-testid="approver-name"
             />
           </section>
 
           {error && (
-            <p role="alert" className="rounded-lg border border-red-500/50 bg-red-500/10 px-3 py-2 text-sm text-red-500">
+            <p role="alert" className="rounded-lg border border-negative/50 bg-negative-wash px-3 py-2 text-sm text-negative">
               {error}
             </p>
           )}
@@ -208,7 +208,7 @@ export default function ApprovalLinkView({
           </ul>
 
           {pending.length === 0 ? (
-            <p className="rounded-2xl border border-emerald-500/40 bg-emerald-500/10 p-4 text-center text-sm font-medium" data-testid="approval-all-done">
+            <p className="rounded-2xl border border-positive/40 bg-positive-wash p-4 text-center text-sm font-medium" data-testid="approval-all-done">
               {t.allDone}
             </p>
           ) : (
@@ -251,9 +251,9 @@ function ItemCard({
   const [note, setNote] = useState("");
   const status =
     item.decision === "approved"
-      ? { label: t.approved, cls: "border-emerald-500/50 bg-emerald-500/10 text-emerald-600 dark:text-emerald-300" }
+      ? { label: t.approved, cls: "border-positive/50 bg-positive-wash text-positive dark:text-positive" }
       : item.decision === "changes_requested"
-        ? { label: t.requested, cls: "border-amber-500/50 bg-amber-500/10 text-amber-600 dark:text-amber-300" }
+        ? { label: t.requested, cls: "border-caution/50 bg-caution-wash text-caution dark:text-caution" }
         : { label: t.pending, cls: "border-edge bg-surface-2 text-muted" };
   return (
     <li className="overflow-hidden rounded-2xl border border-edge bg-surface" data-testid="approval-item" data-kind={item.kind} data-id={item.id} data-decision={item.decision}>
@@ -276,11 +276,11 @@ function ItemCard({
         {item.kind === "post" && item.caption && (
           <p className="whitespace-pre-wrap text-sm leading-relaxed">
             {item.caption}
-            {item.hashtags.length > 0 && <span className="mt-1 block text-accent">{item.hashtags.map((h) => (h.startsWith("#") ? h : `#${h}`)).join(" ")}</span>}
+            {item.hashtags.length > 0 && <span className="mt-1 block text-text">{item.hashtags.map((h) => (h.startsWith("#") ? h : `#${h}`)).join(" ")}</span>}
           </p>
         )}
         {item.decision === "changes_requested" && item.note && (
-          <p className="rounded-lg border border-amber-500/40 bg-amber-500/5 px-3 py-2 text-sm">“{item.note}”</p>
+          <p className="rounded-lg border border-caution/40 bg-caution-wash px-3 py-2 text-sm">“{item.note}”</p>
         )}
         {item.decision !== "approved" &&
           (asking ? (
@@ -290,7 +290,7 @@ function ItemCard({
                 onChange={(e) => setNote(e.target.value)}
                 maxLength={1000}
                 placeholder={t.notePh}
-                className="min-h-24 w-full rounded-lg border border-edge bg-surface-2 px-3 py-2 text-base outline-none focus:border-accent"
+                className="min-h-24 w-full rounded-lg border border-edge bg-surface-2 px-3 py-2 text-base outline-none focus:border-edge"
                 data-testid="changes-note"
               />
               <div className="flex gap-2">

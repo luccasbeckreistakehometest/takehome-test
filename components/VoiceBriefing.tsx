@@ -371,12 +371,12 @@ export default function VoiceBriefing({
   return (
     <Card>
       <div data-testid="voice" data-state={phase}>
-        <p className="text-xs font-semibold uppercase tracking-widest text-accent">Briefing falado</p>
+        <p className="text-xs font-semibold uppercase tracking-widest text-text">Briefing falado</p>
         <h2 className="mt-1 font-[family-name:var(--font-display)] text-xl font-semibold">Conte sobre a marca</h2>
         <div className="mt-4 rounded-xl border border-edge bg-surface-2 p-4 text-sm leading-relaxed" data-testid="voice-prompt">“{prompt}”</div>
         <div className="mt-2 flex items-center gap-3 text-xs">
           {voiceOn ? (
-            <button type="button" onClick={() => void replay()} className="font-semibold text-accent hover:underline" data-testid="voice-replay">▶ Ouvir</button>
+            <button type="button" onClick={() => void replay()} className="font-semibold text-text hover:underline" data-testid="voice-replay">▶ Ouvir</button>
           ) : (
             <span className="text-muted">Só texto neste servidor (voz da IA não configurada).</span>
           )}
@@ -389,14 +389,14 @@ export default function VoiceBriefing({
               <button
                 type="button"
                 onClick={() => (phase === "speaking" ? (hush(), resumeListening()) : void finishTurn())}
-                className="relative grid size-16 place-items-center rounded-full bg-accent text-accent-ink shadow-lg"
+                className="relative grid size-16 place-items-center rounded-full bg-text text-canvas shadow-e1"
                 aria-label={phase === "speaking" ? "Interromper e falar" : "Terminei de falar"}
                 data-testid="voice-stop"
               >
-                <span className={`absolute inset-0 rounded-full bg-accent/40 ${phase === "listening" ? "animate-ping" : ""}`} />
+                <span className={`absolute inset-0 rounded-full bg-surface-sunken ${phase === "listening" ? "animate-ping" : ""}`} />
                 <Icon name="mic" size={24} />
               </button>
-              <p className="text-sm font-medium text-accent" data-testid="voice-status">{status}</p>
+              <p className="text-sm font-medium text-text" data-testid="voice-status">{status}</p>
               <p className="min-h-5 max-w-lg text-center text-sm text-muted" aria-live="polite">{(heard + " " + interim).trim()}</p>
               {phase === "listening" && (
                 <>
@@ -412,7 +412,7 @@ export default function VoiceBriefing({
               {phase === "review" ? "Falar mais" : "Começar a falar"}
             </Button>
           )}
-          {error && <p className="text-sm text-red-400" role="alert">{error}</p>}
+          {error && <p className="text-sm text-negative" role="alert">{error}</p>}
         </div>
 
         {briefing && (
@@ -430,8 +430,8 @@ export default function VoiceBriefing({
                 ) : null)}
                 {briefing.fields.channels.length > 0 && <div className="flex gap-3"><dt className="w-32 shrink-0 text-muted">Canais</dt><dd>{briefing.fields.channels.join(", ")}</dd></div>}
               </dl>
-              {briefing.missing.length > 0 && <p className="mt-3 text-sm text-amber-400">Ainda falta: {briefing.missing.map((m) => LABELS[m] ?? m).join(", ")}</p>}
-              {complete && <p className="mt-3 text-sm text-emerald-400">Tenho o que preciso.</p>}
+              {briefing.missing.length > 0 && <p className="mt-3 text-sm text-caution">Ainda falta: {briefing.missing.map((m) => LABELS[m] ?? m).join(", ")}</p>}
+              {complete && <p className="mt-3 text-sm text-positive">Tenho o que preciso.</p>}
             </div>
           </div>
         )}

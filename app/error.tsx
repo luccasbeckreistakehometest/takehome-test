@@ -21,10 +21,10 @@ export default function ErrorPage({ error, reset }: { error: Error & { digest?: 
         <button type="button" onClick={reset} className="rounded-md bg-accent px-4 py-2 text-sm font-medium text-accent-ink hover:opacity-90">
           Tentar de novo · Retry
         </button>
-        <Link href="/" className="rounded-md border border-edge bg-surface-2 px-4 py-2 text-sm hover:border-accent">
+        <Link href="/" className="rounded-md border border-edge bg-surface-2 px-4 py-2 text-sm hover:border-edge">
           Início · Home
         </Link>
-        <Link href="/contato" className="rounded-md border border-edge bg-surface-2 px-4 py-2 text-sm hover:border-accent">
+        <Link href="/contato" className="rounded-md border border-edge bg-surface-2 px-4 py-2 text-sm hover:border-edge">
           Contato · Contact
         </Link>
       </div>

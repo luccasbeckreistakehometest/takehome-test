@@ -76,7 +76,7 @@ export default function GlobalSearch() {
                   <span className="font-medium">{result.label}</span>{" "}
                   <span className="text-xs text-muted">{result.sublabel}</span>
                 </span>
-                <span className="text-[10px] uppercase tracking-wide text-accent">
+                <span className="text-[10px] uppercase tracking-wide text-text">
                   {result.type}
                 </span>
               </button>

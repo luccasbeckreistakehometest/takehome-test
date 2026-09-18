@@ -83,8 +83,8 @@ export default function InvoiceSettingsCard() {
         <Button onClick={save} disabled={saving} data-testid="pix-save">
           {saving ? "Salvando..." : "Salvar recebimentos"}
         </Button>
-        {saved && <span className="text-sm text-accent">Salvo ✓</span>}
-        <span className={`text-xs ${ready ? "text-emerald-600 dark:text-emerald-400" : "text-muted"}`}>{ready ? "Pronto para enviar faturas" : "Faltam dados para enviar faturas"}</span>
+        {saved && <span className="text-sm text-text">Salvo ✓</span>}
+        <span className={`text-xs ${ready ? "text-positive dark:text-positive" : "text-muted"}`}>{ready ? "Pronto para enviar faturas" : "Faltam dados para enviar faturas"}</span>
       </div>
     </Card>
   );

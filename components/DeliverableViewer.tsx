@@ -177,7 +177,7 @@ export default function DeliverableViewer({ deliverable }: { deliverable: Delive
           )}
           <a
             href={`/api/files/${deliverable.id}?download=1`}
-            className="rounded border border-edge bg-surface-2 px-2 py-1 text-xs text-muted transition-colors hover:border-accent hover:text-accent"
+            className="rounded border border-edge bg-surface-2 px-2 py-1 text-xs text-muted transition-colors hover:border-edge hover:text-text"
           >
             Baixar </a>
           {latestReview && (
@@ -223,8 +223,8 @@ export default function DeliverableViewer({ deliverable }: { deliverable: Delive
             title={annotation.comment}
             className={`absolute grid size-6 -translate-x-1/2 -translate-y-1/2 place-items-center rounded-full border-2 text-xs font-bold ${
               annotation.resolved
-                ? "border-emerald-400 bg-emerald-400/80 text-black"
-                : "border-white bg-red-500 text-white"
+                ? "border-positive/50 bg-positive-wash text-black"
+                : "border-white bg-negative text-white"
             }`}
             style={{ left: `${annotation.x}%`, top: `${annotation.y}%` }}
             onClick={(e) => e.stopPropagation()}
@@ -234,7 +234,7 @@ export default function DeliverableViewer({ deliverable }: { deliverable: Delive
         ))}
         {pending && (
           <span
-            className="absolute grid size-6 -translate-x-1/2 -translate-y-1/2 animate-pulse place-items-center rounded-full border-2 border-white bg-accent text-xs font-bold text-accent-ink"
+            className="absolute grid size-6 -translate-x-1/2 -translate-y-1/2 animate-pulse place-items-center rounded-full border-2 border-canvas bg-text t5 font-medium text-canvas"
             style={{ left: `${pending.x}%`, top: `${pending.y}%` }}
             onClick={(e) => e.stopPropagation()}
           >
@@ -276,7 +276,7 @@ export default function DeliverableViewer({ deliverable }: { deliverable: Delive
             onChange={(e) => setComment(e.target.value)}
             onKeyDown={(e) => e.key === "Enter" && saveAnnotation()}
             placeholder="Descreva o ajuste neste ponto..."
-            className="min-w-48 flex-1 rounded-md border border-edge bg-surface-2 px-3 py-2 text-sm outline-none focus:border-accent"
+            className="min-w-48 flex-1 rounded-md border border-edge bg-surface-2 px-3 py-2 text-sm outline-none focus:border-edge"
           />
           <Button onClick={saveAnnotation}>Salvar</Button>
           <Button variant="ghost" onClick={() => setPending(null)}>
@@ -293,7 +293,7 @@ export default function DeliverableViewer({ deliverable }: { deliverable: Delive
               className="flex items-start justify-between gap-3 rounded-md border border-edge bg-surface-2 px-3 py-2 text-sm"
             >
               <p className={annotation.resolved ? "text-muted line-through" : ""}>
-                <span className="mr-2 font-bold text-accent">#{index + 1}</span>
+                <span className="mr-2 font-bold text-text">#{index + 1}</span>
                 {annotation.comment}
                 <span className="ml-2 text-[10px] uppercase tracking-wide text-muted">
                   {REVIEW_ROLE_LABELS[annotation.author] ?? annotation.author} →{" "}
@@ -304,7 +304,7 @@ export default function DeliverableViewer({ deliverable }: { deliverable: Delive
               </p>
               <div className="flex shrink-0 gap-2 text-xs">
                 <button
-                  className="text-muted hover:text-accent"
+                  className="text-muted hover:text-text"
                   onClick={async () => {
                     await api(`/api/annotations/${annotation.id}`, {
                       method: "PATCH",
@@ -316,7 +316,7 @@ export default function DeliverableViewer({ deliverable }: { deliverable: Delive
                   {annotation.resolved ? "Reabrir" : "Resolver ✓"}
                 </button>
                 <button
-                  className="text-muted hover:text-red-400"
+                  className="text-muted hover:text-negative"
                   onClick={async () => {
                     await api(`/api/annotations/${annotation.id}`, { method: "DELETE" });
                     load();
@@ -364,7 +364,7 @@ export default function DeliverableViewer({ deliverable }: { deliverable: Delive
           </p>
           <div className="grid gap-3 text-sm text-muted sm:grid-cols-2">
             <div>
-              <p className="mb-1 text-xs font-semibold uppercase text-emerald-400">
+              <p className="mb-1 text-xs font-semibold uppercase text-positive">
                 Pontos fortes
               </p>
               <ul className="list-disc space-y-0.5 pl-4">
@@ -374,7 +374,7 @@ export default function DeliverableViewer({ deliverable }: { deliverable: Delive
               </ul>
             </div>
             <div>
-              <p className="mb-1 text-xs font-semibold uppercase text-amber-400">
+              <p className="mb-1 text-xs font-semibold uppercase text-caution">
                 Melhorias
               </p>
               <ul className="list-disc space-y-0.5 pl-4">
@@ -385,8 +385,8 @@ export default function DeliverableViewer({ deliverable }: { deliverable: Delive
             </div>
           </div>
           {reviewContent.revisionNotes.length > 0 && (
-            <div className="rounded-md border border-amber-900/50 bg-amber-950/30 p-3 text-sm text-muted">
-              <p className="mb-1 text-xs font-semibold uppercase text-amber-400">
+            <div className="rounded-md border border-caution/50 bg-caution-wash p-3 text-sm text-muted">
+              <p className="mb-1 text-xs font-semibold uppercase text-caution">
                 Notas de revisão para o profissional
               </p>
               <ul className="list-disc space-y-0.5 pl-4">
@@ -401,7 +401,7 @@ export default function DeliverableViewer({ deliverable }: { deliverable: Delive
 
       {/* Comentários — thread genérica para qualquer entregável (texto ou imagem) */}
       <div className="space-y-3 border-t border-edge pt-4">
-        <h3 className="flex items-center gap-1.5 font-[family-name:var(--font-display)] text-sm font-semibold uppercase tracking-wider text-accent">
+        <h3 className="flex items-center gap-1.5 font-[family-name:var(--font-display)] text-sm font-semibold uppercase tracking-wider text-text">
           <Icon name="message" size={15} />
           Comentários
           {comments.length > 0 && (
@@ -432,7 +432,7 @@ export default function DeliverableViewer({ deliverable }: { deliverable: Delive
                     <button
                       type="button"
                       title="Excluir comentário"
-                      className="text-muted transition-colors hover:text-red-400"
+                      className="text-muted transition-colors hover:text-negative"
                       onClick={() => removeComment(c.id)}
                     >
                       <Icon name="trash" size={14} />

@@ -80,15 +80,15 @@ export default function FinancePage() {
       <div className="flex flex-wrap items-end justify-between gap-4">
         <div>
           <h1 className="flex items-center gap-2 font-[family-name:var(--font-display)] text-2xl font-bold tracking-tight">
-            <Icon name="money" size={24} className="text-accent" /> Horas & margem
+            <Icon name="money" size={24} className="text-text" /> Horas & margem
           </h1>
           <p className="mt-1 text-sm text-muted">Quanto cada cliente paga por mês contra quanto ele custa em horas da equipe. Quem dá prejuízo aparece em vermelho.</p>
         </div>
         <div className="flex flex-wrap items-center gap-2">
-          <button onClick={() => setMonth((m) => shiftMonth(m, -1))} className="grid size-9 place-items-center rounded-md border border-edge bg-surface-2 hover:border-accent" aria-label="Mês anterior">‹</button>
+          <button onClick={() => setMonth((m) => shiftMonth(m, -1))} className="grid size-9 place-items-center rounded-md border border-edge bg-surface-2 hover:border-edge" aria-label="Mês anterior">‹</button>
           <span className="min-w-40 text-center font-medium" data-testid="finance-month">{monthLabel(month, lang)}</span>
-          <button onClick={() => setMonth((m) => shiftMonth(m, 1))} className="grid size-9 place-items-center rounded-md border border-edge bg-surface-2 hover:border-accent" aria-label="Próximo mês">›</button>
-          <a href={`/api/finance/margin?month=${month}&format=csv&lang=${lang}`} className="inline-flex items-center gap-1.5 rounded-md border border-edge bg-surface-2 px-3 py-2 text-sm hover:border-accent" data-testid="finance-csv">
+          <button onClick={() => setMonth((m) => shiftMonth(m, 1))} className="grid size-9 place-items-center rounded-md border border-edge bg-surface-2 hover:border-edge" aria-label="Próximo mês">›</button>
+          <a href={`/api/finance/margin?month=${month}&format=csv&lang=${lang}`} className="inline-flex items-center gap-1.5 rounded-md border border-edge bg-surface-2 px-3 py-2 text-sm hover:border-edge" data-testid="finance-csv">
             <Icon name="doc" size={15} /> Exportar CSV
           </a>
         </div>
@@ -112,7 +112,7 @@ export default function FinancePage() {
             ].map((kpi) => (
               <Card key={kpi.label}>
                 <p className="text-[11px] font-semibold uppercase tracking-wider text-muted">{kpi.label}</p>
-                <p className={`mt-1 font-[family-name:var(--font-display)] text-2xl font-bold ${kpi.negative ? "text-red-500" : ""}`}>{kpi.value}</p>
+                <p className={`mt-1 font-[family-name:var(--font-display)] text-2xl font-bold ${kpi.negative ? "text-negative" : ""}`}>{kpi.value}</p>
                 {kpi.hint && <p className="text-xs text-muted">{kpi.hint}</p>}
               </Card>
             ))}
@@ -140,9 +140,9 @@ export default function FinancePage() {
                     </tr>
                   )}
                   {report.rows.map((row) => (
-                    <tr key={row.clientId} className={`border-b border-edge ${row.status === "loss" ? "bg-red-500/5" : ""}`} data-testid="margin-row" data-status={row.status} data-client={row.name}>
+                    <tr key={row.clientId} className={`border-b border-edge ${row.status === "loss" ? "bg-negative-wash" : ""}`} data-testid="margin-row" data-status={row.status} data-client={row.name}>
                       <td className="px-4 py-2">
-                        <Link href={`/clients/${row.clientId}?tab=time`} className="font-medium hover:text-accent">{row.name}</Link>
+                        <Link href={`/clients/${row.clientId}?tab=time`} className="font-medium hover:text-text">{row.name}</Link>
                       </td>
                       <td className="px-4 py-2">
                         <input
@@ -150,14 +150,14 @@ export default function FinancePage() {
                           min={0}
                           value={fees[row.clientId] ?? ""}
                           onChange={(e) => setFees({ ...fees, [row.clientId]: e.target.value })}
-                          className="w-28 rounded-md border border-edge bg-surface-2 px-2 py-1 text-sm outline-none focus:border-accent"
+                          className="w-28 rounded-md border border-edge bg-surface-2 px-2 py-1 text-sm outline-none focus:border-edge"
                           aria-label={`Fee de ${row.name}`}
                         />
                       </td>
                       <td className="px-4 py-2 text-muted" data-testid="margin-received">{report.received?.[row.clientId] ? money(report.received[row.clientId]) : "—"}</td>
                       <td className="px-4 py-2">{formatHours(row.minutes)}</td>
                       <td className="px-4 py-2">{money(row.cost)}</td>
-                      <td className={`px-4 py-2 font-medium ${row.margin < 0 ? "text-red-500" : ""}`} data-testid="margin-cell">
+                      <td className={`px-4 py-2 font-medium ${row.margin < 0 ? "text-negative" : ""}`} data-testid="margin-cell">
                         {money(row.margin)}
                         {row.marginPct !== null && <span className="ml-1 text-xs text-muted">({row.marginPct}%)</span>}
                       </td>
@@ -199,7 +199,7 @@ export default function FinancePage() {
                         min={0}
                         value={rates.professionals[p.id] ?? ""}
                         onChange={(e) => setRates({ ...rates, professionals: { ...rates.professionals, [p.id]: e.target.value } })}
-                        className="w-24 rounded-md border border-edge bg-surface px-2 py-1 text-sm outline-none focus:border-accent"
+                        className="w-24 rounded-md border border-edge bg-surface px-2 py-1 text-sm outline-none focus:border-edge"
                         aria-label={`Custo/hora de ${p.name}`}
                         data-testid="rate-professional"
                       />
@@ -212,7 +212,7 @@ export default function FinancePage() {
               <Button onClick={save} disabled={saving} data-testid="finance-save">
                 {saving ? "Salvando..." : "Salvar custos e fees"}
               </Button>
-              {saved && <span className="text-sm text-accent">Aplicado ✓</span>}
+              {saved && <span className="text-sm text-text">Aplicado ✓</span>}
             </div>
           </Card>
         </>

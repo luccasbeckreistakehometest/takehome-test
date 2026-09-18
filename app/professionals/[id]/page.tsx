@@ -107,7 +107,7 @@ export default function ProfessionalPage({
             ].map((stat) => (
               <Card key={stat.label} className="text-center">
                 <p className="text-xs uppercase tracking-wide text-muted">{stat.label}</p>
-                <p className="mt-1 font-[family-name:var(--font-display)] text-2xl font-bold text-accent">
+                <p className="mt-1 font-[family-name:var(--font-display)] text-2xl font-bold text-text">
                   {stat.value}
                 </p>
               </Card>
@@ -151,7 +151,7 @@ export default function ProfessionalPage({
                     href={item.url}
                     target="_blank"
                     rel="noreferrer"
-                    className="rounded-md border border-edge bg-surface-2 px-3 py-1.5 text-sm text-muted transition-colors hover:border-accent hover:text-accent"
+                    className="rounded-md border border-edge bg-surface-2 px-3 py-1.5 text-sm text-muted transition-colors hover:border-edge hover:text-text"
                   >
                     {item.title || item.url} ↗
                   </a>
@@ -172,7 +172,7 @@ export default function ProfessionalPage({
                     .filter((p) => p.escrow === "held")
                     .map((p) => (
                       <p key={p.id} className="mt-1">
-                        {p.title.slice(0, 40)} — <span className="text-accent">{p.budget || "a definir"}</span>
+                        {p.title.slice(0, 40)} — <span className="text-text">{p.budget || "a definir"}</span>
                       </p>
                     ))
                 )}
@@ -186,7 +186,7 @@ export default function ProfessionalPage({
                     .filter((p) => p.status === "paid")
                     .map((p) => (
                       <p key={p.id} className="mt-1">
-                        {p.title.slice(0, 40)} — <span className="text-accent">{p.budget || "n/d"}</span>
+                        {p.title.slice(0, 40)} — <span className="text-text">{p.budget || "n/d"}</span>
                       </p>
                     ))
                 )}
@@ -217,7 +217,7 @@ export default function ProfessionalPage({
                       <Tag>{PROJECT_STATUS_LABELS[project.status]}</Tag>
                       <Link
                         href={`/clients/${project.clientId}?project=${project.id}`}
-                        className="text-xs text-accent hover:underline"
+                        className="text-xs text-text hover:underline"
                       >
                         Abrir →
                       </Link>
@@ -269,7 +269,7 @@ export default function ProfessionalPage({
                         <p className="mt-1 text-xs text-muted">{project.brief.slice(0, 200)}</p>
                       )}
                       {applyingTo === project.id && !application && (
-                        <div className="mt-3 space-y-2 rounded-md border border-accent/40 bg-background p-3">
+                        <div className="mt-3 space-y-2 rounded-md border border-edge bg-background p-3">
                           <p className="text-xs font-semibold uppercase tracking-wide text-muted">
                             Mensagem de apresentação
                           </p>
@@ -278,7 +278,7 @@ export default function ProfessionalPage({
                             value={pitch}
                             onChange={(e) => setPitch(e.target.value)}
                             placeholder="Por que você é a pessoa certa para este job? Cite experiência no segmento, trabalhos parecidos do portfolio, disponibilidade..."
-                            className="min-h-24 w-full rounded-md border border-edge bg-surface-2 p-2 text-sm outline-none focus:border-accent"
+                            className="min-h-24 w-full rounded-md border border-edge bg-surface-2 p-2 text-sm outline-none focus:border-edge"
                           />
                           <div className="flex gap-2">
                             <Button
@@ -354,7 +354,7 @@ function PortfolioGallery({ professionalId }: { professionalId: string }) {
     <Card id="portfolio" className="scroll-mt-20" data-tour="pro-portfolio">
       <div className="flex items-center justify-between">
         <SectionTitle>Portfolio na plataforma</SectionTitle>
-        <label className="cursor-pointer rounded-md border border-edge bg-surface-2 px-3 py-1.5 text-xs transition-colors hover:border-accent">
+        <label className="cursor-pointer rounded-md border border-edge bg-surface-2 px-3 py-1.5 text-xs transition-colors hover:border-edge">
           {uploading ? "Enviando..." : "Adicionar imagem"}
           <input
             type="file"

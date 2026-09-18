@@ -49,10 +49,10 @@ function useValue(l: Learnings, lang: UiLang) {
 function HighlightTile({ title, h, l, lang, tone }: { title: string; h: Highlight; l: Learnings; lang: UiLang; tone: "good" | "bad" }) {
   const value = useValue(l, lang);
   return (
-    <div className={`rounded-lg border p-3 ${tone === "good" ? "border-emerald-500/40 bg-emerald-500/5" : "border-red-500/40 bg-red-500/5"}`} data-testid={tone === "good" ? "learning-best" : "learning-worst"} data-dimension={h.dimension} data-key={h.key}>
+    <div className={`rounded-lg border p-3 ${tone === "good" ? "border-positive/40 bg-positive-wash" : "border-negative/40 bg-negative-wash"}`} data-testid={tone === "good" ? "learning-best" : "learning-worst"} data-dimension={h.dimension} data-key={h.key}>
       <p className="text-[11px] font-semibold uppercase tracking-wider text-muted">{title}</p>
       <p className="mt-1 font-[family-name:var(--font-display)] text-lg font-bold capitalize">{groupLabel(h.dimension, h.key, toLang(lang))}</p>
-      <p className={`text-xs ${tone === "good" ? "text-emerald-500" : "text-red-500"}`}>
+      <p className={`text-xs ${tone === "good" ? "text-positive" : "text-negative"}`}>
         {h.liftPct >= 0 ? "+" : ""}
         {h.liftPct}% <span>vs média</span>
       </p>
@@ -89,8 +89,8 @@ export function LearningsSummary({ learnings: l, reading, lang, compact = false 
         {l.worst && <HighlightTile title="O que menos funcionou" h={l.worst} l={l} lang={lang} tone="bad" />}
       </div>
       {reading && reading.lines.length > 0 && (
-        <div className="rounded-md border border-accent/40 bg-accent/5 p-3 text-sm" data-testid="learnings-reading">
-          <p className="mb-1 flex items-center gap-2 text-xs font-semibold uppercase tracking-wider text-accent">
+        <div className="rounded-md border border-edge bg-surface-sunken p-3 text-sm" data-testid="learnings-reading">
+          <p className="mb-1 flex items-center gap-2 text-xs font-semibold uppercase tracking-wider text-text">
             <Icon name="sparkle" size={13} /> <span>Leitura da IA</span>
             {reading.demo && <Tag>exemplo — sem chave de IA</Tag>}
           </p>
@@ -103,7 +103,7 @@ export function LearningsSummary({ learnings: l, reading, lang, compact = false 
       )}
       {!compact && (
         <details>
-          <summary className="cursor-pointer text-xs text-accent">Ver todos os grupos</summary>
+          <summary className="cursor-pointer text-xs text-text">Ver todos os grupos</summary>
           <div className="mt-2 grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
             {ORDER.map((dim) =>
               l.dimensions[dim].length === 0 ? null : (
@@ -112,7 +112,7 @@ export function LearningsSummary({ learnings: l, reading, lang, compact = false 
                   {l.dimensions[dim].map((g) => (
                     <p key={g.key} className="flex justify-between gap-2">
                       <span className="capitalize">{groupLabel(dim, g.key, toLang(lang))}</span>
-                      <span className={g.liftPct >= 0 ? "text-emerald-500" : "text-red-500"}>
+                      <span className={g.liftPct >= 0 ? "text-positive" : "text-negative"}>
                         {value(g.avg)} · {g.liftPct >= 0 ? "+" : ""}
                         {g.liftPct}% · {g.posts}
                       </span>
@@ -169,11 +169,11 @@ export default function LearningsCard({ clientId, canGenerate = true }: { client
       <div className="flex flex-wrap items-center justify-between gap-2">
         <SectionTitle>O que funciona pra este cliente</SectionTitle>
         <div className="flex items-center gap-1">
-          <button onClick={() => setMonth((m) => shiftMonth(m, -1))} className="grid size-7 place-items-center rounded-md border border-edge text-sm hover:border-accent" aria-label="Mês anterior" data-testid="learnings-prev">
+          <button onClick={() => setMonth((m) => shiftMonth(m, -1))} className="grid size-7 place-items-center rounded-md border border-edge text-sm hover:border-edge" aria-label="Mês anterior" data-testid="learnings-prev">
             ‹
           </button>
           <span className="min-w-32 text-center text-xs font-medium capitalize" data-testid="learnings-month">{monthLabel(month, lang)}</span>
-          <button onClick={() => setMonth((m) => shiftMonth(m, 1))} className="grid size-7 place-items-center rounded-md border border-edge text-sm hover:border-accent" aria-label="Próximo mês">
+          <button onClick={() => setMonth((m) => shiftMonth(m, 1))} className="grid size-7 place-items-center rounded-md border border-edge text-sm hover:border-edge" aria-label="Próximo mês">
             ›
           </button>
         </div>

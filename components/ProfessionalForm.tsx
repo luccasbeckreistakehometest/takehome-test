@@ -133,7 +133,7 @@ export default function ProfessionalForm({
                   }
                   className={`rounded-full border px-3 py-1 text-xs transition-colors ${
                     active
-                      ? "border-accent bg-accent text-accent-ink"
+                      ? "border-text bg-text text-canvas"
                       : "border-edge bg-surface-2 text-muted hover:border-muted"
                   }`}
                 >
@@ -177,7 +177,7 @@ export default function ProfessionalForm({
               onChange={(e) =>
                 set("employmentType", e.target.value as "freelancer" | "employee")
               }
-              className="w-full rounded-md border border-edge bg-surface-2 px-3 py-2 text-sm text-foreground outline-none transition-colors focus:border-accent"
+              className="w-full rounded-md border border-edge bg-surface-2 px-3 py-2 text-sm text-foreground outline-none transition-colors focus:border-edge"
             >
               <option value="freelancer">Freelancer (marketplace aberto)</option>
               <option value="employee">Funcionário full-time (só demandas da agência)</option>

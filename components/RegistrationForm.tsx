@@ -98,9 +98,9 @@ export default function RegistrationForm({
               key={r}
               type="button"
               onClick={() => setRole(r)}
-              className="group flex flex-col items-start gap-2 rounded-xl border border-edge bg-surface-2 p-4 text-left transition-all hover:-translate-y-0.5 hover:border-accent"
+              className="group flex flex-col items-start gap-2 rounded-xl border border-edge bg-surface-2 p-4 text-left transition-all hover:-translate-y-0.5 hover:border-edge"
             >
-              <span className="grid size-10 place-items-center rounded-lg bg-accent/10 text-accent transition-colors group-hover:bg-accent group-hover:text-accent-ink">
+              <span className="grid size-10 place-items-center rounded-lg bg-surface-sunken text-text transition-colors group-hover:bg-surface-sunken group-hover:text-text-ink">
                 <Icon name={ROLE_INFO[r].icon} size={20} />
               </span>
               <span className="font-semibold">{ROLE_INFO[r].label}</span>
@@ -120,7 +120,7 @@ export default function RegistrationForm({
         </button>
       )}
       <div className="flex items-center gap-2 rounded-md border border-edge bg-surface-2 px-3 py-2 text-sm">
-        <Icon name={ROLE_INFO[role].icon} size={16} className="text-accent" />
+        <Icon name={ROLE_INFO[role].icon} size={16} className="text-text" />
         <span className="font-medium">{ROLE_INFO[role].label}</span>
       </div>
     </>
@@ -243,11 +243,11 @@ export default function RegistrationForm({
         />
         <span>
           Li e aceito os{" "}
-          <Link href="/termos" target="_blank" className="text-accent hover:underline">
+          <Link href="/termos" target="_blank" className="text-text hover:underline">
             Termos de Uso
           </Link>{" "}
           e a{" "}
-          <Link href="/privacidade" target="_blank" className="text-accent hover:underline">
+          <Link href="/privacidade" target="_blank" className="text-text hover:underline">
             Política de Privacidade
           </Link>
           .

@@ -45,12 +45,12 @@ export default function BriefingVoiceStart({
     return (
       <div className="space-y-2" data-testid="briefing-voice-start">
         <VoiceBriefing confirmLabel="Salvar no briefing" onConfirm={(b) => void apply(b)} onTypeInstead={() => { setTalking(false); onWrite(); }} />
-        {error && <p className="text-sm text-red-500" role="alert">{error}</p>}
+        {error && <p className="text-sm text-negative" role="alert">{error}</p>}
       </div>
     );
   }
   return (
-    <div className="rounded-xl border border-accent/40 bg-accent/5 p-5" data-testid="briefing-voice-start">
+    <div className="rounded-xl border border-edge bg-surface-sunken p-5" data-testid="briefing-voice-start">
       {saved ? (
         <p className="text-sm font-medium" data-testid="briefing-voice-saved">Briefing salvo. Confira os campos na aba Briefing quando quiser.</p>
       ) : (

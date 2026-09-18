@@ -193,7 +193,7 @@ export default function ProjectsTab({
                     <div className="flex flex-wrap items-center justify-between gap-2">
                       <p className="font-semibold">{demand.title}</p>
                       {createdFromSuggestion.has(index) ? (
-                        <span className="inline-flex items-center gap-1.5 text-xs text-accent"><Icon name="check" size={13} /> Criada</span>
+                        <span className="inline-flex items-center gap-1.5 text-xs text-text"><Icon name="check" size={13} /> Criada</span>
                       ) : (
                         <Button className="!px-2.5 !py-1 text-xs" onClick={() => createFromSuggestion(index)}>
                           Criar demanda
@@ -202,7 +202,7 @@ export default function ProjectsTab({
                     </div>
                     <p className="mt-1 whitespace-pre-wrap text-xs text-muted">{demand.brief}</p>
                     <p className="mt-1.5 text-xs text-muted">
-                      <span className="text-accent">{demand.skillsNeeded.join(", ") || "skills livres"}</span>
+                      <span className="text-text">{demand.skillsNeeded.join(", ") || "skills livres"}</span>
                       {" · "}{demand.location || "local livre"} · {demand.budget || "verba a definir"} · {demand.deadline || "prazo a definir"}
                       {demand.source && ` · origem: ${demand.source}`}
                     </p>
@@ -228,7 +228,7 @@ export default function ProjectsTab({
                     onClick={() => setForm((f) => ({ ...f, mode: option.value }))}
                     className={`inline-flex items-center gap-1.5 rounded-md border px-3 py-1.5 text-sm transition-colors ${
                       form.mode === option.value
-                        ? "border-accent bg-accent/10 text-accent"
+                        ? "border-edge bg-surface-sunken text-text"
                         : "border-edge bg-surface-2 text-muted hover:border-muted"
                     }`}
                   >
@@ -283,7 +283,7 @@ export default function ProjectsTab({
                       }
                       className={`rounded-full border px-3 py-1 text-xs transition-colors ${
                         active
-                          ? "border-accent bg-accent text-accent-ink"
+                          ? "border-text bg-text text-canvas"
                           : "border-edge bg-surface-2 text-muted hover:border-muted"
                       }`}
                     >
@@ -330,7 +330,7 @@ export default function ProjectsTab({
             <button
               key={project.id}
               onClick={() => setSelectedId(project.id)}
-              className="rounded-xl border border-edge bg-surface p-4 text-left transition-colors hover:border-accent/60"
+              className="rounded-xl border border-edge bg-surface p-4 text-left transition-colors hover:border-edge"
             >
               <div className="flex items-start justify-between gap-2">
                 <p className="font-semibold">{project.title}</p>
@@ -506,7 +506,7 @@ function ProjectDetail({ projectId, onBack }: { projectId: string; onBack: () =>
 
   return (
     <div className="space-y-6">
-      <button onClick={onBack} className="text-sm text-accent hover:underline">
+      <button onClick={onBack} className="text-sm text-text hover:underline">
         ← Todas as demandas
       </button>
       <div className="flex flex-wrap items-start justify-between gap-3">
@@ -637,7 +637,7 @@ function ProjectDetail({ projectId, onBack }: { projectId: string; onBack: () =>
                 <div>
                   <Link
                     href={`/professionals/${application.professionalId}`}
-                    className="font-semibold text-accent hover:underline"
+                    className="font-semibold text-text hover:underline"
                   >
                     {application.professionalName}
                   </Link>{" "}
@@ -705,7 +705,7 @@ function ProjectDetail({ projectId, onBack }: { projectId: string; onBack: () =>
               Vinculado:{" "}
               <Link
                 href={`/professionals/${project.professional.id}`}
-                className="font-semibold text-accent hover:underline"
+                className="font-semibold text-text hover:underline"
               >
                 {project.professional.name}
               </Link>{" "}
@@ -754,7 +754,7 @@ function ProjectDetail({ projectId, onBack }: { projectId: string; onBack: () =>
                       <div className="flex gap-2">
                         <Link
                           href={`/professionals/${candidate.professionalId}`}
-                          className="text-xs text-accent hover:underline"
+                          className="text-xs text-text hover:underline"
                         >
                           Ver portfolio →
                         </Link>
@@ -773,14 +773,14 @@ function ProjectDetail({ projectId, onBack }: { projectId: string; onBack: () =>
                         <li key={i}>{reason}</li>
                       ))}
                       {candidate.gaps.map((gap, i) => (
-                        <li key={`g${i}`} className="text-amber-400/80">
+                        <li key={`g${i}`} className="text-caution/80">
                           {gap}
                         </li>
                       ))}
                     </ul>
                     {candidate.suggestedBrief && (
                       <p className="mt-1 text-xs text-muted">
-                        <span className="text-accent">Mini-brief: </span>
+                        <span className="text-text">Mini-brief: </span>
                         {candidate.suggestedBrief}
                       </p>
                     )}
@@ -812,7 +812,7 @@ function ProjectDetail({ projectId, onBack }: { projectId: string; onBack: () =>
               </option>
             ))}
           </select>
-          <label className="cursor-pointer rounded-md border border-edge bg-surface-2 px-3.5 py-2 text-sm text-foreground transition-colors hover:border-accent">
+          <label className="cursor-pointer rounded-md border border-edge bg-surface-2 px-3.5 py-2 text-sm text-foreground transition-colors hover:border-edge">
             {refUploading ? "Enviando..." : "Enviar referência"}
             <input
               type="file"
@@ -869,11 +869,11 @@ function ProjectDetail({ projectId, onBack }: { projectId: string; onBack: () =>
                   <span className="flex gap-1 text-xs">
                     <a
                       href={`/api/files/${reference.id}?download=1`}
-                      className="text-muted hover:text-accent"
+                      className="text-muted hover:text-text"
                       title="Baixar"
                     ></a>
                     <button
-                      className="text-muted hover:text-red-400"
+                      className="text-muted hover:text-negative"
                       title="Excluir"
                       onClick={async () => {
                         await api(`/api/deliverables/${reference.id}`, { method: "DELETE" });
@@ -985,7 +985,7 @@ function ProjectDetail({ projectId, onBack }: { projectId: string; onBack: () =>
                 onClick={() => setSketchIndex(index)}
                 className={`rounded-md border px-2.5 py-1 text-xs transition-colors ${
                   index === sketchIndex
-                    ? "border-accent bg-accent/10 text-accent"
+                    ? "border-edge bg-surface-sunken text-text"
                     : "border-edge bg-surface-2 text-muted hover:border-muted"
                 }`}
               >
@@ -1026,8 +1026,8 @@ function ProjectDetail({ projectId, onBack }: { projectId: string; onBack: () =>
                     {sketch.rationale}
                   </p>
                   {(sketch.neededReferences?.length ?? 0) > 0 && (
-                    <div className="rounded-md border border-amber-900/50 bg-amber-950/30 p-3 text-xs">
-                      <p className="mb-1 font-semibold uppercase text-amber-400">
+                    <div className="rounded-md border border-caution/50 bg-caution-wash p-3 text-xs">
+                      <p className="mb-1 font-semibold uppercase text-caution">
                         Para um sketch mais fiel, envie nas Referências:
                       </p>
                       <ul className="list-disc space-y-0.5 pl-4">
@@ -1040,7 +1040,7 @@ function ProjectDetail({ projectId, onBack }: { projectId: string; onBack: () =>
                   <a
                     href={`data:image/svg+xml;utf8,${encodeURIComponent(sketch.svg)}`}
                     download="sketch-referencia.svg"
-                    className="inline-block rounded-md border border-edge bg-surface-2 px-3 py-1.5 text-xs transition-colors hover:border-accent hover:text-accent"
+                    className="inline-block rounded-md border border-edge bg-surface-2 px-3 py-1.5 text-xs transition-colors hover:border-edge hover:text-text"
                   >Baixar SVG para enviar ao profissional
                   </a>
                 </div>
@@ -1077,7 +1077,7 @@ function ProjectDetail({ projectId, onBack }: { projectId: string; onBack: () =>
                       href={meeting.link}
                       target="_blank"
                       rel="noreferrer"
-                      className="ml-2 text-accent hover:underline"
+                      className="ml-2 text-text hover:underline"
                     >
                       entrar ↗
                     </a>
@@ -1086,14 +1086,14 @@ function ProjectDetail({ projectId, onBack }: { projectId: string; onBack: () =>
                     href={googleCalendarUrl(meeting)}
                     target="_blank"
                     rel="noreferrer"
-                    className="ml-2 inline-flex items-center gap-1 text-muted hover:text-accent"
+                    className="ml-2 inline-flex items-center gap-1 text-muted hover:text-text"
                     title="Adicionar ao Google Calendar (e anexar o Meet por lá)"
                   >
                     <Icon name="calendar" size={13} /> Calendar
                   </a>
                 </p>
                 <button
-                  className="text-xs text-muted hover:text-red-400"
+                  className="text-xs text-muted hover:text-negative"
                   onClick={async () => {
                     await api(`/api/meetings/${meeting.id}`, { method: "DELETE" });
                     load();
@@ -1149,7 +1149,7 @@ function ProjectDetail({ projectId, onBack }: { projectId: string; onBack: () =>
               key={message.id}
               className={`max-w-[80%] rounded-lg px-3 py-2 text-sm ${
                 message.sender === "agency"
-                  ? "ml-auto bg-accent/15 text-foreground"
+                  ? "ml-auto bg-surface-sunken text-foreground"
                   : "bg-surface-2 text-foreground"
               }`}
             >

@@ -173,7 +173,7 @@ export default function Tour({ kind, refId }: { kind: TourKind | null; refId?: s
         data-anchor={anchor}
         data-mode={placement.mode}
       >
-        <p className="text-xs font-semibold uppercase tracking-widest text-accent">{`${step + 1} / ${total}`}</p>
+        <p className="text-xs font-semibold uppercase tracking-widest text-text">{`${step + 1} / ${total}`}</p>
         <h3 className="mt-1 text-lg font-semibold">{s.t}</h3>
         <p className="mt-1 text-sm text-muted">{s.b}</p>
         <div className="mt-4 flex flex-wrap items-center justify-between gap-2">
@@ -187,7 +187,7 @@ export default function Tour({ kind, refId }: { kind: TourKind | null; refId?: s
               </button>
             )}
             {more && (
-              <button onClick={() => go(step + 1)} className="rounded-md border border-accent/60 px-3 py-1.5 text-sm text-accent" data-testid="tour-more">
+              <button onClick={() => go(step + 1)} className="rounded-md border border-edge px-3 py-1.5 text-sm text-text" data-testid="tour-more">
                 Ver todos os diferenciais
               </button>
             )}

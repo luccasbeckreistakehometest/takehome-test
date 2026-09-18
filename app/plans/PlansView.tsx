@@ -196,12 +196,12 @@ export default function PlansView() {
     return (
       <div className="space-y-6">
         <h1 className="flex items-center gap-2 font-[family-name:var(--font-display)] text-2xl font-bold tracking-tight">
-          <Icon name="money" size={24} className="text-accent" /> Receita & planos
+          <Icon name="money" size={24} className="text-text" /> Receita & planos
         </h1>
         <div className="grid gap-3 sm:grid-cols-3">
           <Card>
             <p className="text-xs uppercase text-muted">Receita confirmada</p>
-            <p className="mt-1 text-3xl font-bold text-accent">{brl(data.revenue.total)}</p>
+            <p className="mt-1 text-3xl font-bold text-text">{brl(data.revenue.total)}</p>
           </Card>
           <Card>
             <p className="text-xs uppercase text-muted">Planos pagos vigentes (valor mensal)</p>
@@ -223,7 +223,7 @@ export default function PlansView() {
         <Card>
           <p className="text-sm text-muted">
             Usuários, planos, coins, pagamentos e reprocessamento ficam no{" "}
-            <Link href="/admin" className="text-accent hover:underline">
+            <Link href="/admin" className="text-text hover:underline">
               painel do admin
             </Link>
             .
@@ -248,7 +248,7 @@ export default function PlansView() {
             {currentPaid ? ` · pago até ${fmtDate(data.subscription?.renewsAt)}` : ` · cota renova em ${fmtDate(data.subscription?.renewsAt)}`}
           </p>
           <p className="text-sm text-muted">
-            Carteira: <strong className="text-accent" data-testid="wallet-coins">{Math.floor(data.wallet?.coins ?? 0)} coins</strong>
+            Carteira: <strong className="text-text" data-testid="wallet-coins">{Math.floor(data.wallet?.coins ?? 0)} coins</strong>
             {" "}({Math.floor(data.wallet?.planCoins ?? 0)} da cota do mês + {Math.floor(data.wallet?.purchasedCoins ?? 0)} comprados)
             {" · "}uso no mês: {Math.round(data.usageThisMonth ?? 0)}
           </p>
@@ -261,7 +261,7 @@ export default function PlansView() {
               type="button"
               aria-pressed={period === key}
               onClick={() => setPeriod(key)}
-              className={`rounded-md px-3 py-1.5 text-xs transition-colors ${period === key ? "bg-accent text-accent-ink" : "text-muted hover:text-foreground"}`}
+              className={`rounded-md px-3 py-1.5 text-xs transition-colors ${period === key ? "bg-text text-canvas" : "text-text-muted hover:text-text"}`}
             >
               {p.label}
             </button>
@@ -276,29 +276,29 @@ export default function PlansView() {
           ? "Assinatura no cartão: renova sozinha no período escolhido; cancele quando quiser e o plano vale até o fim do período pago. Ou pague um período à vista (Pix, boleto ou cartão), sem renovação."
           : "Os planos são pagos por período (Pix, cartão ou boleto) e não renovam sozinhos: no fim do período a conta volta para o grátis."}{" "}
         Arrependimento em até 7 dias —{" "}
-        <Link href="/reembolso" className="text-accent hover:underline">
+        <Link href="/reembolso" className="text-text hover:underline">
           política de reembolso
         </Link>
         .
       </p>
 
       {returned && (
-        <p role="status" className="rounded-md border border-accent/40 bg-accent/5 px-3 py-2 text-sm text-accent">
+        <p role="status" className="rounded-md border border-edge bg-surface-sunken px-3 py-2 text-sm text-text">
           {returned}
         </p>
       )}
       {note && (
-        <p role="status" className="rounded-md border border-accent/40 bg-accent/5 px-3 py-2 text-sm text-accent">
+        <p role="status" className="rounded-md border border-edge bg-surface-sunken px-3 py-2 text-sm text-text">
           {note}
         </p>
       )}
       {error && <ErrorBox message={error} />}
 
       {sub?.recurring && (
-        <Card className="flex flex-wrap items-center justify-between gap-3 border-accent/60" data-testid="subscription-status">
+        <Card className="flex flex-wrap items-center justify-between gap-3 border-edge" data-testid="subscription-status">
           <div>
             <p className="flex items-center gap-2 font-medium">
-              <Icon name="money" size={16} className="text-accent" /> Assinatura no cartão (Mercado Pago)
+              <Icon name="money" size={16} className="text-text" /> Assinatura no cartão (Mercado Pago)
             </p>
             <p className="mt-1 text-sm text-muted">
               {sub.cancelAtPeriodEnd
@@ -315,7 +315,7 @@ export default function PlansView() {
       )}
 
       {askEmail && (
-        <Card className="space-y-2 border-accent" data-testid="subscription-email">
+        <Card className="space-y-2 border-edge" data-testid="subscription-email">
           <p className="text-sm">Qual e-mail você usa no Mercado Pago? A assinatura fica ligada a ele.</p>
           <div className="flex flex-wrap gap-2">
             <div className="min-w-56 flex-1">
@@ -342,7 +342,7 @@ export default function PlansView() {
       )}
 
       {wanted && !returned && !data.purchaseBlocked && (
-        <Card className="border-accent" data-testid="checkout-continue">
+        <Card className="border-edge" data-testid="checkout-continue">
           <p className="text-sm text-muted">Plano escolhido</p>
           <p className="mt-1 text-lg font-semibold">
             {wanted.name} · {periodInfo.label} · {brl(priceFor(wanted.monthlyPrice))}
@@ -360,9 +360,9 @@ export default function PlansView() {
           const isCurrent = current?.id === plan.id;
           const free = plan.monthlyPrice === 0;
           return (
-            <Card key={plan.id} hover className={`relative flex flex-col ${plan.recommended ? "border-accent" : ""}`}>
+            <Card key={plan.id} hover className={`relative flex flex-col ${plan.recommended ? "border-edge" : ""}`}>
               {plan.recommended && (
-                <span className="absolute -top-2.5 left-4 rounded-full bg-accent px-2 py-0.5 text-[10px] font-bold text-accent-ink">
+                <span className="absolute -top-2.5 left-4 rounded-xs bg-text px-2 py-0.5 text-[10px] font-medium text-canvas">
                   RECOMENDADO
                 </span>
               )}
@@ -381,7 +381,7 @@ export default function PlansView() {
               <ul className="mt-4 flex-1 space-y-1.5 text-sm text-muted">
                 {plan.highlights.map((h) => (
                   <li key={h} className="flex items-start gap-1.5">
-                    <Icon name="check" size={14} className="mt-0.5 shrink-0 text-accent" /> {h}
+                    <Icon name="check" size={14} className="mt-0.5 shrink-0 text-text" /> {h}
                   </li>
                 ))}
               </ul>
@@ -424,9 +424,9 @@ export default function PlansView() {
         <div className="grid gap-3 sm:grid-cols-3">
           {data.packs.map((pack) => (
             <div key={pack.id} className="rounded-lg border border-edge bg-surface-2 p-4 text-center">
-              <p className="font-[family-name:var(--font-display)] text-2xl font-bold text-accent">
+              <p className="font-[family-name:var(--font-display)] text-2xl font-bold text-text">
                 {pack.coins}
-                {pack.bonus > 0 && <span className="text-sm text-emerald-500"> +{pack.bonus}</span>}
+                {pack.bonus > 0 && <span className="text-sm text-positive"> +{pack.bonus}</span>}
               </p>
               <p className="text-xs text-muted">coins{pack.bonus > 0 && " (com bônus)"}</p>
               <p className="mt-2 text-lg font-semibold">{brl(pack.price)}</p>

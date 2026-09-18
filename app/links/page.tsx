@@ -18,7 +18,7 @@ export default async function LinksOverviewPage() {
     <div className="space-y-6">
       <div>
         <h1 className="flex items-center gap-2 font-[family-name:var(--font-display)] text-2xl font-bold tracking-tight">
-          <Icon name="link" size={24} className="text-accent" /> Links & bio
+          <Icon name="link" size={24} className="text-text" /> Links & bio
         </h1>
         <p className="mt-1 text-sm text-muted">Links curtos com UTM automático e a página de link na bio de cada cliente. Os cliques entram no relatório mensal.</p>
       </div>
@@ -39,7 +39,7 @@ export default async function LinksOverviewPage() {
               {rows.map((row) => (
                 <tr key={row.clientId}>
                   <td className="px-4 py-2">
-                    <Link href={`/clients/${row.clientId}?tab=bio`} className="font-medium hover:text-accent">
+                    <Link href={`/clients/${row.clientId}?tab=bio`} className="font-medium hover:text-text">
                       {row.clientName}
                     </Link>
                   </td>
@@ -47,7 +47,7 @@ export default async function LinksOverviewPage() {
                   <td className="px-4 py-2 text-right tabular-nums">{row.clicks30}</td>
                   <td className="px-4 py-2 text-xs">
                     {row.bioSlug && row.bioPublished ? (
-                      <a href={`/b/${row.bioSlug}`} target="_blank" rel="noreferrer" className="text-accent hover:underline">
+                      <a href={`/b/${row.bioSlug}`} target="_blank" rel="noreferrer" className="text-text hover:underline">
                         {`/b/${row.bioSlug}`}
                       </a>
                     ) : (

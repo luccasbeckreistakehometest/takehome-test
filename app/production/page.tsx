@@ -151,7 +151,7 @@ export default function ProductionPage() {
                 if (id) moveProject(id, status);
               }}
               className={`w-64 shrink-0 rounded-xl border p-2 transition-colors ${
-                isOver ? "border-accent bg-accent/5" : "border-transparent"
+                isOver ? "border-edge bg-surface-sunken" : "border-transparent"
               }`}
             >
               <p className="mb-2 flex items-center justify-between px-1 text-xs font-semibold uppercase tracking-wider text-muted">
@@ -176,7 +176,7 @@ export default function ProductionPage() {
                         setDraggingId(null);
                         setDragOverStatus(null);
                       }}
-                      className={`block cursor-grab rounded-lg border border-edge bg-surface p-3 text-sm transition-colors hover:border-accent/60 active:cursor-grabbing ${
+                      className={`block cursor-grab rounded-lg border border-edge bg-surface p-3 text-sm transition-colors hover:border-edge active:cursor-grabbing ${
                         isDragging ? "opacity-40" : ""
                       }`}
                     >

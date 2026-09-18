@@ -32,10 +32,10 @@ export function UsageBars({ usage }: { usage: UsageRow[] }) {
           <li key={row.key} data-key={row.key} data-used={row.used} data-allowance={row.allowance}>
             <div className="flex items-center justify-between text-sm">
               <span>{row.label}</span>
-              <span className={`font-medium tabular-nums ${over ? "text-red-500" : row.remaining === 0 ? "text-amber-500" : ""}`}>{`${row.used}/${row.allowance}`}</span>
+              <span className={`font-medium tabular-nums ${over ? "text-negative" : row.remaining === 0 ? "text-caution" : ""}`}>{`${row.used}/${row.allowance}`}</span>
             </div>
             <div className="mt-1 h-1.5 overflow-hidden rounded-full bg-surface-2" aria-hidden>
-              <div className={`h-full ${over ? "bg-red-500" : row.remaining === 0 ? "bg-amber-500" : "bg-accent"}`} style={{ width: `${pct}%` }} />
+              <div className={`h-full ${over ? "bg-negative" : row.remaining === 0 ? "bg-caution" : "bg-text"}`} style={{ width: `${pct}%` }} />
             </div>
           </li>
         );
@@ -78,7 +78,7 @@ export function RequestList({
             {r.extraPrice > 0 ? ` · +${fmtMoney(r.extraPrice, lang)}` : ""}
           </p>
           {actor === "agency" && r.needsReview && (
-            <p className="mt-0.5 text-xs text-amber-600 dark:text-amber-300" data-testid="scope-review">
+            <p className="mt-0.5 text-xs text-caution dark:text-caution" data-testid="scope-review">
               O cliente escolheu este item; confira se o pedido é mesmo do pacote.
             </p>
           )}
@@ -90,7 +90,7 @@ export function RequestList({
                 const price = Number((answer ?? "").replace(",", "."));
                 if (Number.isFinite(price) && price > 0) onDecide(r.id, "charge_extra", price);
               }}
-              className="mt-2 rounded-md border border-edge px-3 py-1.5 text-xs hover:border-accent"
+              className="mt-2 rounded-md border border-edge px-3 py-1.5 text-xs hover:border-edge"
               data-testid="scope-charge-extra"
             >
               Cobrar como extra
@@ -109,10 +109,10 @@ export function RequestList({
                 </>
               ) : (
                 <>
-                  <button type="button" onClick={() => onDecide(r.id, "waived")} className="rounded-md border border-edge px-3 py-1.5 text-xs hover:border-accent" data-testid="scope-waive">
+                  <button type="button" onClick={() => onDecide(r.id, "waived")} className="rounded-md border border-edge px-3 py-1.5 text-xs hover:border-edge" data-testid="scope-waive">
                     Incluir sem custo
                   </button>
-                  <button type="button" onClick={() => onDecide(r.id, "declined")} className="rounded-md border border-edge px-3 py-1.5 text-xs text-red-500">
+                  <button type="button" onClick={() => onDecide(r.id, "declined")} className="rounded-md border border-edge px-3 py-1.5 text-xs text-negative">
                     Cancelar pedido
                   </button>
                 </>
@@ -141,17 +141,17 @@ export function PackageSummaryCard({ clientId, onOpen }: { clientId: string; onO
     <div className="rounded-xl border border-edge bg-surface p-5 shadow-sm" data-testid="package-summary">
       <div className="flex flex-wrap items-center justify-between gap-2">
         <p className="flex items-center gap-2 font-medium">
-          <Icon name="package" size={16} className="text-accent" />
+          <Icon name="package" size={16} className="text-text" />
           {data.package ? `Pacote de ${monthLabel(data.month, lang)}` : "Pacote do cliente"}
         </p>
-        <button type="button" onClick={onOpen} className="text-sm text-accent hover:underline">
+        <button type="button" onClick={onOpen} className="text-sm text-text hover:underline">
           {data.package ? "Ver pacote" : "Definir pacote"}
         </button>
       </div>
       {data.package ? (
         <>
           <p className="mt-1 text-sm text-muted">{data.usage.map((u) => `${u.used}/${u.allowance} ${u.label.toLowerCase()}`).join(" · ")}</p>
-          {pending > 0 && <p className="mt-1 text-sm text-amber-600 dark:text-amber-300">{`${pending} extra(s) esperando o cliente aprovar o valor`}</p>}
+          {pending > 0 && <p className="mt-1 text-sm text-caution dark:text-caution">{`${pending} extra(s) esperando o cliente aprovar o valor`}</p>}
         </>
       ) : (
         <p className="mt-1 text-sm text-muted">Diga o que o fee cobre por mês. Pedido fora do combinado vira extra com valor aprovado pelo cliente.</p>

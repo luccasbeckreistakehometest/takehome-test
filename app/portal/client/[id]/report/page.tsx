@@ -64,20 +64,20 @@ export default function PortalMonthlyReportPage({ params }: { params: Promise<{ 
     <div className="space-y-6">
       <div className="flex flex-wrap items-start justify-between gap-4">
         <div>
-          <Link href={`/portal/client/${id}`} className="text-sm text-accent hover:underline">
+          <Link href={`/portal/client/${id}`} className="text-sm text-text hover:underline">
             ← Voltar ao portal
           </Link>
-          <p className="mt-2 text-xs uppercase tracking-widest text-accent">Portal do cliente</p>
+          <p className="mt-2 text-xs uppercase tracking-widest text-text">Portal do cliente</p>
           <h1 className="font-[family-name:var(--font-display)] text-3xl font-bold tracking-tight">
             Relatório mensal
           </h1>
         </div>
         <div className="flex items-center gap-2">
-          <button onClick={() => setMonth((m) => shiftMonth(m, -1))} className="grid size-9 place-items-center rounded-md border border-edge bg-surface-2 hover:border-accent" aria-label="Mês anterior">
+          <button onClick={() => setMonth((m) => shiftMonth(m, -1))} className="grid size-9 place-items-center rounded-md border border-edge bg-surface-2 hover:border-edge" aria-label="Mês anterior">
             ‹
           </button>
           <span className="min-w-40 text-center font-medium" data-testid="report-month">{monthTitle(month, lang)}</span>
-          <button onClick={() => setMonth((m) => shiftMonth(m, 1))} className="grid size-9 place-items-center rounded-md border border-edge bg-surface-2 hover:border-accent" aria-label="Próximo mês">
+          <button onClick={() => setMonth((m) => shiftMonth(m, 1))} className="grid size-9 place-items-center rounded-md border border-edge bg-surface-2 hover:border-edge" aria-label="Próximo mês">
             ›
           </button>
         </div>
@@ -102,7 +102,7 @@ export default function PortalMonthlyReportPage({ params }: { params: Promise<{ 
               href={`/print/report/${payload.report.token}`}
               target="_blank"
               rel="noreferrer"
-              className="rounded-md border border-edge bg-surface-2 px-3 py-2 text-sm hover:border-accent"
+              className="rounded-md border border-edge bg-surface-2 px-3 py-2 text-sm hover:border-edge"
             >Salvar em PDF
             </a>
           )}

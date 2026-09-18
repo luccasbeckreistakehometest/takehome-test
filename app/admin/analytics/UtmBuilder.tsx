@@ -12,7 +12,7 @@ export default function UtmBuilder({ base }: { base: string }) {
   const url = buildCampaignUrl(base, form.path, form);
   return (
     <section className="space-y-3 rounded-xl border border-edge bg-surface p-5" data-testid="utm-builder">
-      <h2 className="text-sm font-semibold uppercase tracking-wider text-accent">Link de campanha</h2>
+      <h2 className="text-sm font-semibold uppercase tracking-wider text-text">Link de campanha</h2>
       <div className="grid gap-3 sm:grid-cols-5">
         <div>
           <Label htmlFor="utm-path">Página</Label>

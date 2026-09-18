@@ -157,7 +157,7 @@ export default function ProspectingPage() {
           <div
             className={`rounded-md border p-3 text-sm ${
               lastSearch.resultCount === 0
-                ? "border-amber-700/60 bg-amber-950/30"
+                ? "border-caution/60 bg-caution-wash"
                 : "border-edge bg-surface-2"
             }`}
           >
@@ -202,7 +202,7 @@ export default function ProspectingPage() {
                 {prospect.marketingMaturity}
               </p>
               <p className="text-sm text-muted">
-                <span className="font-semibold text-accent">Abordagem: </span>
+                <span className="font-semibold text-text">Abordagem: </span>
                 {prospect.suggestedApproach}
               </p>
               <div className="flex flex-wrap items-center gap-2 pt-1 text-xs">
@@ -211,7 +211,7 @@ export default function ProspectingPage() {
                     href={prospect.website.startsWith("http") ? prospect.website : `https://${prospect.website}`}
                     target="_blank"
                     rel="noreferrer"
-                    className="text-accent hover:underline"
+                    className="text-text hover:underline"
                   >
                     site ↗
                   </a>
@@ -219,13 +219,13 @@ export default function ProspectingPage() {
                 {prospect.instagram && <span className="text-muted">{prospect.instagram}</span>}
                 <span className="ml-auto flex gap-2">
                   {prospect.status === "converted" && prospect.clientId ? (
-                    <Link href={`/clients/${prospect.clientId}`} className="text-accent hover:underline">
+                    <Link href={`/clients/${prospect.clientId}`} className="text-text hover:underline">
                       Abrir cliente →
                     </Link>
                   ) : (
                     <>
                       <button
-                        className="font-medium text-accent hover:underline"
+                        className="font-medium text-text hover:underline"
                         onClick={() => setProposalFor((v) => (v === prospect.id ? null : prospect.id))}
                         data-testid="proposal-toggle"
                       >Proposta em 5 min
@@ -239,7 +239,7 @@ export default function ProspectingPage() {
                         </button>
                       )}
                       <button
-                        className="font-medium text-accent hover:underline"
+                        className="font-medium text-text hover:underline"
                         onClick={async () => {
                           const result = await setStatus(prospect, "converted");
                           if (result.clientId) {
@@ -249,7 +249,7 @@ export default function ProspectingPage() {
                       >
                         Converter em cliente </button>
                       <button
-                        className="text-muted hover:text-red-400"
+                        className="text-muted hover:text-negative"
                         onClick={() => setStatus(prospect, "discarded")}
                       >
                         Descartar

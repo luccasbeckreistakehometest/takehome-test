@@ -84,7 +84,7 @@ export default function UserMenu({ name, role, showPlans = true }: { name: strin
             role="menuitem"
             type="button"
             onClick={logout}
-            className="flex w-full items-center gap-2 rounded-md px-3 py-2 text-left text-red-500 hover:bg-surface-2"
+            className="flex w-full items-center gap-2 rounded-md px-3 py-2 text-left text-negative hover:bg-surface-2"
             data-testid="logout"
           >
             <Icon name="logout" size={15} /> Sair

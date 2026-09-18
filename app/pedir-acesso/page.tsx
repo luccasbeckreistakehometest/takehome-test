@@ -22,7 +22,7 @@ export default function Page() {
         <h1 className="font-[family-name:var(--font-display)] text-3xl font-bold tracking-tight">Acesso para agências</h1>
         <p className="mt-2 text-muted">
           Marcas e profissionais criam conta na hora.{" "}
-          <Link href="/criar-conta" className="text-accent hover:underline">
+          <Link href="/criar-conta" className="text-text hover:underline">
             Criar conta
           </Link>
         </p>

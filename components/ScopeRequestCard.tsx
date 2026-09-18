@@ -88,7 +88,7 @@ export default function ScopeRequestCard({ clientId }: { clientId: string }) {
       {hasPackage && data && <UsageBars usage={data.usage} />}
       {error && <ErrorBox message={error} />}
       {sent && (
-        <p className="rounded-md border border-accent/40 bg-accent/5 p-3 text-sm" data-testid="scope-sent" data-kind={sent}>
+        <p className="rounded-md border border-edge bg-surface-sunken p-3 text-sm" data-testid="scope-sent" data-kind={sent}>
           {sent === "in"
             ? "Pedido enviado! Cabe no seu pacote e a agência já recebeu."
             : "Esse pedido passa do seu pacote. Aprove o valor abaixo para a agência começar."}
@@ -122,7 +122,7 @@ export default function ScopeRequestCard({ clientId }: { clientId: string }) {
             <Input aria-label="Quantidade" type="number" min={1} max={50} value={qty} onChange={(e) => setQty(e.target.value)} data-testid="scope-qty" />
           </div>
           {preview && (
-            <p className={`text-sm ${preview.inPackage ? "" : "font-medium text-amber-600 dark:text-amber-300"}`} data-testid="scope-preview" data-in={preview.inPackage}>
+            <p className={`text-sm ${preview.inPackage ? "" : "font-medium text-caution dark:text-caution"}`} data-testid="scope-preview" data-in={preview.inPackage}>
               {preview.inPackage
                 ? `Cabe no seu pacote (sobram ${preview.remaining}).`
                 : `Isso passa do seu pacote: +${fmtMoney(preview.extraTotal, lang)}. A agência só começa depois que você aprovar.`}

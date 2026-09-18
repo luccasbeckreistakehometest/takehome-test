@@ -75,7 +75,7 @@ export default function AdminInbox() {
             <div className="flex flex-wrap items-center justify-between gap-2">
               <p>
                 <span className="font-medium">{m.name}</span>{" "}
-                <a href={`mailto:${m.email}`} className="text-accent hover:underline">
+                <a href={`mailto:${m.email}`} className="text-text hover:underline">
                   {m.email}
                 </a>
               </p>

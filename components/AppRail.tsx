@@ -174,7 +174,7 @@ export function RailToggle() {
       onClick={() => window.dispatchEvent(new Event("ah:rail-open"))}
       className="grid size-9 shrink-0 place-items-center rounded-sm text-text-muted transition-colors hover:bg-surface-sunken hover:text-text lg:hidden"
     >
-      <Icon name="kanban" size={20} />
+      <Icon name="menu" size={20} />
     </button>
   );
 }

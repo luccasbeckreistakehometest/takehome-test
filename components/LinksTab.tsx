@@ -114,15 +114,15 @@ export default function LinksTab({ client }: { client: Client }) {
                   <span className="text-xs text-muted" data-testid="link-clicks">{`${link.clicks30} cliques · ${link.uniques30} pessoas (30 dias)`}</span>
                 </div>
                 <div className="mt-1 flex flex-wrap items-center gap-2 text-xs">
-                  <span className="font-mono text-accent">{link.shortUrl.replace(/^https?:\/\//, "")}</span>
+                  <span className="font-mono text-text">{link.shortUrl.replace(/^https?:\/\//, "")}</span>
                   <CopyButton text={link.shortUrl} label="Copiar" />
                   {link.postId && <span className="text-muted">de um post do calendário</span>}
                   {!inBio.has(link.code) && bio.buttons.length < 8 && (
-                    <button type="button" className="text-accent hover:underline" onClick={() => setBio({ ...bio, buttons: [...bio.buttons, { code: link.code, label: link.label }] })}>
+                    <button type="button" className="text-text hover:underline" onClick={() => setBio({ ...bio, buttons: [...bio.buttons, { code: link.code, label: link.label }] })}>
                       + na bio
                     </button>
                   )}
-                  <button type="button" className="ml-auto text-red-500 hover:underline" onClick={() => archive(link.code)}>
+                  <button type="button" className="ml-auto text-negative hover:underline" onClick={() => archive(link.code)}>
                     Arquivar
                   </button>
                 </div>
@@ -169,7 +169,7 @@ export default function LinksTab({ client }: { client: Client }) {
                     />
                     <button type="button" aria-label="Subir" onClick={() => move(index, -1)} className="px-1 text-muted hover:text-foreground">↑</button>
                     <button type="button" aria-label="Descer" onClick={() => move(index, 1)} className="px-1 text-muted hover:text-foreground">↓</button>
-                    <button type="button" aria-label="Tirar da bio" onClick={() => setBio({ ...bio, buttons: bio.buttons.filter((b) => b.code !== button.code) })} className="px-1 text-muted hover:text-red-500">×</button>
+                    <button type="button" aria-label="Tirar da bio" onClick={() => setBio({ ...bio, buttons: bio.buttons.filter((b) => b.code !== button.code) })} className="px-1 text-muted hover:text-negative">×</button>
                   </li>
                 ))}
               </ul>
@@ -186,9 +186,9 @@ export default function LinksTab({ client }: { client: Client }) {
         </div>
         <div className="flex flex-wrap items-center gap-2">
           <Button onClick={saveBio} data-testid="bio-save">Salvar página</Button>
-          {saved && <span className="text-sm text-accent">Salvo ✓</span>}
+          {saved && <span className="text-sm text-text">Salvo ✓</span>}
           {bio.published && (
-            <a href={pageUrl} target="_blank" rel="noreferrer" className="text-sm text-accent hover:underline" data-testid="bio-open">
+            <a href={pageUrl} target="_blank" rel="noreferrer" className="text-sm text-text hover:underline" data-testid="bio-open">
               Abrir a página ↗
             </a>
           )}

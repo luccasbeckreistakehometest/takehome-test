@@ -64,7 +64,7 @@ export default function ActivityBell({
           <path d="M13.7 21a2 2 0 0 1-3.4 0" />
         </svg>
         {unread > 0 && (
-          <span className="absolute -right-1 -top-1 grid size-4 place-items-center rounded-full bg-accent text-[10px] font-bold text-accent-ink">
+          <span className="absolute -right-1 -top-1 grid size-4 place-items-center rounded-full bg-text text-[10px] font-medium text-canvas">
             {unread > 9 ? "9+" : unread}
           </span>
         )}
@@ -109,7 +109,7 @@ export function LogoutButton() {
         await fetch("/api/auth/logout", { method: "POST" });
         window.location.href = "/login";
       }}
-      className="rounded-md border border-edge bg-surface-2 px-2.5 py-1 text-xs text-muted transition-colors hover:border-red-700 hover:text-red-400"
+      className="rounded-md border border-edge bg-surface-2 px-2.5 py-1 text-xs text-muted transition-colors hover:border-negative/50 hover:text-negative"
       title="Sair"
     >
       Sair ↩

@@ -52,7 +52,7 @@ function CreateDemandButton({
   const [state, setState] = useState<"idle" | "creating" | "done">("idle");
   if (state === "done") {
     return (
-      <span className="inline-flex items-center gap-1.5 text-xs text-accent">
+      <span className="inline-flex items-center gap-1.5 text-xs text-text">
         <Icon name="check" size={13} /> Demanda criada (aba Demandas)
       </span>
     );
@@ -80,7 +80,7 @@ function CreateDemandButton({
           setState("idle");
         }
       }}
-      className="inline-flex items-center justify-center gap-1.5 rounded border border-edge bg-surface-2 px-2 py-0.5 text-xs text-muted transition-colors hover:border-accent hover:text-accent disabled:opacity-50"
+      className="inline-flex items-center justify-center gap-1.5 rounded border border-edge bg-surface-2 px-2 py-0.5 text-xs text-muted transition-colors hover:border-edge hover:text-text disabled:opacity-50"
     >
       {state === "creating" ? (
         "Criando..."
@@ -113,7 +113,7 @@ function SchedulePostButton({
 
   if (state === "done") {
     return (
-      <span className="inline-flex items-center gap-1.5 text-xs text-accent">
+      <span className="inline-flex items-center gap-1.5 text-xs text-text">
         <Icon name="clock" size={13} /> Agendado <Icon name="check" size={13} /> (veja em Agenda)
       </span>
     );
@@ -122,7 +122,7 @@ function SchedulePostButton({
     return (
       <button
         onClick={() => setState("picking")}
-        className="inline-flex items-center gap-1.5 rounded border border-edge bg-surface-2 px-2 py-0.5 text-xs text-muted transition-colors hover:border-accent hover:text-accent"
+        className="inline-flex items-center gap-1.5 rounded border border-edge bg-surface-2 px-2 py-0.5 text-xs text-muted transition-colors hover:border-edge hover:text-text"
       >
         <Icon name="clock" size={13} /> Agendar publicação
       </button>
@@ -134,7 +134,7 @@ function SchedulePostButton({
         type="datetime-local"
         value={when}
         onChange={(e) => setWhen(e.target.value)}
-        className="rounded border border-edge bg-surface-2 px-2 py-0.5 text-xs outline-none focus:border-accent"
+        className="rounded border border-edge bg-surface-2 px-2 py-0.5 text-xs outline-none focus:border-edge"
       />
       <button
         disabled={!when || state === "saving"}
@@ -207,7 +207,7 @@ function ActionButton({
           setBusy(false);
         }
       }}
-      className="inline-flex items-center justify-center gap-1.5 rounded border border-edge bg-background px-2 py-1 text-xs text-muted transition-colors hover:border-accent hover:text-accent disabled:opacity-50"
+      className="inline-flex items-center justify-center gap-1.5 rounded border border-edge bg-background px-2 py-1 text-xs text-muted transition-colors hover:border-edge hover:text-text disabled:opacity-50"
     >
       {busy ? (busyLabel ?? "...") : label}
     </button>
@@ -270,7 +270,7 @@ export function StrategyAnalysisView({
                   onClick={() =>
                     actions.onPosts(`conteúdo para a persona "${b.persona}": ${b.profile}`)
                   }
-                  className="mt-2 inline-flex items-center gap-1.5 rounded border border-edge bg-background px-2 py-1 text-xs text-muted transition-colors hover:border-accent hover:text-accent"
+                  className="mt-2 inline-flex items-center gap-1.5 rounded border border-edge bg-background px-2 py-1 text-xs text-muted transition-colors hover:border-edge hover:text-text"
                 >
                   <Icon name="edit" size={13} /> Gerar posts para esta persona
                 </button>
@@ -288,16 +288,16 @@ export function StrategyAnalysisView({
               <p className="mt-1 text-muted">{c.positioning}</p>
               <div className="mt-3 grid gap-3 text-muted sm:grid-cols-2">
                 <div>
-                  <p className="mb-1 text-xs font-semibold uppercase text-emerald-400/80">Forças</p>
+                  <p className="mb-1 text-xs font-semibold uppercase text-positive/80">Forças</p>
                   <List items={c.strengths} />
                 </div>
                 <div>
-                  <p className="mb-1 text-xs font-semibold uppercase text-red-400/80">Fraquezas</p>
+                  <p className="mb-1 text-xs font-semibold uppercase text-negative/80">Fraquezas</p>
                   <List items={c.weaknesses} />
                 </div>
               </div>
               <p className="mt-3 text-muted">
-                <span className="font-semibold text-accent">Oportunidade: </span>
+                <span className="font-semibold text-text">Oportunidade: </span>
                 {c.opportunity}
               </p>
             </div>
@@ -317,7 +317,7 @@ export function StrategyAnalysisView({
                   <div className="mt-2 flex flex-wrap gap-2">
                     <button
                       onClick={() => actions.onCampaign(`${f.recommendation} — ${f.why}`)}
-                      className="inline-flex items-center gap-1.5 rounded border border-edge bg-background px-2 py-1 text-xs text-muted transition-colors hover:border-accent hover:text-accent"
+                      className="inline-flex items-center gap-1.5 rounded border border-edge bg-background px-2 py-1 text-xs text-muted transition-colors hover:border-edge hover:text-text"
                     >
                       <Icon name="target" size={13} /> Gerar campanha desta aposta
                     </button>
@@ -331,7 +331,7 @@ export function StrategyAnalysisView({
                           setCreatingDemand(null);
                         }
                       }}
-                      className="inline-flex items-center justify-center gap-1.5 rounded border border-edge bg-background px-2 py-1 text-xs text-muted transition-colors hover:border-accent hover:text-accent disabled:opacity-50"
+                      className="inline-flex items-center justify-center gap-1.5 rounded border border-edge bg-background px-2 py-1 text-xs text-muted transition-colors hover:border-edge hover:text-text disabled:opacity-50"
                     >
                       {creatingDemand === i ? (
                         "IA escrevendo o brief..."
@@ -365,7 +365,7 @@ export function StrategyAnalysisView({
                 <tr key={i} className="border-t border-edge">
                   <td className="py-2 pr-4">{g.goal}</td>
                   <td className="py-2 pr-4 text-muted">{g.metric}</td>
-                  <td className="py-2 pr-4 font-medium text-accent">{g.target}</td>
+                  <td className="py-2 pr-4 font-medium text-text">{g.target}</td>
                   <td className="py-2 text-muted">{g.deadline}</td>
                 </tr>
               ))}
@@ -397,7 +397,7 @@ export function MarketPulseView({
             <Item key={i} title={h.headline}>
               <p>{h.whatChanged}</p>
               <p className="mt-1">
-                <span className="text-accent">Por que importa: </span>
+                <span className="text-text">Por que importa: </span>
                 {h.relevance}
               </p>
               <p className="mt-2 text-xs opacity-70">Fonte: {h.source}</p>
@@ -495,7 +495,7 @@ export function CampaignPlanView({
           {data.objectives.map((o, i) => (
             <Item key={i} title={o.objective}>
               <p>{o.kpi}</p>
-              <p className="mt-1 font-medium text-accent">{o.target}</p>
+              <p className="mt-1 font-medium text-text">{o.target}</p>
             </Item>
           ))}
         </div>
@@ -505,7 +505,7 @@ export function CampaignPlanView({
         <div className="space-y-3">
           {data.weeks.map((w) => (
             <div key={w.week} className="flex gap-4 rounded-lg border border-edge bg-surface-2 p-4">
-              <div className="grid size-10 shrink-0 place-items-center rounded-md bg-accent font-[family-name:var(--font-display)] font-bold text-accent-ink">
+              <div className="grid size-10 shrink-0 place-items-center rounded-sm bg-surface-sunken font-[family-name:var(--font-display)] font-bold text-text">
                 S{w.week}
               </div>
               <div className="flex-1 text-sm">
@@ -549,7 +549,7 @@ export function CampaignPlanView({
               <div key={i} className="rounded-lg border border-edge bg-surface-2 p-3 text-sm">
                 <div className="flex items-center justify-between">
                   <p className="font-medium">{b.item}</p>
-                  <p className="font-semibold text-accent">{b.allocation}</p>
+                  <p className="font-semibold text-text">{b.allocation}</p>
                 </div>
                 <p className="mt-1 text-muted">{b.rationale}</p>
               </div>
@@ -577,7 +577,7 @@ export function CampaignPlanView({
                       href={influencer.profileUrl}
                       target="_blank"
                       rel="noreferrer"
-                      className="text-accent hover:underline"
+                      className="text-text hover:underline"
                     >
                       {influencer.handle || "ver perfil"} ↗
                     </a>
@@ -635,7 +635,7 @@ export function RoiProjectionView({
         {stats.map((s, i) => (
           <Card key={i} className="text-center">
             <p className="text-xs uppercase tracking-wide text-muted">{s.label}</p>
-            <p className="mt-1 font-[family-name:var(--font-display)] text-2xl font-bold text-accent">
+            <p className="mt-1 font-[family-name:var(--font-display)] text-2xl font-bold text-text">
               {s.value}
             </p>
           </Card>
@@ -660,7 +660,7 @@ export function RoiProjectionView({
                   <td className="py-2 pr-4 font-medium">{m.metric}</td>
                   <td className="py-2 pr-4 text-muted">{m.before}</td>
                   <td className="py-2 pr-4">{m.after}</td>
-                  <td className="py-2 pr-4 font-semibold text-accent">{m.uplift}</td>
+                  <td className="py-2 pr-4 font-semibold text-text">{m.uplift}</td>
                   {canEditActuals ? (
                     <td className="py-1.5">
                       <input
@@ -670,7 +670,7 @@ export function RoiProjectionView({
                           setSavingActuals("idle");
                         }}
                         placeholder="valor real..."
-                        className="w-28 rounded border border-edge bg-surface-2 px-2 py-1 text-xs outline-none focus:border-accent"
+                        className="w-28 rounded border border-edge bg-surface-2 px-2 py-1 text-xs outline-none focus:border-edge"
                       />
                     </td>
                   ) : (
@@ -699,7 +699,7 @@ export function RoiProjectionView({
               {savingActuals === "saving" ? "Salvando..." : "Salvar valores reais"}
             </button>
             {savingActuals === "saved" && (
-              <span className="inline-flex items-center gap-1.5 text-xs text-accent">
+              <span className="inline-flex items-center gap-1.5 text-xs text-text">
                 <Icon name="check" size={13} /> Salvos — projeção × realidade registrada
               </span>
             )}
@@ -720,7 +720,7 @@ export function RoiProjectionView({
                 <List items={r.milestones} />
               </div>
               <p className="mt-2 text-muted">
-                <span className="text-accent">Impacto esperado: </span>
+                <span className="text-text">Impacto esperado: </span>
                 {r.expectedImpact}
               </p>
               {actions && (
@@ -754,7 +754,7 @@ export function RoiProjectionView({
               <div key={i} className="rounded-lg border border-edge bg-surface-2 p-3 text-sm">
                 <div className="flex items-center justify-between">
                   <p className="font-medium">{inv.item}</p>
-                  <p className="font-semibold text-accent">{inv.monthlyCost}</p>
+                  <p className="font-semibold text-text">{inv.monthlyCost}</p>
                 </div>
                 <p className="mt-1 text-muted">{inv.notes}</p>
               </div>
@@ -819,7 +819,7 @@ export function SocialCalendarView({
         {ordered.map(({ post, index }) => (
           <Card key={index}>
             <div className="mb-2 flex flex-wrap items-center gap-2">
-              <span className="grid size-9 place-items-center rounded-md bg-accent font-[family-name:var(--font-display)] text-sm font-bold text-accent-ink">
+              <span className="grid size-9 place-items-center rounded-sm bg-surface-sunken font-[family-name:var(--font-display)] text-sm font-bold text-text">
                 {post.day}
               </span>
               <Tag>{post.channel}</Tag>
@@ -827,7 +827,7 @@ export function SocialCalendarView({
               <span className="ml-auto flex items-center gap-2">
                 {generationId && editingIndex !== index && (
                   <button
-                    className="inline-flex items-center gap-1.5 rounded border border-edge bg-surface-2 px-2 py-0.5 text-xs text-muted transition-colors hover:border-accent hover:text-accent"
+                    className="inline-flex items-center gap-1.5 rounded border border-edge bg-surface-2 px-2 py-0.5 text-xs text-muted transition-colors hover:border-edge hover:text-text"
                     onClick={() => {
                       setEditingIndex(index);
                       setDraft({ caption: post.caption, hashtags: post.hashtags.join(" ") });
@@ -845,12 +845,12 @@ export function SocialCalendarView({
                 <textarea
                   value={draft.caption}
                   onChange={(e) => setDraft((d) => ({ ...d, caption: e.target.value }))}
-                  className="min-h-32 w-full rounded-md border border-accent/50 bg-surface-2 p-2 text-sm outline-none"
+                  className="min-h-32 w-full rounded-md border border-edge bg-surface-2 p-2 text-sm outline-none"
                 />
                 <input
                   value={draft.hashtags}
                   onChange={(e) => setDraft((d) => ({ ...d, hashtags: e.target.value }))}
-                  className="w-full rounded-md border border-edge bg-surface-2 px-2 py-1 text-xs outline-none focus:border-accent"
+                  className="w-full rounded-md border border-edge bg-surface-2 px-2 py-1 text-xs outline-none focus:border-edge"
                   placeholder="#hashtags separadas por espaço"
                 />
                 <div className="flex gap-2">
@@ -871,7 +871,7 @@ export function SocialCalendarView({
             ) : (
               <>
                 <p className="mt-2 whitespace-pre-wrap text-sm text-muted">{post.caption}</p>
-                <p className="mt-2 text-xs text-accent">{post.hashtags.join(" ")}</p>
+                <p className="mt-2 text-xs text-text">{post.hashtags.join(" ")}</p>
               </>
             )}
             <div className="mt-3 rounded-md border border-edge bg-surface-2 p-3 text-xs text-muted">
@@ -950,7 +950,7 @@ export function PostBatchView({
             <span className="ml-auto flex items-center gap-2">
               {generationId && editingIndex !== index && (
                 <button
-                  className="inline-flex items-center gap-1.5 rounded border border-edge bg-surface-2 px-2 py-0.5 text-xs text-muted transition-colors hover:border-accent hover:text-accent"
+                  className="inline-flex items-center gap-1.5 rounded border border-edge bg-surface-2 px-2 py-0.5 text-xs text-muted transition-colors hover:border-edge hover:text-text"
                   onClick={() => {
                     setEditingIndex(index);
                     setDraft({ caption: post.caption, hashtags: post.hashtags.join(" ") });
@@ -968,12 +968,12 @@ export function PostBatchView({
               <textarea
                 value={draft.caption}
                 onChange={(e) => setDraft((d) => ({ ...d, caption: e.target.value }))}
-                className="min-h-32 w-full rounded-md border border-accent/50 bg-surface-2 p-2 text-sm outline-none"
+                className="min-h-32 w-full rounded-md border border-edge bg-surface-2 p-2 text-sm outline-none"
               />
               <input
                 value={draft.hashtags}
                 onChange={(e) => setDraft((d) => ({ ...d, hashtags: e.target.value }))}
-                className="w-full rounded-md border border-edge bg-surface-2 px-2 py-1 text-xs outline-none focus:border-accent"
+                className="w-full rounded-md border border-edge bg-surface-2 px-2 py-1 text-xs outline-none focus:border-edge"
                 placeholder="#hashtags separadas por espaço"
               />
               <div className="flex gap-2">
@@ -994,7 +994,7 @@ export function PostBatchView({
           ) : (
             <>
               <p className="mt-2 whitespace-pre-wrap text-sm text-muted">{post.caption}</p>
-              <p className="mt-2 text-xs text-accent">{post.hashtags.join(" ")}</p>
+              <p className="mt-2 text-xs text-text">{post.hashtags.join(" ")}</p>
             </>
           )}
           <div className="mt-3 rounded-md border border-edge bg-surface-2 p-3 text-xs text-muted">
@@ -1078,7 +1078,7 @@ export function VisualIdentityView({ data }: { data: VisualIdentity }) {
               />
               <div className="text-sm">
                 <p className="font-semibold">{color.name}</p>
-                <p className="font-mono text-xs text-accent">{color.hex}</p>
+                <p className="font-mono text-xs text-text">{color.hex}</p>
                 <p className="text-xs text-muted">{color.usage}</p>
               </div>
             </div>
@@ -1100,14 +1100,14 @@ export function VisualIdentityView({ data }: { data: VisualIdentity }) {
         <SectionTitle>Tom de voz</SectionTitle>
         <p className="text-sm text-muted">{data.toneOfVoice.description}</p>
         <div className="mt-3 grid gap-3 sm:grid-cols-2">
-          <div className="rounded-lg border border-emerald-900/50 bg-emerald-950/30 p-3 text-sm">
-            <p className="mb-1 text-xs font-semibold uppercase text-emerald-400">Faça</p>
+          <div className="rounded-lg border border-positive/50 bg-positive-wash p-3 text-sm">
+            <p className="mb-1 text-xs font-semibold uppercase text-positive">Faça</p>
             <div className="text-muted">
               <List items={data.toneOfVoice.dos} />
             </div>
           </div>
-          <div className="rounded-lg border border-red-900/50 bg-red-950/30 p-3 text-sm">
-            <p className="mb-1 text-xs font-semibold uppercase text-red-400">Não faça</p>
+          <div className="rounded-lg border border-negative/50 bg-negative-wash p-3 text-sm">
+            <p className="mb-1 text-xs font-semibold uppercase text-negative">Não faça</p>
             <div className="text-muted">
               <List items={data.toneOfVoice.donts} />
             </div>
@@ -1230,7 +1230,7 @@ export function ProductRecsView({
                 {o.trendBasis}
               </p>
               <p className="mt-1 text-muted">
-                <span className="font-semibold text-accent">Viável porque: </span>
+                <span className="font-semibold text-text">Viável porque: </span>
                 {o.fitWithCapabilities}
               </p>
               <p className="mt-1 text-muted">
@@ -1266,7 +1266,7 @@ export function ProductRecsView({
               <p className="font-medium">{r.area}</p>
               <p className="text-muted">{r.recommendation}</p>
               <p className="mt-1 text-xs text-muted">
-                <span className="text-accent">Por quê: </span>
+                <span className="text-text">Por quê: </span>
                 {r.why}
               </p>
               {actions && (

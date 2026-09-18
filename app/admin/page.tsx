@@ -132,7 +132,7 @@ export default function AdminPage() {
       <div className="flex flex-wrap items-center justify-between gap-3">
         <div>
           <h1 className="flex items-center gap-2 font-[family-name:var(--font-display)] text-2xl font-bold tracking-tight">
-            <Icon name="settings" size={24} className="text-accent" /> Admin da Plataforma
+            <Icon name="settings" size={24} className="text-text" /> Admin da Plataforma
           </h1>
           <p className="mt-1 text-sm text-muted">
             Controle geral: agências, clientes, profissionais, planos e receita.
@@ -141,14 +141,14 @@ export default function AdminPage() {
         <div className="flex flex-wrap gap-2">
           <Link
             href="/admin/analytics"
-            className="rounded-md border border-edge bg-surface-2 px-4 py-2 text-sm transition-colors hover:border-accent"
+            className="rounded-md border border-edge bg-surface-2 px-4 py-2 text-sm transition-colors hover:border-edge"
             data-testid="admin-analytics-link"
           >
             Funil e origens
           </Link>
           <Link
             href="/settings"
-            className="rounded-md border border-edge bg-surface-2 px-4 py-2 text-sm transition-colors hover:border-accent"
+            className="rounded-md border border-edge bg-surface-2 px-4 py-2 text-sm transition-colors hover:border-edge"
           >
             Configurações da plataforma
           </Link>
@@ -214,7 +214,7 @@ export default function AdminPage() {
           </p>
         </div>
         <div className="mt-2 h-2 overflow-hidden rounded-full bg-surface-2" aria-hidden="true">
-          <div className={`h-full ${spendPct >= 100 ? "bg-red-500" : spendPct > 75 ? "bg-amber-500" : "bg-accent"}`} style={{ width: `${spendPct}%` }} />
+          <div className={`h-full ${spendPct >= 100 ? "bg-negative" : spendPct > 75 ? "bg-caution" : "bg-accent"}`} style={{ width: `${spendPct}%` }} />
         </div>
         <p className="mt-2 text-xs text-muted">
           {spendPct >= 100 ? "Teto atingido: a IA está pausada até amanhã (UTC). " : ""}
@@ -227,7 +227,7 @@ export default function AdminPage() {
       </Card>
 
       {data.legal && !data.legal.identityComplete && (
-        <Card className="border-amber-500/60" data-testid="admin-legal-warning">
+        <Card className="border-caution/60" data-testid="admin-legal-warning">
           <p className="text-sm">
             Defina LEGAL_NAME, LEGAL_DOCUMENT e LEGAL_EMAIL no servidor: sem eles a política de privacidade não identifica o
             controlador (LGPD art. 9) e o cadastro público de agências fica fechado (entram por convite ou pedido de acesso).
@@ -255,7 +255,7 @@ export default function AdminPage() {
               {data.agencies.map((a) => (
                 <tr key={a.id}>
                   <td className="py-2 pr-3">
-                    <button type="button" onClick={() => setAgency(a.id)} className="font-medium hover:text-accent">
+                    <button type="button" onClick={() => setAgency(a.id)} className="font-medium hover:text-text">
                       {a.name}
                     </button>
                     <span className="block font-mono text-xs text-muted">/a/{a.slug}</span>
@@ -273,13 +273,13 @@ export default function AdminPage() {
                       <span className="mt-1 flex flex-wrap gap-2">
                         <button
                           type="button"
-                          className="text-accent hover:underline"
+                          className="text-text hover:underline"
                           onClick={() => moderatePage(a.id, { pageIndexable: !a.pageIndexable })}
                         >
                           {a.pageIndexable ? "Tirar do Google" : "Liberar no Google"}
                         </button>
                         {a.pagePublished && (
-                          <button type="button" className="text-red-500 hover:underline" onClick={() => moderatePage(a.id, { unpublish: true })}>
+                          <button type="button" className="text-negative hover:underline" onClick={() => moderatePage(a.id, { unpublish: true })}>
                             Despublicar
                           </button>
                         )}
@@ -297,7 +297,7 @@ export default function AdminPage() {
       <div className="grid gap-3 sm:grid-cols-3 lg:grid-cols-6">
         {kpis.map((k) => (
           <Card key={k.label} hover>
-            <Icon name={k.icon} size={20} className="text-accent" />
+            <Icon name={k.icon} size={20} className="text-text" />
             <p className="mt-2 font-[family-name:var(--font-display)] text-2xl font-bold">{k.value}</p>
             <p className="text-xs text-muted">{k.label}</p>
           </Card>
@@ -312,7 +312,7 @@ export default function AdminPage() {
               <Link
                 key={c.id}
                 href={`/clients/${c.id}`}
-                className="flex items-center justify-between rounded-md border border-edge bg-surface-2 px-3 py-2 text-sm transition-colors hover:border-accent/60"
+                className="flex items-center justify-between rounded-md border border-edge bg-surface-2 px-3 py-2 text-sm transition-colors hover:border-edge"
               >
                 <span className="font-medium">{c.name}</span>
                 <span className="text-xs text-muted">{[c.agencyName, c.industry, c.country].filter(Boolean).join(" · ")}</span>
@@ -329,7 +329,7 @@ export default function AdminPage() {
               <Link
                 key={p.id}
                 href={`/professionals/${p.id}`}
-                className="flex items-center justify-between rounded-md border border-edge bg-surface-2 px-3 py-2 text-sm transition-colors hover:border-accent/60"
+                className="flex items-center justify-between rounded-md border border-edge bg-surface-2 px-3 py-2 text-sm transition-colors hover:border-edge"
               >
                 <span className="font-medium">{p.name}</span>
                 <span className="flex items-center gap-1.5 text-xs text-muted">
@@ -364,7 +364,7 @@ export default function AdminPage() {
                 className="flex items-center justify-between rounded-md border border-edge bg-surface-2 px-3 py-2 text-sm"
               >
                 <span>
-                  <span className="font-mono text-accent">{u.username}</span>{" "}
+                  <span className="font-mono text-text">{u.username}</span>{" "}
                   <span className="text-muted">— {u.name}{u.agencyName ? ` · ${u.agencyName}` : ""}</span>
                 </span>
                 <Tag>{u.role}</Tag>
@@ -383,7 +383,7 @@ export default function AdminPage() {
                 <div key={i.token} className="rounded-md border border-edge bg-surface-2 px-3 py-2 text-sm">
                   <div className="flex items-center justify-between">
                     <Tag>{i.role}</Tag>
-                    <span className={`text-xs ${i.status === "accepted" ? "text-emerald-500" : "text-muted"}`}>
+                    <span className={`text-xs ${i.status === "accepted" ? "text-positive" : "text-muted"}`}>
                       {i.status}
                     </span>
                   </div>
@@ -475,7 +475,7 @@ function AiUsage({ ai }: { ai: Overview["ai"] }) {
                   <td className="py-1.5 pr-3 text-right">
                     {usd(m.costUsd)} <span className="text-xs text-muted">(R$ {m.costBrl.toFixed(2)})</span>
                   </td>
-                  <td className={`py-1.5 pr-3 text-right font-medium ${m.marginBrl < 0 ? "text-red-500" : ""}`}>
+                  <td className={`py-1.5 pr-3 text-right font-medium ${m.marginBrl < 0 ? "text-negative" : ""}`}>
                     R$ {m.marginBrl.toFixed(2)}
                     {m.marginPct !== null && <span className="ml-1 text-xs text-muted">{m.marginPct}%</span>}
                   </td>

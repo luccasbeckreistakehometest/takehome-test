@@ -55,7 +55,7 @@ export default function AdminPublicPages() {
           {bios.map((b) => (
             <li key={b.clientId} className="flex flex-wrap items-center justify-between gap-2 rounded-md border border-edge px-3 py-2" data-testid="admin-bio-row" data-slug={b.slug}>
               <span className="min-w-0">
-                <a href={`/b/${b.slug}`} target="_blank" rel="noreferrer" className="text-accent hover:underline">{`/b/${b.slug}`}</a>
+                <a href={`/b/${b.slug}`} target="_blank" rel="noreferrer" className="text-text hover:underline">{`/b/${b.slug}`}</a>
                 <span className="ml-2 text-muted">{b.clientName}</span>
                 <span className="ml-2 text-xs text-muted">{when(b.updatedAt)}</span>
               </span>

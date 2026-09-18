@@ -25,7 +25,7 @@ export default function ClientsPage() {
     return (
       <div className="mx-auto max-w-xl py-16 text-center">
         <h1 className="font-[family-name:var(--font-display)] text-4xl font-bold tracking-tight">
-          Sua agência, <span className="text-accent">centralizada</span>.
+          Sua agência, <span className="text-text">centralizada</span>.
         </h1>
         <p className="mt-4 text-muted">
           Cadastre o briefing de um cliente uma única vez e gere estratégia com
@@ -59,7 +59,7 @@ export default function ClientsPage() {
       <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
         {clients.map((client) => (
           <Link key={client.id} href={`/clients/${client.id}`}>
-            <Card className="h-full transition-colors hover:border-accent/60">
+            <Card className="h-full transition-colors hover:border-edge">
               <p className="font-[family-name:var(--font-display)] text-lg font-semibold">
                 {client.name}
               </p>

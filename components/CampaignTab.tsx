@@ -117,7 +117,7 @@ export default function CampaignTab({ client }: { client: Client }) {
                     key={c}
                     type="button"
                     onClick={() => toggleChannel(c)}
-                    className={`rounded-full border px-3 py-1 text-xs ${form.channels.includes(c) ? "border-accent bg-accent/15 text-accent" : "border-edge text-muted hover:border-muted"}`}
+                    className={`rounded-full border px-3 py-1 text-xs ${form.channels.includes(c) ? "border-edge bg-surface-sunken text-text" : "border-edge text-muted hover:border-muted"}`}
                     data-testid="campaign-channel"
                     data-channel={c}
                     aria-pressed={form.channels.includes(c)}
@@ -154,7 +154,7 @@ export default function CampaignTab({ client }: { client: Client }) {
         <Card className="space-y-4" data-testid="campaign-review" data-status={review.campaign.status}>
           <div className="flex flex-wrap items-start justify-between gap-3">
             <div>
-              <p className="text-xs uppercase tracking-widest text-accent">Revisão da campanha</p>
+              <p className="text-xs uppercase tracking-widest text-text">Revisão da campanha</p>
               <h3 className="font-[family-name:var(--font-display)] text-lg font-semibold" data-testid="campaign-theme">{review.campaign.theme}</h3>
               <p className="mt-1 text-sm text-muted">{review.campaign.summary}</p>
               <div className="mt-2 flex flex-wrap gap-1.5">
@@ -176,7 +176,7 @@ export default function CampaignTab({ client }: { client: Client }) {
             <Button onClick={acceptAll} disabled={busyPost !== null || review.campaign.drafts === 0} data-testid="campaign-accept-all">
               <Icon name="check" size={14} /> Aceitar todos os rascunhos
             </Button>
-            <Link href="/calendar" className="text-sm text-accent hover:underline">
+            <Link href="/calendar" className="text-sm text-text hover:underline">
               Ver no calendário →
             </Link>
             <button onClick={() => setReview(null)} className="ml-auto text-sm text-muted hover:text-foreground" data-testid="campaign-back">
@@ -207,9 +207,9 @@ export default function CampaignTab({ client }: { client: Client }) {
                 </div>
                 <p className="mt-1 font-semibold">{post.title}</p>
                 <details className="mt-1">
-                  <summary className="cursor-pointer text-xs text-accent">Ver legenda, CTA e brief da imagem</summary>
+                  <summary className="cursor-pointer text-xs text-text">Ver legenda, CTA e brief da imagem</summary>
                   <p className="mt-2 whitespace-pre-wrap text-foreground/90">{post.caption}</p>
-                  {post.hashtags.length > 0 && <p className="mt-1 text-xs text-accent">{post.hashtags.join(" ")}</p>}
+                  {post.hashtags.length > 0 && <p className="mt-1 text-xs text-text">{post.hashtags.join(" ")}</p>}
                   {post.imageBrief && (
                     <p className="mt-2 whitespace-pre-wrap text-xs text-muted">
                       <span className="font-semibold">Brief da imagem:</span> {post.imageBrief}
@@ -234,7 +234,7 @@ export default function CampaignTab({ client }: { client: Client }) {
               <button
                 key={c.id}
                 onClick={() => open(c.id)}
-                className="flex w-full flex-wrap items-center justify-between gap-2 rounded-md border border-edge bg-surface-2 px-3 py-2 text-left text-sm transition-colors hover:border-accent/60"
+                className="flex w-full flex-wrap items-center justify-between gap-2 rounded-md border border-edge bg-surface-2 px-3 py-2 text-left text-sm transition-colors hover:border-edge"
                 data-testid="campaign-row"
                 data-status={c.status}
               >

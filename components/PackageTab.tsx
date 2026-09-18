@@ -132,7 +132,7 @@ export default function PackageTab({ clientId }: { clientId: string }) {
                   type="button"
                   aria-label="Remover item"
                   onClick={() => setDraft((rows) => (rows ?? []).filter((_, i) => i !== index))}
-                  className="text-muted hover:text-red-500"
+                  className="text-muted hover:text-negative"
                 >
                   ×
                 </button>
@@ -140,7 +140,7 @@ export default function PackageTab({ clientId }: { clientId: string }) {
             ))}
             <button
               type="button"
-              className="text-sm text-accent hover:underline"
+              className="text-sm text-text hover:underline"
               onClick={() => setDraft((rows) => [...(rows ?? []), { key: `item_${(rows ?? []).length + 1}`, label: "Novo item", unit: "demanda", qty: "1", extraPrice: "0" }])}
             >
               + Adicionar item
@@ -163,7 +163,7 @@ export default function PackageTab({ clientId }: { clientId: string }) {
               >
                 Sem pacote
               </Button>
-              {saved && <span className="text-sm text-accent">Salvo ✓</span>}
+              {saved && <span className="text-sm text-text">Salvo ✓</span>}
             </div>
           </div>
         )}

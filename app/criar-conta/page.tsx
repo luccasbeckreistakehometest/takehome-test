@@ -45,7 +45,7 @@ export default async function CriarContaPage({
       </Card>
       <p className="text-center text-sm text-muted">
         Já tem conta?{" "}
-        <Link href="/login" className="text-accent hover:underline">
+        <Link href="/login" className="text-text hover:underline">
           Entrar
         </Link>
       </p>

@@ -18,7 +18,7 @@ export default async function RadarOverviewPage() {
     <div className="space-y-6">
       <div>
         <h1 className="flex items-center gap-2 font-[family-name:var(--font-display)] text-2xl font-bold tracking-tight">
-          <Icon name="radar" size={24} className="text-accent" /> Radar de IA
+          <Icon name="radar" size={24} className="text-text" /> Radar de IA
         </h1>
         <p className="mt-1 text-sm text-muted">
           Quando alguém pergunta para uma IA, seus clientes aparecem? Simulação com busca na web, uma vez por semana por cliente — um entregável para vender todo mês.
@@ -41,7 +41,7 @@ export default async function RadarOverviewPage() {
               {rows.map((row) => (
                 <tr key={row.clientId}>
                   <td className="px-4 py-2">
-                    <Link href={`/clients/${row.clientId}?tab=ai_radar`} className="font-medium hover:text-accent">
+                    <Link href={`/clients/${row.clientId}?tab=ai_radar`} className="font-medium hover:text-text">
                       {row.clientName}
                     </Link>
                   </td>

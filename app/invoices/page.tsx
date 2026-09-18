@@ -18,7 +18,7 @@ export default async function InvoicesPage() {
     <div className="space-y-6">
       <div>
         <h1 className="flex items-center gap-2 font-[family-name:var(--font-display)] text-2xl font-bold tracking-tight">
-          <Icon name="qr" size={24} className="text-accent" /> Cobranças
+          <Icon name="qr" size={24} className="text-text" /> Cobranças
         </h1>
         <p className="mt-1 text-sm text-muted">Fatura do fee com Pix copia e cola e QR. O dinheiro vai direto para a sua conta, sem taxa da Marqa.</p>
       </div>

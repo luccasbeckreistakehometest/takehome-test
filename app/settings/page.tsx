@@ -39,8 +39,8 @@ const INTEGRATIONS: {
 ];
 
 const STATUS_BADGE: Record<IntegrationStatus, { label: string; cls: string }> = {
-  live: { label: "Ativo", cls: "border-emerald-500/40 bg-emerald-500/10 text-emerald-500" },
-  beta: { label: "Beta", cls: "border-amber-500/40 bg-amber-500/10 text-amber-500" },
+  live: { label: "Ativo", cls: "border-positive/40 bg-positive-wash text-positive" },
+  beta: { label: "Beta", cls: "border-caution/40 bg-caution-wash text-caution" },
   soon: { label: "Em breve", cls: "border-edge text-muted" },
 };
 
@@ -121,7 +121,7 @@ export default function SettingsPage() {
               // eslint-disable-next-line @next/next/no-img-element
               <img src={`/api/settings/logo?v=${logoVersion}`} alt="logo" className="size-full object-contain" />
             ) : (
-              <span className="text-xl font-bold text-accent">
+              <span className="text-xl font-bold text-text">
                 {settings.agencyName.charAt(0).toUpperCase()}
               </span>
             )}
@@ -132,7 +132,7 @@ export default function SettingsPage() {
               Aparece no cabeçalho e nas telas que o cliente/profissional vê ao entrar pelo convite.
             </p>
             <div className="flex items-center gap-2">
-              <label className="cursor-pointer rounded-md border border-edge bg-surface-2 px-3 py-1.5 text-sm transition-colors hover:border-accent">
+              <label className="cursor-pointer rounded-md border border-edge bg-surface-2 px-3 py-1.5 text-sm transition-colors hover:border-edge">
                 Enviar logo
                 <input
                   type="file"
@@ -158,7 +158,7 @@ export default function SettingsPage() {
                     setSettings((prev) => (prev ? { ...prev, logoMime: "" } : prev));
                     setLogoVersion((v) => v + 1);
                   }}
-                  className="rounded-md border border-edge px-3 py-1.5 text-sm text-muted transition-colors hover:border-red-500/60 hover:text-red-500"
+                  className="rounded-md border border-edge px-3 py-1.5 text-sm text-muted transition-colors hover:border-negative/60 hover:text-negative"
                 >
                   Remover
                 </button>
@@ -200,7 +200,7 @@ export default function SettingsPage() {
                 key={mode.value}
                 className={`cursor-pointer rounded-md border p-3 text-sm transition-colors ${
                   settings.aiMode === mode.value
-                    ? "border-accent bg-accent/10"
+                    ? "border-edge bg-surface-sunken"
                     : "border-edge bg-surface-2 hover:border-muted"
                 }`}
               >
@@ -241,7 +241,7 @@ export default function SettingsPage() {
             value={settings.houseStyle}
             onChange={(e) => setSettings({ ...settings, houseStyle: e.target.value })}
             placeholder="Diretrizes da agência que valem para todos os clientes: tom, o que nunca fazer, formatos preferidos..."
-            className="min-h-20 w-full rounded-md border border-edge bg-surface-2 px-3 py-2 text-sm outline-none focus:border-accent"
+            className="min-h-20 w-full rounded-md border border-edge bg-surface-2 px-3 py-2 text-sm outline-none focus:border-edge"
           />
         </div>
         {settings.canManagePlatform && (
@@ -259,9 +259,9 @@ export default function SettingsPage() {
               <Label>
                 Anthropic (Claude){" "}
                 {settings.hasAnthropicKey ? (
-                  <span className="normal-case text-accent">configurada ✓</span>
+                  <span className="normal-case text-text">configurada ✓</span>
                 ) : (
-                  <span className="normal-case text-red-400">não configurada</span>
+                  <span className="normal-case text-negative">não configurada</span>
                 )}
               </Label>
               <Input
@@ -277,7 +277,7 @@ export default function SettingsPage() {
               <Label>
                 Google AI — mockups de imagem{" "}
                 {settings.hasGoogleAiKey ? (
-                  <span className="normal-case text-accent">configurada ✓</span>
+                  <span className="normal-case text-text">configurada ✓</span>
                 ) : (
                   <span className="normal-case text-muted">
                     opcional — aistudio.google.com
@@ -312,7 +312,7 @@ export default function SettingsPage() {
                     imageProvider: e.target.value as "huggingface" | "together" | "pollinations",
                   })
                 }
-                className="w-full rounded-md border border-edge bg-surface px-3 py-2 text-sm text-foreground outline-none focus:border-accent"
+                className="w-full rounded-md border border-edge bg-surface px-3 py-2 text-sm text-foreground outline-none focus:border-edge"
               >
                 <option value="huggingface">Hugging Face — FLUX.1-dev · melhor qualidade (chave grátis)</option>
                 <option value="together">Together AI — FLUX.1-schnell-Free · rápido (chave grátis)</option>
@@ -328,7 +328,7 @@ export default function SettingsPage() {
                 <Label>
                   Hugging Face API Key{" "}
                   {settings.hasHfKey ? (
-                    <span className="normal-case text-accent">configurada ✓</span>
+                    <span className="normal-case text-text">configurada ✓</span>
                   ) : (
                     <span className="normal-case text-muted">para FLUX.1-dev</span>
                   )}
@@ -344,7 +344,7 @@ export default function SettingsPage() {
                 <Label>
                   Together API Key{" "}
                   {settings.hasTogetherKey ? (
-                    <span className="normal-case text-accent">configurada ✓</span>
+                    <span className="normal-case text-text">configurada ✓</span>
                   ) : (
                     <span className="normal-case text-muted">para FLUX-schnell</span>
                   )}
@@ -367,7 +367,7 @@ export default function SettingsPage() {
           <Button onClick={save} disabled={saving}>
             {saving ? "Salvando..." : "Salvar configurações"}
           </Button>
-          {saved && <span className="text-sm text-accent">Aplicado ✓</span>}
+          {saved && <span className="text-sm text-text">Aplicado ✓</span>}
         </div>
       </Card>
 
@@ -388,8 +388,8 @@ export default function SettingsPage() {
       <Card className="space-y-3">
         <SectionTitle>Integrações</SectionTitle>
         <p className="text-sm text-muted">
-          <span className="text-emerald-500">Ativo</span> = já funciona com sua credencial.{" "}
-          <span className="text-amber-500">Beta</span> = gancho pronto, falta plugar o token.{" "}
+          <span className="text-positive">Ativo</span> = já funciona com sua credencial.{" "}
+          <span className="text-caution">Beta</span> = gancho pronto, falta plugar o token.{" "}
           Mensagens ficam em <strong>Mensagens → Conexões</strong>; dados e vendas de cada
           conta em <strong>Cliente → Vendas & Dados</strong>.
         </p>

@@ -50,35 +50,35 @@ export default async function AnalyticsPage({ searchParams }: Props) {
       <div className="flex flex-wrap items-end justify-between gap-3">
         <div>
           <p className="text-xs uppercase tracking-widest text-muted">
-            <Link href="/admin" className="hover:text-accent">Admin</Link> / Analytics
+            <Link href="/admin" className="hover:text-text">Admin</Link> / Analytics
           </p>
           <h1 className="font-[family-name:var(--font-display)] text-2xl font-bold tracking-tight">Funil e origens</h1>
           <p className="mt-1 text-sm text-muted">Sem cookie: um visitante é um hash que muda todo dia. Eventos crus ficam 90 dias; o resumo diário fica.</p>
         </div>
-        <a href={`/api/admin/analytics?format=csv&days=${days}`} className="rounded-md border border-edge bg-surface-2 px-3 py-2 text-sm hover:border-accent">
+        <a href={`/api/admin/analytics?format=csv&days=${days}`} className="rounded-md border border-edge bg-surface-2 px-3 py-2 text-sm hover:border-edge">
           Baixar CSV
         </a>
       </div>
 
       <div className="flex flex-wrap gap-2 text-sm">
         {[7, 30, 90].map((d) => (
-          <Link key={d} href={qs({ days: d })} className={`rounded-full border px-3 py-1 ${d === days ? "border-accent bg-accent text-accent-ink" : "border-edge"}`}>
+          <Link key={d} href={qs({ days: d })} className={`rounded-full border px-3 py-1 ${d === days ? "border-text bg-text text-canvas" : "border-edge"}`}>
             {`${d} dias`}
           </Link>
         ))}
         <span className="mx-1 w-px bg-edge" />
         {["", ...AUDIENCES].map((a) => (
-          <Link key={a || "all"} href={qs({ audience: a })} className={`rounded-full border px-3 py-1 ${a === audience ? "border-accent bg-accent text-accent-ink" : "border-edge"}`}>
+          <Link key={a || "all"} href={qs({ audience: a })} className={`rounded-full border px-3 py-1 ${a === audience ? "border-text bg-text text-canvas" : "border-edge"}`}>
             {AUDIENCE_LABEL[a]}
           </Link>
         ))}
         {source && (
-          <Link href={qs({ source: "" })} className="rounded-full border border-accent px-3 py-1">{`origem: ${source} ×`}</Link>
+          <Link href={qs({ source: "" })} className="rounded-full border border-edge px-3 py-1">{`origem: ${source} ×`}</Link>
         )}
       </div>
 
       <section className="rounded-xl border border-edge bg-surface p-5" data-testid="analytics-funnel">
-        <h2 className="mb-3 text-sm font-semibold uppercase tracking-wider text-accent">Funil</h2>
+        <h2 className="mb-3 text-sm font-semibold uppercase tracking-wider text-text">Funil</h2>
         <ul className="space-y-2">
           {rows.map((row) => (
             <li key={row.step} className="grid grid-cols-[150px_1fr_110px] items-center gap-3 text-sm" data-step={row.step} data-count={row.count}>
@@ -98,7 +98,7 @@ export default async function AnalyticsPage({ searchParams }: Props) {
 
       <div className="grid gap-6 lg:grid-cols-2">
         <section className="rounded-xl border border-edge bg-surface p-5">
-          <h2 className="mb-3 text-sm font-semibold uppercase tracking-wider text-accent">Visitantes por dia</h2>
+          <h2 className="mb-3 text-sm font-semibold uppercase tracking-wider text-text">Visitantes por dia</h2>
           {visitors.length === 0 ? (
             <p className="text-sm text-muted">Sem visitas no período.</p>
           ) : (
@@ -112,7 +112,7 @@ export default async function AnalyticsPage({ searchParams }: Props) {
           )}
         </section>
         <section className="rounded-xl border border-edge bg-surface p-5">
-          <h2 className="mb-3 text-sm font-semibold uppercase tracking-wider text-accent">Origens e campanhas</h2>
+          <h2 className="mb-3 text-sm font-semibold uppercase tracking-wider text-text">Origens e campanhas</h2>
           <div className="overflow-x-auto">
             <table className="w-full min-w-[320px] text-left text-sm" data-testid="analytics-sources">
               <thead className="text-xs uppercase text-muted">
@@ -127,7 +127,7 @@ export default async function AnalyticsPage({ searchParams }: Props) {
                 {sources.map((s) => (
                   <tr key={`${s.source}-${s.campaign}`}>
                     <td className="py-1.5 pr-2">
-                      <Link href={qs({ source: s.source || "(direto)" })} className="hover:text-accent">{s.source || "(direto)"}</Link>
+                      <Link href={qs({ source: s.source || "(direto)" })} className="hover:text-text">{s.source || "(direto)"}</Link>
                     </td>
                     <td className="py-1.5 pr-2 text-muted">{s.campaign || "—"}</td>
                     <td className="py-1.5 pr-2 text-right tabular-nums">{s.visitors}</td>
@@ -141,7 +141,7 @@ export default async function AnalyticsPage({ searchParams }: Props) {
       </div>
 
       <section className="rounded-xl border border-edge bg-surface p-5">
-        <h2 className="mb-3 text-sm font-semibold uppercase tracking-wider text-accent">Cadastros recentes (1º toque)</h2>
+        <h2 className="mb-3 text-sm font-semibold uppercase tracking-wider text-text">Cadastros recentes (1º toque)</h2>
         <div className="overflow-x-auto">
           <table className="w-full min-w-[480px] text-left text-sm" data-testid="analytics-signups">
             <thead className="text-xs uppercase text-muted">
@@ -169,7 +169,7 @@ export default async function AnalyticsPage({ searchParams }: Props) {
       </section>
 
       <section className="rounded-xl border border-edge bg-surface p-5">
-        <h2 className="mb-1 text-sm font-semibold uppercase tracking-wider text-accent">Primeiros passos concluídos</h2>
+        <h2 className="mb-1 text-sm font-semibold uppercase tracking-wider text-text">Primeiros passos concluídos</h2>
         <p className="mb-3 text-xs text-muted">Contas que concluíram cada passo do checklist no período (papel:passo).</p>
         {activation.length === 0 ? (
           <p className="text-sm text-muted">Nenhum passo concluído no período.</p>

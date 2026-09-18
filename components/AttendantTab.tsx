@@ -169,7 +169,7 @@ export default function AttendantTab({ client }: { client: Client }) {
             <label
               key={m.value}
               className={`cursor-pointer rounded-md border p-3 text-sm transition-colors ${
-                form.mode === m.value ? "border-accent bg-accent/10" : "border-edge bg-surface-2 hover:border-muted"
+                form.mode === m.value ? "border-edge bg-surface-sunken" : "border-edge bg-surface-2 hover:border-muted"
               }`}
               data-testid={`mode-${m.value}`}
             >
@@ -179,7 +179,7 @@ export default function AttendantTab({ client }: { client: Client }) {
             </label>
           ))}
         </div>
-        <div className={`rounded-md border px-3 py-2 text-xs ${view.channel.ready ? "border-emerald-500/40 text-emerald-500" : "border-amber-500/40 text-amber-500"}`}>
+        <div className={`rounded-md border px-3 py-2 text-xs ${view.channel.ready ? "border-positive/40 text-positive" : "border-caution/40 text-caution"}`}>
           {view.channel.via === "own_number" && "Saída pelo número próprio da marca (WhatsApp Cloud API)."}
           {view.channel.via === "agency_api" && "Saída pela API do WhatsApp da agência (Mensagens → Conexões)."}
           {view.channel.via === "agency_session" && "Saída pela sessão de WhatsApp da agência (Mensagens → Conexões)."}
@@ -209,7 +209,7 @@ export default function AttendantTab({ client }: { client: Client }) {
                     onClick={() =>
                       setForm({ ...form, days: form.days.includes(i) ? form.days.filter((x) => x !== i) : [...form.days, i].sort() })
                     }
-                    className={`size-8 rounded-md border text-xs font-medium ${form.days.includes(i) ? "border-accent bg-accent/15 text-accent" : "border-edge text-muted"}`}
+                    className={`size-8 rounded-md border text-xs font-medium ${form.days.includes(i) ? "border-edge bg-surface-sunken text-text" : "border-edge text-muted"}`}
                     aria-label={`dia ${i}`}
                   >
                     {d}
@@ -265,7 +265,7 @@ export default function AttendantTab({ client }: { client: Client }) {
             </div>
             <div>
               <Label>
-                Token de acesso {view.config.hasToken && <span className="normal-case text-accent">configurado ✓</span>}
+                Token de acesso {view.config.hasToken && <span className="normal-case text-text">configurado ✓</span>}
               </Label>
               <Input type="password" value={apiToken} onChange={(e) => setApiToken(e.target.value)} placeholder={view.config.hasToken ? "•••• (em branco = manter, clear = apagar)" : "EAAG..."} />
             </div>
@@ -277,7 +277,7 @@ export default function AttendantTab({ client }: { client: Client }) {
           <Button onClick={save} disabled={saving} data-testid="attendant-save">
             {saving ? "Salvando..." : "Salvar atendente"}
           </Button>
-          {saved && <span className="text-sm text-accent">Aplicado ✓</span>}
+          {saved && <span className="text-sm text-text">Aplicado ✓</span>}
         </div>
       </Card>
 
@@ -305,7 +305,7 @@ export default function AttendantTab({ client }: { client: Client }) {
           </p>
         )}
         {lastReply && lastReply !== "none" && (
-          <div className="rounded-md border border-accent/40 bg-accent/5 p-3 text-sm" data-testid="attendant-test-result" data-status={lastReply.status}>
+          <div className="rounded-md border border-edge bg-surface-sunken p-3 text-sm" data-testid="attendant-test-result" data-status={lastReply.status}>
             <div className="flex flex-wrap items-center gap-2">
               <Tag>{STATUS_LABEL[lastReply.status]}</Tag>
               <span className="text-xs text-muted">{REASON_LABEL[lastReply.reason] ?? lastReply.reason}</span>

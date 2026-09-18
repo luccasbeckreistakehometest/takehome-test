@@ -149,7 +149,7 @@ export default function AssistantWidget() {
               <button
                 key={suggestion}
                 onClick={() => send(suggestion)}
-                className="block w-full rounded-lg border border-edge bg-surface-sunken px-3 py-2 text-left text-xs text-text-muted transition-colors hover:border-accent hover:text-foreground"
+                className="block w-full rounded-lg border border-edge bg-surface-sunken px-3 py-2 text-left text-xs text-text-muted transition-colors hover:border-edge hover:text-foreground"
               >
                 “{suggestion}”
               </button>
@@ -191,7 +191,7 @@ export default function AssistantWidget() {
             }}
             rows={1}
             placeholder="Diga o que precisa..."
-            className="max-h-24 min-h-9 flex-1 resize-none rounded-xl border border-edge bg-surface-sunken px-3 py-2 text-sm outline-none transition-colors focus:border-accent"
+            className="max-h-24 min-h-9 flex-1 resize-none rounded-xl border border-edge bg-surface-sunken px-3 py-2 text-sm outline-none transition-colors focus:border-edge"
           />
           <button
             onClick={() => send()}

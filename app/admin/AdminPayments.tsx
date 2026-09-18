@@ -89,7 +89,7 @@ export default function AdminPayments({ agency = "" }: { agency?: string }) {
           </Button>
         </form>
         {msg && (
-          <p role="status" className="mt-2 text-sm text-accent">
+          <p role="status" className="mt-2 text-sm text-text">
             {msg}
           </p>
         )}

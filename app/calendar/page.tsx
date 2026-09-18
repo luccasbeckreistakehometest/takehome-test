@@ -25,9 +25,9 @@ type Post = ScheduledPostWithClient;
 type View = "month" | "week";
 
 const STATUS_STYLE: Record<Post["status"], string> = {
-  draft: "border-dashed border-amber-500/70 bg-amber-500/10 text-amber-600 dark:text-amber-300",
-  scheduled: "border-accent/60 bg-accent/10 text-foreground",
-  published: "border-emerald-500/60 bg-emerald-500/10 text-emerald-600 dark:text-emerald-300",
+  draft: "border-dashed border-caution/70 bg-caution-wash text-caution dark:text-caution",
+  scheduled: "border-edge bg-surface-sunken text-foreground",
+  published: "border-positive/60 bg-positive-wash text-positive dark:text-positive",
   canceled: "border-edge bg-surface-2 text-muted line-through",
 };
 const STATUS_LABEL: Record<Post["status"], string> = {
@@ -116,21 +116,21 @@ export default function CalendarPage() {
             ))}
           </Select>
           <div className="flex rounded-md border border-edge">
-            <button onClick={() => setView("month")} className={`px-3 py-1.5 text-sm ${view === "month" ? "bg-accent/15 text-accent" : "text-muted"}`} data-testid="view-month">
+            <button onClick={() => setView("month")} className={`px-3 py-1.5 text-sm ${view === "month" ? "bg-surface-sunken text-text" : "text-muted"}`} data-testid="view-month">
               Mês
             </button>
-            <button onClick={() => setView("week")} className={`px-3 py-1.5 text-sm ${view === "week" ? "bg-accent/15 text-accent" : "text-muted"}`} data-testid="view-week">
+            <button onClick={() => setView("week")} className={`px-3 py-1.5 text-sm ${view === "week" ? "bg-surface-sunken text-text" : "text-muted"}`} data-testid="view-week">
               Semana
             </button>
           </div>
           <div className="flex items-center gap-1">
-            <button onClick={() => setAnchor((a) => (view === "month" ? addMonths(a, -1) : addDays(a, -7)))} className="grid size-8 place-items-center rounded-md border border-edge hover:border-accent" aria-label="Anterior">
+            <button onClick={() => setAnchor((a) => (view === "month" ? addMonths(a, -1) : addDays(a, -7)))} className="grid size-8 place-items-center rounded-md border border-edge hover:border-edge" aria-label="Anterior">
               ‹
             </button>
-            <button onClick={() => setAnchor(todayKey())} className="rounded-md border border-edge px-2 py-1 text-xs hover:border-accent">
+            <button onClick={() => setAnchor(todayKey())} className="rounded-md border border-edge px-2 py-1 text-xs hover:border-edge">
               Hoje
             </button>
-            <button onClick={() => setAnchor((a) => (view === "month" ? addMonths(a, 1) : addDays(a, 7)))} className="grid size-8 place-items-center rounded-md border border-edge hover:border-accent" aria-label="Próximo">
+            <button onClick={() => setAnchor((a) => (view === "month" ? addMonths(a, 1) : addDays(a, 7)))} className="grid size-8 place-items-center rounded-md border border-edge hover:border-edge" aria-label="Próximo">
               ›
             </button>
           </div>
@@ -146,7 +146,7 @@ export default function CalendarPage() {
       {error && <ErrorBox message={error} />}
 
       {gaps.emptyDays.length > 0 && (
-        <div className="flex flex-wrap items-center gap-2 rounded-lg border border-amber-500/40 bg-amber-500/10 px-3 py-2 text-sm" data-testid="calendar-gaps">
+        <div className="flex flex-wrap items-center gap-2 rounded-lg border border-caution/40 bg-caution-wash px-3 py-2 text-sm" data-testid="calendar-gaps">
           <span className="font-medium">Buracos no calendário:</span>
           <span>
             <span data-testid="gap-count">{gaps.emptyDays.length}</span> <span>dias sem conteúdo à frente</span>
@@ -161,7 +161,7 @@ export default function CalendarPage() {
               <button
                 key={day}
                 onClick={() => setAdding({ date: day })}
-                className="rounded border border-amber-500/50 px-1.5 py-0.5 text-xs hover:bg-amber-500/20"
+                className="rounded border border-caution/50 px-1.5 py-0.5 text-xs hover:bg-caution-wash"
                 title="Criar post neste dia"
               >
                 {parseKey(day).toLocaleDateString(locale, { weekday: "short", day: "2-digit" })} +
@@ -211,15 +211,15 @@ export default function CalendarPage() {
                         key={day.key}
                         className={`group rounded-md border p-1.5 ${view === "month" ? "min-h-24" : "min-h-48"} ${
                           day.inMonth ? "bg-surface" : "bg-surface-2/50 opacity-50"
-                        } ${isToday ? "border-accent" : isGap ? "border-amber-500/40" : "border-edge"}`}
+                        } ${isToday ? "border-edge" : isGap ? "border-caution/40" : "border-edge"}`}
                         data-testid="calendar-day"
                         data-date={day.key}
                       >
                         <div className="mb-1 flex items-center justify-between">
-                          <span className={`text-xs ${isToday ? "font-bold text-accent" : "text-muted"}`}>{parseKey(day.key).getDate()}</span>
+                          <span className={`text-xs ${isToday ? "font-bold text-text" : "text-muted"}`}>{parseKey(day.key).getDate()}</span>
                           <button
                             onClick={() => setAdding({ date: day.key })}
-                            className="text-xs text-muted opacity-0 transition-opacity hover:text-accent group-hover:opacity-100"
+                            className="text-xs text-muted opacity-0 transition-opacity hover:text-text group-hover:opacity-100"
                             aria-label="Novo post neste dia"
                           >
                             +
@@ -309,7 +309,7 @@ function PostPanel({
       <div className="max-h-[calc(100dvh-2rem)] w-full max-w-lg animate-pop-in overflow-y-auto overscroll-contain rounded-2xl border border-edge bg-surface p-5 shadow-2xl [transform-origin:center]" onClick={(e) => e.stopPropagation()} data-testid="post-panel">
         <div className="flex items-start justify-between gap-3">
           <div>
-            <p className="text-xs uppercase tracking-widest text-accent">{post.clientName}</p>
+            <p className="text-xs uppercase tracking-widest text-text">{post.clientName}</p>
             <h3 className="font-[family-name:var(--font-display)] text-lg font-semibold">{post.title}</h3>
             <div className="mt-1 flex flex-wrap gap-1.5">
               <Tag>{post.channel}</Tag>
@@ -330,7 +330,7 @@ function PostPanel({
           <a href={`/api/files/${post.deliverableId}`} target="_blank" rel="noreferrer" className="mt-3 block">
             {/* eslint-disable-next-line @next/next/no-img-element */}
             <img src={`/api/files/${post.deliverableId}`} alt={post.title} className="max-h-48 rounded-md border border-edge object-contain" />
-            <span className="mt-1 block text-xs text-accent">Peça aprovada pelo cliente ↗</span>
+            <span className="mt-1 block text-xs text-text">Peça aprovada pelo cliente ↗</span>
           </a>
         )}
         {(post.clientApproval === "pending" || post.clientApproval === "changes_requested") && post.status !== "published" && post.status !== "canceled" && (
@@ -342,7 +342,7 @@ function PostPanel({
             </span>
             <button
               type="button"
-              className="rounded-md border border-edge px-2.5 py-1 hover:border-accent"
+              className="rounded-md border border-edge px-2.5 py-1 hover:border-edge"
               onClick={() => {
                 if (window.confirm("Liberar este post sem a aprovação do cliente? Ele vai ao ar no horário marcado.")) void onPatch({ releaseApproval: true });
               }}
@@ -353,12 +353,12 @@ function PostPanel({
           </div>
         )}
         {post.status === "scheduled" && Number(post.publishAttempts ?? 0) >= 5 && (
-          <p className="mt-3 rounded-md border border-red-500/50 bg-red-500/10 px-3 py-2 text-xs" data-testid="post-publish-error">
+          <p className="mt-3 rounded-md border border-negative/50 bg-negative-wash px-3 py-2 text-xs" data-testid="post-publish-error">
             {`Não conseguimos publicar: ${post.publishError || "erro desconhecido"}. Confira a conexão e agende de novo para tentar outra vez.`}
           </p>
         )}
         {post.clientApproval === "changes_requested" && post.clientApprovalNote && (
-          <p className="mt-3 rounded-md border border-amber-500/50 bg-amber-500/10 px-3 py-2 text-sm" data-testid="post-client-note">
+          <p className="mt-3 rounded-md border border-caution/50 bg-caution-wash px-3 py-2 text-sm" data-testid="post-client-note">
             <span className="block text-xs font-medium">{post.clientApprovalBy ? `Ajuste pedido por ${post.clientApprovalBy}` : "Ajuste pedido pelo cliente"}</span>
             “{post.clientApprovalNote}”
           </p>
@@ -418,7 +418,7 @@ function PostPanel({
           {post.status !== "published" && post.format !== "Carrossel" && (
             <a
               href={`/clients/${post.clientId}?tab=carousels&topic=${encodeURIComponent(post.title)}&post=${post.id}`}
-              className="inline-flex items-center gap-1.5 rounded-md border border-edge px-3.5 py-2 text-sm hover:border-accent"
+              className="inline-flex items-center gap-1.5 rounded-md border border-edge px-3.5 py-2 text-sm hover:border-edge"
               data-testid="post-to-carousel"
             >
               <Icon name="layers" size={14} /> Transformar em carrossel
@@ -620,11 +620,11 @@ function PostLink({ post, onInsert }: { post: Post; onInsert: (url: string) => v
       </div>
       {link && (
         <p className="text-xs text-muted" data-testid="post-link-short">
-          <span className="font-mono text-accent">{link.shortUrl.replace(/^https?:\/\//, "")}</span>
+          <span className="font-mono text-text">{link.shortUrl.replace(/^https?:\/\//, "")}</span>
           {` · ${link.clicks} clique(s)`}
         </p>
       )}
-      {error && <p className="text-xs text-red-500">{error}</p>}
+      {error && <p className="text-xs text-negative">{error}</p>}
     </div>
   );
 }

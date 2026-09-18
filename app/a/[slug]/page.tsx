@@ -63,7 +63,7 @@ export default async function AgencyPublicPage({ params }: Props) {
           </span>
         )}
         <div>
-          <p className="text-xs uppercase tracking-widest text-accent">{settings.agencyName}</p>
+          <p className="text-xs uppercase tracking-widest text-text">{settings.agencyName}</p>
           <h1 className="mt-1 font-[family-name:var(--font-display)] text-3xl font-bold tracking-tight sm:text-4xl" data-testid="agency-headline">
             {config.headline || settings.tagline}
           </h1>
@@ -87,7 +87,7 @@ export default async function AgencyPublicPage({ params }: Props) {
           <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3" data-testid="agency-services">
             {config.services.map((service) => (
               <div key={service} className="rounded-xl border border-edge bg-surface p-4 text-sm font-medium">
-                <span className="mr-2 text-accent">✓</span>
+                <span className="mr-2 text-text">✓</span>
                 {service}
               </div>
             ))}
@@ -123,7 +123,7 @@ export default async function AgencyPublicPage({ params }: Props) {
                   // eslint-disable-next-line @next/next/no-img-element
                   <img src={`/api/a/${config.slug}/logo/${client.id}`} alt={client.name} className="size-6 rounded-full object-cover" />
                 ) : (
-                  <span className="grid size-6 place-items-center rounded-full bg-accent/15 text-xs font-bold text-accent">{client.name.charAt(0).toUpperCase()}</span>
+                  <span className="grid size-6 place-items-center rounded-full bg-surface-sunken text-xs font-bold text-text">{client.name.charAt(0).toUpperCase()}</span>
                 )}
                 {client.name}
               </span>
@@ -149,12 +149,12 @@ export default async function AgencyPublicPage({ params }: Props) {
         </section>
       )}
 
-      <section id="contato" className="grid gap-6 rounded-2xl border border-accent/30 bg-accent/5 p-6 md:grid-cols-[1fr_1.2fr]">
+      <section id="contato" className="grid gap-6 rounded-2xl border border-edge bg-surface-sunken p-6 md:grid-cols-[1fr_1.2fr]">
         <div>
           <h2 className="font-[family-name:var(--font-display)] text-2xl font-bold">{cta}</h2>
           <p className="mt-2 text-sm text-muted">Conte o que você precisa e a gente responde no seu WhatsApp.</p>
           {config.whatsapp && (
-            <a href={`https://wa.me/${config.whatsapp}`} target="_blank" rel="noreferrer" className="mt-4 inline-block text-sm text-accent hover:underline">
+            <a href={`https://wa.me/${config.whatsapp}`} target="_blank" rel="noreferrer" className="mt-4 inline-block text-sm text-text hover:underline">
               Ou chame direto no WhatsApp ↗
             </a>
           )}

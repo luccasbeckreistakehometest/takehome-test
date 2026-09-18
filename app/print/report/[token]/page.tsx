@@ -53,7 +53,7 @@ export default function PrintMonthlyReportPage({ params }: { params: Promise<{ t
       >Salvar como PDF
       </button>
       <div className="mb-6 border-b-2 border-foreground pb-4">
-        <p className="text-xs font-bold uppercase tracking-widest text-accent">{payload.agency.name}</p>
+        <p className="text-xs font-bold uppercase tracking-widest text-text">{payload.agency.name}</p>
         <h1 className="mt-1 font-[family-name:var(--font-display)] text-2xl font-bold" data-testid="print-title">
           <span>Relatório mensal</span> — {monthTitle(payload.report.month, lang)}
         </h1>

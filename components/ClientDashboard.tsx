@@ -14,7 +14,8 @@ import OnboardingModal from "./OnboardingModal";
 import { ClientPulseCard } from "./PulseOverviewCard";
 import LearningsCard from "./LearningsCard";
 import ActivationChecklist from "./ActivationChecklist";
-import { Button, Card, SectionTitle, Spinner, Tag } from "./ui";
+import { Button, Dash, EmptyState, Spinner } from "./ui";
+import { buttonClass } from "@/lib/button-class";
 
 type DashboardData = {
   client: Client;
@@ -65,173 +66,244 @@ export default function ClientDashboard({
   ).filter((type) => landingEnabled || type !== "landing_page");
 
   return (
-    <div className="space-y-6">
+    // Tela de ferramenta (§4.4, densidade compact): trabalho à esquerda em 8
+    // colunas, contexto e ações num trilho de 4. Antes eram nove painéis
+    // idênticos empilhados a 24px, quatro deles com um número laranja gigante.
+    <div>
       <OnboardingModal role="client" />
       {client.selfServe && <ActivationChecklist expect="brand" />}
+
       {isNew && !client.selfServe && (
-        <Card className="border-accent/40 bg-accent/5">
-          <SectionTitle>Comece por aqui</SectionTitle>
-          <ol className="mt-1 list-decimal space-y-1.5 pl-5 text-sm text-muted">
-            <li>
-              Complete o <button className="text-accent hover:underline" onClick={() => onNavigate("briefing")}>briefing</button> — ele alimenta toda a IA.
-            </li>
-            <li>
-              Gere a <button className="text-accent hover:underline" onClick={() => onNavigate("strategy_analysis")}>Estratégia & Deep Dive</button> (pesquisa real de mercado).
-            </li>
-            <li>
-              Rode o <button className="text-accent hover:underline" onClick={onRunKit}>Kit completo</button> — campanha, ROI, identidade e social de uma vez.
-            </li>
-          </ol>
-        </Card>
-      )}
-      {/* Números principais */}
-      <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
-        <Card>
-          <p className="text-xs uppercase tracking-wide text-muted">Elo da conta</p>
-          <div className="mt-1.5">
-            <TierBadge info={data.tier} />
-          </div>
-          <div className="mt-2.5">
-            <TierProgress info={data.tier} compact />
-          </div>
-        </Card>
-        {[
-          { label: "Entregáveis gerados", value: data.stats.generations, tab: "strategy_analysis" },
-          { label: "Demandas ativas", value: data.projects.active, tab: "projects" },
-          { label: "Aguardando revisão", value: data.projects.awaitingReview, tab: "projects" },
-        ].map((stat) => (
-          <button key={stat.label} onClick={() => onNavigate(stat.tab)} className="text-left">
-            <Card className="h-full transition-colors hover:border-accent/60">
-              <p className="text-xs uppercase tracking-wide text-muted">{stat.label}</p>
-              <p className="mt-1 font-[family-name:var(--font-display)] text-3xl font-bold text-accent">
-                {stat.value}
-              </p>
-            </Card>
-          </button>
-        ))}
-      </div>
-
-      {/* Ações rápidas */}
-      <Card>
-        <SectionTitle>Ações rápidas</SectionTitle>
-        <div className="flex flex-wrap gap-2">
-          <Button onClick={onRunKit}>Gerar kit completo</Button>
-          <Button variant="ghost" onClick={() => onNavigate("projects")}>
-            + Nova demanda
-          </Button>
-          <Button variant="ghost" onClick={() => onNavigate("market_pulse")}>Rodar radar de mercado
-          </Button>
-          <Button variant="ghost" onClick={() => onNavigate("client_report")}>Gerar relatório
-          </Button>
-          <Link href={`/ideas?audience=client&targetId=${client.id}`}>
-            <Button variant="ghost">Ideias para esta conta</Button>
-          </Link>
-          <Link href={`/portal/client/${client.id}`}>
-            <Button variant="ghost">Ver como cliente</Button>
-          </Link>
-          <Link href="/plans">
-            <Button variant="ghost">Planos & coins</Button>
-          </Link>
-        </div>
-      </Card>
-
-      {children}
-
-      {!client.selfServe && <ClientPulseCard clientId={client.id} />}
-
-      <LearningsCard clientId={client.id} />
-
-      {data.pulseSummary && (
-        <Card>
-          <SectionTitle>Último pulso do mercado</SectionTitle>
-          <p className="text-sm text-muted">{data.pulseSummary}</p>
-        </Card>
-      )}
-
-      <div className="grid gap-6 lg:grid-cols-2">
-        {/* Entregáveis por tipo */}
-        <Card>
-          <SectionTitle>Entregáveis</SectionTitle>
-          <div className="space-y-1.5">
-            {deliverableTypes.map((type) => {
-              const info = data.byType[type];
-              return (
+        <section className="mt-8 border-b border-edge pb-4">
+          <p className="t6 text-text-muted">Comece por aqui</p>
+          <ol className="mt-2">
+            {[
+              {
+                label: "Complete o briefing",
+                hint: "ele alimenta toda a IA",
+                run: () => onNavigate("briefing"),
+              },
+              {
+                label: "Gere a Estratégia & Deep Dive",
+                hint: "pesquisa real de mercado",
+                run: () => onNavigate("strategy_analysis"),
+              },
+              {
+                label: "Rode o Kit completo",
+                hint: "campanha, ROI, identidade e social de uma vez",
+                run: onRunKit,
+              },
+            ].map((step, i) => (
+              <li key={step.label} className="border-b border-rule last:border-b-0">
                 <button
-                  key={type}
-                  onClick={() => onNavigate(type)}
-                  className="flex w-full items-center justify-between rounded-md border border-edge bg-surface-2 px-3 py-2 text-left text-sm transition-colors hover:border-accent/60"
+                  type="button"
+                  onClick={step.run}
+                  className="flex w-full items-baseline gap-3 py-2 text-left"
                 >
-                  <span className="font-medium">{GENERATION_LABELS[type]}</span>
-                  <span className="text-xs text-muted">
-                    {info?.count
-                      ? `${info.count}x · último em ${new Date(info.latestAt!).toLocaleDateString("pt-BR")}`
-                      : "gerar →"}
-                  </span>
+                  <span className="idx t5 w-6 shrink-0">{String(i + 1).padStart(2, "0")}</span>
+                  <span className="t3 block text-left font-medium underline-offset-4 hover:underline">{step.label}</span>
+                  <span className="t5 text-text-muted">{step.hint}</span>
                 </button>
-              );
-            })}
-          </div>
-        </Card>
+              </li>
+            ))}
+          </ol>
+        </section>
+      )}
 
-        <div className="space-y-6">
-          {/* Demandas recentes */}
-          <Card>
-            <SectionTitle>Demandas recentes</SectionTitle>
+      <div className="ed-grid mt-8">
+        <div className="c8">
+          {/* Entregáveis: tabela, não vinte botões-caixa */}
+          <section>
+            <table className="w-full table-fixed border-collapse text-left">
+              <colgroup>
+                <col />
+                <col className="w-24" />
+                <col className="w-32" />
+              </colgroup>
+              <thead>
+                <tr className="border-b border-edge">
+                  <th className="t6 pb-2 text-text-muted">Entregáveis</th>
+                  <th className="t6 pb-2 text-right text-text-muted">Vezes</th>
+                  <th className="t6 pb-2 text-right text-text-muted">Último</th>
+                </tr>
+              </thead>
+              <tbody>
+                {deliverableTypes.map((type) => {
+                  const info = data.byType[type];
+                  return (
+                    <tr key={type} className="border-b border-rule">
+                      <td className="py-2">
+                        <button
+                          type="button"
+                          onClick={() => onNavigate(type)}
+                          className="t3 block text-left font-medium underline-offset-4 hover:underline"
+                        >
+                          {GENERATION_LABELS[type]}
+                        </button>
+                      </td>
+                      <td className="n3 py-2 text-right">{info?.count ? info.count : <Dash />}</td>
+                      <td className="t5 tnum py-2 text-right text-text-muted">
+                        {info?.latestAt ? new Date(info.latestAt).toLocaleDateString("pt-BR") : <Dash />}
+                      </td>
+                    </tr>
+                  );
+                })}
+              </tbody>
+            </table>
+          </section>
+
+          <section className="mt-10">
+            <h2 className="t6 border-b border-edge pb-2 text-text-muted">Demandas recentes</h2>
             {data.projects.recent.length === 0 ? (
-              <p className="text-sm text-muted">
-                Nenhuma demanda ainda — crie a partir do plano na aba Demandas.
-              </p>
+              <EmptyState
+                icon="kanban"
+                title="Nenhuma demanda ainda"
+                condition="Crie a primeira a partir do plano, na aba Demandas."
+              />
             ) : (
-              <div className="space-y-1.5">
+              <ul>
                 {data.projects.recent.map((project) => (
-                  <button
-                    key={project.id}
-                    onClick={() => onNavigate("projects")}
-                    className="flex w-full items-center justify-between rounded-md border border-edge bg-surface-2 px-3 py-2 text-left text-sm transition-colors hover:border-accent/60"
-                  >
-                    <span className="font-medium">{project.title}</span>
-                    <Tag>{PROJECT_STATUS_LABELS[project.status]}</Tag>
-                  </button>
-                ))}
-              </div>
-            )}
-          </Card>
-
-          {/* Próximas reuniões */}
-          <Card>
-            <div className="flex items-center justify-between">
-              <SectionTitle>Próximas reuniões</SectionTitle>
-              <Link href="/agenda" className="text-xs text-accent hover:underline">
-                Agenda completa →
-              </Link>
-            </div>
-            {data.meetings.length === 0 ? (
-              <p className="text-sm text-muted">Nenhuma reunião futura para esta conta.</p>
-            ) : (
-              <div className="space-y-1.5">
-                {data.meetings.map((meeting) => (
-                  <div
-                    key={meeting.id}
-                    className="flex items-center justify-between rounded-md border border-edge bg-surface-2 px-3 py-2 text-sm"
-                  >
-                    <span>
-                      <span className="font-medium">{meeting.title}</span>{" "}
-                      <span className="text-xs text-muted">
-                        · {new Date(meeting.scheduledAt).toLocaleString("pt-BR")}
+                  <li key={project.id} className="border-b border-rule">
+                    <button
+                      type="button"
+                      onClick={() => onNavigate("projects")}
+                      className="flex w-full items-baseline justify-between gap-3 py-2 text-left"
+                    >
+                      <span className="t3 min-w-0 truncate font-medium">{project.title}</span>
+                      <span className="t5 shrink-0 text-text-muted">
+                        {PROJECT_STATUS_LABELS[project.status]}
                       </span>
+                    </button>
+                  </li>
+                ))}
+              </ul>
+            )}
+          </section>
+
+          <div className="mt-10">{children}</div>
+
+          <section className="mt-10">
+            <h2 className="t6 border-b border-edge pb-2 text-text-muted">Próximas reuniões</h2>
+            {data.meetings.length === 0 ? (
+              <EmptyState
+                icon="calendar"
+                title="Nenhuma reunião futura"
+                condition="As reuniões marcadas para esta conta aparecem aqui."
+                action={
+                  <Link href="/agenda" className={buttonClass("secondary")}>
+                    Abrir agenda
+                  </Link>
+                }
+              />
+            ) : (
+              <ul>
+                {data.meetings.map((meeting) => (
+                  <li
+                    key={meeting.id}
+                    className="flex items-baseline justify-between gap-3 border-b border-rule py-2"
+                  >
+                    <span className="t3 min-w-0 truncate font-medium">{meeting.title}</span>
+                    <span className="t5 tnum shrink-0 text-text-muted">
+                      {new Date(meeting.scheduledAt).toLocaleString("pt-BR")}
                     </span>
                     <a
                       href={googleCalendarUrl(meeting)}
                       target="_blank"
                       rel="noreferrer"
-                      className="text-xs text-muted hover:text-accent"
-                    ></a>
-                  </div>
+                      className="t5 shrink-0 font-medium underline-offset-4 hover:underline"
+                    >
+                      Google Agenda
+                    </a>
+                  </li>
                 ))}
-              </div>
+              </ul>
             )}
-          </Card>
+          </section>
         </div>
+
+        {/* ---- Trilho: números, ações, pulso ------------------------------ */}
+        <aside className="c4">
+          <section>
+            <h2 className="t6 border-b border-edge pb-2 text-text-muted">Números da conta</h2>
+            <dl>
+              {[
+                { label: "Entregáveis gerados", value: data.stats.generations, tab: "strategy_analysis" },
+                { label: "Demandas ativas", value: data.projects.active, tab: "projects" },
+                { label: "Aguardando revisão", value: data.projects.awaitingReview, tab: "projects" },
+              ].map((stat) => (
+                <div key={stat.label} className="border-b border-rule">
+                  <button
+                    type="button"
+                    onClick={() => onNavigate(stat.tab)}
+                    className="flex w-full items-baseline justify-between gap-3 py-2 text-left"
+                  >
+                    <dt className="t4 text-text-muted">{stat.label}</dt>
+                    <dd className={`n3 ${stat.value === 0 ? "text-text-faint" : ""}`}>{stat.value}</dd>
+                  </button>
+                </div>
+              ))}
+            </dl>
+            <div className="mt-3 flex items-center gap-2">
+              <TierBadge info={data.tier} />
+            </div>
+            <div className="mt-2">
+              <TierProgress info={data.tier} compact />
+            </div>
+          </section>
+
+          <section className="mt-8">
+            <h2 className="t6 border-b border-edge pb-2 text-text-muted">Ações</h2>
+            <div className="mt-3 flex flex-col items-start gap-2">
+              <Button onClick={onRunKit} className="w-full">
+                Gerar kit completo
+              </Button>
+              {[
+                { label: "Nova demanda", run: () => onNavigate("projects") },
+                { label: "Rodar radar de mercado", run: () => onNavigate("market_pulse") },
+                { label: "Gerar relatório", run: () => onNavigate("client_report") },
+              ].map((action) => (
+                <button
+                  key={action.label}
+                  type="button"
+                  onClick={action.run}
+                  className="t4 w-full border-b border-rule py-1.5 text-left underline-offset-4 hover:underline"
+                >
+                  {action.label}
+                </button>
+              ))}
+              {[
+                { label: "Ideias para esta conta", href: `/ideas?audience=client&targetId=${client.id}` },
+                { label: "Ver como cliente", href: `/portal/client/${client.id}` },
+                { label: "Planos & coins", href: "/plans" },
+              ].map((action) => (
+                <Link
+                  key={action.href}
+                  href={action.href}
+                  className="t4 w-full border-b border-rule py-1.5 underline-offset-4 hover:underline"
+                >
+                  {action.label}
+                </Link>
+              ))}
+            </div>
+          </section>
+
+          {!client.selfServe && (
+            <div className="mt-8">
+              <ClientPulseCard clientId={client.id} />
+            </div>
+          )}
+
+          <div className="mt-8">
+            <LearningsCard clientId={client.id} />
+          </div>
+
+          {data.pulseSummary && (
+            <section className="mt-8">
+              <h2 className="t6 border-b border-edge pb-2 text-text-muted">Último pulso do mercado</h2>
+              <p className="t4 measure-prose mt-2 text-text-muted">{data.pulseSummary}</p>
+            </section>
+          )}
+        </aside>
       </div>
     </div>
   );

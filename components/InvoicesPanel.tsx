@@ -34,11 +34,11 @@ const STATE_LABEL: Record<InvoiceState, string> = {
 };
 const STATE_STYLE: Record<InvoiceState, string> = {
   draft: "border-edge text-muted",
-  sent: "border-accent/50 text-accent",
-  paid_claimed: "border-amber-500/60 text-amber-600 dark:text-amber-300",
-  paid: "border-emerald-500/60 text-emerald-600 dark:text-emerald-300",
+  sent: "border-edge text-text",
+  paid_claimed: "border-caution/60 text-caution dark:text-caution",
+  paid: "border-positive/60 text-positive dark:text-positive",
   void: "border-edge text-muted line-through",
-  overdue: "border-red-500/60 text-red-500",
+  overdue: "border-negative/60 text-negative",
 };
 
 const thisMonth = () => new Date(Date.now() - 3 * 3_600_000).toISOString().slice(0, 7);
@@ -114,9 +114,9 @@ export default function InvoicesPanel({ clientId, clients = [] }: { clientId?: s
   return (
     <div className="space-y-5" data-testid="invoices-panel">
       {!ready && (
-        <p className="rounded-lg border border-amber-500/50 bg-amber-500/10 px-3 py-2 text-sm" data-testid="invoices-no-pix">
+        <p className="rounded-lg border border-caution/50 bg-caution-wash px-3 py-2 text-sm" data-testid="invoices-no-pix">
           Cadastre sua chave Pix em{" "}
-          <Link href="/settings#recebimentos" className="font-medium text-accent hover:underline">
+          <Link href="/settings#recebimentos" className="font-medium text-text hover:underline">
             Configurações → Recebimentos
           </Link>{" "}
           para enviar faturas.
@@ -133,7 +133,7 @@ export default function InvoicesPanel({ clientId, clients = [] }: { clientId?: s
         </Card>
         <Card>
           <p className="text-xs uppercase tracking-wide text-muted">Atrasadas</p>
-          <p className={`mt-1 font-[family-name:var(--font-display)] text-2xl font-bold ${summary?.overdue.length ? "text-red-500" : ""}`}>{summary?.overdue.length ?? 0}</p>
+          <p className={`mt-1 font-[family-name:var(--font-display)] text-2xl font-bold ${summary?.overdue.length ? "text-negative" : ""}`}>{summary?.overdue.length ?? 0}</p>
         </Card>
         <Card>
           <p className="text-xs uppercase tracking-wide text-muted">Cliente avisou que pagou</p>
@@ -164,7 +164,7 @@ export default function InvoicesPanel({ clientId, clients = [] }: { clientId?: s
             <Icon name="plus" size={14} /> Criar rascunho
           </Button>
           {invoices.length > 0 && (
-            <a href={`/api/invoices?format=csv${clientId ? `&clientId=${clientId}` : ""}`} className="ml-auto text-sm text-accent hover:underline">
+            <a href={`/api/invoices?format=csv${clientId ? `&clientId=${clientId}` : ""}`} className="ml-auto text-sm text-text hover:underline">
               Baixar CSV
             </a>
           )}
@@ -219,12 +219,12 @@ export default function InvoicesPanel({ clientId, clients = [] }: { clientId?: s
                   </Button>
                 )}
                 {invoice.status !== "draft" && invoice.status !== "void" && (
-                  <a href={`/fatura/${invoice.token}`} target="_blank" rel="noreferrer" className="rounded-md border border-edge px-3 py-2 text-sm hover:border-accent" data-testid="invoice-open">
+                  <a href={`/fatura/${invoice.token}`} target="_blank" rel="noreferrer" className="rounded-md border border-edge px-3 py-2 text-sm hover:border-edge" data-testid="invoice-open">
                     Ver página do cliente ↗
                   </a>
                 )}
                 {invoice.status !== "paid" && invoice.status !== "void" && (
-                  <button type="button" onClick={() => act(invoice, "void")} className="ml-auto text-xs text-red-500 hover:underline">
+                  <button type="button" onClick={() => act(invoice, "void")} className="ml-auto text-xs text-negative hover:underline">
                     Cancelar fatura
                   </button>
                 )}
@@ -277,7 +277,7 @@ function DraftEditor({ invoice, onSaved }: { invoice: Invoice; onSaved: () => vo
         </div>
       ))}
       <div className="flex flex-wrap items-center gap-2">
-        <button type="button" className="text-sm text-accent hover:underline" onClick={() => setItems((rows) => [...rows, { label: "", amount: "", kind: "manual" }])}>
+        <button type="button" className="text-sm text-text hover:underline" onClick={() => setItems((rows) => [...rows, { label: "", amount: "", kind: "manual" }])}>
           + Linha
         </button>
         <div className="w-40">

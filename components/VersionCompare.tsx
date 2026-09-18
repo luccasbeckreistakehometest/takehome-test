@@ -41,7 +41,7 @@ function VersionColumn({
     <div className="space-y-3">
       <div className="rounded-lg border border-edge bg-surface-2 p-3">
         <div className="mb-2 flex items-center justify-between gap-2">
-          <span className="inline-flex items-center gap-1.5 text-sm font-semibold text-accent">
+          <span className="inline-flex items-center gap-1.5 text-sm font-semibold text-text">
             <Icon name="doc" size={14} /> Versão {label}
           </span>
           {generation && generation.id === latestId && <Tag>mais recente</Tag>}
@@ -159,7 +159,7 @@ export default function VersionCompare({
           Escolha duas versões deste entregável para ver as diferenças lado a lado.
         </p>
         {sameSelected && (
-          <p className="mt-2 inline-flex items-center gap-1.5 text-xs text-amber-400">
+          <p className="mt-2 inline-flex items-center gap-1.5 text-xs text-caution">
             <Icon name="x" size={13} /> As duas colunas apontam para a mesma versão —
             escolha versões diferentes para comparar.
           </p>

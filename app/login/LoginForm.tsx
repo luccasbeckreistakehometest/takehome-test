@@ -82,14 +82,14 @@ export default function LoginForm({ showDevAccounts }: { showDevAccounts: boolea
           </Button>
           <p className="text-center text-xs text-muted">
             Esqueceu a senha?{" "}
-            <Link href="/contato?assunto=acesso" className="text-accent hover:underline">
+            <Link href="/contato?assunto=acesso" className="text-text hover:underline">
               Fale com o suporte
             </Link>{" "}
             — se a sua conta foi criada por uma agência, ela também pode gerar uma senha nova para você.
           </p>
           <div className="border-t border-edge pt-3 text-center text-sm text-muted">
             Ainda não tem conta?{" "}
-            <Link href="/criar-conta" className="font-medium text-accent hover:underline">
+            <Link href="/criar-conta" className="font-medium text-text hover:underline">
               Criar conta grátis →
             </Link>
           </div>
@@ -105,10 +105,10 @@ export default function LoginForm({ showDevAccounts }: { showDevAccounts: boolea
                 key={user.username}
                 type="button"
                 onClick={() => setUsername(user.username)}
-                className="flex w-full items-center justify-between rounded-md border border-edge bg-surface-2 px-3 py-1.5 text-sm transition-colors hover:border-accent"
+                className="flex w-full items-center justify-between rounded-md border border-edge bg-surface-2 px-3 py-1.5 text-sm transition-colors hover:border-edge"
               >
                 <span>
-                  <span className="font-mono text-accent">{user.username}</span> <span className="text-muted">— {user.name}</span>
+                  <span className="font-mono text-text">{user.username}</span> <span className="text-muted">— {user.name}</span>
                 </span>
                 <span className="text-xs text-muted">{ROLE_LABEL[user.role] ?? user.role}</span>
               </button>

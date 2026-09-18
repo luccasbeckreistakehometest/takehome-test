@@ -116,7 +116,7 @@ export default function CarouselTab({ client }: { client: Client }) {
           </div>
         </div>
         {error && <ErrorBox message={error} />}
-        {note && <p className="text-sm text-accent">{note}</p>}
+        {note && <p className="text-sm text-text">{note}</p>}
         <div className="flex flex-wrap items-center gap-2">
           <Button onClick={() => create("ai")} disabled={busy !== "" || form.topic.trim().length < 2 || !data.aiAvailable} data-testid="carousel-generate">
             <Icon name="sparkle" size={14} /> {busy === "ai" ? "Escrevendo os slides..." : "Gerar com IA · 3 coins"}
@@ -141,7 +141,7 @@ export default function CarouselTab({ client }: { client: Client }) {
                 <button
                   type="button"
                   onClick={() => setSelectedId(c.id)}
-                  className={`w-full rounded-md border px-3 py-2 text-left ${c.id === selectedId ? "border-accent bg-accent/5" : "border-edge hover:border-accent/60"}`}
+                  className={`w-full rounded-md border px-3 py-2 text-left ${c.id === selectedId ? "border-edge bg-surface-sunken" : "border-edge hover:border-edge"}`}
                 >
                   <span className="block truncate font-medium">{c.content.hook || c.topic}</span>
                   <span className="text-xs text-muted">{`${c.content.slides.length} slides · ${TEMPLATE_LABEL[c.template]}`}</span>
@@ -226,7 +226,7 @@ function CarouselEditor({ clientId, carousel, onChanged }: { clientId: string; c
         <a href={`/api/carousels/${carousel.id}/zip`} className="inline-flex items-center gap-1.5 rounded-md bg-accent px-3.5 py-2 text-sm font-medium text-accent-ink" data-testid="carousel-zip">
           <Icon name="download" size={14} /> Baixar tudo (ZIP)
         </a>
-        <button type="button" onClick={remove} className="ml-auto text-xs text-red-500 hover:underline">
+        <button type="button" onClick={remove} className="ml-auto text-xs text-negative hover:underline">
           Excluir
         </button>
       </div>
@@ -248,7 +248,7 @@ function CarouselEditor({ clientId, carousel, onChanged }: { clientId: string; c
             <Textarea aria-label={`Texto do slide ${index + 1}`} value={slide.body} maxLength={BODY_MAX} onChange={(e) => setSlide(index, { body: e.target.value })} />
             <div className="flex items-center justify-between text-xs text-muted">
               <span>{slide.visualHint}</span>
-              <a href={`/api/carousels/${carousel.id}/slide/${index}?download=1&v=${hashes[index] ?? ""}`} className="shrink-0 text-accent hover:underline">
+              <a href={`/api/carousels/${carousel.id}/slide/${index}?download=1&v=${hashes[index] ?? ""}`} className="shrink-0 text-text hover:underline">
                 Baixar
               </a>
             </div>
@@ -277,7 +277,7 @@ function CarouselEditor({ clientId, carousel, onChanged }: { clientId: string; c
         <Button variant="ghost" onClick={schedule} disabled={dirty} data-testid="carousel-schedule">
           <Icon name="calendar" size={14} /> {carousel.postId ? "Atualizar no calendário" : "Levar para o calendário"}
         </Button>
-        {scheduled && <span className="text-sm text-accent" data-testid="carousel-scheduled">No calendário como rascunho ✓</span>}
+        {scheduled && <span className="text-sm text-text" data-testid="carousel-scheduled">No calendário como rascunho ✓</span>}
       </div>
     </div>
   );
