@@ -491,3 +491,98 @@ Sem pacote novo. O sprite local `components/icons.tsx` (SVG inline, `currentColo
   "Gerar kit completo" —, não por ✦.
 
 ---
+
+## 9. Exibição de dados
+
+### 9.1 Tabelas
+
+- **Sem cartão em volta.** A tabela é a superfície. Nada de `border` + `rounded` + `p-5` envolvendo
+  uma tabela: é o que faz a `/finance` parecer um slide.
+- **Sem zebra.** Zebra é para quando a linha é alta e a leitura é horizontal. As tabelas da Marqa são
+  curtas e densas: régua de 1px em `rule` entre linhas, régua de 1px em `edge` sob o cabeçalho, e
+  `surface-sunken` só na linha sob o cursor e na selecionada.
+- Cabeçalho `t5` (Archivo `wdth 92`, `wght 500`, caixa de sentença, `text-muted`), fixo no scroll com
+  `position: sticky` + `e3`.
+- **Largura de coluna é declarada**, nunca automática, e `table-layout: fixed`. Coluna de texto pode
+  truncar com `text-overflow: ellipsis` + `title`; coluna numérica jamais trunca.
+- **Alinhamento:** texto à esquerda, **número à direita**, data à direita, status à esquerda, ações à
+  direita. **O cabeçalho alinha igual à célula** — é o detalhe que mais denuncia trabalho apressado.
+- Linha de total: régua de 1px `edge` em cima, `wght 600`, mesma tabulação.
+- Overflow horizontal: só a tabela rola (`overflow-x: auto` no contêiner próprio), nunca a página; a
+  primeira coluna gruda com `position: sticky; left: 0`.
+- Estados obrigatórios: carregando (esqueleto com **as mesmas** larguras de coluna), vazio, erro,
+  filtro sem resultado (diferente de vazio), fim de paginação.
+
+### 9.2 Números
+
+- `font-variant-numeric: tabular-nums lining-nums` em **toda** célula, KPI, moeda e porcentagem.
+- Moeda em pt-BR via `Intl.NumberFormat("pt-BR", { style: "currency", currency: "BRL" })`.
+  O símbolo `R$` sai em `text-muted`, o valor em `text` — a coluna alinha pelo dígito, não pelo cifrão.
+- Porcentagem com uma casa (`15,8%`); contagem sem casa; horas como `12h30` (nunca `12.5`).
+- **Delta** é `+12,4%` / `−8,1%` em `positive`/`negative` com a seta do sprite, **sem chip de fundo
+  colorido**. O sinal `−` é o menos tipográfico (U+2212), não o hífen.
+- **Ausência de dado é `—`** em `text-faint`. `0` só quando o valor medido é zero. Onde o produto não
+  sabe a diferença, o backend passa a devolver `null` e não `0`.
+- Alinhamento de linha de base: rótulo e valor de um KPI compartilham a mesma linha de base, com o
+  rótulo acima; blocos de KPI lado a lado alinham **pelo valor**, não pelo topo do cartão.
+
+### 9.3 Gráficos (relatórios e insights)
+
+- Uma série = `--brand`. Duas séries = `--brand` + `n-400`. Três ou mais: repensar o gráfico.
+- Grade só no eixo de valor, 1px em `rule`, sem grade vertical, sem moldura.
+- Sem preenchimento em gradiente, sem topo arredondado em barra, sem 3D, sem donut com número no
+  meio — a não ser que aquele número **seja** a métrica.
+- Legenda só com duas séries ou mais; com uma, o rótulo vai direto na linha.
+- Sparkline: traço de 1,5px, sem preenchimento, sem pontos, exceto o último.
+- Eixos em `t5`; valores em figura tabular; o eixo de valor começa em zero, e quando não começar isso
+  é dito no rótulo.
+- Toda visualização tem tabela equivalente acessível (`<table>` visualmente oculta ou `aria-label`
+  com o resumo).
+
+### 9.4 Estados vazios — forma fixa
+
+Nunca um parágrafo solto. Sempre: ícone 24 em `text-faint` · frase `t3` dizendo **o que vai aparecer
+aqui** (não "nenhum dado") · **uma** ação em link ou botão *quiet* · quando fizer sentido, uma linha
+`t5` explicando a condição ("aparece a partir de 4 posts publicados"). Fundo `surface`, régua
+tracejada de 1px em `rule`, `r-md`, altura mínima 160px.
+
+---
+
+## 10. Documentos e impressão
+
+É aqui que a tese vira dinheiro: o relatório, a proposta, a fatura, a página pública e o carrossel
+são o que a agência mostra **ao cliente dela**. Precisam parecer entrega de estúdio.
+
+**Anatomia comum**
+
+1. **Capa**: nome do cliente em `d1`; período e tipo em `t1`; régua de 3px em `--brand` com a largura
+   da mancha; logo da agência (ou o lockup Marqa) alinhado à base da régua. Sem cor de fundo.
+2. **Cabeçalho corrente** (a partir da 2ª página): `t5`, `cliente · período` à esquerda, número da
+   página em figura tabular à direita, régua `rule` embaixo.
+3. **Sumário executivo**: coluna de prosa de 62ch em `t2`, com `hanging-punctuation`.
+4. **Figuras**: bloco numerado (`Fig. 1`) em `t5`, legenda abaixo, `break-inside: avoid`.
+5. **Tabelas**: as da §9.1, sem cartão, régua fina.
+6. **Rodapé**: emissor, data de geração em figura tabular, e o aviso de origem do dado.
+
+**Estilo de impressão de verdade** — não `display: none` no header:
+
+```css
+@page { size: A4; margin: 24mm 25mm 22mm; }
+@page :first { margin-top: 32mm; }
+@media print {
+  :root { color-scheme: light; }              /* documento é sempre claro */
+  body { background: #fff; color: var(--n-900); }
+  .doc-cover  { break-after: page; }
+  .doc-figure, .doc-table, .doc-kpi { break-inside: avoid; }
+  h2, h3 { break-after: avoid; }              /* título não fica órfão no pé */
+  a[href^="http"]::after { content: " (" attr(href) ")"; font-size: 9pt; color: var(--n-500); }
+  .doc-rule { print-color-adjust: exact; }    /* só a régua da marca imprime colorida */
+  .no-print, nav, .app-rail, .fab { display: none !important; }
+}
+```
+
+Regras: o documento **nunca** herda o tema escuro; o FAB do assistente e a navegação do app não
+existem dentro de uma peça de cliente; a pré-visualização na tela usa a mesma folha de estilo do
+papel (mesma mancha, mesmas quebras), então o que se vê é o que sai.
+
+---
