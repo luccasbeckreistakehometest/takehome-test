@@ -18,9 +18,23 @@ describe("rate limiter", () => {
     expect(limiter.check("ip", 60_001).ok).toBe(true);
   });
 
-  it("uses the first X-Forwarded-For entry (set by Caddy)", () => {
-    const req = new Request("http://x", { headers: { "x-forwarded-for": "203.0.113.9, 10.0.0.1" } });
-    expect(clientIp(req)).toBe("203.0.113.9");
+  it("keys on the last X-Forwarded-For entry, so a forged header cannot reset a limit", () => {
+    // Caddy appends the address it saw to whatever the caller sent, so the
+    // last entry is ours and everything before it is the caller's to invent.
+    const proxied = new Request("http://x", { headers: { "x-forwarded-for": "10.0.0.1, 203.0.113.9" } });
+    expect(clientIp(proxied)).toBe("203.0.113.9");
+
+    // An attacker rotating the part they control must stay in the same bucket.
+    const spoofed = ["1.1.1.1", "8.8.8.8", "fe80::1"].map(
+      (fake) => new Request("http://x", { headers: { "x-forwarded-for": `${fake}, 203.0.113.9` } })
+    );
+    expect(new Set(spoofed.map(clientIp))).toEqual(new Set(["203.0.113.9"]));
+
+    const limiter = createRateLimiter({ limit: 2, windowMs: 60_000 });
+    expect(spoofed.map((req, i) => limiter.check(clientIp(req), i).ok)).toEqual([true, true, false]);
+
+    // Falls back to the socket address the proxy wrote, then to one bucket.
+    expect(clientIp(new Request("http://x", { headers: { "x-real-ip": "203.0.113.9" } }))).toBe("203.0.113.9");
     expect(clientIp(new Request("http://x"))).toBe("local");
   });
 });
