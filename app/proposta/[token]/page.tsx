@@ -162,7 +162,10 @@ export default function PublicProposalPage({ params }: { params: Promise<{ token
           <span className="idx t5 w-8 shrink-0">03</span>
           <h2 className="d4">Escolha o pacote</h2>
         </div>
-        <div className="mt-4 grid border-t border-edge sm:pl-11 md:grid-cols-3">
+        {/* Linhas, não colunas: dentro de 160mm três colunas dão 166px cada e
+            "Recomendado" atropela o nome do pacote vizinho. Numa peça de
+            papel, preço é lista com número alinhado à direita. */}
+        <div className="mt-4 border-t border-edge sm:pl-11">
           {c.packages.map((pkg) => {
             const active = selected === pkg.name;
             return (
@@ -172,27 +175,29 @@ export default function PublicProposalPage({ params }: { params: Promise<{ token
                 disabled={data.state !== "open" || Boolean(accepted)}
                 onClick={() => setSelected(pkg.name)}
                 aria-pressed={active}
-                className={`flex flex-col border-b border-rule py-4 pr-6 text-left transition-colors duration-[var(--dur-1)] disabled:cursor-default ${
-                  active ? "bg-surface-sunken pl-4" : "hover:bg-surface-sunken"
+                className={`flex w-full items-baseline gap-4 border-b border-rule py-4 text-left transition-colors duration-[var(--dur-1)] disabled:cursor-default ${
+                  active ? "bg-surface-sunken" : "hover:bg-surface-sunken"
                 }`}
                 data-testid="proposal-package"
                 data-name={pkg.name}
               >
-                <span className="flex items-baseline justify-between gap-2">
-                  <span className="t5 font-medium">{pkg.name}</span>
-                  {pkg.recommended && <span className="t6 text-n-500">Recomendado</span>}
+                <span
+                  aria-hidden
+                  className={`mt-1.5 size-3 shrink-0 rounded-full border ${
+                    active ? "border-n-900 bg-n-900" : "border-n-400"
+                  }`}
+                />
+                <span className="min-w-0 flex-1">
+                  <span className="flex flex-wrap items-baseline gap-x-3">
+                    <span className="t2 font-medium">{pkg.name}</span>
+                    {pkg.recommended && <span className="t6 text-n-500">Recomendado</span>}
+                  </span>
+                  <span className="t5 mt-1 block text-n-500">{pkg.items.join(" · ")}</span>
                 </span>
-                <span className="n2 mt-3">
-                  {money(pkg.price)}
-                  <span className="t5 font-normal text-n-500"> / {pkg.period}</span>
+                <span className="shrink-0 text-right">
+                  <span className="n2 block">{money(pkg.price)}</span>
+                  <span className="t5 block text-n-500">por {pkg.period}</span>
                 </span>
-                <ul className="mt-3">
-                  {pkg.items.map((item, i) => (
-                    <li key={i} className="t5 border-b border-rule py-1 text-n-500">
-                      {item}
-                    </li>
-                  ))}
-                </ul>
               </button>
             );
           })}
