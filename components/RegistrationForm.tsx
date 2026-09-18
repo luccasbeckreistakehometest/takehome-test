@@ -91,20 +91,28 @@ export default function RegistrationForm({
   if (!role) {
     return (
       <div className="space-y-3">
-        <p className="t3 text-text-muted">Que tipo de conta você quer criar?</p>
-        <div className="grid gap-x-8 gap-y-5 border-y border-edge py-4 sm:grid-cols-3">
-          {(Object.keys(ROLE_INFO) as Role[]).map((r) => (
+        <p className="t6 text-text-muted">Que tipo de conta você quer criar?</p>
+        {/* Escolha é uma LISTA: três cartões iguais lado a lado não dizem qual é
+            a diferença, só que existem três. Numeral pendurado, régua entre as
+            opções e a descrição na medida de leitura. */}
+        <div className="mt-2 border-t border-edge">
+          {(Object.keys(ROLE_INFO) as Role[]).map((r, i) => (
             <button
               key={r}
               type="button"
               onClick={() => setRole(r)}
-              className="group flex flex-col items-start gap-2 rounded-xl border border-edge bg-surface-sunken p-4 text-left transition-all hover:-translate-y-0.5 hover:border-edge"
+              className="group flex w-full items-baseline gap-4 border-b border-rule py-4 text-left transition-colors duration-[var(--dur-1)] hover:bg-surface-sunken"
             >
-              <span className="grid size-10 place-items-center rounded-lg bg-surface-sunken text-text transition-colors group-hover:bg-surface-sunken group-hover:text-text-ink">
-                <Icon name={ROLE_INFO[r].icon} size={20} />
+              <span className="idx t5 w-6 shrink-0">{String(i + 1).padStart(2, "0")}</span>
+              <span className="min-w-0 flex-1">
+                <span className="t2 block font-medium underline-offset-4 group-hover:underline">
+                  {ROLE_INFO[r].label}
+                </span>
+                <span className="t4 measure-prose mt-0.5 block text-text-muted">
+                  {ROLE_INFO[r].blurb}
+                </span>
               </span>
-              <span className="font-semibold">{ROLE_INFO[r].label}</span>
-              <span className="t5 text-text-muted">{ROLE_INFO[r].blurb}</span>
+              <Icon name="arrow-right" size={16} className="shrink-0 text-text-muted" />
             </button>
           ))}
         </div>
@@ -115,14 +123,13 @@ export default function RegistrationForm({
   const header = (
     <>
       {!fixedRole && (
-        <button type="button" onClick={() => setRole(null)} className="t5 text-text-muted transition-colors hover:text-text">
-          ← trocar tipo de conta
+        <button type="button" onClick={() => setRole(null)} className="t5 text-text-muted underline-offset-4 transition-colors hover:text-text hover:underline">
+          Trocar tipo de conta
         </button>
       )}
-      <div className="flex items-center gap-2 rounded-md border border-edge bg-surface-sunken px-3 py-2 t3">
-        <Icon name={ROLE_INFO[role].icon} size={16} className="text-text" />
-        <span className="font-medium">{ROLE_INFO[role].label}</span>
-      </div>
+      <p className="t6 border-b border-edge pb-2 text-text-muted">
+        Conta de <span className="text-text">{ROLE_INFO[role].label}</span>
+      </p>
     </>
   );
 
