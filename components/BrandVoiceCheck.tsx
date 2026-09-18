@@ -143,7 +143,7 @@ export default function BrandVoiceCheck({
           <p className="mt-2 flex items-center gap-2 t6 text-text-muted">
             {result.demo && <Tag>exemplo — sem chave de IA</Tag>}
             <Link href={`/clients/${clientId}?tab=briefing#voz-da-marca`} className="text-text hover:underline">
-              Regras da voz →
+              Regras da voz
             </Link>
           </p>
         </div>

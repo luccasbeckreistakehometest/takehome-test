@@ -80,7 +80,7 @@ export default function LeadForm({ slug, agencyName }: { slug: string; agencyNam
       </div>
       {error && <ErrorBox message={error} />}
       <Button type="submit" disabled={sending || !form.name.trim() || !form.whatsapp.trim() || !form.need.trim() || !form.budgetBand} data-testid="lead-submit">
-        {sending ? "Enviando..." : "Quero conversar →"}
+        {sending ? "Enviando..." : "Quero conversar"}
       </Button>
       <p className="t5 text-text-muted">Sem spam: só a equipe da agência recebe.</p>
     </form>

@@ -101,7 +101,7 @@ export default function MarcaModeChoice({
                 ))}
               </ul>
               <span className="mt-4 inline-flex items-center gap-1 t3 font-medium text-text">
-                {busy === m.self ? "Configurando…" : "Escolher"} →
+                {busy === m.self ? "Configurando…" : "Escolher"}
               </span>
             </button>
           ))}

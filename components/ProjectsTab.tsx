@@ -756,7 +756,7 @@ function ProjectDetail({ projectId, onBack }: { projectId: string; onBack: () =>
                           href={`/professionals/${candidate.professionalId}`}
                           className="t5 text-text hover:underline"
                         >
-                          Ver portfolio →
+                          Ver portfolio
                         </Link>
                         <Button
                           className="!px-2.5 !py-1 t5"
@@ -1079,7 +1079,7 @@ function ProjectDetail({ projectId, onBack }: { projectId: string; onBack: () =>
                       rel="noreferrer"
                       className="ml-2 text-text hover:underline"
                     >
-                      entrar ↗
+                      entrar
                     </a>
                   )}
                   <a

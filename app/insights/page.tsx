@@ -92,7 +92,7 @@ export default function InsightsPage() {
     { label: "Aguardando aprovação", value: String(data.counts.awaitingApproval), icon: "check", href: "/production" },
     { label: "Reuniões futuras", value: String(data.counts.meetingsUpcoming), icon: "calendar", href: "/agenda" },
     { label: "Posts agendados", value: String(data.counts.scheduledPosts), icon: "send", href: "/agenda" },
-    { label: "Horas & margem", value: "→", icon: "clock", href: "/finance" },
+    { label: "Horas & margem", value: "Abrir", icon: "clock", href: "/finance" },
   ];
 
   const funnelMax = Math.max(1, ...Object.values(data.funnel.byStatus));

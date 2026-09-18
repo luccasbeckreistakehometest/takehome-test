@@ -213,14 +213,14 @@ export default function ProspectingPage() {
                     rel="noreferrer"
                     className="text-text hover:underline"
                   >
-                    site ↗
+                    site
                   </a>
                 )}
                 {prospect.instagram && <span className="text-text-muted">{prospect.instagram}</span>}
                 <span className="ml-auto flex gap-2">
                   {prospect.status === "converted" && prospect.clientId ? (
                     <Link href={`/clients/${prospect.clientId}`} className="text-text hover:underline">
-                      Abrir cliente →
+                      Abrir cliente
                     </Link>
                   ) : (
                     <>

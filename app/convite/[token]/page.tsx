@@ -50,7 +50,7 @@ export default function ConvitePage({ params }: { params: Promise<{ token: strin
               : "Convite não encontrado ou revogado."}
         </p>
         <Link href="/criar-conta" className="mt-4 inline-block text-text hover:underline">
-          Criar uma conta →
+          Criar uma conta
         </Link>
       </div>
     );

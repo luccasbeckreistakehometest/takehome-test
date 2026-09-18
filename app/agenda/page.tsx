@@ -121,7 +121,7 @@ export default function AgendaPage() {
         <div className="flex items-center justify-between">
           <SectionTitle>Fila de publicações</SectionTitle>
           <a href="/calendar" className="t5 text-text hover:underline">
-            Ver no calendário →
+            Ver no calendário
           </a>
         </div>
         <p className="t3 text-text-muted">
@@ -359,7 +359,7 @@ function MeetingRow({
         <span className="flex items-center gap-2 t5">
           {meeting.link && (
             <a href={meeting.link} target="_blank" rel="noreferrer" className="text-text hover:underline">
-              entrar ↗
+              entrar
             </a>
           )}
           <a

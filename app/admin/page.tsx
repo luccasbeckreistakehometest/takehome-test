@@ -358,7 +358,7 @@ export default function AdminPage() {
             {data.onboarding.recent.map((o) => (
               <li key={o.userId} className="flex flex-wrap items-center justify-between gap-2 py-2">
                 <span><span className="font-medium">{o.username ?? o.userId.slice(0, 8)}</span> <span className="text-text-muted">· {o.role}</span></span>
-                <span className="t5 text-text-muted">{o.tourCompleted ? "tour concluído" : `passo ${o.tourStep}`} · {(JSON.parse(o.events) as { type: string }[]).map((e) => e.type).join(" → ") || "—"}</span>
+                <span className="t5 text-text-muted">{o.tourCompleted ? "tour concluído" : `passo ${o.tourStep}`} · {(JSON.parse(o.events) as { type: string }[]).map((e) => e.type).join("") || "—"}</span>
               </li>
             ))}
             {data.onboarding.recent.length === 0 && <li className="py-2 text-text-muted">Ninguém ainda.</li>}

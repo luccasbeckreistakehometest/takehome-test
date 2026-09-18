@@ -177,7 +177,7 @@ export default function CampaignTab({ client }: { client: Client }) {
               <Icon name="check" size={14} /> Aceitar todos os rascunhos
             </Button>
             <Link href="/calendar" className="t3 text-text hover:underline">
-              Ver no calendário →
+              Ver no calendário
             </Link>
             <button onClick={() => setReview(null)} className="ml-auto t3 text-text-muted hover:text-text" data-testid="campaign-back">
               ← Voltar

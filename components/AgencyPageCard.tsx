@@ -108,7 +108,7 @@ export default function AgencyPageCard({ origin }: { origin: string }) {
         <CopyButton text={publicUrl} label="Copiar link" />
         {config.published && data.config.slug && (
           <a href={`/a/${data.config.slug}`} target="_blank" rel="noreferrer" className="text-text hover:underline" data-testid="page-open">
-            Abrir página ↗
+            Abrir página
           </a>
         )}
       </div>
@@ -234,7 +234,7 @@ export default function AgencyPageCard({ origin }: { origin: string }) {
               </div>
             ))}
             <a href="/prospecting" className="inline-block t5 text-text hover:underline">
-              Ver na prospecção →
+              Ver na prospecção
             </a>
           </div>
         )}

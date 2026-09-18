@@ -53,7 +53,7 @@ export default async function GrowthPage() {
             <span className="mt-2 flex-1 t3 text-text-muted">{card.body}</span>
             <span className="mt-4 flex items-center justify-between t5">
               <span className="text-text-muted">{card.stat(stats)}</span>
-              <span className="font-medium text-text">{card.cta} →</span>
+              <span className="font-medium text-text">{card.cta}</span>
             </span>
           </Link>
         ))}

@@ -68,7 +68,7 @@ export default function PortalPage() {
             Entrar como cliente
           </Button>
           <Link href="/cadastro" className="text-center t5 text-text hover:underline">
-            Ainda não sou cadastrado →
+            Ainda não sou cadastrado
           </Link>
         </Card>
 
@@ -100,7 +100,7 @@ export default function PortalPage() {
             href="/professionals/new"
             className="text-center t5 text-text hover:underline"
           >
-            Quero me cadastrar →
+            Quero me cadastrar
           </Link>
         </Card>
       </div>

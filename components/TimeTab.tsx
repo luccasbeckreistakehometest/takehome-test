@@ -205,7 +205,7 @@ export default function TimeTab({ client }: { client: Client }) {
           <p className="t6 text-text-muted">Situação</p>
           <span className={`mt-1 inline-block rounded-xs border px-2 py-0.5 t5 font-medium ${MARGIN_STYLE[data.margin.status]}`}>{MARGIN_LABEL[data.margin.status]}</span>
           {data.margin.effectiveHourlyRate !== null && <p className="mt-1 t5 text-text-muted">{money(data.margin.effectiveHourlyRate)}/h efetivo</p>}
-          <Link href="/finance" className="mt-1 block t5 text-text hover:underline">Ver todos os clientes →</Link>
+          <Link href="/finance" className="mt-1 block t5 text-text hover:underline">Ver todos os clientes</Link>
         </Card>
       </div>
 

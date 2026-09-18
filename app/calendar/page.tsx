@@ -330,7 +330,7 @@ function PostPanel({
           <a href={`/api/files/${post.deliverableId}`} target="_blank" rel="noreferrer" className="mt-3 block">
             {/* eslint-disable-next-line @next/next/no-img-element */}
             <img src={`/api/files/${post.deliverableId}`} alt={post.title} className="max-h-48 rounded-md border border-edge object-contain" />
-            <span className="mt-1 block t5 text-text">Peça aprovada pelo cliente ↗</span>
+            <span className="mt-1 block t5 text-text">Peça aprovada pelo cliente</span>
           </a>
         )}
         {(post.clientApproval === "pending" || post.clientApproval === "changes_requested") && post.status !== "published" && post.status !== "canceled" && (

@@ -105,12 +105,12 @@ export default function ProposalPanel({ prospectId, onAccepted }: { prospectId: 
               <div className="flex items-center gap-1.5">
                 <Tag>{STATE_LABEL[p.state]}</Tag>
                 <a href={`/proposta/${p.token}`} target="_blank" rel="noreferrer" className="rounded border border-edge bg-surface-sunken px-2 py-0.5 t5 text-text-muted hover:border-edge hover:text-text" data-testid="proposal-open">
-                  Abrir ↗
+                  Abrir
                 </a>
                 <CopyButton text={`${origin}/proposta/${p.token}`} label="Copiar link" />
                 {p.state === "accepted" && p.clientId && (
                   <a href={`/clients/${p.clientId}`} className="t5 text-text hover:underline" onClick={onAccepted}>
-                    Abrir cliente →
+                    Abrir cliente
                   </a>
                 )}
               </div>

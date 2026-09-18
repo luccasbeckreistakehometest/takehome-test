@@ -189,7 +189,7 @@ export default function LinksTab({ client }: { client: Client }) {
           {saved && <span className="t3 text-text">Salvo ✓</span>}
           {bio.published && (
             <a href={pageUrl} target="_blank" rel="noreferrer" className="t3 text-text hover:underline" data-testid="bio-open">
-              Abrir a página ↗
+              Abrir a página
             </a>
           )}
           {bio.published && <CopyButton text={pageUrl} label="Copiar endereço" />}

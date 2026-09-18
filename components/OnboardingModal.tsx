@@ -127,7 +127,7 @@ export default function OnboardingModal({
                 href={current.href}
                 className="mt-3 inline-block t3 font-medium text-text hover:underline"
               >
-                {current.cta} →
+                {current.cta}
               </a>
             )}
           </div>

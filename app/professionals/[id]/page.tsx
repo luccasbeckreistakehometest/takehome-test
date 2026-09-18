@@ -153,7 +153,7 @@ export default function ProfessionalPage({
                     rel="noreferrer"
                     className="rounded-md border border-edge bg-surface-sunken px-3 py-1.5 t3 text-text-muted transition-colors hover:border-edge hover:text-text"
                   >
-                    {item.title || item.url} ↗
+                    {item.title || item.url}
                   </a>
                 ))}
               </div>
@@ -219,7 +219,7 @@ export default function ProfessionalPage({
                         href={`/clients/${project.clientId}?project=${project.id}`}
                         className="t5 text-text hover:underline"
                       >
-                        Abrir →
+                        Abrir
                       </Link>
                     </div>
                   </div>

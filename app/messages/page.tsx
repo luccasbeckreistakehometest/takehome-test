@@ -863,7 +863,7 @@ function SessionWorker({ onSavedConnection }: { onSavedConnection: () => void })
             onError={(e) => ((e.currentTarget.style.opacity = "0.3"))}
           />
           <p className="text-center t5 text-text-muted">
-            Abra o WhatsApp no celular → <strong>Aparelhos conectados</strong> → <strong>Conectar aparelho</strong> e escaneie.
+            Abra o WhatsApp no celular<strong>Aparelhos conectados</strong><strong>Conectar aparelho</strong> e escaneie.
           </p>
         </div>
       )}

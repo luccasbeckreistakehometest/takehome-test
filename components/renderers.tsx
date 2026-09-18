@@ -579,7 +579,7 @@ export function CampaignPlanView({
                       rel="noreferrer"
                       className="text-text hover:underline"
                     >
-                      {influencer.handle || "ver perfil"} ↗
+                      {influencer.handle || "ver perfil"}
                     </a>
                   )}
                   {influencer.contactEmail && (
