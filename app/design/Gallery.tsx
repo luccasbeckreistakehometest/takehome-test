@@ -242,9 +242,11 @@ export default function Gallery() {
         lede="Uma rampa neutra quente, três cores semânticas que só descrevem estado, e uma cor expressiva — a da agência — com orçamento de um elemento por tela."
       >
         <Block label="Rampa Tinta">
-          <div className="flex flex-wrap gap-0">
+          {/* Uma rampa que quebra em três fileiras deixa de ser uma rampa: no
+              celular ela rola, e continua sendo uma faixa contínua. */}
+          <div className="flex gap-0 overflow-x-auto">
             {NEUTRALS.map((n) => (
-              <div key={n} className="w-[6.25%] min-w-[54px]">
+              <div key={n} className="w-[6.25%] min-w-[54px] shrink-0">
                 <div className="h-14 border-r border-b border-[rgba(0,0,0,.06)]" style={{ background: `var(--n-${n})` }} />
                 <p className="t5 tnum pt-1 text-text-muted">{n}</p>
               </div>
