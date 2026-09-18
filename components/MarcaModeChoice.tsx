@@ -64,8 +64,8 @@ export default function MarcaModeChoice({
   if (!open) return null;
 
   return (
-    <div className="fixed inset-0 z-[80] grid place-items-center bg-black/50 p-4 backdrop-blur-sm">
-      <div className="w-full max-w-2xl animate-pop-in rounded-2xl border border-edge bg-surface p-6 shadow-2xl [transform-origin:center]">
+    <div className="scrim fixed inset-0 z-[80] grid place-items-center p-4">
+      <div className="w-full max-w-2xl animate-pop-in rounded-2xl border border-edge bg-surface p-6 shadow-e2 [transform-origin:center]">
         <div className="mb-1 flex items-center justify-between">
           <p className="t5 font-semibold uppercase tracking-widest text-text">
             Como você quer trabalhar?

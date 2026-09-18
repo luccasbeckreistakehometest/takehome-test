@@ -154,8 +154,8 @@ export default function Tour({ kind, refId }: { kind: TourKind | null; refId?: s
 
   return (
     <>
-      <div className={`pointer-events-none fixed inset-0 z-[90] ${rect ? "" : "bg-black/40"}`}>
-        {rect && <div className="absolute rounded-xl shadow-[0_0_0_9999px_rgba(0,0,0,.6)] transition-all duration-200" style={rect} />}
+      <div className={`pointer-events-none fixed inset-0 z-[90] ${rect ? "" : "scrim"}`}>
+        {rect && <div className="absolute rounded-sm shadow-[0_0_0_9999px_rgba(16,15,14,.6)] transition-all duration-[var(--dur-2)]" style={rect} />}
       </div>
       <div
         ref={cardRef}
@@ -163,8 +163,8 @@ export default function Tour({ kind, refId }: { kind: TourKind | null; refId?: s
         aria-label={s.t}
         className={
           sheet
-            ? "fixed inset-x-0 bottom-0 z-[91] max-h-[60dvh] overflow-y-auto rounded-t-2xl border border-edge bg-surface p-5 pb-[max(1.25rem,env(safe-area-inset-bottom))] shadow-2xl"
-            : "fixed z-[91] w-[min(92vw,360px)] rounded-2xl border border-edge bg-surface p-5 shadow-2xl"
+            ? "fixed inset-x-0 bottom-0 z-[91] max-h-[60dvh] overflow-y-auto rounded-t-md border border-edge bg-surface p-5 pb-[max(1.25rem,env(safe-area-inset-bottom))] shadow-e2"
+            : "fixed z-[91] w-[min(92vw,360px)] rounded-md border border-edge bg-surface p-5 shadow-e2"
         }
         style={cardStyle}
         data-testid="tour-step"
@@ -173,8 +173,8 @@ export default function Tour({ kind, refId }: { kind: TourKind | null; refId?: s
         data-anchor={anchor}
         data-mode={placement.mode}
       >
-        <p className="t5 font-semibold uppercase tracking-widest text-text">{`${step + 1} / ${total}`}</p>
-        <h3 className="mt-1 d4 font-semibold">{s.t}</h3>
+        <p className="t6 tnum text-text-muted">{`${step + 1} / ${total}`}</p>
+        <h3 className="d4 mt-1">{s.t}</h3>
         <p className="t3 measure-lede mt-2 text-text-muted">{s.b}</p>
         <div className="mt-4 flex flex-wrap items-center justify-between gap-2">
           <button onClick={() => finish("tour_skip")} className="t3 text-text-muted hover:text-text" data-testid="tour-skip">
@@ -182,19 +182,19 @@ export default function Tour({ kind, refId }: { kind: TourKind | null; refId?: s
           </button>
           <div className="flex flex-wrap justify-end gap-2">
             {step > 0 && (
-              <button onClick={() => go(step - 1)} className="rounded-md border border-edge px-3 py-1.5 t3">
+              <button onClick={() => go(step - 1)} className="t3 rounded-sm border border-edge px-3 py-1.5 hover:bg-surface-sunken">
                 Voltar
               </button>
             )}
             {more && (
-              <button onClick={() => go(step + 1)} className="rounded-md border border-edge px-3 py-1.5 t3 text-text" data-testid="tour-more">
+              <button onClick={() => go(step + 1)} className="t3 rounded-sm border border-edge px-3 py-1.5 text-text hover:bg-surface-sunken" data-testid="tour-more">
                 Ver todos os diferenciais
               </button>
             )}
             <button
               data-testid="tour-next"
               onClick={() => (last ? finish("tour_done") : go(step + 1))}
-              className="rounded-md bg-accent px-4 py-1.5 t3 font-medium text-accent-ink"
+              className="t3 rounded-sm bg-brand-solid px-4 py-1.5 font-medium text-brand-ink transition-[filter] hover:brightness-95"
             >
               {last ? "Entendi" : "Próximo"}
             </button>

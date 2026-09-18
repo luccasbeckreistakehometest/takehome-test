@@ -40,11 +40,11 @@ export default function GlobalSearch() {
 
   return (
     <div
-      className="fixed inset-0 z-[60] flex items-start justify-center bg-black/60 pt-24"
+      className="fixed inset-0 z-[60] flex items-start justify-center scrim pt-24"
       onClick={() => setOpen(false)}
     >
       <div
-        className="w-full max-w-lg rounded-xl border border-edge bg-surface shadow-2xl"
+        className="w-full max-w-lg rounded-xl border border-edge bg-surface shadow-e2"
         onClick={(e) => e.stopPropagation()}
       >
         <input

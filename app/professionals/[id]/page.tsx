@@ -402,7 +402,7 @@ function PortfolioGallery({ professionalId }: { professionalId: string }) {
                   await api(`/api/professional-assets/${asset.id}`, { method: "DELETE" });
                   load();
                 }}
-                className="absolute right-1 top-1 hidden rounded bg-black/70 px-1.5 t5 text-white group-hover:block"
+                className="absolute right-1 top-1 hidden rounded scrim px-1.5 t5 text-white group-hover:block"
               >
                 ✕
               </button>

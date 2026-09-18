@@ -212,9 +212,9 @@ export function ApprovalLinkDialog({
 }) {
   const [clientId, setClientId] = useState(defaultClientId || clients[0]?.id || "");
   return (
-    <div className="fixed inset-0 z-[70] flex items-end justify-center bg-black/40 p-4 sm:items-center" onClick={onClose}>
+    <div className="fixed inset-0 z-[70] flex items-end justify-center scrim p-4 sm:items-center" onClick={onClose}>
       <div
-        className="max-h-[90vh] w-full max-w-lg overflow-y-auto rounded-2xl border border-edge bg-surface p-5 shadow-2xl"
+        className="max-h-[90vh] w-full max-w-lg overflow-y-auto rounded-2xl border border-edge bg-surface p-5 shadow-e2"
         onClick={(e) => e.stopPropagation()}
         data-testid="approval-link-dialog"
       >

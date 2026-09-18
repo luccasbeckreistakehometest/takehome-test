@@ -104,10 +104,10 @@ export default function OnboardingModal({
   const isLast = step === flow.steps.length - 1;
 
   return (
-    <div className="fixed inset-0 z-[80] grid place-items-center bg-black/50 p-4 backdrop-blur-sm" data-testid="welcome">
-      <div className="w-full max-w-lg animate-pop-in rounded-2xl border border-edge bg-surface p-6 shadow-2xl [transform-origin:center]">
+    <div className="scrim fixed inset-0 z-[80] grid place-items-center p-4" data-testid="welcome">
+      <div className="animate-pop-in w-full max-w-lg rounded-md border border-edge bg-surface p-6 shadow-e2">
         <div className="mb-4 flex items-center justify-between">
-          <p className="t5 font-semibold uppercase tracking-widest text-text">{flow.title}</p>
+          <p className="t6 text-text-muted">{flow.title}</p>
           <button onClick={() => close("skip")} aria-label="Fechar" className="text-text-muted transition-colors hover:text-text">
             <Icon name="x" size={18} />
           </button>
@@ -116,7 +116,7 @@ export default function OnboardingModal({
         {showLogin && <WelcomeLogin />}
 
         <div className="flex gap-4">
-          <span className="grid size-12 shrink-0 place-items-center rounded-xl bg-surface-sunken text-text">
+          <span className="grid size-12 shrink-0 place-items-center rounded-sm bg-surface-sunken text-text">
             <Icon name={current.icon} size={24} />
           </span>
           <div>

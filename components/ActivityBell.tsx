@@ -72,7 +72,7 @@ export default function ActivityBell({
       {open && (
         <>
           <div className="fixed inset-0 z-[60]" onClick={() => setOpen(false)} />
-          <div className="fixed right-4 top-16 z-[70] max-h-96 w-80 overflow-y-auto rounded-xl border border-edge bg-surface p-2 shadow-2xl animate-pop-in [transform-origin:top_right]">
+          <div className="fixed right-4 top-16 z-[70] max-h-96 w-80 overflow-y-auto rounded-xl border border-edge bg-surface p-2 shadow-e2 animate-pop-in [transform-origin:top_right]">
           {items.length === 0 ? (
             <p className="p-3 t3 text-text-muted">Nada por aqui ainda.</p>
           ) : (

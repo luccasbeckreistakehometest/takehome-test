@@ -48,7 +48,7 @@ export default function UserMenu({ name, role, showPlans = true }: { name: strin
         <div
           id="user-menu"
           role="menu"
-          className="absolute right-0 top-10 z-50 w-56 rounded-xl border border-edge bg-surface p-1.5 t3 shadow-2xl"
+          className="absolute right-0 top-10 z-50 w-56 rounded-xl border border-edge bg-surface p-1.5 t3 shadow-e2"
         >
           <p className="truncate px-3 py-1.5 t5 text-text-muted">{name}</p>
           <Link role="menuitem" href="/conta" onClick={() => setOpen(false)} className="flex items-center gap-2 rounded-md px-3 py-2 hover:bg-surface-sunken">

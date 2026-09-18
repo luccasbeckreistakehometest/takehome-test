@@ -212,7 +212,7 @@ export default function ApprovalLinkView({
               {t.allDone}
             </p>
           ) : (
-            <div className="fixed inset-x-0 bottom-0 z-30 border-t border-edge bg-background/95 p-3 backdrop-blur">
+            <div className="fixed inset-x-0 bottom-0 z-30 border-t border-edge bg-canvas p-3 shadow-e3">
               <div className="mx-auto max-w-xl">
                 <button
                   type="button"
