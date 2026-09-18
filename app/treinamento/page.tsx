@@ -8,7 +8,7 @@ const TRACKS = [
     steps: [
       "Cadastre o cliente com o briefing mais completo possível (aba Briefing) — ele alimenta toda a IA.",
       "Rode a Estratégia & Deep Dive: a IA pesquisa o mercado real e define personas, concorrentes, apostas e metas.",
-      "Use o ✦ Kit completo para gerar estratégia → campanha → ROI → identidade → social → landing page em um clique.",
+      "Use o Kit completo para gerar estratégia → campanha → ROI → identidade → social → landing page em um clique.",
       "Rode o Radar de mercado com frequência (ideal: diário) — as próximas gerações se adaptam ao que mudou.",
       "Crie Demandas para produções (foto/design), rode o Match por IA e vincule o profissional com melhor fit.",
       "Combine o pagamento com o profissional antes da produção e marque na demanda — a plataforma registra o status, o dinheiro passa direto entre vocês.",

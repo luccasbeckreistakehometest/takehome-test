@@ -542,14 +542,14 @@ export function PageHeader({
   actions?: ReactNode;
 }) {
   return (
-    <header className="mb-8 flex flex-wrap items-end justify-between gap-4 border-b border-edge pb-5">
+    <div className="mb-8 flex flex-wrap items-end justify-between gap-4 border-b border-edge pb-5">
       <div className="min-w-0">
         {eyebrow && <p className="t6 text-text-muted">{eyebrow}</p>}
         <h1 className="d3 mt-2">{title}</h1>
         {lede && <p className="t3 measure-lede mt-2 text-text-muted">{lede}</p>}
       </div>
       {actions && <div className="flex flex-wrap items-center gap-2">{actions}</div>}
-    </header>
+    </div>
   );
 }
 

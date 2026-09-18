@@ -60,7 +60,7 @@ export default function UserMenu({ name, role, showPlans = true }: { name: strin
             </Link>
           ) : showPlans ? (
             <Link role="menuitem" href="/plans" onClick={() => setOpen(false)} className="flex items-center gap-2 rounded-md px-3 py-2 hover:bg-surface-sunken">
-              <Icon name="sparkle" size={15} /> Planos & coins
+              Planos & coins
             </Link>
           ) : null}
           {role !== "admin" && (
@@ -74,7 +74,7 @@ export default function UserMenu({ name, role, showPlans = true }: { name: strin
               className="flex w-full items-center gap-2 rounded-md px-3 py-2 text-left hover:bg-surface-sunken"
               data-testid="tour-restart"
             >
-              <Icon name="sparkle" size={15} /> Refazer tour
+              Refazer tour
             </button>
           )}
           <Link role="menuitem" href="/contato" onClick={() => setOpen(false)} className="flex items-center gap-2 rounded-md px-3 py-2 hover:bg-surface-sunken">

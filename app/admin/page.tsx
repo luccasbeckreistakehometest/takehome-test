@@ -115,7 +115,7 @@ export default function AdminPage() {
     { label: "Usuários", value: String(data.totals.users), icon: "users" },
     { label: "Clientes", value: String(data.totals.clients), icon: "briefcase" },
     { label: "Profissionais", value: String(data.totals.professionals), icon: "user" },
-    { label: "Entregáveis", value: String(data.totals.generations), icon: "sparkle" },
+    { label: "Entregáveis", value: String(data.totals.generations), icon: "layers" },
     { label: "Demandas pagas", value: String(data.totals.paidProjects), icon: "check" },
     { label: "Receita rastreada", value: brl(data.totals.trackedRevenue), icon: "money" },
     { label: "Tours concluídos", value: `${data.onboarding.toursCompleted}/${data.onboarding.toursStarted}`, icon: "target" },

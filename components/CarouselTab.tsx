@@ -119,7 +119,7 @@ export default function CarouselTab({ client }: { client: Client }) {
         {note && <p className="t3 text-text">{note}</p>}
         <div className="flex flex-wrap items-center gap-2">
           <Button onClick={() => create("ai")} disabled={busy !== "" || form.topic.trim().length < 2 || !data.aiAvailable} data-testid="carousel-generate">
-            <Icon name="sparkle" size={14} /> {busy === "ai" ? "Escrevendo os slides..." : "Gerar com IA · 3 coins"}
+            {busy === "ai" ? "Escrevendo os slides..." : "Gerar com IA · 3 coins"}
           </Button>
           <Button variant="ghost" onClick={() => create("manual")} disabled={busy !== "" || form.topic.trim().length < 2} data-testid="carousel-manual">
             <Icon name="edit" size={14} /> Escrever eu mesmo

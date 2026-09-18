@@ -105,7 +105,7 @@ export default function PrintGenerationPage({
       >
         Salvar como PDF
       </button>
-      <header className="doc-cover">
+      <div className="doc-cover">
         <div className="doc-rule" />
         <p className="t6 mt-4 text-n-500">{agencyName}</p>
         <h1 className="d2 mt-3" style={{ ["--soft" as string]: 20 }}>
@@ -121,7 +121,7 @@ export default function PrintGenerationPage({
             year: "numeric",
           })}
         </p>
-      </header>
+      </div>
       <div className="mt-10">{content}</div>
     </article>
   );

@@ -111,7 +111,7 @@ export default async function RootLayout({
         <div className="flex min-h-dvh">
           {isAgency && <AppRail brandName={brand.name} />}
           <div className="flex min-h-dvh min-w-0 flex-1 flex-col">
-            <header className="no-print sticky top-0 z-40 border-b border-rule bg-canvas">
+            <header className="app-chrome no-print sticky top-0 z-40 border-b border-rule bg-canvas">
               <div className="flex h-14 items-center gap-2 px-4">
                 {isAgency && <RailToggle />}
                 <Link

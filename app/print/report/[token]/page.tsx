@@ -49,7 +49,7 @@ export default function PrintMonthlyReportPage({ params }: { params: Promise<{ t
         Salvar como PDF
       </button>
 
-      <header className="doc-cover">
+      <div className="doc-cover">
         <div className="doc-rule" />
         <p className="t6 mt-4 text-n-500">{payload.agency.name}</p>
         <h1 className="d2 mt-3" style={{ ["--soft" as string]: 20 }} data-testid="print-title">
@@ -66,7 +66,7 @@ export default function PrintMonthlyReportPage({ params }: { params: Promise<{ t
             year: "numeric",
           })}
         </p>
-      </header>
+      </div>
 
       <div className="mt-10">
         <MonthlyReportView data={payload.report.data} summary={payload.report.summary} lang={lang} />

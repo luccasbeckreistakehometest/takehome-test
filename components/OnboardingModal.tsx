@@ -26,7 +26,7 @@ const FLOWS: Record<Role, { title: string; steps: Step[] }> = {
     title: "Vamos configurar sua marca",
     steps: [
       { icon: "clipboard", title: "Complete o briefing", body: "Conte sobre o seu negócio: é isso que alimenta toda a IA — estratégia, campanhas e materiais sob medida." },
-      { icon: "sparkle", title: "Gere seu primeiro kit", body: "Com um clique a IA cria estratégia, plano de campanha, ROI, identidade e calendário social." },
+      { icon: "layers", title: "Gere seu primeiro kit", body: "Com um clique a IA cria estratégia, plano de campanha, ROI, identidade e calendário social." },
       { icon: "message", title: "Fale com a agência", body: "Aprove entregas, peça produções e acompanhe reuniões pelo seu portal." },
     ],
   },

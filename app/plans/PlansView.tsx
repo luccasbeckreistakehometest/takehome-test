@@ -413,7 +413,7 @@ export default function PlansView() {
       <Card>
         <SectionTitle>
           <span className="flex items-center gap-1.5">
-            <Icon name="sparkle" size={15} /> Coins avulsos
+            Coins avulsos
           </span>
         </SectionTitle>
         <p className="mb-3 t3 text-text-muted">

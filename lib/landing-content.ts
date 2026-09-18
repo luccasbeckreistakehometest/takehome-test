@@ -91,12 +91,12 @@ export const GENERAL: LandingConfig = {
         { icon: "users", t: "Marketplace de profissionais", d: "Match por IA de fotógrafos e designers, com o status de cada etapa até a aprovação." },
         { icon: "message", t: "WhatsApp & Instagram", d: "Pela API oficial: listas, agendamento e um atendente que rascunha respostas no tom da marca." },
         { icon: "chart", t: "Relatório mensal & vendas", d: "Relatório do mês com leitura da IA, pulso e NPS do cliente, vendas reais (GA4, Meta Ads, loja) e o que funciona em cada marca." },
-        { icon: "sparkle", t: "Com a marca da agência", d: "Logo, cores e nome da agência para os clientes e profissionais que ela convida." },
+        { icon: "layers", t: "Com a marca da agência", d: "Logo, cores e nome da agência para os clientes e profissionais que ela convida." },
       ],
       howTitle: "Do briefing ao pronto, em 3 passos",
       how: [
         { icon: "clipboard", t: "Conte o briefing", d: "Uma vez só. É o que alimenta toda a IA da plataforma." },
-        { icon: "sparkle", t: "A IA cria", d: "Estratégia, campanha, identidade e social — com pesquisa real e atual." },
+        { icon: "layers", t: "A IA cria", d: "Estratégia, campanha, identidade e social — com pesquisa real e atual." },
         { icon: "check", t: "Aprove e publique", d: "Revise, ajuste e coloque no ar. Conecte profissionais e meça o retorno." },
       ],
       showcase: {
@@ -174,12 +174,12 @@ export const GENERAL: LandingConfig = {
         { icon: "users", t: "Professionals marketplace", d: "AI match of photographers and designers, with the status of every step up to approval." },
         { icon: "message", t: "WhatsApp & Instagram", d: "Through the official API: lists, scheduling and an attendant that drafts replies in the brand's tone." },
         { icon: "chart", t: "Monthly report & sales", d: "Monthly report with an AI summary, client pulse and NPS, real sales (GA4, Meta Ads, store) and what works for each brand." },
-        { icon: "sparkle", t: "Your agency's brand", d: "Logo, colours and agency name for the clients and professionals it invites." },
+        { icon: "layers", t: "Your agency's brand", d: "Logo, colours and agency name for the clients and professionals it invites." },
       ],
       howTitle: "From brief to done, in 3 steps",
       how: [
         { icon: "clipboard", t: "Share the brief", d: "Just once. It powers all the AI in the platform." },
-        { icon: "sparkle", t: "AI creates", d: "Strategy, campaign, identity and social — with real, current research." },
+        { icon: "layers", t: "AI creates", d: "Strategy, campaign, identity and social — with real, current research." },
         { icon: "check", t: "Approve & publish", d: "Review, tweak and go live. Connect professionals and measure the return." },
       ],
       showcase: {
@@ -258,7 +258,7 @@ export const AGENCY: LandingConfig = {
       benefitsTitle: "A sua operação inteira, potencializada",
       benefitsSub: "Da captação à retenção, tudo num lugar só — com a sua identidade.",
       benefits: [
-        { icon: "sparkle", t: "Kit completo por cliente", d: "Estratégia, campanha, ROI, identidade e social gerados de uma vez." },
+        { icon: "layers", t: "Kit completo por cliente", d: "Estratégia, campanha, ROI, identidade e social gerados de uma vez." },
         { icon: "palette", t: "Com a sua marca", d: "Seu logo, suas cores e o nome da agência. O cliente enxerga a sua marca." },
         { icon: "users", t: "Rede de profissionais", d: "Match por IA com portfólio e histórico. Distribua produção sem folha inchada." },
         { icon: "link", t: "Aprovação sem login", d: "O cliente aprova pelo celular, num link. Pedido de ajuste chega na hora, com histórico." },
@@ -352,7 +352,7 @@ export const AGENCY: LandingConfig = {
       benefitsTitle: "Your entire operation, supercharged",
       benefitsSub: "From acquisition to retention, all in one place — with your identity.",
       benefits: [
-        { icon: "sparkle", t: "Full kit per client", d: "Strategy, campaign, ROI, identity and social generated at once." },
+        { icon: "layers", t: "Full kit per client", d: "Strategy, campaign, ROI, identity and social generated at once." },
         { icon: "palette", t: "Your brand", d: "Your logo, colours and agency name. Clients see your brand." },
         { icon: "users", t: "Professionals network", d: "AI match on portfolio and track record. Distribute production without bloating payroll." },
         { icon: "link", t: "Approval without a login", d: "The client approves on their phone, from a link. Change requests arrive right away, with history." },
@@ -466,7 +466,7 @@ export const CLIENT: LandingConfig = {
       howTitle: "Simples assim",
       how: [
         { icon: "clipboard", t: "Preencha o briefing", d: "Conte sobre o seu negócio — leva minutos." },
-        { icon: "sparkle", t: "Gere o kit", d: "Estratégia, campanha, identidade e social num clique." },
+        { icon: "layers", t: "Gere o kit", d: "Estratégia, campanha, identidade e social num clique." },
         { icon: "check", t: "Publique e cresça", d: "Edite no seu tom, publique e acompanhe o resultado." },
       ],
       showcase: {
@@ -530,7 +530,7 @@ export const CLIENT: LandingConfig = {
       howTitle: "It's that simple",
       how: [
         { icon: "clipboard", t: "Fill the brief", d: "Tell us about your business — takes minutes." },
-        { icon: "sparkle", t: "Generate the kit", d: "Strategy, campaign, identity and social in a click." },
+        { icon: "layers", t: "Generate the kit", d: "Strategy, campaign, identity and social in a click." },
         { icon: "check", t: "Publish and grow", d: "Edit in your tone, publish and track results." },
       ],
       showcase: {
@@ -594,7 +594,7 @@ export const PRO: LandingConfig = {
         { icon: "check", t: "Entregas com marcações na imagem", d: "Comentários fixados no ponto da imagem + nota de IA. O que pedem é o que volta." },
         { icon: "chart", t: "Seus ganhos e seu elo num lugar só", d: "O que tem a receber, o que já foi pago e o seu elo (Bronze → Platina), que sobe com entregas bem avaliadas." },
         { icon: "user", t: "Perfil e portfólio", d: "Sua vitrine hospedada, sempre trabalhando por você." },
-        { icon: "sparkle", t: "Candidaturas com status claro", d: "Mande um pitch curto e acompanhe: aguardando análise, aceita ou recusada." },
+        { icon: "layers", t: "Candidaturas com status claro", d: "Mande um pitch curto e acompanhe: aguardando análise, aceita ou recusada." },
       ],
       howTitle: "Comece em minutos",
       how: [
@@ -653,7 +653,7 @@ export const PRO: LandingConfig = {
         { icon: "check", t: "Deliveries with notes on the image", d: "Comments pinned to the spot on the image + AI score. What they ask for is what comes back." },
         { icon: "chart", t: "Your earnings and tier in one place", d: "What you're owed, what's been paid and your tier (Bronze → Platinum), which rises with well-rated deliveries." },
         { icon: "user", t: "Profile & portfolio", d: "Your hosted showcase, always working for you." },
-        { icon: "sparkle", t: "Applications with a clear status", d: "Send a short pitch and follow it: under review, accepted or declined." },
+        { icon: "layers", t: "Applications with a clear status", d: "Send a short pitch and follow it: under review, accepted or declined." },
       ],
       howTitle: "Start in minutes",
       how: [

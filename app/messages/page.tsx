@@ -375,7 +375,7 @@ function Compose({
 
       <Card>
         <SectionTitle>
-          <span className="flex items-center gap-1.5"><Icon name="sparkle" size={15} /> Rascunho por IA</span>
+          <span className="flex items-center gap-1.5">Rascunho por IA</span>
         </SectionTitle>
         <div className="space-y-3">
           <div>
@@ -388,7 +388,7 @@ function Compose({
             />
           </div>
           <Button variant="ghost" onClick={draft} disabled={drafting || !goal.trim()}>
-            {drafting ? <Spinner label="Redigindo..." /> : <><Icon name="sparkle" size={15} /> Gerar rascunho</>}
+            {drafting ? <Spinner label="Redigindo..." /> : <>Gerar rascunho</>}
           </Button>
           {variants.length > 0 && (
             <div className="space-y-2">

@@ -6,7 +6,6 @@ import { fmtCurrency, fmtNum, useUiLang, type UiLang } from "@/lib/i18n";
 import { currentMonth, shiftMonth } from "@/lib/report-aggregate";
 import { groupLabel, type Highlight, type LearningDimension, type Learnings, type LearningsReading, type ThinReason } from "@/lib/learnings-rules";
 import { Button, Card, ErrorBox, SectionTitle, Spinner, Tag } from "./ui";
-import { Icon } from "./icons";
 
 type ClickRow = { key: string; posts: number; clicks: number; avg: number };
 type Payload = {
@@ -91,7 +90,7 @@ export function LearningsSummary({ learnings: l, reading, lang, compact = false 
       {reading && reading.lines.length > 0 && (
         <div className="rounded-md border border-edge bg-surface-sunken p-3 t3" data-testid="learnings-reading">
           <p className="mb-1 flex items-center gap-2 t6 text-text-muted">
-            <Icon name="sparkle" size={13} /> <span>Leitura da IA</span>
+            <span>Leitura da IA</span>
             {reading.demo && <Tag>exemplo — sem chave de IA</Tag>}
           </p>
           <ul className="space-y-1">
@@ -204,7 +203,7 @@ export default function LearningsCard({ clientId, canGenerate = true }: { client
           {data.learnings.hasEnoughData && canGenerate && (!data.reading || data.readingStale) && (
             <div className="flex flex-wrap items-center gap-2">
               <Button variant="ghost" className="!px-3 !py-1.5 t5" onClick={generate} disabled={busy} data-testid="learnings-generate">
-                <Icon name="sparkle" size={13} /> {busy ? "Lendo os números..." : data.readingStale ? "Atualizar leitura da IA" : "Gerar leitura da IA (3 linhas)"}
+                {busy ? "Lendo os números..." : data.readingStale ? "Atualizar leitura da IA" : "Gerar leitura da IA (3 linhas)"}
               </Button>
               {data.readingStale && <span className="t5 text-text-muted">os números mudaram desde a última leitura</span>}
             </div>

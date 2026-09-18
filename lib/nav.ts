@@ -18,7 +18,7 @@ export const AGENCY_PRIMARY_NAV: NavItem[] = [
 export const AGENCY_MORE_NAV: NavItem[] = [
   { href: "/professionals", label: "Profissionais", icon: "users", tour: "nav-professionals" },
   { href: "/ideas", label: "Ideias", icon: "lightbulb", tour: "nav-ideas" },
-  { href: "/assistant", label: "Assistente", icon: "sparkle", tour: "nav-assistant" },
+  { href: "/assistant", label: "Assistente", icon: "message", tour: "nav-assistant" },
   { href: "/treinamento", label: "Treinamento", icon: "doc", tour: "nav-training" },
   { href: "/plans", label: "Planos", icon: "money", tour: "nav-plans" },
 ];

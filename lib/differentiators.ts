@@ -134,7 +134,7 @@ export const STRIP_ITEMS: StripItem[] = [
   },
   {
     anchor: "diff-brand-voice",
-    icon: "sparkle",
+    icon: "layers",
     title: "Guardião da voz da marca",
     body: "Antes de agendar um post ou enviar uma resposta, um clique checa tom, termos proibidos, CTA, hashtags e alegações sem fonte — e reescreve no tom.",
     href: "/calendar",

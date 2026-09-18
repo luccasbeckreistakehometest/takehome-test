@@ -87,7 +87,7 @@ export default function BrandVoiceCheck({
     <div className="space-y-2" data-testid="voice-check" data-verdict={result && !stale ? result.verdict : "none"}>
       <div className="flex flex-wrap items-center gap-2">
         <Button variant="ghost" className="!px-2.5 !py-1 t5" onClick={check} disabled={busy !== null || !text.trim()} data-testid="voice-check-run">
-          <Icon name="sparkle" size={13} /> {busy === "check" ? "Checando..." : result && !stale ? "Checar de novo" : "Checar voz da marca"}
+          {busy === "check" ? "Checando..." : result && !stale ? "Checar de novo" : "Checar voz da marca"}
         </Button>
         {onRewrite && (
           <Button variant="ghost" className="!px-2.5 !py-1 t5" onClick={rewrite} disabled={busy !== null || !text.trim()} data-testid="voice-rewrite">

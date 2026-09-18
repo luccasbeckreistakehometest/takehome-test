@@ -943,12 +943,14 @@ hr {
     print-color-adjust: exact;
     -webkit-print-color-adjust: exact;
   }
+  /* A casca some por CLASSE, não por tag: a capa da peça era um <header> e a
+     regra por tag apagava a capa do documento no papel. */
   .no-print,
-  nav,
-  header,
-  footer,
+  .app-chrome,
   .app-rail,
-  .fab {
+  .fab,
+  body > footer,
+  nav:not(.doc nav) {
     display: none !important;
   }
   main {

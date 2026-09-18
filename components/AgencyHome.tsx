@@ -90,7 +90,7 @@ export default function AgencyHome() {
     <div>
       <OnboardingModal role="agency" />
 
-      <header className="flex flex-wrap items-end justify-between gap-4 pb-6">
+      <div className="flex flex-wrap items-end justify-between gap-4 pb-6">
         <div>
           <p className="t6 text-text-muted">Painel</p>
           <h1 className="d3 mt-2">Hoje</h1>
@@ -103,7 +103,7 @@ export default function AgencyHome() {
         <Link href="/clients/new" className={buttonClass("primary")}>
           Novo cliente
         </Link>
-      </header>
+      </div>
 
       {data.clients.length === 0 ? (
         <div data-testid="agency-empty-state">

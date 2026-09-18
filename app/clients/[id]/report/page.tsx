@@ -157,14 +157,14 @@ export default function ClientMonthlyReportPage({ params }: { params: Promise<{ 
         </div>
       ) : (
         <article className="doc mt-10 px-8 py-10 sm:px-12">
-          <header className="doc-cover">
+          <div className="doc-cover">
             <div className="doc-rule" />
             <p className="t6 mt-4 text-n-500">Relatório mensal</p>
             <h2 className="d2 mt-3" style={{ ["--soft" as string]: 20 }}>
               {payload.client.name}
             </h2>
             <p className="t1 tnum mt-2 text-n-500">{monthTitle(month, lang)}</p>
-          </header>
+          </div>
           <div className="mt-10">
             <MonthlyReportView data={payload.data} summary={payload.report?.summary ?? null} lang={lang} />
           </div>

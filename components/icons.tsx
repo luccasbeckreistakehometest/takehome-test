@@ -11,7 +11,8 @@
 //     texto ao lado.
 //
 // Nenhum ícone de "IA": sem varinha, sem cérebro. Ação de IA é dita por verbo.
-// `sparkle` continua no sprite só enquanto as 20 chamadas antigas existirem
+// `sparkle` ficou sem nenhuma chamada: a ação de IA é dita por verbo (§8). O
+// glifo sai do sprite para não voltar por hábito.
 // (bloco 3 da §13 as remove) — não use em código novo.
 import type { SVGProps } from "react";
 
@@ -75,7 +76,6 @@ const PATHS = {
   plus: <path d="M12 5v14M5 12h14" />,
   check: <path d="m5 13 4 4L19 7" />,
   x: <path d="M6 6l12 12M18 6 6 18" />,
-  sparkle: <path d="M12 3l1.9 5.6L19.5 10l-5.6 1.4L12 17l-1.9-5.6L4.5 10l5.6-1.4L12 3Z" />,
   message: <path d="M21 15a2 2 0 0 1-2 2H8l-5 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2Z" />,
   whatsapp: (
     <>

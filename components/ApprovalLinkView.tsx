@@ -138,7 +138,7 @@ export default function ApprovalLinkView({
 
   return (
     <div className="mx-auto max-w-xl space-y-5 pb-28" style={{ ["--accent" as string]: agency.accentColor }} data-no-translate data-testid="approval-link-page">
-      <header className="flex items-center gap-3">
+      <div className="flex items-center gap-3">
         {agency.logoUrl ? (
           // eslint-disable-next-line @next/next/no-img-element
           <img src={agency.logoUrl} alt={agency.name} className="size-11 rounded-lg object-contain" />
@@ -153,7 +153,7 @@ export default function ApprovalLinkView({
           </p>
           {agency.tagline && <p className="truncate t5 text-text-muted">{agency.tagline}</p>}
         </div>
-      </header>
+      </div>
 
       {expired ? (
         <section className="rounded-md border border-edge bg-surface p-6 text-center" data-testid="approval-expired">

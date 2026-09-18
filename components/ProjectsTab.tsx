@@ -167,7 +167,7 @@ export default function ProjectsTab({
                   "Analisando o plano..."
                 ) : (
                   <>
-                    <Icon name="sparkle" size={15} /> Gerar demandas do plano (IA)
+                    Gerar demandas do plano (IA)
                   </>
                 )}
               </Button>
@@ -181,7 +181,7 @@ export default function ProjectsTab({
                 className="max-w-md"
               />
               <Button variant="ghost" onClick={() => suggest(true)} disabled={suggesting || !idea.trim()}>
-                <Icon name="sparkle" size={15} /> Escrever brief com IA
+                Escrever brief com IA
               </Button>
             </div>
             {error && <ErrorBox message={error} />}
@@ -725,7 +725,7 @@ function ProjectDetail({ projectId, onBack }: { projectId: string; onBack: () =>
                   "Analisando fit..."
                 ) : (
                   <>
-                    <Icon name="sparkle" size={15} /> Match por IA
+                    Match por IA
                   </>
                 )}
               </Button>
@@ -967,7 +967,7 @@ function ProjectDetail({ projectId, onBack }: { projectId: string; onBack: () =>
                 "Gerando 4 conceitos..."
               ) : (
                 <>
-                  <Icon name="sparkle" size={15} /> Gerar 4 conceitos (grátis)
+                  Gerar 4 conceitos (grátis)
                 </>
               )}
             </Button>

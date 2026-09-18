@@ -49,7 +49,7 @@ export default function LegalPage({ doc }: { doc: LegalDoc }) {
     // número, e o numeral fica pendurado fora da coluna de texto.
     <article lang={pt ? "pt-BR" : "en"} className="full-bleed" data-no-translate>
       <div className="ed sec">
-        <header className="ed-grid">
+        <div className="ed-grid">
           <div className="c8">
             <p className="t6 text-text-muted">{pt ? "Documento legal" : "Legal document"}</p>
             <h1 className="d2 mt-4">{doc.title}</h1>
@@ -58,7 +58,7 @@ export default function LegalPage({ doc }: { doc: LegalDoc }) {
             </p>
             <p className="t1 prose-doc mt-6">{doc.intro}</p>
           </div>
-        </header>
+        </div>
 
         <div className="ed-grid mt-14 border-t border-edge pt-10">
           {/* Corpo do documento */}

@@ -111,7 +111,7 @@ export default function InvoicePayView({
       data-state={current}
     >
       <div className="doc-rule" />
-      <header className="mt-4 flex items-center gap-3">
+      <div className="mt-4 flex items-center gap-3">
         {agency.logoUrl ? (
           // eslint-disable-next-line @next/next/no-img-element
           <img src={agency.logoUrl} alt={agency.name} className="size-9 rounded-xs object-contain" />
@@ -120,7 +120,7 @@ export default function InvoicePayView({
           <p className="t6 truncate text-n-500">{agency.name}</p>
           {agency.tagline && <p className="t5 truncate text-n-400">{agency.tagline}</p>}
         </div>
-      </header>
+      </div>
 
       {current === "void" ? (
         <h1 className="d3 mt-10">{t.voidTitle}</h1>

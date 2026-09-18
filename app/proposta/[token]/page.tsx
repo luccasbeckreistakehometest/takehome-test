@@ -101,7 +101,7 @@ export default function PublicProposalPage({ params }: { params: Promise<{ token
       style={brandStyle(agency.accentColor) as React.CSSProperties}
       data-testid="proposal-page"
     >
-      <header className="doc-cover">
+      <div className="doc-cover">
         <div className="doc-rule" />
         <div className="mt-4 flex items-center gap-3">
           {agency.hasLogo && agency.logoUrl ? (
@@ -116,7 +116,7 @@ export default function PublicProposalPage({ params }: { params: Promise<{ token
           {c.headline}
         </h1>
         <p className="t1 prose-doc mt-5 whitespace-pre-line">{c.pitch}</p>
-      </header>
+      </div>
 
       {data.state === "expired" && (
         <p className="t3 mt-8 border-l-2 border-caution bg-caution-wash px-4 py-3">

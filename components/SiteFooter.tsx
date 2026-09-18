@@ -7,7 +7,7 @@ export default function SiteFooter({ brandName, tagline }: { brandName: string; 
   const support = supportChannels();
   const year = new Date().getFullYear();
   return (
-    <footer className="border-t border-edge py-6 t5 text-text-muted">
+    <footer className="no-print border-t border-rule py-6 t5 text-text-muted">
       <div className="mx-auto flex w-full max-w-6xl flex-col gap-3 px-4 sm:flex-row sm:items-center sm:justify-between">
         <p>
           {brandName} — {tagline}

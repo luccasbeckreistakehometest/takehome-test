@@ -10,7 +10,7 @@ type Mode = { self: boolean; icon: IconName; title: string; body: string; bullet
 const MODES: Mode[] = [
   {
     self: true,
-    icon: "sparkle",
+    icon: "layers",
     title: "Faço eu mesmo",
     body: "Modo autônomo — você no controle, com a IA de copiloto.",
     bullets: [

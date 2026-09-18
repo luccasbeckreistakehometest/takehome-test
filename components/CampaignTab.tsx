@@ -143,7 +143,7 @@ export default function CampaignTab({ client }: { client: Client }) {
           {error && <ErrorBox message={error} />}
           <div className="flex flex-wrap items-center gap-3">
             <Button onClick={generate} disabled={generating || form.channels.length === 0} data-testid="campaign-generate">
-              <Icon name="sparkle" size={15} /> {generating ? "Escrevendo o mês..." : "Gerar campanha de 30 dias"}
+              {generating ? "Escrevendo o mês..." : "Gerar campanha de 30 dias"}
             </Button>
             {generating && <Spinner label="A IA está planejando as semanas e escrevendo cada post (2-4 min)..." />}
           </div>
