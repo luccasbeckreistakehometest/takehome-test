@@ -1,6 +1,5 @@
 import Link from "next/link";
 import ContactForm from "@/components/ContactForm";
-import { Card } from "@/components/ui";
 import { supportChannels } from "@/lib/legal";
 
 // Página de contato. E-mail e WhatsApp de suporte só aparecem quando
@@ -9,50 +8,84 @@ export default function ContactPage({ lang, topic }: { lang: "pt" | "en"; topic?
   const pt = lang === "pt";
   const support = supportChannels();
   return (
-    <div className="mx-auto max-w-2xl space-y-6 py-6">
-      <div>
-        <h1 className="font-[family-name:var(--font-display)] text-3xl font-bold tracking-tight">
-          {pt ? "Fale com a gente" : "Talk to us"}
-        </h1>
-        <p className="mt-2 text-muted">
-          {pt
-            ? "Dúvidas, problemas de acesso, pagamentos ou pedidos sobre os seus dados. Respondemos por e-mail."
-            : "Questions, sign-in problems, payments or requests about your data. We answer by email."}
-        </p>
-        {!pt && <p className="mt-1 text-xs text-muted">The form is in Portuguese; you can write in English.</p>}
-      </div>
-      {(support.email || support.whatsapp) && (
-        <div className="flex flex-wrap gap-3 text-sm">
-          {support.email && (
-            <a href={`mailto:${support.email}`} className="rounded-md border border-edge bg-surface-2 px-3 py-2 hover:border-accent">
-              {support.email}
-            </a>
-          )}
-          {support.whatsapp && (
-            <a
-              href={`https://wa.me/${support.whatsapp}`}
-              target="_blank"
-              rel="noopener noreferrer"
-              className="rounded-md border border-edge bg-surface-2 px-3 py-2 hover:border-accent"
-            >
-              WhatsApp
-            </a>
-          )}
+    // Split doc (8+4): o formulário é o trabalho, os canais diretos são o
+    // trilho. Antes eram três blocos empilhados com o mesmo peso no meio da
+    // página.
+    <div className="full-bleed">
+      <div className="ed sec">
+        <div className="ed-grid">
+          <div className="c7">
+            <p className="t6 text-text-muted">{pt ? "Suporte" : "Support"}</p>
+            <h1 className="d2 mt-4">{pt ? "Fale com a gente" : "Talk to us"}</h1>
+            <p className="t1 measure-lede mt-5 text-text-muted">
+              {pt
+                ? "Dúvidas, problemas de acesso, pagamentos ou pedidos sobre os seus dados. Respondemos por e-mail."
+                : "Questions, sign-in problems, payments or requests about your data. We answer by email."}
+            </p>
+            {!pt && (
+              <p className="t5 mt-2 text-text-muted">
+                The form is in Portuguese; you can write in English.
+              </p>
+            )}
+            <div className="mt-10 border-t border-edge pt-8">
+              <ContactForm initialTopic={topic} />
+            </div>
+          </div>
+
+          <aside className="c4 c-start9">
+            {(support.email || support.whatsapp) && (
+              <section className="border-t border-edge pt-3">
+                <p className="t6 text-text-muted">{pt ? "Canais diretos" : "Direct channels"}</p>
+                <ul className="mt-2">
+                  {support.email && (
+                    <li className="border-b border-rule">
+                      <a
+                        href={`mailto:${support.email}`}
+                        className="t4 block py-2 underline-offset-4 hover:underline"
+                      >
+                        {support.email}
+                      </a>
+                    </li>
+                  )}
+                  {support.whatsapp && (
+                    <li className="border-b border-rule">
+                      <a
+                        href={`https://wa.me/${support.whatsapp}`}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="t4 block py-2 underline-offset-4 hover:underline"
+                      >
+                        WhatsApp
+                      </a>
+                    </li>
+                  )}
+                </ul>
+              </section>
+            )}
+            <section className="mt-8 border-t border-edge pt-3">
+              <p className="t6 text-text-muted">{pt ? "Veja também" : "See also"}</p>
+              <ul className="mt-2">
+                <li className="border-b border-rule">
+                  <Link
+                    href={pt ? "/reembolso" : "/refunds"}
+                    className="t4 block py-2 text-text-muted underline-offset-4 hover:text-text hover:underline"
+                  >
+                    {pt ? "Reembolso e cancelamento" : "Refunds and cancellation"}
+                  </Link>
+                </li>
+                <li className="border-b border-rule">
+                  <Link
+                    href={pt ? "/privacidade" : "/privacy"}
+                    className="t4 block py-2 text-text-muted underline-offset-4 hover:text-text hover:underline"
+                  >
+                    {pt ? "Privacidade" : "Privacy"}
+                  </Link>
+                </li>
+              </ul>
+            </section>
+          </aside>
         </div>
-      )}
-      <Card>
-        <ContactForm initialTopic={topic} />
-      </Card>
-      <p className="text-sm text-muted">
-        {pt ? "Veja também: " : "See also: "}
-        <Link href={pt ? "/reembolso" : "/refunds"} className="text-accent hover:underline">
-          {pt ? "reembolso e cancelamento" : "refunds and cancellation"}
-        </Link>{" "}
-        ·{" "}
-        <Link href={pt ? "/privacidade" : "/privacy"} className="text-accent hover:underline">
-          {pt ? "privacidade" : "privacy"}
-        </Link>
-      </p>
+      </div>
     </div>
   );
 }

@@ -182,7 +182,11 @@ export function LinkText({
   return (
     <a
       className={cx(
-        "text-brand-text underline-offset-2 rounded-xs",
+        // Tinta, não marca: o orçamento de cor da §5.5 dá UM papel à cor da
+        // agência por tela, e esse papel é o botão primário. Um link em prosa
+        // já se distingue pelo sublinhado — pintá-lo de laranja fazia toda
+        // tela com um CTA ter dois "elementos expressivos".
+        "text-text underline-offset-2 rounded-xs decoration-edge hover:decoration-current",
         quiet ? "no-underline hover:underline" : "underline",
         className,
       )}
