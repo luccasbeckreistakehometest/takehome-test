@@ -357,8 +357,8 @@ export default function Gallery() {
             <div key={g.n} className="grid gap-2">
               <p className="t5 text-text-muted">{g.n}</p>
               <div className="grid grid-cols-12 gap-1.5">
-                <div className="h-8 bg-surface-sunken" style={{ gridColumn: `span ${g.a}` }} />
-                <div className="h-8 border border-rule" style={{ gridColumn: `span ${g.b}` }} />
+                <div className="h-8 bg-[var(--n-200)]" style={{ gridColumn: `span ${g.a}` }} />
+                <div className="h-8 border border-edge" style={{ gridColumn: `span ${g.b}` }} />
               </div>
             </div>
           ))}

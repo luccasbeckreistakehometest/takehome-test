@@ -35,7 +35,12 @@
   /* ---------- 2. Papéis — tema claro (§5.2) ------------------------------ */
   --canvas: var(--n-50);
   --surface: var(--n-0);
-  --surface-sunken: var(--n-50);
+  /* A §5.2 dá n-50 ao sunken, igual ao canvas — e aí um campo rebaixado
+     apoiado na página some, junto com o hover de todo botão secundário que não
+     estiver dentro de um painel. n-100 dá um degrau visível contra os dois
+     (1,23:1 sobre a surface, 1,11:1 sobre o canvas) e continua muito acima do
+     piso para o texto que vive em cima dele. */
+  --surface-sunken: var(--n-100);
   --surface-raised: var(--n-0);
   --text: var(--n-900); /* 18,20:1 sobre surface */
   --text-muted: var(--n-500); /* 5,60:1 */
