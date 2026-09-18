@@ -766,6 +766,62 @@ a parecer um estúdio.
 
 ---
 
+## 15. Estado da implementação
+
+A fundação (bloco 1 da §13) e as primitivas (bloco 2) estão no código, na branch
+`feat/design-system`. O que está feito, o que mudou de rota e o que ainda não foi verificado:
+
+**Feito**
+
+- `lib/brand-ramp.ts` + `tests/unit/brand-ramp.test.ts` (28 testes): a derivação da §5.4 com os
+  pisos verificados nos nove hexes, nos dois temas. Os valores caem dentro de um degrau de 8 bits
+  da tabela da §5.4 (`#C65100` contra `#C75100`, `#ED2466` contra `#EC2365`) — mesmo algoritmo,
+  passo de busca diferente. O que o teste garante é o piso, não o hex exato.
+- `app/globals.css`: rampa Tinta, papéis nos dois temas, semântica, profundidade, densidade como
+  token de contêiner, movimento sem laço, e a folha de impressão da §10.
+- `app/layout.tsx`: Fraunces + Archivo por `next/font/google`, com as pilhas de fallback que
+  permitem ao Next calcular o `size-adjust`. O `--accent` cru deu lugar aos nove tokens de
+  `brandStyle()`.
+- `lib/type.ts`: `displayStyle(px)` com o `opsz` já correto, `tabular`, `condensed`, `EM_DASH`.
+- `components/ui.tsx`: o inventário da §11 com os estados obrigatórios; os nomes antigos
+  continuam exportados com a mesma assinatura.
+- `components/icons.tsx`: uma espessura, três tamanhos (o que chegar é arredondado), `IconName`
+  virou união de verdade.
+- `app/design`: a galeria, fora do sitemap e negada no `robots.ts`.
+
+**Decisões tomadas na implementação, que divergem ou precisam do texto acima**
+
+1. **Ponte de compatibilidade em vez de varredura.** Os nomes antigos (`--accent`, `--edge`,
+   `bg-surface-2`, `text-muted`, `--font-display`) passaram a APONTAR para os tokens novos. É o
+   que faz a correção de contraste valer em 300 telas sem reescrevê-las no mesmo commit. Cada
+   bloco da §13 troca os nomes na sua vez.
+2. **`rounded-xl`/`2xl`/`3xl` colapsaram em `r-md` no tema do Tailwind**, em vez de serem
+   removidos classe a classe. O proibido da §4.5 continua proibido em código novo; o que já
+   existe deixou de parecer um bloco de balas sem uma varredura de 53 arquivos.
+3. **O alvo de toque de 40×40 virou área transparente (`::after`), não altura mínima.** Com
+   `min-height` as duas densidades renderizavam idênticas — o `compact` só existe se o botão
+   desenhado tiver mesmo 32px.
+4. **`FormGrid` reserva a linha da dica.** Dois campos lado a lado, um com dica e outro sem,
+   colocavam os controles em linhas de base diferentes. A grade reserva a linha para todos.
+5. **O `Select` é o nativo com moldura nossa** (`appearance: none`, altura, borda e seta do
+   sistema), não uma listbox reescrita. O que a §11.2 proíbe é o widget cru do sistema
+   operacional no meio de inputs customizados; o teclado nativo é melhor do que o que
+   reimplementaríamos.
+6. **`overflow-x: hidden` saiu do `body`**, como manda o risco 8 da §14 — e isso pode revelar
+   estouro lateral em telas que ninguém sabia que estavam quebradas.
+
+**Não feito nesta rodada, e dito com todas as letras**
+
+- A varredura de emoji (bloco 3) **não** foi feita. Medido: 886 ocorrências em 151 arquivos, com
+  393 só em `lib/ui-dict.ts`, e `😀😐😞` são valores de dado do Pulso, com asserção em e2e. Não é
+  uma troca mecânica como a §13 supunha.
+- Nenhuma tela de produto foi redesenhada (blocos 4 a 12).
+- Nenhum teste com leitor de tela, nenhum PDF realmente impresso, e nenhuma medição de CLS/LCP
+  com as fontes novas. O peso real do par Fraunces + Archivo (risco 1 da §14) continua **não
+  medido**.
+
+---
+
 ## 15. Referências de estudo
 
 Estudadas pela **hierarquia, o espaço em branco e a contenção da cor de marca**, nunca por asset ou
