@@ -1,67 +1,273 @@
 @import "tailwindcss";
 
-/* Paleta "Solar": base premium escura fria + CTA laranja de alto contraste
-   (laranja lidera testes A/B de conversão). O tema escuro é o default;
-   o whitelabel troca só o --accent via style inline. */
-:root,
-:root[data-theme="dark"] {
-  --background: #0a0a0f;
-  --surface: #14141b;
-  --surface-2: #1d1d26;
-  --edge: #2b2b37;
-  --foreground: #f5f5f8;
-  --muted: #9a9aac;
-  --accent: #f76b15;
-  --accent-2: #ffb03a;
-  --accent-ink: #ffffff;
-  --shadow: 0 14px 44px rgba(0, 0, 0, 0.55);
-  color-scheme: dark;
-}
+/* ============================================================================
+   Marqa — Estúdio Editorial · fundação
+   Normativo: docs/DESIGN.md. Quando o código diverge de lá, o código está errado.
 
-:root[data-theme="light"] {
-  --background: #f8f8fb;
-  --surface: #ffffff;
-  --surface-2: #f0f0f5;
-  --edge: #e3e3ec;
-  --foreground: #0f0f16;
-  --muted: #5c5c6c;
-  /* --accent / --accent-ink NÃO trocam: são a cor de marca (whitelabel),
-     constante entre temas. Herdam do :root default ou do style inline. */
-  --shadow: 0 14px 44px rgba(15, 15, 25, 0.1);
+   Ordem do arquivo:
+     1. rampa neutra "Tinta" (§5.1)          5. tema Tailwind (@theme)
+     2. papéis por tema (§5.2)               6. base: reset, foco, rolagem
+     3. semântica de estado (§5.3)           7. densidade (§4.4)
+     8. marca whitelabel (§5.4)              9. impressão (§10)
+    10. ponte de compatibilidade: tokens antigos apontando para os novos
+   ============================================================================ */
+
+/* ---------- 1. Rampa neutra "Tinta" (§5.1) --------------------------------
+   Cinza quente, não o preto-azulado de antes. Papel tem temperatura; cinza frio
+   é o cinza que todo gerador de tema entrega. Contrastes medidos no doc. */
+:root {
+  --n-0: #ffffff;
+  --n-25: #fbfaf8;
+  --n-50: #f5f3ef;
+  --n-100: #eae7e1;
+  --n-150: #dcd8d0;
+  --n-200: #c9c4ba;
+  --n-300: #aba599;
+  --n-400: #8b857a;
+  --n-500: #6d675e;
+  --n-600: #524d46;
+  --n-700: #3b3733;
+  --n-800: #292623;
+  --n-850: #201e1c;
+  --n-900: #171514;
+  --n-950: #100f0e;
+
+  /* ---------- 2. Papéis — tema claro (§5.2) ------------------------------ */
+  --canvas: var(--n-50);
+  --surface: var(--n-0);
+  --surface-sunken: var(--n-50);
+  --surface-raised: var(--n-0);
+  --text: var(--n-900); /* 18,20:1 sobre surface */
+  --text-muted: var(--n-500); /* 5,60:1 */
+  --text-faint: var(--n-400); /* 3,66:1 — placeholder, travessão */
+  --rule: var(--n-150); /* 1,42:1 — régua DECORATIVA, nunca sozinha */
+  --edge: var(--n-400); /* 3,66:1 — borda ESTRUTURAL (WCAG 1.4.11) */
+
+  /* ---------- 3. Semântica — só estado, nunca decoração (§5.3) ----------- */
+  --positive: #1b6b44; /* 6,50:1 */
+  --positive-wash: #eef3f0;
+  --negative: #a32b22; /* 7,18:1 */
+  --negative-wash: #f8eeed;
+  --caution: #7a5200; /* 6,92:1 */
+  --caution-wash: #f4f1eb;
+
+  /* Sombra: só para o que de fato flutua (§6). Painel nunca tem. */
+  --e1: 0 1px 2px rgba(16, 15, 14, 0.06), 0 8px 24px -8px rgba(16, 15, 14, 0.18);
+  --e2: 0 2px 4px rgba(16, 15, 14, 0.08), 0 24px 64px -16px rgba(16, 15, 14, 0.28);
+  --e3: 0 1px 0 var(--rule), 0 8px 16px -12px rgba(16, 15, 14, 0.24);
+
+  /* ---------- 8. Marca (§5.4) -------------------------------------------
+     Valores da plataforma; lib/brand-ramp.ts sobrescreve no <html> por request
+     com a rampa derivada da cor da agência. Os pares -light/-dark existem
+     porque o tema é escolhido no cliente, antes da pintura. */
+  --brand: #f76b15;
+  --brand-solid: #f76b15;
+  --brand-ink: #100f0e;
+  --brand-text-light: #c65100;
+  --brand-text-dark: #f76b15;
+  --brand-edge-light: #f56911;
+  --brand-edge-dark: #f76b15;
+  --brand-wash-light: #fff0e9;
+  --brand-wash-dark: #31180c;
+  --brand-text: var(--brand-text-light);
+  --brand-edge: var(--brand-edge-light);
+  --brand-wash: var(--brand-wash-light);
+
+  /* Movimento (§7): três durações, uma curva de saída, nada em loop. */
+  --dur-1: 90ms;
+  --dur-2: 160ms;
+  --dur-3: 240ms;
+  --ease: cubic-bezier(0.2, 0, 0, 1);
+  --ease-out: cubic-bezier(0.4, 0, 1, 1);
+
+  /* Espaçamento (§4.3): nada fora desta lista. Sem p-[13px]. */
+  --space-3xs: 2px;
+  --space-2xs: 4px;
+  --space-xs: 6px;
+  --space-sm: 8px;
+  --space-md: 12px;
+  --space-lg: 16px;
+  --space-xl: 20px;
+  --space-2xl: 24px;
+  --space-3xl: 32px;
+  --space-4xl: 40px;
+  --space-5xl: 56px;
+  --space-6xl: 72px;
+  --space-7xl: 96px;
+  --space-8xl: 128px;
+
+  /* Grade (§4.1) */
+  --measure-editorial: 1280px;
+  --measure-tool: 1180px;
+  --rail-w: 248px;
+  --doc-measure: 160mm;
+
+  /* Ponte tipográfica: 72 arquivos ainda escrevem
+     `font-[family-name:var(--font-display)]`. Esses nomes passam a apontar para
+     as famílias novas, então a troca vale em todo o produto sem varredura de
+     classe. O opsz padrão do body (abaixo) dá a esses casos um tamanho óptico
+     de manchete em vez do 14 de fábrica; a escala correta continua sendo
+     .d1–.d4 / displayStyle(). */
+  --font-display: var(--font-fraunces);
+  --font-text: var(--font-archivo);
+  --font-geist-sans: var(--font-archivo);
+  --font-geist-mono: ui-monospace, SFMono-Regular, "SF Mono", Menlo, Consolas,
+    "Liberation Mono", monospace;
+
+  /* Mesma ponte para as ~20 leituras cruas de var(--accent) etc. que existem
+     em SVG e em `accent-[...]`. O laranja de 2,97:1 some por aqui também. */
+  --accent: var(--brand-solid);
+  --accent-2: var(--brand);
+  --accent-ink: var(--brand-ink);
+  --background: var(--canvas);
+  --foreground: var(--text);
+  --muted: var(--text-muted);
+  --surface-2: var(--surface-sunken);
+  --shadow: var(--e2);
+
   color-scheme: light;
 }
 
-@theme inline {
-  --color-background: var(--background);
-  --color-surface: var(--surface);
-  --color-surface-2: var(--surface-2);
-  --color-edge: var(--edge);
-  --color-foreground: var(--foreground);
-  --color-muted: var(--muted);
-  --color-accent: var(--accent);
-  --color-accent-2: var(--accent-2);
-  --color-accent-ink: var(--accent-ink);
-  --font-sans: var(--font-geist-sans);
-  --font-display: var(--font-display);
-  --font-mono: var(--font-geist-mono);
+/* Tema escuro — não é o claro invertido: as bordas trocam de degrau porque
+   contraste não é simétrico, e a sombra perde metade da opacidade e ganha um
+   degrau tonal (preto sobre preto não separa). */
+:root[data-theme="dark"] {
+  --canvas: var(--n-950);
+  --surface: var(--n-900);
+  --surface-sunken: var(--n-850);
+  --surface-raised: var(--n-850);
+  --text: var(--n-50); /* 16,42:1 */
+  --text-muted: var(--n-400); /* 4,97:1 */
+  --text-faint: var(--n-500); /* 3,25:1 */
+  --rule: var(--n-700); /* 1,54:1 */
+  --edge: var(--n-500); /* 3,25:1 */
+
+  --positive: #57c98d; /* 8,79:1 */
+  --positive-wash: #1f2b23;
+  --negative: #ff8a7e; /* 7,96:1 */
+  --negative-wash: #332321;
+  --caution: #e4a83c; /* 8,64:1 */
+  --caution-wash: #302719;
+
+  --e1: 0 1px 2px rgba(0, 0, 0, 0.3), 0 8px 24px -8px rgba(0, 0, 0, 0.45);
+  --e2: 0 2px 4px rgba(0, 0, 0, 0.4), 0 24px 64px -16px rgba(0, 0, 0, 0.6);
+  --e3: 0 1px 0 var(--rule), 0 8px 16px -12px rgba(0, 0, 0, 0.5);
+
+  --brand-text: var(--brand-text-dark);
+  --brand-edge: var(--brand-edge-dark);
+  --brand-wash: var(--brand-wash-dark);
+
+  color-scheme: dark;
 }
 
+/* ---------- 5. Tema Tailwind ---------------------------------------------
+   `inline` porque os valores são variáveis que trocam com o tema. */
+@theme inline {
+  --color-canvas: var(--canvas);
+  --color-surface: var(--surface);
+  --color-surface-sunken: var(--surface-sunken);
+  --color-surface-raised: var(--surface-raised);
+  --color-text: var(--text);
+  --color-text-muted: var(--text-muted);
+  --color-text-faint: var(--text-faint);
+  --color-rule: var(--rule);
+  --color-edge: var(--edge);
+  --color-positive: var(--positive);
+  --color-positive-wash: var(--positive-wash);
+  --color-negative: var(--negative);
+  --color-negative-wash: var(--negative-wash);
+  --color-caution: var(--caution);
+  --color-caution-wash: var(--caution-wash);
+  --color-brand: var(--brand);
+  --color-brand-solid: var(--brand-solid);
+  --color-brand-ink: var(--brand-ink);
+  --color-brand-text: var(--brand-text);
+  --color-brand-edge: var(--brand-edge);
+  --color-brand-wash: var(--brand-wash);
+
+  /* ---------- 10. Ponte de compatibilidade ------------------------------
+     As telas de produto ainda usam os nomes antigos. Em vez de reescrever 300
+     arquivos na fundação, os nomes antigos passam a APONTAR para os novos —
+     o que já corrige, sem tocar em tela nenhuma: a hairline de 1,31:1 vira a
+     régua medida, o cinza frio vira a Tinta quente, e `bg-accent` +
+     `text-accent-ink` deixa de ser 2,97:1 e passa a ser o sólido derivado com
+     a tinta que vence. Cada bloco da §13 troca os nomes na sua vez. */
+  --color-background: var(--canvas);
+  --color-surface-2: var(--surface-sunken);
+  --color-foreground: var(--text);
+  --color-muted: var(--text-muted);
+  --color-accent: var(--brand-solid);
+  --color-accent-2: var(--brand);
+  --color-accent-ink: var(--brand-ink);
+
+  --font-display: var(--font-fraunces);
+  --font-sans: var(--font-archivo);
+  --font-text: var(--font-archivo);
+  --font-mono: ui-monospace, SFMono-Regular, "SF Mono", Menlo, Consolas,
+    "Liberation Mono", monospace;
+}
+
+@theme {
+  /* Raio é sinal, não decoração (§4.5). rounded-xl/2xl/3xl estão proibidos —
+     e por isso colapsam em r-md aqui: o que já existe no produto para de
+     parecer um bloco de balas sem exigir uma varredura de classe. */
+  --radius-none: 0px;
+  --radius-xs: 3px;
+  --radius-sm: 3px;
+  --radius-md: 6px;
+  --radius-lg: 6px;
+  --radius-xl: 6px;
+  --radius-2xl: 6px;
+  --radius-3xl: 6px;
+  --radius-4xl: 6px;
+
+  --shadow-e1: 0 1px 2px rgba(16, 15, 14, 0.06), 0 8px 24px -8px rgba(16, 15, 14, 0.18);
+  --shadow-e2: 0 2px 4px rgba(16, 15, 14, 0.08), 0 24px 64px -16px rgba(16, 15, 14, 0.28);
+
+  --container-tool: 1180px;
+  --container-editorial: 1280px;
+}
+
+/* ---------- 7. Densidade é um token de contêiner (§4.4) -------------------
+   O mesmo <Table> serve o relatório e a tela de margem. */
+:root,
+[data-density="comfortable"] {
+  --row-h: 48px;
+  --pad-x: 24px;
+  --pad-y: 20px;
+  --gap: 24px;
+  --ui-h: 40px;
+  --ui-size: 16px;
+}
+[data-density="compact"] {
+  --row-h: 32px;
+  --pad-x: 12px;
+  --pad-y: 8px;
+  --gap: 12px;
+  --ui-h: 32px;
+  --ui-size: 13px;
+}
+
+/* ---------- 6. Base -------------------------------------------------------- */
 body {
-  background: var(--background);
-  color: var(--foreground);
-  font-family: var(--font-geist-sans), system-ui, sans-serif;
-  /* Transição suave ao alternar tema */
-  transition: background-color 0.3s ease, color 0.3s ease;
-  /* Nunca rolar horizontal por causa de nav/tabelas largas */
-  overflow-x: hidden;
+  background: var(--canvas);
+  color: var(--text);
+  font-family: var(--font-archivo), "Helvetica Neue", Helvetica, Arial,
+    "Liberation Sans", sans-serif;
+  /* `font-variation-settings` é herdado: o wdth vale para o Archivo e o opsz
+     para o Fraunces — cada família ignora o eixo que não tem. É o que evita
+     manchete com desenho de corpo de texto em quem ainda não migrou. */
+  font-variation-settings: "wdth" 100, "opsz" 32;
+  font-size: 14px;
+  line-height: 20px;
+  -webkit-font-smoothing: antialiased;
 }
 
 ::selection {
-  background: var(--accent);
-  color: var(--accent-ink);
+  background: var(--brand-wash);
+  color: var(--text);
 }
 
-/* Cursor pointer consistente em tudo que é acionável */
 button:not(:disabled),
 a[href],
 [role="button"],
@@ -75,51 +281,226 @@ button:disabled {
   cursor: not-allowed;
 }
 
-/* Scrollbar discreta que segue o tema */
 * {
   scrollbar-width: thin;
-  scrollbar-color: var(--edge) transparent;
+  scrollbar-color: var(--n-300) transparent;
+}
+:root[data-theme="dark"] * {
+  scrollbar-color: var(--n-700) transparent;
 }
 *::-webkit-scrollbar {
-  width: 8px;
-  height: 8px;
+  width: 10px;
+  height: 10px;
 }
 *::-webkit-scrollbar-thumb {
-  background: var(--edge);
+  background: var(--rule);
+  border: 3px solid transparent;
+  background-clip: padding-box;
   border-radius: 999px;
 }
 *::-webkit-scrollbar-thumb:hover {
-  background: var(--muted);
+  background: var(--edge);
+  background-clip: padding-box;
 }
 
-/* Foco acessível e no tom do tema */
+/* Foco: anel de 2px em --brand-edge (>=3:1 garantido pela rampa) com 2px de
+   offset. No escuro o anel vira tinta clara com 1px interno da marca, para não
+   sumir quando a marca é escura. `outline: none` só existe com substituto. */
 :focus-visible {
-  outline: 2px solid var(--accent);
+  outline: 2px solid var(--brand-edge);
   outline-offset: 2px;
 }
-
-/* Impressão/PDF: esconde a moldura do app e força fundo claro */
-@media print {
-  header,
-  footer,
-  nav {
-    display: none !important;
-  }
-  body {
-    background: #ffffff !important;
-    color: #000 !important;
-  }
-  main {
-    padding: 0 !important;
-    max-width: none !important;
-  }
+:root[data-theme="dark"] :focus-visible {
+  outline-color: var(--n-50);
+  box-shadow: 0 0 0 1px var(--brand-edge);
 }
 
-/* ---------- Animações ---------- */
+/* Régua de retina: 1px sempre, nunca 0.5px (o Safari arredonda para 0 em 1x). */
+hr {
+  border: 0;
+  border-top: 1px solid var(--rule);
+}
+
+/* ---------- Tipografia (§3.2) --------------------------------------------
+   UMA API: as classes abaixo. Não existe `text-5xl` neste sistema — o eixo
+   óptico do Fraunces (opsz) tem que acompanhar o tamanho renderizado, e uma
+   manchete escrita na mão deixa o opsz no padrão 14 e some. Para tamanhos
+   fora da escala, use `displayStyle(px)` de lib/type.ts. */
+.d1,
+.d2,
+.d3,
+.d4 {
+  font-family: var(--font-fraunces), "Iowan Old Style", "Palatino Linotype",
+    Palatino, "Book Antiqua", Georgia, serif;
+  font-weight: var(--wght, 500);
+  font-variation-settings: "opsz" var(--opsz), "SOFT" var(--soft, 0),
+    "WONK" var(--wonk, 0);
+  text-wrap: balance;
+}
+.d1 {
+  --opsz: 44;
+  --wonk: 1;
+  font-size: 44px;
+  line-height: 44px;
+  letter-spacing: -0.022em;
+}
+.d2 {
+  --opsz: 34;
+  --wonk: 1;
+  font-size: 34px;
+  line-height: 36px;
+  letter-spacing: -0.018em;
+}
+.d3 {
+  --opsz: 26;
+  font-size: 26px;
+  line-height: 30px;
+  letter-spacing: -0.012em;
+}
+.d4 {
+  --opsz: 24;
+  font-size: 24px;
+  line-height: 28px;
+  letter-spacing: -0.008em;
+}
+@media (min-width: 768px) {
+  .d1 {
+    --opsz: 72;
+    font-size: 72px;
+    line-height: 72px;
+  }
+  .d2 {
+    --opsz: 48;
+    font-size: 48px;
+    line-height: 48px;
+  }
+  .d3 {
+    --opsz: 32;
+    font-size: 32px;
+    line-height: 36px;
+  }
+}
+/* Itálico é do Fraunces: citação de cliente e nota de rodapé. A UI não usa. */
+.d-quote {
+  font-style: italic;
+  --soft: 20;
+}
+
+/* Texto e UI — Archivo. wdth 100 na prosa, wdth 92 no rótulo denso. */
+.t1,
+.t2,
+.t3,
+.t4,
+.t5,
+.t6 {
+  font-family: var(--font-archivo), "Helvetica Neue", Helvetica, Arial,
+    "Liberation Sans", sans-serif;
+  font-variation-settings: "wdth" var(--wdth, 100);
+}
+.t1 {
+  font-size: 20px;
+  line-height: 30px;
+  letter-spacing: -0.004em;
+  font-weight: 400;
+  text-wrap: pretty;
+}
+.t2 {
+  font-size: 16px;
+  line-height: 26px;
+  font-weight: 400;
+  text-wrap: pretty;
+}
+.t3 {
+  font-size: 14px;
+  line-height: 20px;
+  font-weight: 400;
+}
+.t4 {
+  font-size: 13px;
+  line-height: 18px;
+  letter-spacing: 0.002em;
+  font-weight: 400;
+}
+.t5 {
+  --wdth: 92;
+  font-size: 12px;
+  line-height: 16px;
+  letter-spacing: 0.006em;
+  font-weight: 500;
+}
+/* Caixa alta é exclusividade do t6: no máximo um por seção. Label de
+   formulário é t5 em caixa de sentença (§3.3.1). */
+.t6 {
+  --wdth: 92;
+  font-size: 11px;
+  line-height: 12px;
+  letter-spacing: 0.09em;
+  font-weight: 600;
+  text-transform: uppercase;
+}
+
+/* Números: sempre Archivo com figura tabular. O Fraunces ignora `tnum`
+   (medido: >80px de deriva em dez dígitos), então nenhum número que se compara
+   entra em display — nem o passo de 36px. */
+.n1,
+.n2,
+.n3,
+.tnum {
+  font-family: var(--font-archivo), "Helvetica Neue", Helvetica, Arial,
+    "Liberation Sans", sans-serif;
+  font-variant-numeric: tabular-nums lining-nums;
+  font-variation-settings: "wdth" 100;
+}
+.n1 {
+  font-size: 36px;
+  line-height: 36px;
+  letter-spacing: -0.02em;
+  font-weight: 500;
+}
+.n2 {
+  font-size: 24px;
+  line-height: 28px;
+  letter-spacing: -0.015em;
+  font-weight: 500;
+}
+.n3 {
+  font-size: 14px;
+  line-height: 20px;
+  font-weight: 500;
+}
+
+/* Medida de leitura obrigatória (§3.3.3): prosa nunca ocupa 100% do contêiner. */
+.measure-lede {
+  max-width: 62ch;
+}
+.measure-prose {
+  max-width: 68ch;
+}
+.measure-ui {
+  max-width: 72ch;
+}
+.prose-doc {
+  max-width: 62ch;
+  hanging-punctuation: first last;
+}
+
+/* Régua decorativa — nunca o único recurso de hierarquia (§5.2). */
+.rule-t {
+  box-shadow: inset 0 1px 0 var(--rule);
+}
+.rule-b {
+  box-shadow: inset 0 -1px 0 var(--rule);
+}
+
+/* ---------- Movimento (§7) -----------------------------------------------
+   Três durações, uma curva, e NADA em loop. As classes decorativas antigas
+   (float / glow-pulse / gradient-pan / marquee) continuam existindo porque as
+   telas de marketing ainda as citam — mas estão neutralizadas: o elemento sai
+   junto com a reescrita da tela (bloco 10 da §13), não antes. */
 @keyframes pop-in {
   from {
     opacity: 0;
-    transform: translateY(14px) scale(0.92);
+    transform: translateY(6px);
   }
   to {
     opacity: 1;
@@ -129,69 +510,92 @@ button:disabled {
 @keyframes pop-out {
   from {
     opacity: 1;
-    transform: none;
   }
   to {
     opacity: 0;
-    transform: translateY(14px) scale(0.92);
-  }
-}
-@keyframes fade-in-up {
-  from {
-    opacity: 0;
-    transform: translateY(10px);
-  }
-  to {
-    opacity: 1;
-    transform: none;
-  }
-}
-@keyframes shimmer {
-  0% {
-    background-position: -400px 0;
-  }
-  100% {
-    background-position: 400px 0;
+    transform: translateY(6px);
   }
 }
 .animate-pop-in {
-  animation: pop-in 0.22s cubic-bezier(0.16, 1, 0.3, 1);
-  transform-origin: bottom right;
+  animation: pop-in var(--dur-3) var(--ease);
 }
 .animate-pop-out {
-  animation: pop-out 0.18s ease-in forwards;
-  transform-origin: bottom right;
+  animation: pop-out var(--dur-2) var(--ease-out) forwards;
 }
 .animate-fade-in {
-  animation: fade-in-up 0.35s cubic-bezier(0.16, 1, 0.3, 1) both;
+  animation: pop-in var(--dur-3) var(--ease) both;
 }
 
-/* ---------- Celebração de subida de elo (level-up) ---------- */
-/* O confete cai de cima da tela; cada partícula recebe --dx/--dy/--rot via
-   inline style para dispersão randômica sem libs externas. */
+/* Skeleton: a mesma caixa do conteúdo final, pulsação de opacidade, e só
+   aparece depois de 400ms — carregamento rápido não pisca. */
+@keyframes skeleton-pulse {
+  0%,
+  100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.45;
+  }
+}
+.skeleton {
+  background: var(--surface-sunken);
+  border-radius: 3px;
+  opacity: 0;
+  animation: skeleton-pulse 1.2s var(--ease) 0.4s infinite both;
+}
+
+/* Painel não flutua: o hover troca borda e degrau tonal, não altura. */
+.card-hover {
+  transition: border-color var(--dur-1) var(--ease),
+    background-color var(--dur-1) var(--ease);
+}
+.card-hover:hover {
+  border-color: var(--edge);
+}
+
+.reveal {
+  opacity: 0;
+  transform: translateY(8px);
+  transition: opacity var(--dur-3) var(--ease), transform var(--dur-3) var(--ease);
+}
+.reveal.is-visible {
+  opacity: 1;
+  transform: none;
+}
+
+/* Neutralizadas: sem animação, sem gradiente animado, sem brilho pulsante. */
+.float-slow,
+.glow-pulse,
+.marquee-track {
+  animation: none !important;
+}
+.hero-gradient-text {
+  background: none;
+  -webkit-background-clip: border-box;
+  background-clip: border-box;
+  color: var(--brand-text);
+}
+
+/* Comemoração de elo: funcionalidade, não enfeite. Disparo único, <=700ms. */
 @keyframes confetti-fall {
   0% {
     opacity: 0;
     transform: translate3d(0, -12px, 0) rotate(0deg);
   }
-  8% {
+  10% {
     opacity: 1;
   }
   100% {
     opacity: 0;
-    transform: translate3d(var(--dx, 0), var(--dy, 320px), 0)
-      rotate(var(--rot, 360deg));
+    transform: translate3d(var(--dx, 0), var(--dy, 320px), 0) rotate(var(--rot, 360deg));
   }
 }
 @keyframes levelup-pop {
-  0% {
+  from {
     opacity: 0;
-    transform: translateY(-14px) scale(0.9);
+    transform: translateY(-8px);
   }
-  60% {
-    transform: translateY(0) scale(1.02);
-  }
-  100% {
+  to {
     opacity: 1;
     transform: none;
   }
@@ -201,79 +605,116 @@ button:disabled {
   top: -12px;
   border-radius: 2px;
   will-change: transform, opacity;
-  animation: confetti-fall linear forwards;
+  animation: confetti-fall 700ms linear forwards;
 }
 .animate-levelup {
-  animation: levelup-pop 0.4s cubic-bezier(0.16, 1, 0.3, 1) both;
+  animation: levelup-pop var(--dur-3) var(--ease) both;
 }
-
-/* Skeleton de carregamento */
-.skeleton {
-  background: linear-gradient(
-    90deg,
-    var(--surface-2) 25%,
-    var(--edge) 37%,
-    var(--surface-2) 63%
-  );
-  background-size: 800px 100%;
-  animation: shimmer 1.4s infinite linear;
-  border-radius: 8px;
-}
-
-/* Elevação e transição padrão para cards/itens interativos */
-.card-hover {
-  transition: transform 0.18s ease, border-color 0.18s ease, box-shadow 0.18s ease;
-}
-.card-hover:hover {
-  transform: translateY(-2px);
-  box-shadow: var(--shadow);
-}
-
-/* ---------- Landing (marketing) ---------- */
-@keyframes float {
-  0%, 100% { transform: translateY(0); }
-  50% { transform: translateY(-12px); }
-}
-@keyframes gradient-pan {
-  0% { background-position: 0% 50%; }
-  100% { background-position: 100% 50%; }
-}
-@keyframes glow-pulse {
-  0%, 100% { opacity: 0.55; }
-  50% { opacity: 0.9; }
-}
-@keyframes marquee {
-  from { transform: translateX(0); }
-  to { transform: translateX(-50%); }
-}
-.reveal {
-  opacity: 0;
-  transform: translateY(26px);
-  transition: opacity 0.7s ease, transform 0.7s cubic-bezier(0.16, 1, 0.3, 1);
-}
-.reveal.is-visible {
-  opacity: 1;
-  transform: none;
-}
-.float-slow { animation: float 7s ease-in-out infinite; }
-.float-slow.delay { animation-delay: 1.4s; }
-.glow-pulse { animation: glow-pulse 5s ease-in-out infinite; }
-.hero-gradient-text {
-  background: linear-gradient(100deg, var(--accent), var(--accent-2) 55%, var(--accent));
-  background-size: 220% auto;
-  -webkit-background-clip: text;
-  background-clip: text;
-  color: transparent;
-  animation: gradient-pan 6s linear infinite alternate;
-}
-.marquee-track { animation: marquee 26s linear infinite; }
 
 @media (prefers-reduced-motion: reduce) {
   *,
   *::before,
   *::after {
-    animation-duration: 0.01ms !important;
-    transition-duration: 0.01ms !important;
+    animation-duration: 1ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 1ms !important;
   }
-  .reveal { opacity: 1; transform: none; }
+  .reveal {
+    opacity: 1;
+    transform: none;
+  }
+  .skeleton {
+    opacity: 1;
+    animation: none !important;
+  }
+  .levelup-confetti {
+    display: none;
+  }
+}
+
+/* ---------- 9. Documento e impressão (§10) --------------------------------
+   Folha de impressão de verdade, não `display: none` no header. A
+   pré-visualização na tela usa a MESMA mancha do papel, então o que se vê é o
+   que sai. */
+.doc {
+  width: var(--doc-measure);
+  max-width: 100%;
+  margin-inline: auto;
+  background: var(--n-0);
+  color: var(--n-900);
+  border-radius: 0;
+}
+.doc-rule {
+  height: 3px;
+  background: var(--brand-solid);
+}
+
+@page {
+  size: A4;
+  margin: 24mm 25mm 22mm;
+}
+@page :first {
+  margin-top: 32mm;
+}
+
+@media print {
+  :root {
+    color-scheme: light;
+    /* O documento nunca herda o tema escuro. */
+    --canvas: #ffffff;
+    --surface: #ffffff;
+    --surface-sunken: #ffffff;
+    --text: #171514;
+    --text-muted: #6d675e;
+    --text-faint: #8b857a;
+    --rule: #dcd8d0;
+    --edge: #8b857a;
+  }
+  body {
+    background: #fff;
+    color: var(--n-900);
+  }
+  .doc {
+    width: auto;
+  }
+  .doc-cover {
+    break-after: page;
+  }
+  .doc-figure,
+  .doc-table,
+  .doc-kpi,
+  tr {
+    break-inside: avoid;
+  }
+  h1,
+  h2,
+  h3,
+  .d1,
+  .d2,
+  .d3,
+  .d4 {
+    break-after: avoid;
+  }
+  a[href^="http"]::after {
+    content: " (" attr(href) ")";
+    font-size: 9pt;
+    color: var(--n-500);
+  }
+  /* Só a régua da marca imprime colorida. */
+  .doc-rule {
+    print-color-adjust: exact;
+    -webkit-print-color-adjust: exact;
+  }
+  .no-print,
+  nav,
+  header,
+  footer,
+  .app-rail,
+  .fab {
+    display: none !important;
+  }
+  main {
+    padding: 0 !important;
+    max-width: none !important;
+  }
 }

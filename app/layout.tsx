@@ -1,7 +1,8 @@
 import type { Metadata } from "next";
 import Link from "next/link";
-import { Geist, Geist_Mono, Space_Grotesk } from "next/font/google";
+import { Archivo, Fraunces } from "next/font/google";
 import { resolveBrand } from "@/lib/branding";
+import { brandStyle } from "@/lib/brand-ramp";
 import { getSession } from "@/lib/session";
 import Translator, { LangToggle } from "@/components/Translator";
 import ActivityBell from "@/components/ActivityBell";
@@ -21,9 +22,29 @@ import { MarqaMark } from "@/components/MarqaLogo";
 import { purchaseBlockReason } from "@/lib/plans";
 import "./globals.css";
 
-const geistSans = Geist({ variable: "--font-geist-sans", subsets: ["latin"] });
-const geistMono = Geist_Mono({ variable: "--font-geist-mono", subsets: ["latin"] });
-const spaceGrotesk = Space_Grotesk({ variable: "--font-display", subsets: ["latin"] });
+// Duas variáveis servidas pelo próprio Next (sem CDN) e uma pilha de sistema
+// para monoespaçada — docs/DESIGN.md §3.1. Nenhuma das duas é Inter, Poppins,
+// Montserrat ou Geist. `latin` cobre o pt-BR inteiro.
+//
+// Fraunces é display e só entra com o eixo óptico acompanhando o tamanho
+// (lib/type.ts); Archivo carrega texto, UI e TODO número, porque tem figura
+// tabular de verdade e um eixo de largura que dispensa uma terceira família.
+// `fallback` é a pilha que o Next usa para calcular o size-adjust da fonte
+// substituta — é o que impede o salto de layout enquanto a woff2 chega.
+const fraunces = Fraunces({
+  subsets: ["latin"],
+  axes: ["SOFT", "WONK", "opsz"],
+  variable: "--font-fraunces",
+  display: "swap",
+  fallback: ["Iowan Old Style", "Palatino Linotype", "Palatino", "Book Antiqua", "Georgia", "serif"],
+});
+const archivo = Archivo({
+  subsets: ["latin"],
+  axes: ["wdth"],
+  variable: "--font-archivo",
+  display: "swap",
+  fallback: ["Helvetica Neue", "Helvetica", "Arial", "Liberation Sans", "sans-serif"],
+});
 
 // Whitelabel + sessão: marca e navegação vêm do banco/cookie a cada request
 export const dynamic = "force-dynamic";
@@ -64,8 +85,8 @@ export default async function RootLayout({
   return (
     <html
       lang="pt-BR"
-      className={`${geistSans.variable} ${geistMono.variable} ${spaceGrotesk.variable} h-full antialiased`}
-      style={{ ["--accent" as string]: brand.accentColor }}
+      className={`${fraunces.variable} ${archivo.variable} h-full antialiased`}
+      style={brandStyle(brand.accentColor) as React.CSSProperties}
       suppressHydrationWarning
     >
       <head>
