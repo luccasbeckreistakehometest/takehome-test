@@ -415,3 +415,79 @@ número de KPI é `text` (não marca), eyebrow é `text-muted` (não marca), íc
 `text-faint` (não marca).
 
 ---
+
+## 6. Bordas, profundidade e elevação
+
+Ordem de recursos para separar duas coisas. Usa-se o primeiro que resolve; sombra é o último.
+
+1. **Espaço e posição** — a maior parte do trabalho.
+2. **Degrau tonal** — `surface` sobre `canvas`, `surface-sunken` dentro de `surface`.
+3. **Régua/hairline** — 1px, `rule`.
+4. **Borda estrutural** — 1px, `edge` (≥3:1), só quando delimita algo interativo.
+5. **Sombra** — **só** para o que de fato flutua acima da página.
+
+**Um painel nunca tem sombra.** Um cartão de conteúdo não flutua.
+
+| Token | Valor (claro) | Onde |
+|---|---|---|
+| `e1` | `0 1px 2px rgba(16,15,14,.06), 0 8px 24px -8px rgba(16,15,14,.18)` | menu, popover, tooltip |
+| `e2` | `0 2px 4px rgba(16,15,14,.08), 0 24px 64px -16px rgba(16,15,14,.28)` | diálogo, gaveta |
+| `e3` | `0 1px 0 var(--rule), 0 8px 16px -12px rgba(16,15,14,.24)` | barra fixa **depois** do scroll começar |
+
+No escuro a sombra quase não existe: `e1`/`e2` caem para metade da opacidade e **ganham um degrau
+tonal** (`surface` → `surface-raised` = `n-850`), porque sombra preta sobre fundo preto não separa
+nada. Quem confia só na sombra perde o tema escuro.
+
+**Regras de retina.** Borda é sempre `1px solid` — nunca `0.5px` (o Safari arredonda para 0 em 1x).
+Régua de tabela é `box-shadow: inset 0 -1px 0 var(--rule)`, não `border-bottom`, para não entrar na
+altura da linha e não brigar com o ritmo de 4px. Nada de borda em elemento com `transform: scale()`.
+
+---
+
+## 7. Movimento
+
+| Token | Duração | Curva | Para quê |
+|---|---|---|---|
+| `dur-1` | 90ms | `cubic-bezier(.2,0,0,1)` | estado: hover, foco, pressionado |
+| `dur-2` | 160ms | `cubic-bezier(.2,0,0,1)` | revelar: menu, tooltip, sublinhado de aba, acordeão |
+| `dur-3` | 240ms | `cubic-bezier(.2,0,0,1)` | camada: diálogo, gaveta, toast |
+
+Saída sempre 2/3 da entrada, com `cubic-bezier(.4,0,1,1)`. Sem mola, sem *bounce*, sem `overshoot`.
+
+Propriedades animáveis: `opacity`, `transform`, `background-color`, `border-color`, `color`,
+`box-shadow`. **Nunca** `height`, `width`, `top`, `left` (usar `grid-template-rows: 0fr → 1fr` para
+acordeão).
+
+**Nada roda em loop.** Saem: `float`, `glow-pulse`, `gradient-pan`, `marquee`, `shimmer` infinito.
+O skeleton perde o brilho que atravessa a tela e vira uma pulsação de opacidade de 1,2s entre
+`surface-sunken` e `rule` — e só aparece depois de **400ms** de espera, para carregamento rápido não
+piscar.
+
+Exceção, porque é funcionalidade e não enfeite: a comemoração de subida de elo (`LevelUpCelebration`)
+continua, mas **um disparo só**, ≤ 700ms, dispensável com `Esc`, e nunca por cima de uma peça que o
+cliente da agência vê.
+
+`prefers-reduced-motion: reduce`: todas as durações viram 1ms, transformações somem (opacidade
+permanece), o skeleton fica estático e a comemoração vira um selo parado.
+
+---
+
+## 8. Ícones
+
+Sem pacote novo. O sprite local `components/icons.tsx` (SVG inline, `currentColor`) fica — endurecido:
+
+- **Uma espessura:** 1,5px numa `viewBox` de 24. O tamanho 16 usa 1,75px para o traço não sumir.
+- **Três tamanhos, e só três:** `16` (denso, dentro de tabela e lista), `20` (padrão de UI),
+  `24` (marcador de seção, estado vazio). Acabam os 13/14/15/17/18/22.
+- Traçado desenhado na grade de 24 com os eixos em meio pixel, `stroke-linecap="round"`,
+  `stroke-linejoin="round"`, sem preenchimento, sem traço de espessura mista no mesmo glifo.
+- **Ícone nunca tem cor própria.** Herda `currentColor`; quem decide a cor é o texto ao lado.
+- **Zero emoji na interface do produto.** Todo emoji listado na §2.2 sai — vira glifo do sprite ou
+  simplesmente nada (a maioria não estava informando coisa alguma). Emoji continua legítimo em
+  conteúdo escrito por gente e em copy gerada pela IA que a agência publica.
+- Ícone decorativo leva `aria-hidden="true"`; ícone que é o único conteúdo de um botão leva
+  `aria-label`.
+- **Nenhum ícone de "IA".** Sem varinha, sem estrelinha, sem cérebro. Ação de IA é dita por verbo —
+  "Gerar kit completo" —, não por ✦.
+
+---
