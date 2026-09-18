@@ -16,6 +16,7 @@ import {
   Drawer,
   EmptyState,
   Field,
+  FormGrid,
   IconButton,
   Input,
   InputAffix,
@@ -213,15 +214,15 @@ export default function Gallery() {
           <div className="grid gap-6 md:grid-cols-2">
             <div>
               <p className="t5 mb-2 text-text-muted">Tabular (o sistema)</p>
-              <p className="n2 leading-7">1.111.111,11</p>
-              <p className="n2 leading-7">4.280.900,00</p>
-              <p className="n2 leading-7">9.006.374,52</p>
+              <p className="n2 leading-8">1111111111</p>
+              <p className="n2 leading-8">0000000000</p>
+              <p className="n2 leading-8">4.280.900,00</p>
             </div>
             <div>
               <p className="t5 mb-2 text-text-muted">Proporcional (o que não entra em coluna)</p>
-              <p className="t1 leading-7" style={{ fontVariantNumeric: "proportional-nums" }}>1.111.111,11</p>
-              <p className="t1 leading-7" style={{ fontVariantNumeric: "proportional-nums" }}>4.280.900,00</p>
-              <p className="t1 leading-7" style={{ fontVariantNumeric: "proportional-nums" }}>9.006.374,52</p>
+              <p className="n2 leading-8" style={{ fontVariantNumeric: "proportional-nums" }}>1111111111</p>
+              <p className="n2 leading-8" style={{ fontVariantNumeric: "proportional-nums" }}>0000000000</p>
+              <p className="n2 leading-8" style={{ fontVariantNumeric: "proportional-nums" }}>4.280.900,00</p>
             </div>
           </div>
           <Note>
@@ -288,7 +289,7 @@ export default function Gallery() {
             <table className="w-full min-w-[620px] table-fixed border-collapse">
               <thead>
                 <tr>
-                  {["Marca", "Sólido + tinta", "Texto (claro)", "Texto (escuro)", "Campo"].map((h, i) => (
+                  {["Marca", "Sólido + tinta", "Texto no claro", "Texto no escuro", "Campo"].map((h, i) => (
                     <th key={h} className={`t5 border-b border-edge px-3 py-2 font-medium text-text-muted ${i === 0 ? "text-left" : "text-right"}`}>
                       {h}
                     </th>
@@ -308,16 +309,20 @@ export default function Gallery() {
                         </span>
                       </td>
                       <td className="px-3 py-2 text-right shadow-[inset_0_-1px_0_var(--rule)]">
-                        <span className="t5 inline-flex items-center gap-2 rounded-sm px-2 py-1" style={{ background: l.brandSolid, color: l.brandInk }}>
+                        <span className="t5 inline-flex items-center gap-2 rounded-sm border border-rule px-2 py-1" style={{ background: l.brandSolid, color: l.brandInk }}>
                           Gerar
                           <span className="tnum">{contrast(l.brandSolid, l.brandInk).toFixed(2)}</span>
                         </span>
                       </td>
-                      <td className="n3 px-3 py-2 text-right shadow-[inset_0_-1px_0_var(--rule)]" style={{ color: l.brandText }}>
-                        {contrast(l.brandText, SURFACE_LIGHT).toFixed(2)}
+                      <td className="px-3 py-2 text-right shadow-[inset_0_-1px_0_var(--rule)]">
+                        <span className="n3 inline-block rounded-sm px-2 py-1" style={{ background: SURFACE_LIGHT, color: l.brandText }}>
+                          {contrast(l.brandText, SURFACE_LIGHT).toFixed(2)}
+                        </span>
                       </td>
-                      <td className="n3 px-3 py-2 text-right shadow-[inset_0_-1px_0_var(--rule)]" style={{ color: d.brandText }}>
-                        {contrast(d.brandText, SURFACE_DARK).toFixed(2)}
+                      <td className="px-3 py-2 text-right shadow-[inset_0_-1px_0_var(--rule)]">
+                        <span className="n3 inline-block rounded-sm px-2 py-1" style={{ background: SURFACE_DARK, color: d.brandText }}>
+                          {contrast(d.brandText, SURFACE_DARK).toFixed(2)}
+                        </span>
                       </td>
                       <td className="px-3 py-2 text-right shadow-[inset_0_-1px_0_var(--rule)]">
                         <span className="t5 inline-block rounded-sm px-2 py-1" style={{ background: l.brandWash, color: "var(--n-900)" }}>
@@ -435,7 +440,7 @@ export default function Gallery() {
         title="Entrada"
         lede="A instrução vai acima do controle — dentro do placeholder ela some justamente no foco, que é quando é lida. A largura do campo comunica o conteúdo esperado."
       >
-        <div className="grid gap-6 rounded-md border border-rule bg-surface p-6 md:grid-cols-2">
+        <FormGrid className="rounded-md border border-rule bg-surface p-6">
           <Field label="Nome do cliente" hint="Como aparece no relatório e na proposta." required>
             {(p) => <Input placeholder="Padaria Aurora" {...p} />}
           </Field>
@@ -487,7 +492,7 @@ export default function Gallery() {
               ]}
             />
           </div>
-        </div>
+        </FormGrid>
       </Section>
 
       <Section
@@ -538,7 +543,7 @@ export default function Gallery() {
       >
         <Density value="compact" className="grid gap-3">
           <h3 className="t6 text-text-muted">compact — a tela de margem</h3>
-          <div className="rounded-md border border-rule bg-surface">
+          <div className="bg-surface">
             <Table
               caption="Margem por cliente"
               columns={COLUMNS}
@@ -550,12 +555,12 @@ export default function Gallery() {
         </Density>
         <Density value="comfortable" className="grid gap-3">
           <h3 className="t6 text-text-muted">comfortable — a mesma tabela no relatório</h3>
-          <div className="rounded-md border border-rule bg-surface">
+          <div className="bg-surface">
             <Table caption="Margem por cliente" columns={COLUMNS} rows={ROWS.slice(0, 2)} rowKey={(r) => r.id} />
           </div>
         </Density>
         <Block label="Carregando — as mesmas larguras de coluna">
-          <div className="rounded-md border border-rule bg-surface">
+          <div className="bg-surface">
             <Table caption="Carregando" columns={COLUMNS} rows={[]} rowKey={() => ""} loading />
           </div>
         </Block>
@@ -593,8 +598,10 @@ export default function Gallery() {
             </span>
           </div>
         </Block>
-        <div className="grid gap-6 md:grid-cols-2">
-          <Progress value={72.5} label="Pacote consumido" />
+        <div className="grid gap-8">
+          <div className="max-w-[360px]">
+            <Progress value={72.5} label="Pacote consumido" />
+          </div>
           <Pagination page={page} pages={7} onChange={setPage} />
         </div>
         <Block label="Retorno">

@@ -85,7 +85,11 @@ export function Button({
       aria-busy={loading || undefined}
       disabled={disabled || loading}
       className={cx(
-        "t3 relative inline-flex h-[var(--ui-h)] min-h-10 items-center justify-center gap-2 rounded-sm px-4 font-medium",
+        "t3 relative inline-flex h-[var(--ui-h)] items-center justify-center gap-2 rounded-sm px-4 font-medium",
+        // Alvo de toque de 40×40 (44 no mobile) SEM esticar a caixa visível: no
+        // compact o botão tem 32px desenhados e o resto entra como área
+        // transparente. Esticar a altura apagaria a densidade.
+        "after:absolute after:inset-x-0 after:top-1/2 after:h-10 after:-translate-y-1/2 after:content-[''] max-md:after:h-11",
         "transition-[background-color,border-color,color,filter] duration-[var(--dur-1)] ease-[var(--ease)]",
         // Sem opacidade global: opacidade quebra o contraste do rótulo.
         "disabled:cursor-not-allowed disabled:border-rule disabled:bg-surface-sunken disabled:text-text-faint disabled:hover:brightness-100",
@@ -100,7 +104,10 @@ export function Button({
       </span>
       {loading && (
         <span className="absolute inset-0 grid place-items-center">
-          <Spinner />
+          <span
+            aria-hidden
+            className="size-4 animate-spin rounded-full border-2 border-current/30 border-t-current"
+          />
         </span>
       )}
     </button>
@@ -127,7 +134,8 @@ export function IconButton({
       aria-label={label}
       title={label}
       className={cx(
-        "grid size-10 shrink-0 place-items-center rounded-sm",
+        "relative grid size-[var(--ui-h)] shrink-0 place-items-center rounded-sm",
+        "after:absolute after:top-1/2 after:left-1/2 after:size-10 after:-translate-x-1/2 after:-translate-y-1/2 after:content-[''] max-md:after:size-11",
         "transition-colors duration-[var(--dur-1)] ease-[var(--ease)]",
         "disabled:cursor-not-allowed disabled:text-text-faint",
         BUTTON_VARIANTS[variant],
@@ -216,6 +224,7 @@ export function Field({
   children: (props: { id: string; "aria-describedby"?: string; "aria-invalid"?: true }) => ReactNode;
 }) {
   const id = useId();
+  const inGrid = useContext(FormGridCtx);
   const hintId = `${id}-hint`;
   const errId = `${id}-err`;
   const described = [hint && hintId, error && errId].filter(Boolean).join(" ") || undefined;
@@ -235,10 +244,12 @@ export function Field({
         </label>
         {counter && <span className="t5 tnum text-text-faint">{counter}</span>}
       </div>
-      {hint && (
+      {hint ? (
         <p id={hintId} className="t5 mb-1.5 text-text-muted">
           {hint}
         </p>
+      ) : (
+        inGrid && <p aria-hidden className="t5 mb-1.5 invisible">&nbsp;</p>
       )}
       {children({ id, "aria-describedby": described, "aria-invalid": error ? true : undefined })}
       {error && (
@@ -248,6 +259,32 @@ export function Field({
         </p>
       )}
     </div>
+  );
+}
+
+const FormGridCtx = createContext(false);
+
+/**
+ * Grade de formulário. Reserva a linha da dica em TODO campo da grade, para que
+ * os controles de uma mesma linha compartilhem a linha de base — dois campos
+ * lado a lado em que um tem dica e o outro não é o desalinhamento que mais
+ * denuncia formulário montado às pressas.
+ */
+export function FormGrid({
+  columns = 2,
+  children,
+  className = "",
+}: {
+  columns?: 1 | 2;
+  children: ReactNode;
+  className?: string;
+}) {
+  return (
+    <FormGridCtx.Provider value>
+      <div className={cx("grid gap-x-6 gap-y-6", columns === 2 && "md:grid-cols-2", className)}>
+        {children}
+      </div>
+    </FormGridCtx.Provider>
   );
 }
 
@@ -262,7 +299,7 @@ const CONTROL = cx(
 );
 
 export function Input({ className = "", ...props }: React.InputHTMLAttributes<HTMLInputElement>) {
-  return <input className={cx(CONTROL, "h-[var(--ui-h)] min-h-10", className)} {...props} />;
+  return <input className={cx(CONTROL, "h-[var(--ui-h)]", className)} {...props} />;
 }
 
 /** Prefixo/sufixo colados ao campo (R$, %, @) sem entrar no valor digitado. */
@@ -275,7 +312,7 @@ export function InputAffix({
   return (
     <div
       className={cx(
-        "t3 flex h-[var(--ui-h)] min-h-10 items-center rounded-sm border border-edge bg-surface",
+        "t3 flex h-[var(--ui-h)] items-center rounded-sm border border-edge bg-surface",
         "focus-within:border-brand-edge",
         className,
       )}
@@ -307,7 +344,7 @@ export function Select({ className = "", children, ...props }: React.SelectHTMLA
   return (
     <div className="relative">
       <select
-        className={cx(CONTROL, "h-[var(--ui-h)] min-h-10 appearance-none pr-9", className)}
+        className={cx(CONTROL, "h-[var(--ui-h)] appearance-none pr-9", className)}
         {...props}
       >
         {children}
@@ -675,7 +712,7 @@ export function Drawer({
 export type Tone = "neutral" | "positive" | "caution" | "negative";
 
 const TONES: Record<Tone, { box: string; ink: string; icon: IconName }> = {
-  neutral: { box: "border-edge bg-surface-sunken", ink: "text-text", icon: "info" },
+  neutral: { box: "border-edge bg-surface", ink: "text-text-muted", icon: "info" },
   positive: { box: "border-positive/40 bg-positive-wash", ink: "text-positive", icon: "check" },
   caution: { box: "border-caution/40 bg-caution-wash", ink: "text-caution", icon: "alert" },
   negative: { box: "border-negative/40 bg-negative-wash", ink: "text-negative", icon: "alert" },
