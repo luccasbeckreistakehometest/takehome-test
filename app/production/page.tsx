@@ -11,7 +11,6 @@ import {
   type ProjectStatus,
 } from "@/lib/marketplace-types";
 import { ErrorBox, Select, Spinner, Tag } from "@/components/ui";
-import { Icon } from "@/components/icons";
 
 // Kanban de produção: todas as demandas de todos os clientes por status.
 // Arraste os cards entre as colunas para mudar o status (HTML5 drag & drop),
@@ -100,15 +99,10 @@ export default function ProductionPage() {
           <h1 className="d3">
             Produção
           </h1>
-          <p className="mt-1 flex items-center gap-1.5 t3 text-text-muted">
-            <Icon name="kanban" size={15} />
-            Arraste os cards entre as colunas para mudar a etapa do pipeline.
-          </p>
+          <p className="mt-1  t3 text-text-muted">Arraste os cards entre as colunas para mudar a etapa do pipeline.</p>
         </div>
         <div className="w-full sm:w-64">
-          <label className="mb-1 block t5 font-medium uppercase tracking-wide text-text-muted">
-            Filtrar por cliente
-          </label>
+          <label className="t6 mb-1 block text-text-muted">Filtrar por cliente</label>
           <Select
             value={clientFilter}
             onChange={(event) => setClientFilter(event.target.value)}
@@ -156,7 +150,7 @@ export default function ProductionPage() {
             >
               <p className="mb-2 flex items-center justify-between px-1 t5 font-semibold uppercase tracking-wider text-text-muted">
                 {PROJECT_STATUS_LABELS[status]}
-                <span className="rounded-full bg-surface-sunken px-2 py-0.5">{column.length}</span>
+                <span className="tnum text-text-faint">{column.length}</span>
               </p>
               <div className="min-h-24 space-y-2">
                 {column.map((project) => {

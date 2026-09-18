@@ -123,20 +123,20 @@ export default function InsightsPage() {
         </div>
       </Card>
 
-      {/* KPIs */}
-      <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4 xl:grid-cols-7">
-        {kpis.map((kpi, i) => (
-          <Link key={kpi.label} href={kpi.href} style={{ animationDelay: `${i * 40}ms` }} className="animate-fade-in">
-            <Card hover className="h-full">
-              <Icon name={kpi.icon} size={20} className="text-text" />
-              <p className="d3 mt-2">
+      {/* Figuras: sete ladrilhos com ícone e número em display viram uma faixa
+          com régua. Número que se compara é Archivo tabular (§3.1). */}
+      <dl className="grid gap-x-8 gap-y-5 border-y border-edge py-4 sm:grid-cols-2 lg:grid-cols-4 xl:grid-cols-7">
+        {kpis.map((kpi) => (
+          <div key={kpi.label} className="min-w-0">
+            <dt className="t6 text-text-muted">{kpi.label}</dt>
+            <dd className="mt-1">
+              <Link href={kpi.href} className="n2 block truncate underline-offset-4 hover:underline">
                 {kpi.value}
-              </p>
-              <p className="t5 text-text-muted">{kpi.label}</p>
-            </Card>
-          </Link>
+              </Link>
+            </dd>
+          </div>
         ))}
-      </div>
+      </dl>
 
       <div className="grid gap-6 lg:grid-cols-2">
         {/* Funil de demandas */}
