@@ -84,3 +84,122 @@ Encontrado nas capturas, não no código:
 - **Ícones em sete tamanhos** (13, 14, 15, 17, 18, 22, 24px) com a mesma espessura de traço.
 
 ---
+
+## 3. Tipografia
+
+Duas famílias baixadas (as duas variáveis, as duas servidas pelo próprio Next via `next/font/google`,
+sem CDN) e uma pilha de sistema. Nada de Inter, Poppins, Montserrat ou Geist em título.
+
+### 3.1 Famílias
+
+**Display — `Fraunces`** (Undercase Type). Serifa *old style* de display com quatro eixos:
+`opsz 9–144`, `wght 100–900`, `SOFT 0–100`, `WONK 0–1`.
+
+Por quê: é o único jeito honesto de fazer tipografia editorial na web. Com o eixo óptico, uma manchete
+de 72px e um olho-de-texto de 11px são **desenhos diferentes** — o `opsz` baixo abre o espacejamento,
+aumenta a altura-x e alarga os caracteres; o alto afina e fecha. Sem isso, "editorial" vira uma fonte
+esticada. O eixo `WONK` (o `h`/`n`/`m` inclinado, os terminais em bola do itálico) dá personalidade
+nas manchetes sem trocar de família, e o `SOFT` cobre do rígido ao "molhado" sem uma segunda licença.
+
+```ts
+const display = Fraunces({
+  subsets: ["latin"],
+  axes: ["SOFT", "WONK", "opsz"],   // wght já vem por padrão
+  variable: "--font-display",
+  display: "swap",
+});
+```
+
+Uso: `wght` **400–600 apenas** (nunca 700+: a manchete pesa pelo tamanho, não pelo peso).
+`opsz` **sempre igual ao tamanho renderizado em px**, com clamp em 9–144 — é obrigatório, não opcional.
+`WONK 1` só a partir de 40px. `SOFT 0` no app e nos documentos; até `SOFT 20` na página pública da
+agência e na capa da proposta, onde a peça é uma peça de marca.
+
+Pilha de fallback (serifas de sistema com altura-x parecida, não Times):
+`'Iowan Old Style', 'Palatino Linotype', Palatino, 'Book Antiqua', Georgia, serif`
+
+**Texto e UI — `Archivo`** (Omnibus-Type). Grotesca variável com `wght 100–900` e `wdth 62.5–125`.
+
+Por quê: linhagem editorial de verdade (grotescas americanas de madeira, desenhadas para manchete de
+jornal), altura-x grande — sobrevive a 12–13px numa tabela densa, que é onde o produto passa a maior
+parte do tempo — e um **eixo de largura**, que dá cabeçalho de coluna condensado e rótulo denso sem
+uma terceira família. É a economia que separa um sistema de uma pasta de fontes.
+
+```ts
+const text = Archivo({
+  subsets: ["latin"],
+  axes: ["wdth"],
+  variable: "--font-text",
+  display: "swap",
+});
+```
+
+Uso: `wght` **400 / 500 / 600**. `wdth 100` para prosa e UI; `wdth 92` para cabeçalho de tabela,
+rótulo denso e eyebrow; nada além disso.
+
+Pilha de fallback: `'Helvetica Neue', Helvetica, Arial, 'Liberation Sans', sans-serif`
+
+**Monoespaçada — pilha de sistema, zero download.** Só para string de máquina: slug, token, ID, UTM,
+chave de webhook, nome de variável de ambiente.
+`ui-monospace, SFMono-Regular, 'SF Mono', Menlo, Consolas, 'Liberation Mono', monospace`
+
+**Números: não há terceira família.** Toda tabela, KPI, moeda e porcentagem usa Archivo com
+`font-variant-numeric: tabular-nums lining-nums`. Uma família a menos na rede e nenhuma quebra de
+ritmo de cor dentro da tabela.
+
+Subset `latin` cobre o pt-BR inteiro (ã õ ç á é í ó ú â ê ô à). `latin-ext` só entra se surgir copy
+em idioma que precise.
+
+### 3.2 Escala modular
+
+Duas razões, como manda a prática editorial: a escala de texto é fechada (1,2 — terça menor), a de
+display é aberta (1,5 — quinta). `tracking` em `em` para escalar junto com o corpo.
+
+**Display — Fraunces**
+
+| Token | px | line-height | tracking | wght | opsz | WONK | Onde |
+|---|---|---|---|---|---|---|---|
+| `d1` | 72 (mobile 44) | 72 / 44 | −0,022em | 500 | 72 | 1 | capa de relatório, hero da página pública, H1 da landing |
+| `d2` | 48 (mobile 34) | 48 / 36 | −0,018em | 500 | 48 | 1 | abertura de seção editorial |
+| `d3` | 32 (mobile 26) | 36 / 32 | −0,012em | 500 | 32 | 0 | título de página do app, capítulo de documento |
+| `d4` | 24 | 28 | −0,008em | 500 | 24 | 0 | título de painel, subtítulo de documento |
+
+**Texto — Archivo**
+
+| Token | px | line-height | tracking | wght | wdth | Medida máx. | Onde |
+|---|---|---|---|---|---|---|---|
+| `t1` lede | 20 | 30 | −0,004em | 400 | 100 | 62ch | linha de apoio abaixo de `d1`/`d2` |
+| `t2` body | 16 | 26 | 0 | 400 | 100 | 68ch | prosa, corpo de documento |
+| `t3` ui | 14 | 20 | 0 | 400 | 100 | 72ch | padrão da interface |
+| `t4` dense | 13 | 18 | +0,002em | 400 | 100 | — | célula de tabela, lista densa |
+| `t5` micro | 12 | 16 | +0,006em | 500 | 92 | — | legenda, cabeçalho de tabela, badge, **label de formulário** |
+| `t6` eyebrow | 11 | 12 | +0,09em | 600 | 92 | — | **caixa alta; no máximo um por seção** |
+
+**Números — Archivo, `tabular-nums lining-nums`**
+
+| Token | px | line-height | tracking | wght | Onde |
+|---|---|---|---|---|---|
+| `n1` | 36 | 36 | −0,02em | 500 | KPI de destaque |
+| `n2` | 24 | 28 | −0,015em | 500 | figura de relatório, total de fatura |
+| `n3` | 14 | 20 | 0 | 500 | valor em tabela, moeda inline |
+
+### 3.3 Regras de tipografia
+
+1. **Caixa alta é só do `t6`.** Label de formulário é `t5` em caixa de sentença. Isto sozinho mata o
+   defeito D8: um estilo deixa de fazer quatro trabalhos.
+2. **`opsz` acompanha o tamanho.** Um utilitário `displayStyle(px)` devolve `fontSize`,
+   `lineHeight`, `letterSpacing` e `fontVariationSettings` juntos. Ninguém escreve `text-5xl` na mão.
+3. **Medida de leitura é obrigatória.** Toda prosa fica dentro de `max-width` em `ch`, nunca 100% do
+   contêiner. A coluna editorial tem 6 das 12 colunas.
+4. **Pontuação pendurada** (`hanging-punctuation: first last`) na coluna de prosa dos documentos e
+   nas citações — Safari já suporta; nos outros navegadores degrada sem prejuízo.
+5. **Alinhamento óptico** na capa dos documentos: aspas e travessões iniciais recuam com
+   `text-indent` negativo do tamanho do glifo.
+6. **Sem viúvas em manchete**: `text-wrap: balance` em `d1`/`d2`/`d3`, `text-wrap: pretty` em `t1`/`t2`.
+7. **Números que se comparam se alinham.** Qualquer número que apareça duas vezes na mesma coluna
+   ou empilhado é tabular. Sem exceção.
+8. **Zero não é vazio.** Ausência de dado é travessão (`—`) em `text-faint`, nunca `0`.
+9. **Itálico é do Fraunces**, para citação do cliente e nota de rodapé do documento. A UI não usa
+   itálico.
+
+---
