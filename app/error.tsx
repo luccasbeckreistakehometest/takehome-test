@@ -2,6 +2,7 @@
 
 import { useEffect } from "react";
 import Link from "next/link";
+import { buttonClass } from "@/lib/button-class";
 
 // Erro inesperado dentro do app (a moldura continua). Mensagem neutra; o
 // detalhe fica no log do servidor/console.
@@ -10,23 +11,37 @@ export default function ErrorPage({ error, reset }: { error: Error & { digest?: 
     console.error(error);
   }, [error]);
   return (
-    <div role="alert" className="mx-auto max-w-xl py-16 text-center" data-testid="error-page">
-      <h1 className="d3">Algo deu errado</h1>
-      <p className="mt-2 text-text-muted">Tente de novo. Se continuar, fale com a gente e cite o código abaixo.</p>
-      <p className="mt-1 t3 text-text-muted" lang="en">
-        Something went wrong. Try again; if it keeps happening, contact us with the code below.
-      </p>
-      {error.digest && <p className="mt-3 font-mono t5 text-text-muted">código: {error.digest}</p>}
-      <div className="mt-8 flex flex-wrap justify-center gap-3">
-        <button type="button" onClick={reset} className="rounded-md bg-accent px-4 py-2 t3 font-medium text-accent-ink hover:opacity-90">
-          Tentar de novo · Retry
-        </button>
-        <Link href="/" className="rounded-md border border-edge bg-surface-sunken px-4 py-2 t3 hover:border-edge">
-          Início · Home
-        </Link>
-        <Link href="/contato" className="rounded-md border border-edge bg-surface-sunken px-4 py-2 t3 hover:border-edge">
-          Contato · Contact
-        </Link>
+    <div role="alert" className="full-bleed" data-testid="error-page">
+      <div className="ed sec">
+        <div className="ed-grid">
+          <div className="c7">
+            <p className="t6 text-text-muted">Erro</p>
+            <h1 className="d2 mt-4">Algo deu errado</h1>
+            <p className="t1 measure-lede mt-4 text-text-muted">
+              Tente de novo. Se continuar, fale com a gente e cite o código abaixo.
+            </p>
+            <p className="t3 measure-lede mt-2 text-text-faint" lang="en">
+              Something went wrong. Try again; if it keeps happening, contact us with the code
+              below.
+            </p>
+            {error.digest && (
+              <p className="t4 mt-6 border-t border-rule pt-3 font-mono text-text-muted">
+                código: {error.digest}
+              </p>
+            )}
+            <div className="mt-8 flex flex-wrap gap-3">
+              <button type="button" onClick={reset} className={buttonClass("primary")}>
+                Tentar de novo · Retry
+              </button>
+              <Link href="/" className={buttonClass("secondary")}>
+                Início · Home
+              </Link>
+              <Link href="/contato" className={buttonClass("secondary")}>
+                Contato · Contact
+              </Link>
+            </div>
+          </div>
+        </div>
       </div>
     </div>
   );
