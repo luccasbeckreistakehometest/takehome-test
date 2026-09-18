@@ -961,8 +961,10 @@ export function Table<R>({
 }) {
   if (!loading && rows.length === 0 && empty) return <>{empty}</>;
   return (
-    // Só a tabela rola, nunca a página.
-    <div className="w-full overflow-x-auto">
+    // Só a tabela rola, nunca a página. `min-w-0` porque um contêiner de
+    // rolagem que seja item de grade ou de flex herda min-width:auto e estica
+    // o pai até caber — e aí quem rola é a página, que é o oposto do combinado.
+    <div className="w-full min-w-0 max-w-full overflow-x-auto">
       <table style={{ minWidth }} className="w-full table-fixed border-collapse">
         <caption className="sr-only">{caption}</caption>
         <colgroup>

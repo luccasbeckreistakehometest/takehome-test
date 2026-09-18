@@ -67,7 +67,7 @@ function Section({
         <div className="min-w-0 md:col-span-10">
           <h2 className="d3 mb-2">{title}</h2>
           {lede && <p className="t2 measure-prose text-text-muted">{lede}</p>}
-          <div className="mt-8 grid gap-8">{children}</div>
+          <div className="mt-8 grid min-w-0 grid-cols-1 gap-8">{children}</div>
         </div>
       </div>
     </section>
@@ -76,7 +76,9 @@ function Section({
 
 function Block({ label, children }: { label: string; children: React.ReactNode }) {
   return (
-    <div className="grid gap-3">
+    // min-w-0 em toda caixa que hospeda um rolador: um item de grade tem
+    // min-width:auto e estica até caber o conteúdo, e aí quem rola é a página.
+    <div className="grid min-w-0 grid-cols-1 gap-3">
       <h3 className="t6 text-text-muted">{label}</h3>
       {children}
     </div>
@@ -214,7 +216,7 @@ export default function Gallery() {
         </Block>
 
         <Block label="Números — Archivo com figura tabular">
-          <div className="grid gap-6 md:grid-cols-2">
+          <div className="grid min-w-0 gap-6 md:grid-cols-2">
             <div>
               <p className="t5 mb-2 text-text-muted">Tabular (o sistema)</p>
               <p className="n2 leading-8">1111111111</p>
@@ -408,7 +410,7 @@ export default function Gallery() {
         lede="Um primary por região. O disabled cai para tinta esmaecida em campo rebaixado, sem opacidade global — opacidade quebra o contraste do rótulo."
       >
         {(["comfortable", "compact"] as const).map((d) => (
-          <Density key={d} value={d} className="grid gap-3">
+          <Density key={d} value={d} className="grid min-w-0 grid-cols-1 gap-3">
             <h3 className="t6 text-text-muted">{d}</h3>
             <div className="flex flex-wrap items-center gap-3 rounded-md border border-rule bg-surface p-[var(--pad-x)]">
               <Button>Gerar relatório</Button>
@@ -546,9 +548,9 @@ export default function Gallery() {
         title="Dados"
         lede="A tabela é a superfície: sem cartão em volta, sem zebra, largura de coluna declarada, cabeçalho alinhado igual à célula, e travessão onde não há dado."
       >
-        <Density value="compact" className="grid gap-3">
+        <Density value="compact" className="grid min-w-0 grid-cols-1 gap-3">
           <h3 className="t6 text-text-muted">compact — a tela de margem</h3>
-          <div className="bg-surface">
+          <div className="min-w-0 bg-surface">
             <Table
               caption="Margem por cliente"
               columns={COLUMNS}
@@ -558,18 +560,18 @@ export default function Gallery() {
             />
           </div>
         </Density>
-        <Density value="comfortable" className="grid gap-3">
+        <Density value="comfortable" className="grid min-w-0 grid-cols-1 gap-3">
           <h3 className="t6 text-text-muted">comfortable — a mesma tabela no relatório</h3>
-          <div className="bg-surface">
+          <div className="min-w-0 bg-surface">
             <Table caption="Margem por cliente" columns={COLUMNS} rows={ROWS.slice(0, 2)} rowKey={(r) => r.id} />
           </div>
         </Density>
         <Block label="Carregando — as mesmas larguras de coluna">
-          <div className="bg-surface">
+          <div className="min-w-0 bg-surface">
             <Table caption="Carregando" columns={COLUMNS} rows={[]} rowKey={() => ""} loading />
           </div>
         </Block>
-        <div className="grid gap-6 md:grid-cols-2">
+        <div className="grid min-w-0 gap-6 md:grid-cols-2">
           <Block label="Vazio — forma fixa">
             <EmptyState
               icon="calendar"
@@ -603,7 +605,7 @@ export default function Gallery() {
             </span>
           </div>
         </Block>
-        <div className="grid gap-8">
+        <div className="grid min-w-0 gap-8">
           <div className="max-w-[360px]">
             <Progress value={72.5} label="Pacote consumido" />
           </div>
