@@ -249,7 +249,9 @@ export function Field({
           {hint}
         </p>
       ) : (
-        inGrid && <p aria-hidden className="t5 mb-1.5 invisible">&nbsp;</p>
+        // Uma coluna só não tem com o que alinhar: a linha reservada seria
+        // espaço morto no celular.
+        inGrid === 2 && <p aria-hidden className="t5 mb-1.5 hidden md:block invisible">&nbsp;</p>
       )}
       {children({ id, "aria-describedby": described, "aria-invalid": error ? true : undefined })}
       {error && (
@@ -262,7 +264,7 @@ export function Field({
   );
 }
 
-const FormGridCtx = createContext(false);
+const FormGridCtx = createContext<0 | 1 | 2>(0);
 
 /**
  * Grade de formulário. Reserva a linha da dica em TODO campo da grade, para que
@@ -280,7 +282,7 @@ export function FormGrid({
   className?: string;
 }) {
   return (
-    <FormGridCtx.Provider value>
+    <FormGridCtx.Provider value={columns}>
       <div className={cx("grid gap-x-6 gap-y-6", columns === 2 && "md:grid-cols-2", className)}>
         {children}
       </div>
