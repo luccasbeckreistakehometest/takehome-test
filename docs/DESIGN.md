@@ -856,3 +856,70 @@ Fontes técnicas dos eixos e das features citadas:
 [Archivo (Omnibus-Type)](https://www.omnibus-type.com/variable-fonts/),
 [OpenType features na web (Google Fonts Knowledge)](https://fonts.google.com/knowledge/using_type/implementing_open_type_features_on_the_web),
 [`font-variant-numeric` (MDN)](https://developer.mozilla.org/en-US/docs/Web/CSS/Reference/Properties/font-variant-numeric).
+
+---
+
+## 16. Aplicação nas telas (18/09/2026)
+
+A §15 registrou a fundação. Esta seção registra a **aplicação**: o que mudou em
+cada superfície da §13, o que foi descoberto medindo em vez de olhando, e o que
+continua em aberto.
+
+### 16.1 O que foi reescrito
+
+| Bloco | Superfície | O que mudou |
+|---|---|---|
+| 10 | Landing + 3 funis + planos | Onze seções com a mesma forma (título centrado + grade de cartões) viram splits nomeados alternados; preço vira tabela editorial com uma coluna por plano |
+| 10 | Jurídico + contato | Anatomia de documento: capa, coluna de 62ch com pontuação pendurada, seção numerada com numeral pendurado, trilho de contexto |
+| 4 | Casca | Barra de 56px com dezessete alvos → trilho de 248px com dois blocos nomeados + "Mais"; gaveta abaixo de 1024px; sai o `backdrop-blur` |
+| 4 | Hoje | Onze painéis idênticos → fila de trabalho tipada + trilho de contexto + carteira em tabela |
+| 5 | Workspace do cliente | Pílulas de atributo → linha de metadados; dois níveis de navegação com dois desenhos; dashboard 8+4 com entregáveis em tabela |
+| 6 | Finance, Insights, Cobranças, Produção, Clientes, Admin | Fileira de cartões com número gigante → faixa de figuras com régua; tabela sem cartão; ícone decorativo fora do título |
+| 7 | Relatório, proposta, fatura, entregável, página pública | As cinco peças ganham a mesma anatomia: régua da marca, capa, seções numeradas, figura tabular, nota de origem do dado |
+| 8 | Ajustes, formulários | Coluna de trabalho de 46rem alinhada à esquerda; todo campo pela primitiva |
+| 9 | Portal do cliente | Cinco caixas empilhadas → seções com régua + split 6+5; um botão primário por tela |
+| 11 | Entrar, criar conta | Cartão centrado → split 5+6; escolha de conta vira lista numerada |
+| 13 | 404 e erro | Bloco centrado → split editorial com o numeral em `displayStyle(120)` |
+
+### 16.2 Defeitos que só a medição encontrou
+
+1. **Todo `<select>` do produto estava desenhado como campo somente-leitura.**
+   `:read-only` do CSS casa com qualquer elemento que não seja editável — e isso
+   inclui `<select>`. A variante `read-only:` da primitiva pintava o fundo de
+   `n-100` ao lado de um `<input>` branco no mesmo formulário. Passou a olhar o
+   atributo (`[&[readonly]]`).
+2. **`grid-column: span N` anulava o `grid-column-start` seguinte** (o atalho
+   escreve o início também), e a coluna de 7 virava coluna de 1. As classes da
+   grade passam a usar `grid-column-end: span N`.
+3. **O reset de celular zerava só o início** da coluna e deixava o fim em `-1`:
+   "coluna cheia" virava uma tira de 1/4 de largura.
+4. **O `<main>` prendia a peça editorial nos 1152px** da medida de ferramenta; a
+   landing escapava com margem negativa, que tira o padding mas não o teto.
+   Resolvido com `.main-shell:has(> .full-bleed)`.
+
+### 16.3 Varreduras medidas (não estimadas)
+
+| Varredura | Alcance |
+|---|---|
+| Emoji de rótulo em `components/**` e `app/**` + dicionário PT→EN nos dois lados | 35 arquivos, 38 chaves duplicadas resolvidas; preservadas as três carinhas do Pulso (valor de dado, com e2e) e as marcas tipográficas ✓ → · |
+| Orçamento de cor (§5.5) | 437 classes em 88 arquivos: `text-accent` → tinta, lavagens e bordas de marca → superfície/borda estrutural, `bg-accent` só onde é botão primário |
+| Cor semântica (§5.3) | 217 classes do palete cru do Tailwind → positive/negative/caution medidos |
+| Escala tipográfica (§3.2) | 116 arquivos: `text-sm`/`text-xs`/`text-base` → t3/t5/t2 |
+| Eixo óptico (§3.3.2) | 54 arquivos escreviam `font-[family-name:var(--font-display)] text-2xl` e deixavam o opsz em 14 → `.d1`–`.d4` |
+| Raio como sinal (§4.5) | `rounded-full` de escolha → chip de 3px em dez telas |
+| Profundidade (§6) | `shadow-lg/xl/2xl` → e1/e2; `bg-black/NN` → véu único |
+
+### 16.4 O que continua em aberto
+
+- **Regra de lint para o `opsz`.** Continua sendo possível escrever `text-5xl` e
+  perder o eixo óptico. A varredura corrigiu o que existia; nada impede o
+  próximo.
+- **PDF de verdade.** A folha `@page` existe e a pré-visualização usa a mesma
+  mancha de 160mm, mas ninguém imprimiu.
+- **Cabeçalho corrente no papel.** A §10 pede cabeçalho corrente; `position:
+  running()` não é suportado nos navegadores, então a peça carrega a
+  identificação na capa e no rodapé. Divergência assumida.
+- **`0` ainda aparece onde a verdade é "sem dado".** `<Dash />` está em uso nas
+  telas reescritas, mas várias rotas devolvem `0`; a troca para `null` é
+  trabalho de backend, fora do sistema de design.
+- **Leitor de tela e CLS/LCP.** Não medidos.
