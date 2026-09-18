@@ -77,7 +77,7 @@ function IdeasContent() {
         <h1 className="d3">
           Motor de ideias
         </h1>
-        <p className="mt-1 t3 text-text-muted">
+        <p className="t3 measure-lede mt-2 text-text-muted">
           Propostas proativas para todas as pontas — agência, clientes e
           profissionais — fundamentadas nas tendências mais recentes do mercado
           (pesquisa real na web) e conectadas a quem já está na plataforma.

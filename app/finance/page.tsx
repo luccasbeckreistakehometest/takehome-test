@@ -77,17 +77,15 @@ export default function FinancePage() {
 
   return (
     <div className="space-y-6" data-testid="finance-page">
-      <div className="flex flex-wrap items-end justify-between gap-4">
+      <div className="flex flex-wrap items-end justify-between gap-4 border-b border-edge pb-5">
         <div>
-          <h1 className="d3 flex items-center gap-2">
-            <Icon name="money" size={24} className="text-text" /> Horas & margem
-          </h1>
-          <p className="mt-1 t3 text-text-muted">Quanto cada cliente paga por mês contra quanto ele custa em horas da equipe. Quem dá prejuízo aparece em vermelho.</p>
+          <h1 className="d3">Horas & margem</h1>
+          <p className="t3 measure-lede mt-2 text-text-muted">Quanto cada cliente paga por mês contra quanto ele custa em horas da equipe. Quem dá prejuízo aparece em vermelho.</p>
         </div>
         <div className="flex flex-wrap items-center gap-2">
-          <button onClick={() => setMonth((m) => shiftMonth(m, -1))} className="grid size-9 place-items-center rounded-md border border-edge bg-surface-sunken hover:border-edge" aria-label="Mês anterior">‹</button>
+          <button onClick={() => setMonth((m) => shiftMonth(m, -1))} className="grid size-9 place-items-center rounded-sm border border-edge text-text-muted hover:bg-surface-sunken" aria-label="Mês anterior">‹</button>
           <span className="min-w-40 text-center font-medium" data-testid="finance-month">{monthLabel(month, lang)}</span>
-          <button onClick={() => setMonth((m) => shiftMonth(m, 1))} className="grid size-9 place-items-center rounded-md border border-edge bg-surface-sunken hover:border-edge" aria-label="Próximo mês">›</button>
+          <button onClick={() => setMonth((m) => shiftMonth(m, 1))} className="grid size-9 place-items-center rounded-sm border border-edge text-text-muted hover:bg-surface-sunken" aria-label="Próximo mês">›</button>
           <a href={`/api/finance/margin?month=${month}&format=csv&lang=${lang}`} className="inline-flex items-center gap-1.5 rounded-md border border-edge bg-surface-sunken px-3 py-2 t3 hover:border-edge" data-testid="finance-csv">
             <Icon name="doc" size={15} /> Exportar CSV
           </a>
@@ -102,7 +100,7 @@ export default function FinancePage() {
         </div>
       ) : (
         <>
-          <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-5">
+          <div className="grid gap-x-8 gap-y-5 border-y border-edge py-4 sm:grid-cols-3 lg:grid-cols-5">
             {[
               { label: "Fees do mês", value: money(report.totals.fee) },
               { label: "Horas apontadas", value: formatHours(report.totals.hours * 60) },
@@ -110,27 +108,26 @@ export default function FinancePage() {
               { label: "Margem", value: money(report.totals.margin), hint: report.totals.marginPct !== null ? `${report.totals.marginPct}%` : undefined, negative: report.totals.margin < 0 },
               { label: "Clientes sinalizados", value: String(report.totals.flagged) },
             ].map((kpi) => (
-              <Card key={kpi.label}>
-                <p className="text-[11px] font-semibold uppercase tracking-wider text-text-muted">{kpi.label}</p>
+              <div key={kpi.label} className="min-w-0">
+                <p className="t6 text-text-muted">{kpi.label}</p>
                 <p className={`n2 mt-1 ${kpi.negative ? "text-negative" : ""}`}>{kpi.value}</p>
                 {kpi.hint && <p className="t5 text-text-muted">{kpi.hint}</p>}
-              </Card>
+              </div>
             ))}
           </div>
 
-          <Card className="!p-0">
-            <div className="overflow-x-auto">
+          <div className="overflow-x-auto">
               <table className="w-full min-w-[720px] t3" data-testid="margin-table">
                 <thead>
-                  <tr className="border-b border-edge text-left text-[11px] uppercase tracking-wider text-text-muted">
-                    <th className="px-4 py-2">Cliente</th>
-                    <th className="px-4 py-2">Fee mensal</th>
-                    <th className="px-4 py-2">Recebido</th>
-                    <th className="px-4 py-2">Horas</th>
-                    <th className="px-4 py-2">Custo</th>
-                    <th className="px-4 py-2">Margem</th>
-                    <th className="px-4 py-2">Custo/h efetivo</th>
-                    <th className="px-4 py-2">Situação</th>
+                  <tr className="border-b border-edge text-left">
+                        <th className="t6 px-4 py-2 text-text-muted">Cliente</th>
+                    <th className="t6 px-4 py-2 text-text-muted">Fee mensal</th>
+                    <th className="t6 px-4 py-2 text-text-muted">Recebido</th>
+                    <th className="t6 px-4 py-2 text-text-muted">Horas</th>
+                    <th className="t6 px-4 py-2 text-text-muted">Custo</th>
+                    <th className="t6 px-4 py-2 text-text-muted">Margem</th>
+                    <th className="t6 px-4 py-2 text-text-muted">Custo/h efetivo</th>
+                    <th className="t6 px-4 py-2 text-text-muted">Situação</th>
                   </tr>
                 </thead>
                 <tbody>
@@ -140,7 +137,7 @@ export default function FinancePage() {
                     </tr>
                   )}
                   {report.rows.map((row) => (
-                    <tr key={row.clientId} className={`border-b border-edge ${row.status === "loss" ? "bg-negative-wash" : ""}`} data-testid="margin-row" data-status={row.status} data-client={row.name}>
+                    <tr key={row.clientId} className={`border-b border-rule ${row.status === "loss" ? "bg-negative-wash" : ""}`} data-testid="margin-row" data-status={row.status} data-client={row.name}>
                       <td className="px-4 py-2">
                         <Link href={`/clients/${row.clientId}?tab=time`} className="font-medium hover:text-text">{row.name}</Link>
                       </td>
@@ -163,21 +160,20 @@ export default function FinancePage() {
                       </td>
                       <td className="px-4 py-2 text-text-muted">{row.effectiveHourlyRate !== null ? `${money(row.effectiveHourlyRate)}/h` : "—"}</td>
                       <td className="px-4 py-2">
-                        <span className={`rounded-full border px-2 py-0.5 t5 font-medium ${MARGIN_STYLE[row.status]}`}>{MARGIN_LABEL[row.status]}</span>
+                        <span className={`t6 rounded-xs border px-2 py-0.5 ${MARGIN_STYLE[row.status]}`}>{MARGIN_LABEL[row.status]}</span>
                       </td>
                     </tr>
                   ))}
                 </tbody>
               </table>
-            </div>
-          </Card>
+          </div>
 
-          <Card className="space-y-4">
+          <section className="mt-10 space-y-4 border-t border-edge pt-5">
             <div>
               <SectionTitle>Custos e meta</SectionTitle>
               <p className="t3 text-text-muted">O custo/hora da equipe interna vale para todo apontamento sem profissional. Profissionais com custo próprio entram pelo valor deles.</p>
             </div>
-            <div className="grid gap-3 sm:grid-cols-3">
+            <div className="grid gap-x-8 gap-y-5 border-y border-edge py-4 sm:grid-cols-3">
               <div>
                 <Label>Custo/hora da equipe interna</Label>
                 <Input type="number" min={0} value={rates.defaultHourlyCost} onChange={(e) => setRates({ ...rates, defaultHourlyCost: e.target.value })} placeholder="Ex.: 80" data-testid="rate-default" />
@@ -214,7 +210,7 @@ export default function FinancePage() {
               </Button>
               {saved && <span className="t3 text-text">Aplicado ✓</span>}
             </div>
-          </Card>
+          </section>
         </>
       )}
     </div>

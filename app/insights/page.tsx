@@ -70,7 +70,7 @@ export default function InsightsPage() {
     return (
       <div className="space-y-6">
         <Skeleton className="h-9 w-48" />
-        <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-5">
+        <div className="grid gap-x-8 gap-y-5 border-y border-edge py-4 sm:grid-cols-3 lg:grid-cols-5">
           {Array.from({ length: 5 }).map((_, i) => (
             <Skeleton key={i} className="h-24" />
           ))}
@@ -102,11 +102,8 @@ export default function InsightsPage() {
     <div className="space-y-6">
       <div className="flex flex-wrap items-center justify-between gap-3">
         <div>
-          <h1 className="d3 flex items-center gap-2">
-            <Icon name="chart" size={24} className="text-text" />
-            Insights
-          </h1>
-          <p className="mt-1 t3 text-text-muted">
+          <h1 className="d3">Insights</h1>
+          <p className="t3 measure-lede mt-2 text-text-muted">
             O andamento de tudo — demandas, clientes, campanhas e produção — em um só lugar.
           </p>
         </div>

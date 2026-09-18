@@ -121,7 +121,7 @@ export default function OnboardingModal({
           </span>
           <div>
             <h3 className="d4 font-semibold">{current.title}</h3>
-            <p className="mt-1 t3 text-text-muted">{current.body}</p>
+            <p className="t3 measure-lede mt-2 text-text-muted">{current.body}</p>
             {current.href && (
               <a
                 href={current.href}

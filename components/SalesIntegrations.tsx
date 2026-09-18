@@ -157,21 +157,21 @@ export default function SalesIntegrations({ clientId }: { clientId: string }) {
       <SalesWebhookCard clientId={clientId} />
       {/* Totais */}
       {totals && (
-        <div className="grid gap-3 sm:grid-cols-3">
+        <div className="grid gap-x-8 gap-y-5 border-y border-edge py-4 sm:grid-cols-3">
           <Card>
-            <p className="t5 uppercase tracking-wide text-text-muted">Receita total</p>
+            <p className="t6 text-text-muted">Receita total</p>
             <p className="d3 mt-1 text-text">
               {brl(totals.revenue, totals.currency)}
             </p>
           </Card>
           <Card>
-            <p className="t5 uppercase tracking-wide text-text-muted">Unidades / negócios</p>
+            <p className="t6 text-text-muted">Unidades / negócios</p>
             <p className="d3 mt-1">
               {fmtNum(totals.units, lang)}
             </p>
           </Card>
           <Card>
-            <p className="t5 uppercase tracking-wide text-text-muted">Produto vs serviço</p>
+            <p className="t6 text-text-muted">Produto vs serviço</p>
             <p className="mt-1 t3">
               <span className="text-text">{brl(totals.byKind.product, totals.currency)}</span> produto
               <br />
@@ -264,7 +264,7 @@ export default function SalesIntegrations({ clientId }: { clientId: string }) {
           </div>
           {snapshots.length > 0 && (
             <div className="mt-4 space-y-1.5 border-t border-edge pt-3">
-              <p className="t5 uppercase tracking-wide text-text-muted">Últimas métricas (30 dias)</p>
+              <p className="t6 text-text-muted">Últimas métricas (30 dias)</p>
               {snapshots.map((s) => (
                 <div key={s.platform} className="flex items-center justify-between rounded-md bg-surface-sunken px-3 py-1.5 t5">
                   <span className="font-medium">{s.platform}</span>

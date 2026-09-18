@@ -145,7 +145,7 @@ export default function AttendantTab({ client }: { client: Client }) {
       <div className="flex flex-wrap items-start justify-between gap-3">
         <div>
           <h2 className="d4">Atendente de WhatsApp com IA</h2>
-          <p className="mt-1 t3 text-text-muted">
+          <p className="t3 measure-lede mt-2 text-text-muted">
             Responde os clientes desta marca 24/7 na voz dela, sem inventar preço nem promessa — e chama uma pessoa quando precisa.
           </p>
         </div>
@@ -188,7 +188,7 @@ export default function AttendantTab({ client }: { client: Client }) {
 
         <div className="grid gap-4 md:grid-cols-2">
           <div className="space-y-3">
-            <p className="t5 font-semibold uppercase tracking-wider text-text-muted">Horário comercial (modo automático)</p>
+            <p className="t6 text-text-muted">Horário comercial (modo automático)</p>
             <div className="grid grid-cols-2 gap-2">
               <div>
                 <Label>Das (hora)</Label>
@@ -223,7 +223,7 @@ export default function AttendantTab({ client }: { client: Client }) {
             </div>
           </div>
           <div className="space-y-3">
-            <p className="t5 font-semibold uppercase tracking-wider text-text-muted">Guardrails</p>
+            <p className="t6 text-text-muted">Guardrails</p>
             <div className="grid grid-cols-2 gap-2">
               <div>
                 <Label>Máx. respostas automáticas por contato/dia</Label>
@@ -254,7 +254,7 @@ export default function AttendantTab({ client }: { client: Client }) {
         </div>
 
         <div className="space-y-2 border-t border-edge pt-4">
-          <p className="t5 font-semibold uppercase tracking-wider text-text-muted">Número próprio da marca (opcional)</p>
+          <p className="t6 text-text-muted">Número próprio da marca (opcional)</p>
           <p className="t5 text-text-muted">
             Com o Phone Number ID e o token do WhatsApp Cloud API deste cliente, as mensagens que chegam nesse número entram aqui e as respostas saem por ele. Sem isso, o atendente usa o canal de WhatsApp da agência.
           </p>

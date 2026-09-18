@@ -245,7 +245,7 @@ export function StrategyAnalysisView({
           {data.targetBuyers.map((b, i) => (
             <div key={i} className="rounded-lg border border-edge bg-surface-sunken p-4">
               <p className="font-semibold">{b.persona}</p>
-              <p className="mt-1 t3 text-text-muted">{b.profile}</p>
+              <p className="t3 measure-lede mt-2 text-text-muted">{b.profile}</p>
               <div className="mt-3 grid gap-3 t3 text-text-muted sm:grid-cols-2">
                 <div>
                   <p className="mb-1 t5 font-semibold uppercase text-text/70">Dores</p>
@@ -631,10 +631,10 @@ export function RoiProjectionView({
         <SectionTitle>Resumo</SectionTitle>
         <p className="t3 leading-relaxed text-text-muted">{data.summary}</p>
       </Card>
-      <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
+      <div className="grid gap-x-8 gap-y-5 border-y border-edge py-4 sm:grid-cols-2 lg:grid-cols-4">
         {stats.map((s, i) => (
           <Card key={i} className="text-center">
-            <p className="t5 uppercase tracking-wide text-text-muted">{s.label}</p>
+            <p className="t6 text-text-muted">{s.label}</p>
             <p className="d3 mt-1 text-text">
               {s.value}
             </p>

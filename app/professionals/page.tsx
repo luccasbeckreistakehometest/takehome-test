@@ -34,7 +34,7 @@ export default function ProfessionalsPage() {
           <h1 className="d3">
             Profissionais
           </h1>
-          <p className="mt-1 t3 text-text-muted">
+          <p className="t3 measure-lede mt-2 text-text-muted">
             Fotógrafos e designers parceiros — rankeados por elo com base em
             entregas reais e notas de qualidade da IA.
           </p>

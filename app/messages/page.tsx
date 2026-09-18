@@ -86,11 +86,8 @@ export default function MessagesPage() {
   return (
     <div className="space-y-6">
       <div>
-        <h1 className="d3 flex items-center gap-2">
-          <Icon name="message" size={24} className="text-text" />
-          Mensagens
-        </h1>
-        <p className="mt-1 t3 text-text-muted">
+        <h1 className="d3">Mensagens</h1>
+        <p className="t3 measure-lede mt-2 text-text-muted">
           WhatsApp e Instagram: mensagens individuais, listas de transmissão e agendamento — com rascunho por IA.
         </p>
       </div>
@@ -395,7 +392,7 @@ function Compose({
           </Button>
           {variants.length > 0 && (
             <div className="space-y-2">
-              <p className="t5 uppercase tracking-wide text-text-muted">Variações — clique para usar</p>
+              <p className="t6 text-text-muted">Variações — clique para usar</p>
               {variants.map((v, i) => (
                 <button
                   key={i}
@@ -850,7 +847,7 @@ function SessionWorker({ onSavedConnection }: { onSavedConnection: () => void })
   return (
     <div className="mt-1 space-y-2 rounded-md border border-edge bg-surface-sunken p-3">
       <div className="flex items-center justify-between">
-        <span className="t5 uppercase tracking-wide text-text-muted">Assistente de envio</span>
+        <span className="t6 text-text-muted">Assistente de envio</span>
         <span className={`t5 font-semibold ${label.cls}`}>{label.text}</span>
       </div>
       {status.message && <p className="t5 text-text-muted">{status.message}</p>}

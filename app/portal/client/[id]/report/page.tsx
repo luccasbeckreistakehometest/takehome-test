@@ -74,11 +74,11 @@ export default function PortalMonthlyReportPage({ params }: { params: Promise<{ 
           </h1>
         </div>
         <div className="flex items-center gap-2">
-          <button onClick={() => setMonth((m) => shiftMonth(m, -1))} className="grid size-9 place-items-center rounded-md border border-edge bg-surface-sunken hover:border-edge" aria-label="Mês anterior">
+          <button onClick={() => setMonth((m) => shiftMonth(m, -1))} className="grid size-9 place-items-center rounded-sm border border-edge text-text-muted hover:bg-surface-sunken" aria-label="Mês anterior">
             ‹
           </button>
           <span className="min-w-40 text-center font-medium" data-testid="report-month">{monthTitle(month, lang)}</span>
-          <button onClick={() => setMonth((m) => shiftMonth(m, 1))} className="grid size-9 place-items-center rounded-md border border-edge bg-surface-sunken hover:border-edge" aria-label="Próximo mês">
+          <button onClick={() => setMonth((m) => shiftMonth(m, 1))} className="grid size-9 place-items-center rounded-sm border border-edge text-text-muted hover:bg-surface-sunken" aria-label="Próximo mês">
             ›
           </button>
         </div>

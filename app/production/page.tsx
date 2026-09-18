@@ -95,7 +95,7 @@ export default function ProductionPage() {
 
   return (
     <div className="space-y-6">
-      <div className="flex flex-wrap items-end justify-between gap-4">
+      <div className="flex flex-wrap items-end justify-between gap-4 border-b border-edge pb-5">
         <div>
           <h1 className="d3">
             Produção

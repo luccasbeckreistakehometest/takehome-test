@@ -254,7 +254,7 @@ export function ApprovalLinkCard({ clientId, clientName }: { clientId: string; c
         <p className="flex items-center gap-2 font-medium">
           <Icon name="check" size={16} className="text-text" /> Aprovação por link
         </p>
-        <p className="mt-1 t3 text-text-muted">Mande posts e entregas pelo WhatsApp. O cliente aprova sem senha e o post já entra na agenda.</p>
+        <p className="t3 measure-lede mt-2 text-text-muted">Mande posts e entregas pelo WhatsApp. O cliente aprova sem senha e o post já entra na agenda.</p>
       </div>
       <Button onClick={() => setOpen(true)} data-testid="approval-link-open">
         <Icon name="send" size={14} /> Enviar para aprovação

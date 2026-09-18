@@ -138,19 +138,19 @@ function RadarResult({ run, trend, sample = false }: { run: Run; trend: number |
   return (
     <div className="space-y-4" data-testid={sample ? "radar-sample" : "radar-result"}>
       {(sample || run.demo) && <Tag>{sample ? "exemplo — sem IA agora" : "exemplo (modo de teste)"}</Tag>}
-      <div className="grid gap-3 sm:grid-cols-3">
+      <div className="grid gap-x-8 gap-y-5 border-y border-edge py-4 sm:grid-cols-3">
         <Card>
-          <p className="t5 uppercase tracking-wide text-text-muted">Participação da marca</p>
+          <p className="t6 text-text-muted">Participação da marca</p>
           <p className="d2 mt-1 text-text" data-testid="radar-sov">{`${fmtNum(s.shareOfVoice, lang)}%`}</p>
           {trend !== null && <p className={`t5 ${trend >= 0 ? "text-positive" : "text-negative"}`}>{`${trend >= 0 ? "+" : ""}${fmtNum(trend, lang)} p.p. desde a rodada anterior`}</p>}
         </Card>
         <Card>
-          <p className="t5 uppercase tracking-wide text-text-muted">Respostas que citam a marca</p>
+          <p className="t6 text-text-muted">Respostas que citam a marca</p>
           <p className="d2 mt-1">{`${s.answersWithClient}/${s.questions}`}</p>
           {s.bestPosition !== null && <p className="t5 text-text-muted">{`melhor posição: ${s.bestPosition}º`}</p>}
         </Card>
         <Card>
-          <p className="t5 uppercase tracking-wide text-text-muted">Concorrentes citados</p>
+          <p className="t6 text-text-muted">Concorrentes citados</p>
           <ul className="mt-1 space-y-0.5 t3">
             {s.competitors.slice(0, 4).map((c) => (
               <li key={c.name} className="flex justify-between gap-2">

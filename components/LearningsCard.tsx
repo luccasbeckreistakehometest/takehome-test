@@ -50,7 +50,7 @@ function HighlightTile({ title, h, l, lang, tone }: { title: string; h: Highligh
   const value = useValue(l, lang);
   return (
     <div className={`rounded-lg border p-3 ${tone === "good" ? "border-positive/40 bg-positive-wash" : "border-negative/40 bg-negative-wash"}`} data-testid={tone === "good" ? "learning-best" : "learning-worst"} data-dimension={h.dimension} data-key={h.key}>
-      <p className="text-[11px] font-semibold uppercase tracking-wider text-text-muted">{title}</p>
+      <p className="t6 text-text-muted">{title}</p>
       <p className="d4 mt-1 capitalize">{groupLabel(h.dimension, h.key, toLang(lang))}</p>
       <p className={`t5 ${tone === "good" ? "text-positive" : "text-negative"}`}>
         {h.liftPct >= 0 ? "+" : ""}

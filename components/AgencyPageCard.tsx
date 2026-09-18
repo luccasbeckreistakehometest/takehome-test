@@ -140,7 +140,7 @@ export default function AgencyPageCard({ origin }: { origin: string }) {
 
       <div className="space-y-2 border-t border-edge pt-4">
         <div className="flex items-center justify-between">
-          <p className="t5 font-semibold uppercase tracking-wider text-text-muted">Depoimentos</p>
+          <p className="t6 text-text-muted">Depoimentos</p>
           <button
             type="button"
             className="t5 text-text hover:underline"
@@ -167,7 +167,7 @@ export default function AgencyPageCard({ origin }: { origin: string }) {
 
       <div className="grid gap-4 border-t border-edge pt-4 md:grid-cols-2">
         <div>
-          <p className="t5 font-semibold uppercase tracking-wider text-text-muted">Mostrar no portfólio</p>
+          <p className="t6 text-text-muted">Mostrar no portfólio</p>
           <p className="mb-2 t5 text-text-muted">Entregas em imagem. Marque só o que o cliente autorizou divulgar.</p>
           {data.portfolio.length === 0 ? (
             <p className="t5 text-text-muted">Nenhuma entrega em imagem ainda.</p>
@@ -187,7 +187,7 @@ export default function AgencyPageCard({ origin }: { origin: string }) {
           )}
         </div>
         <div>
-          <p className="t5 font-semibold uppercase tracking-wider text-text-muted">Clientes na página</p>
+          <p className="t6 text-text-muted">Clientes na página</p>
           <label className="mb-2 flex items-center gap-2 t5 text-text-muted">
             <input type="checkbox" checked={config.showClients} onChange={(e) => setConfig({ ...config, showClients: e.target.checked })} className="accent-[var(--accent)]" />
             Mostrar a faixa “quem confia na gente”
@@ -214,7 +214,7 @@ export default function AgencyPageCard({ origin }: { origin: string }) {
       </div>
 
       <div className="space-y-2 border-t border-edge pt-4">
-        <p className="t5 font-semibold uppercase tracking-wider text-text-muted">Leads recebidos</p>
+        <p className="t6 text-text-muted">Leads recebidos</p>
         {data.leads.length === 0 ? (
           <p className="t5 text-text-muted">Nenhum lead ainda. Compartilhe o link da página nas redes e na bio.</p>
         ) : (

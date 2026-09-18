@@ -46,7 +46,7 @@ export default function AccountSettings() {
     <div className="mx-auto max-w-2xl space-y-6">
       <div>
         <h1 className="d3">Minha conta</h1>
-        <p className="mt-1 t3 text-text-muted">
+        <p className="t3 measure-lede mt-2 text-text-muted">
           {ROLE_LABEL[account.role] ?? account.role} · usuário <span className="font-mono text-text">{account.username}</span>
         </p>
       </div>

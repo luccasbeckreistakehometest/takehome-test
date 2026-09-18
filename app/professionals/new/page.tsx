@@ -13,7 +13,7 @@ export default function NewProfessionalPage() {
     <div className="mx-auto max-w-3xl space-y-6">
       <div>
         <h1 className="d3">Cadastro de profissional</h1>
-        <p className="mt-1 t3 text-text-muted">
+        <p className="t3 measure-lede mt-2 text-text-muted">
           Fotógrafo(a) ou designer: preencha o perfil para receber demandas com fit real — o match considera skills,
           localização, especialidade e o histórico de entregas na plataforma.
         </p>

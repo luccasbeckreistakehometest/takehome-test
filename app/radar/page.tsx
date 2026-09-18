@@ -17,10 +17,8 @@ export default async function RadarOverviewPage() {
   return (
     <div className="space-y-6">
       <div>
-        <h1 className="d3 flex items-center gap-2">
-          <Icon name="radar" size={24} className="text-text" /> Radar de IA
-        </h1>
-        <p className="mt-1 t3 text-text-muted">
+        <h1 className="d3">Radar de IA</h1>
+        <p className="t3 measure-lede mt-2 text-text-muted">
           Quando alguém pergunta para uma IA, seus clientes aparecem? Simulação com busca na web, uma vez por semana por cliente — um entregável para vender todo mês.
         </p>
       </div>

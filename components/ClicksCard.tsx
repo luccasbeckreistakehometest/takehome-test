@@ -28,7 +28,7 @@ export default function ClicksCard({ clientId, onOpen }: { clientId: string; onO
         </button>
       </div>
       {links.length === 0 ? (
-        <p className="mt-1 t3 text-text-muted">Crie links com UTM automático e uma página de link na bio. Os cliques entram no relatório e no &quot;o que funciona&quot;.</p>
+        <p className="t3 measure-lede mt-2 text-text-muted">Crie links com UTM automático e uma página de link na bio. Os cliques entram no relatório e no &quot;o que funciona&quot;.</p>
       ) : (
         <>
           <p className="d3 mt-1 text-text" data-testid="clicks-total">{total}</p>

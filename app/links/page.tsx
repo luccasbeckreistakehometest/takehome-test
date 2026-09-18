@@ -17,10 +17,8 @@ export default async function LinksOverviewPage() {
   return (
     <div className="space-y-6">
       <div>
-        <h1 className="d3 flex items-center gap-2">
-          <Icon name="link" size={24} className="text-text" /> Links & bio
-        </h1>
-        <p className="mt-1 t3 text-text-muted">Links curtos com UTM automático e a página de link na bio de cada cliente. Os cliques entram no relatório mensal.</p>
+        <h1 className="d3">Links & bio</h1>
+        <p className="t3 measure-lede mt-2 text-text-muted">Links curtos com UTM automático e a página de link na bio de cada cliente. Os cliques entram no relatório mensal.</p>
       </div>
       {rows.length === 0 ? (
         <p className="rounded-md border border-dashed border-edge p-4 t3 text-text-muted">Cadastre um cliente para criar os primeiros links.</p>

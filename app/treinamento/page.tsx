@@ -44,7 +44,7 @@ export default function TrainingPage() {
         <h1 className="d3">
           Treinamento
         </h1>
-        <p className="mt-1 t3 text-text-muted">
+        <p className="t3 measure-lede mt-2 text-text-muted">
           O caminho feliz de cada papel dentro da plataforma — do briefing ao
           pagamento.
         </p>

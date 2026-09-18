@@ -166,7 +166,7 @@ export default function TimeTab({ client }: { client: Client }) {
       <div className="flex flex-wrap items-start justify-between gap-3">
         <div>
           <h2 className="d4">Horas e margem</h2>
-          <p className="mt-1 t3 text-text-muted">O que esta conta paga por mês contra o que ela custa em horas da equipe.</p>
+          <p className="t3 measure-lede mt-2 text-text-muted">O que esta conta paga por mês contra o que ela custa em horas da equipe.</p>
         </div>
         <div className="flex items-center gap-2">
           <button onClick={() => setMonth((m) => shiftMonth(m, -1))} className="grid size-8 place-items-center rounded-md border border-edge hover:border-edge" aria-label="Mês anterior">‹</button>
@@ -177,9 +177,9 @@ export default function TimeTab({ client }: { client: Client }) {
 
       {error && <ErrorBox message={error} />}
 
-      <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-5" data-testid="client-margin" data-status={data.margin.status}>
+      <div className="grid gap-x-8 gap-y-5 border-y border-edge py-4 sm:grid-cols-3 lg:grid-cols-5" data-testid="client-margin" data-status={data.margin.status}>
         <Card className="lg:col-span-1">
-          <p className="text-[11px] font-semibold uppercase tracking-wider text-text-muted">Fee mensal</p>
+          <p className="t6 text-text-muted">Fee mensal</p>
           <div className="mt-1 flex items-center gap-1">
             <Input type="number" min={0} value={fee} onChange={(e) => setFee(e.target.value)} placeholder="0" data-testid="client-fee" />
             <Button variant="ghost" className="!px-2.5 !py-1.5 t5" onClick={saveFee} data-testid="client-fee-save">
@@ -188,21 +188,21 @@ export default function TimeTab({ client }: { client: Client }) {
           </div>
         </Card>
         <Card>
-          <p className="text-[11px] font-semibold uppercase tracking-wider text-text-muted">Horas no mês</p>
+          <p className="t6 text-text-muted">Horas no mês</p>
           <p className="d3 mt-1" data-testid="client-hours">{formatHours(data.margin.minutes)}</p>
         </Card>
         <Card>
-          <p className="text-[11px] font-semibold uppercase tracking-wider text-text-muted">Custo das horas</p>
+          <p className="t6 text-text-muted">Custo das horas</p>
           <p className="d3 mt-1" data-testid="client-cost">{money(data.margin.cost)}</p>
           <p className="t5 text-text-muted">{data.settings.defaultHourlyCost ? `${money(data.settings.defaultHourlyCost)}/h padrão` : "custo/hora não definido"}</p>
         </Card>
         <Card>
-          <p className="text-[11px] font-semibold uppercase tracking-wider text-text-muted">Margem</p>
+          <p className="t6 text-text-muted">Margem</p>
           <p className={`n2 mt-1 ${data.margin.margin < 0 ? "text-negative" : ""}`} data-testid="client-margin-value">{money(data.margin.margin)}</p>
           {data.margin.marginPct !== null && <p className="t5 text-text-muted">{data.margin.marginPct}%</p>}
         </Card>
         <Card>
-          <p className="text-[11px] font-semibold uppercase tracking-wider text-text-muted">Situação</p>
+          <p className="t6 text-text-muted">Situação</p>
           <span className={`mt-1 inline-block rounded-full border px-2 py-0.5 t5 font-medium ${MARGIN_STYLE[data.margin.status]}`}>{MARGIN_LABEL[data.margin.status]}</span>
           {data.margin.effectiveHourlyRate !== null && <p className="mt-1 t5 text-text-muted">{money(data.margin.effectiveHourlyRate)}/h efetivo</p>}
           <Link href="/finance" className="mt-1 block t5 text-text hover:underline">Ver todos os clientes →</Link>

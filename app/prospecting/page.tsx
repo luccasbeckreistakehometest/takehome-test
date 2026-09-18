@@ -87,7 +87,7 @@ export default function ProspectingPage() {
         <h1 className="d3">
           Prospecção de clientes
         </h1>
-        <p className="mt-1 t3 text-text-muted">
+        <p className="t3 measure-lede mt-2 text-text-muted">
           A IA pesquisa na web negócios reais do nicho/região e qualifica cada
           lead — mesmo quem ainda não está na plataforma. Converta em cliente com
           um clique.

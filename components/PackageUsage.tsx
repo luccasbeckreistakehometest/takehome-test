@@ -150,11 +150,11 @@ export function PackageSummaryCard({ clientId, onOpen }: { clientId: string; onO
       </div>
       {data.package ? (
         <>
-          <p className="mt-1 t3 text-text-muted">{data.usage.map((u) => `${u.used}/${u.allowance} ${u.label.toLowerCase()}`).join(" · ")}</p>
+          <p className="t3 measure-lede mt-2 text-text-muted">{data.usage.map((u) => `${u.used}/${u.allowance} ${u.label.toLowerCase()}`).join(" · ")}</p>
           {pending > 0 && <p className="mt-1 t3 text-caution">{`${pending} extra(s) esperando o cliente aprovar o valor`}</p>}
         </>
       ) : (
-        <p className="mt-1 t3 text-text-muted">Diga o que o fee cobre por mês. Pedido fora do combinado vira extra com valor aprovado pelo cliente.</p>
+        <p className="t3 measure-lede mt-2 text-text-muted">Diga o que o fee cobre por mês. Pedido fora do combinado vira extra com valor aprovado pelo cliente.</p>
       )}
     </div>
   );

@@ -96,7 +96,7 @@ export default function CampaignTab({ client }: { client: Client }) {
     <div className="space-y-6" data-testid="campaign-tab">
       <div>
         <h2 className="d4">Campanha de 30 dias</h2>
-        <p className="mt-1 t3 text-text-muted">
+        <p className="t3 measure-lede mt-2 text-text-muted">
           Do briefing + objetivo + canais para um mês inteiro: temas por semana, formato por canal, dias de postagem e cada post já escrito (gancho, legenda, CTA e brief da imagem) — tudo entra no calendário como rascunho para você aceitar ou pular.
         </p>
       </div>
@@ -156,7 +156,7 @@ export default function CampaignTab({ client }: { client: Client }) {
             <div>
               <p className="t5 uppercase tracking-widest text-text">Revisão da campanha</p>
               <h3 className="d4" data-testid="campaign-theme">{review.campaign.theme}</h3>
-              <p className="mt-1 t3 text-text-muted">{review.campaign.summary}</p>
+              <p className="t3 measure-lede mt-2 text-text-muted">{review.campaign.summary}</p>
               <div className="mt-2 flex flex-wrap gap-1.5">
                 {review.campaign.weeks.map((w) => (
                   <Tag key={w.week}>

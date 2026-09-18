@@ -175,7 +175,7 @@ export default function Tour({ kind, refId }: { kind: TourKind | null; refId?: s
       >
         <p className="t5 font-semibold uppercase tracking-widest text-text">{`${step + 1} / ${total}`}</p>
         <h3 className="mt-1 d4 font-semibold">{s.t}</h3>
-        <p className="mt-1 t3 text-text-muted">{s.b}</p>
+        <p className="t3 measure-lede mt-2 text-text-muted">{s.b}</p>
         <div className="mt-4 flex flex-wrap items-center justify-between gap-2">
           <button onClick={() => finish("tour_skip")} className="t3 text-text-muted hover:text-text" data-testid="tour-skip">
             Pular

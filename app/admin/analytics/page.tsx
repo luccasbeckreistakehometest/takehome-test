@@ -53,7 +53,7 @@ export default async function AnalyticsPage({ searchParams }: Props) {
             <Link href="/admin" className="hover:text-text">Admin</Link> / Analytics
           </p>
           <h1 className="d3">Funil e origens</h1>
-          <p className="mt-1 t3 text-text-muted">Sem cookie: um visitante é um hash que muda todo dia. Eventos crus ficam 90 dias; o resumo diário fica.</p>
+          <p className="t3 measure-lede mt-2 text-text-muted">Sem cookie: um visitante é um hash que muda todo dia. Eventos crus ficam 90 dias; o resumo diário fica.</p>
         </div>
         <a href={`/api/admin/analytics?format=csv&days=${days}`} className="rounded-md border border-edge bg-surface-sunken px-3 py-2 t3 hover:border-edge">
           Baixar CSV

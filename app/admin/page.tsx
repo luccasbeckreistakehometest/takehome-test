@@ -131,10 +131,8 @@ export default function AdminPage() {
     <div className="space-y-6">
       <div className="flex flex-wrap items-center justify-between gap-3">
         <div>
-          <h1 className="d3 flex items-center gap-2">
-            <Icon name="settings" size={24} className="text-text" /> Admin da Plataforma
-          </h1>
-          <p className="mt-1 t3 text-text-muted">
+          <h1 className="d3">Admin da Plataforma</h1>
+          <p className="t3 measure-lede mt-2 text-text-muted">
             Controle geral: agências, clientes, profissionais, planos e receita.
           </p>
         </div>

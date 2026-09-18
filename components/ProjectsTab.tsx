@@ -567,7 +567,7 @@ function ProjectDetail({ projectId, onBack }: { projectId: string; onBack: () =>
       </div>
       {editing ? (
         <Card className="space-y-3">
-          <div className="grid gap-3 sm:grid-cols-3">
+          <div className="grid gap-x-8 gap-y-5 border-y border-edge py-4 sm:grid-cols-3">
             <div className="sm:col-span-1">
               <Label>Título</Label>
               <Input
@@ -626,7 +626,7 @@ function ProjectDetail({ projectId, onBack }: { projectId: string; onBack: () =>
         <SectionTitle>Profissional</SectionTitle>
         {project.applications.length > 0 && (
           <div className="space-y-2">
-            <p className="t5 font-semibold uppercase tracking-wider text-text-muted">
+            <p className="t6 text-text-muted">
               Candidaturas ({project.applications.length})
             </p>
             {project.applications.map((application) => (

@@ -22,7 +22,7 @@ export default function OneTimeLogin({
     <Card className="space-y-4 border-edge" data-testid="one-time-login">
       <div>
         <p className="font-semibold">Acesso criado para {who}</p>
-        <p className="mt-1 t3 text-text-muted">
+        <p className="t3 measure-lede mt-2 text-text-muted">
           Envie estes dados para a pessoa. A senha provisória só aparece agora — se perder, gere outra pelo suporte do admin.
         </p>
       </div>

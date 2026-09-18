@@ -148,7 +148,7 @@ export default function ClientPortalPage({
           </h1>
           {tier && <TierBadge info={tier} />}
         </div>
-        <p className="mt-1 t3 text-text-muted">
+        <p className="t3 measure-lede mt-2 text-text-muted">
           {client.selfServe
             ? "Sua conta em modo autônomo — você no controle, com a IA de copiloto."
             : "Acompanhe aqui o que a agência está construindo para a sua marca."}

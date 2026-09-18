@@ -99,10 +99,10 @@ export default function CalendarPage() {
 
   return (
     <div className="space-y-6" data-testid="calendar-page">
-      <div className="flex flex-wrap items-end justify-between gap-4">
+      <div className="flex flex-wrap items-end justify-between gap-4 border-b border-edge pb-5">
         <div>
           <h1 className="d3">Calendário de conteúdo</h1>
-          <p className="mt-1 t3 text-text-muted">
+          <p className="t3 measure-lede mt-2 text-text-muted">
             Tudo o que vai ao ar, por cliente e por dia. Rascunhos nascem das aprovações; mude o status com um clique.
           </p>
         </div>

@@ -36,10 +36,8 @@ export default async function GrowthPage() {
   return (
     <div className="space-y-6">
       <div>
-        <h1 className="d3 flex items-center gap-2">
-          <Icon name="trend" size={24} className="text-text" /> Crescimento
-        </h1>
-        <p className="mt-1 t3 text-text-muted">Onde a agência encontra cliente novo e vende mais para quem já está com você.</p>
+        <h1 className="d3">Crescimento</h1>
+        <p className="t3 measure-lede mt-2 text-text-muted">Onde a agência encontra cliente novo e vende mais para quem já está com você.</p>
       </div>
       <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3" data-testid="growth-hub">
         {GROWTH_CARDS.map((card) => (

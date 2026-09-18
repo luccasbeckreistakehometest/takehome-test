@@ -173,7 +173,7 @@ export default function SettingsPage() {
         )}
         {settings.canManagePlatform && (
         <div className="space-y-2 border-t border-edge pt-4">
-          <p className="t5 font-semibold uppercase tracking-wider text-text-muted">
+          <p className="t6 text-text-muted">
             Custo & features de IA
           </p>
           <div className="grid gap-2 sm:grid-cols-3">
@@ -246,7 +246,7 @@ export default function SettingsPage() {
         </div>
         {settings.canManagePlatform && (
         <div className="space-y-2 border-t border-edge pt-4">
-          <p className="t5 font-semibold uppercase tracking-wider text-text-muted">
+          <p className="t6 text-text-muted">
             Chaves de API
           </p>
           <p className="t5 text-text-muted">

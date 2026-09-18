@@ -92,7 +92,7 @@ export default function RegistrationForm({
     return (
       <div className="space-y-3">
         <p className="t3 text-text-muted">Que tipo de conta você quer criar?</p>
-        <div className="grid gap-3 sm:grid-cols-3">
+        <div className="grid gap-x-8 gap-y-5 border-y border-edge py-4 sm:grid-cols-3">
           {(Object.keys(ROLE_INFO) as Role[]).map((r) => (
             <button
               key={r}

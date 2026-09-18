@@ -70,7 +70,7 @@ export default function ProfessionalPage({
           <h1 className="d3">
             {profile.name}
           </h1>
-          <p className="mt-1 t3 text-text-muted">
+          <p className="t3 measure-lede mt-2 text-text-muted">
             {ROLE_LABELS[profile.role]} · {profile.location}
             {profile.priceRange && ` · ${profile.priceRange}`}
           </p>
@@ -99,14 +99,14 @@ export default function ProfessionalPage({
         />
       ) : (
         <>
-          <div className="grid gap-3 sm:grid-cols-3">
+          <div className="grid gap-x-8 gap-y-5 border-y border-edge py-4 sm:grid-cols-3">
             {[
               { label: "Demandas concluídas", value: profile.stats.completed },
               { label: "Nota média das entregas", value: profile.stats.avgScore ?? "—" },
               { label: "Demandas ativas", value: profile.stats.active },
             ].map((stat) => (
               <Card key={stat.label} className="text-center">
-                <p className="t5 uppercase tracking-wide text-text-muted">{stat.label}</p>
+                <p className="t6 text-text-muted">{stat.label}</p>
                 <p className="d3 mt-1 text-text">
                   {stat.value}
                 </p>
@@ -128,7 +128,7 @@ export default function ProfessionalPage({
               </p>
             )}
             {profile.marketFocus && (
-              <p className="mt-1 t3 text-text-muted">
+              <p className="t3 measure-lede mt-2 text-text-muted">
                 <span className="font-semibold text-text/80">Foco de mercado: </span>
                 {profile.marketFocus}
               </p>
@@ -164,7 +164,7 @@ export default function ProfessionalPage({
             <SectionTitle>Meus ganhos</SectionTitle>
             <div className="grid gap-3 sm:grid-cols-2">
               <div className="rounded-lg border border-edge bg-surface-sunken p-3 t3">
-                <p className="t5 uppercase tracking-wide text-text-muted">A receber (pagamento combinado)</p>
+                <p className="t6 text-text-muted">A receber (pagamento combinado)</p>
                 {profile.projects.filter((p) => p.escrow === "held").length === 0 ? (
                   <p className="mt-1 text-text-muted">Nada reservado no momento.</p>
                 ) : (
@@ -178,7 +178,7 @@ export default function ProfessionalPage({
                 )}
               </div>
               <div className="rounded-lg border border-edge bg-surface-sunken p-3 t3">
-                <p className="t5 uppercase tracking-wide text-text-muted">Recebido (demandas pagas)</p>
+                <p className="t6 text-text-muted">Recebido (demandas pagas)</p>
                 {profile.projects.filter((p) => p.status === "paid").length === 0 ? (
                   <p className="mt-1 text-text-muted">Nenhum pagamento ainda.</p>
                 ) : (

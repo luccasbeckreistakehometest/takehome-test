@@ -195,10 +195,8 @@ export default function PlansView() {
   if (data.role === "admin" && data.revenue) {
     return (
       <div className="space-y-6">
-        <h1 className="d3 flex items-center gap-2">
-          <Icon name="money" size={24} className="text-text" /> Receita & planos
-        </h1>
-        <div className="grid gap-3 sm:grid-cols-3">
+        <h1 className="d3">Receita & planos</h1>
+        <div className="grid gap-x-8 gap-y-5 border-y border-edge py-4 sm:grid-cols-3">
           <Card>
             <p className="t5 uppercase text-text-muted">Receita confirmada</p>
             <p className="mt-1 text-3xl font-bold text-text">{brl(data.revenue.total)}</p>
@@ -300,7 +298,7 @@ export default function PlansView() {
             <p className="flex items-center gap-2 font-medium">
               <Icon name="money" size={16} className="text-text" /> Assinatura no cartão (Mercado Pago)
             </p>
-            <p className="mt-1 t3 text-text-muted">
+            <p className="t3 measure-lede mt-2 text-text-muted">
               {sub.cancelAtPeriodEnd
                 ? `Cancelada — o plano vale até ${fmtDate(sub.renewsAt)} e depois volta para o grátis.`
                 : `Próxima cobrança em ${fmtDate(sub.renewsAt)}. Sem fidelidade: cancele quando quiser.`}
@@ -421,7 +419,7 @@ export default function PlansView() {
         <p className="mb-3 t3 text-text-muted">
           Cada ação de IA consome coins; ações que falham não são cobradas. Coins comprados não expiram.
         </p>
-        <div className="grid gap-3 sm:grid-cols-3">
+        <div className="grid gap-x-8 gap-y-5 border-y border-edge py-4 sm:grid-cols-3">
           {data.packs.map((pack) => (
             <div key={pack.id} className="rounded-lg border border-edge bg-surface-sunken p-4 text-center">
               <p className="d3 text-text">
