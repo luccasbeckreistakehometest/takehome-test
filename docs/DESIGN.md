@@ -118,7 +118,7 @@ agência e na capa da proposta, onde a peça é uma peça de marca.
 Pilha de fallback (serifas de sistema com altura-x parecida, não Times):
 `'Iowan Old Style', 'Palatino Linotype', Palatino, 'Book Antiqua', Georgia, serif`
 
-**Texto e UI — `Archivo`** (Omnibus-Type). Grotesca variável com `wght 100–900` e `wdth 62.5–125`.
+**Texto e UI — `Archivo`** (Omnibus-Type). Grotesca variável com `wght 100–900` e `wdth 62–125`.
 
 Por quê: linhagem editorial de verdade (grotescas americanas de madeira, desenhadas para manchete de
 jornal), altura-x grande — sobrevive a 12–13px numa tabela densa, que é onde o produto passa a maior
@@ -143,12 +143,25 @@ Pilha de fallback: `'Helvetica Neue', Helvetica, Arial, 'Liberation Sans', sans-
 chave de webhook, nome de variável de ambiente.
 `ui-monospace, SFMono-Regular, 'SF Mono', Menlo, Consolas, 'Liberation Mono', monospace`
 
-**Números: não há terceira família.** Toda tabela, KPI, moeda e porcentagem usa Archivo com
-`font-variant-numeric: tabular-nums lining-nums`. Uma família a menos na rede e nenhuma quebra de
-ritmo de cor dentro da tabela.
+**Números: não há terceira família — e não é palpite, foi medido.** Dez dígitos a 40px, num Chromium
+headless, comparando a largura de `1111111111` com a de `0000000000`:
+
+| Família | Padrão | Com `tabular-nums` | Conclusão |
+|---|---|---|---|
+| Archivo | 208,55px vs 229,09px — **proporcional** | 227,38px vs 227,38px — **idênticas** | `tnum` funciona |
+| Fraunces | 173,98px vs 256,13px — proporcional | 173,98px vs 256,13px — **sem efeito** | Fraunces **não tem** figuras tabulares |
+
+Daí a regra, que é dura: **todo número que se alinha usa Archivo com
+`font-variant-numeric: tabular-nums lining-nums`. Fraunces nunca recebe número que se compara** —
+num Fraunces sem `tnum` a diferença entre uma coluna de uns e uma de zeros passa de 80px em dez
+dígitos, e a coluna desmonta. Fraunces pode levar número só quando ele é ornamento isolado (o ano
+numa capa, o "1" de um passo). Uma família a menos na rede e nenhuma quebra de ritmo de cor dentro
+da tabela.
 
 Subset `latin` cobre o pt-BR inteiro (ã õ ç á é í ó ú â ê ô à). `latin-ext` só entra se surgir copy
-em idioma que precise.
+em idioma que precise. Os eixos e subsets acima foram conferidos no catálogo do próprio
+`next/font/google` desta versão (`Fraunces`: SOFT 0–100, WONK 0–1, opsz 9–144, wght 100–900;
+`Archivo`: wdth 62–125, wght 100–900), e não no que a documentação promete.
 
 ### 3.2 Escala modular
 
@@ -515,7 +528,9 @@ Sem pacote novo. O sprite local `components/icons.tsx` (SVG inline, `currentColo
 
 ### 9.2 Números
 
-- `font-variant-numeric: tabular-nums lining-nums` em **toda** célula, KPI, moeda e porcentagem.
+- `font-variant-numeric: tabular-nums lining-nums` em **toda** célula, KPI, moeda e porcentagem — e
+  sempre em Archivo. Fraunces não tem `tnum` (medido, §3.1): um KPI em display desalinha a coluna.
+  É por isso que os tokens `n1`–`n3` da §3.2 são de texto, não de display, mesmo o de 36px.
 - Moeda em pt-BR via `Intl.NumberFormat("pt-BR", { style: "currency", currency: "BRL" })`.
   O símbolo `R$` sai em `text-muted`, o valor em `text` — a coluna alinha pelo dígito, não pelo cifrão.
 - Porcentagem com uma casa (`15,8%`); contagem sem casa; horas como `12h30` (nunca `12.5`).
