@@ -138,7 +138,7 @@ export default function CalendarPage() {
             <Icon name="send" size={14} /> Enviar para aprovação
           </Button>
           <Button onClick={() => setAdding({ date: today })} data-testid="calendar-add">
-            <Icon name="plus" size={14} /> Novo post
+            Novo post
           </Button>
         </div>
       </div>
@@ -174,7 +174,7 @@ export default function CalendarPage() {
 
       <Card className="!p-3">
         <div className="mb-2 flex items-center justify-between">
-          <p className="d4 capitalize" data-testid="calendar-title">
+          <p className="t6 text-text-muted" data-testid="calendar-title">
             {title}
           </p>
           <div className="hidden gap-2 t6 text-text-muted sm:flex">
@@ -192,7 +192,7 @@ export default function CalendarPage() {
         ) : (
           <div className="overflow-x-auto">
             <div className="min-w-[700px]">
-              <div className="grid grid-cols-7 gap-1 text-center t6 text-text-muted">
+              <div className="grid grid-cols-7 text-center t6 text-text-muted">
                 {weekdayNames.map((name, i) => (
                   <div key={i} className="py-1">
                     {name}
@@ -200,7 +200,7 @@ export default function CalendarPage() {
                 ))}
               </div>
               {grid.map((week, wi) => (
-                <div key={wi} className="grid grid-cols-7 gap-1">
+                <div key={wi} className="-mt-px grid grid-cols-7">
                   {week.map((day) => {
                     const items = byDay.get(day.key) ?? [];
                     const isToday = day.key === today;
@@ -209,14 +209,14 @@ export default function CalendarPage() {
                     return (
                       <div
                         key={day.key}
-                        className={`group rounded-md border p-1.5 ${view === "month" ? "min-h-24" : "min-h-48"} ${
-                          day.inMonth ? "bg-surface" : "bg-surface-sunken/50 opacity-50"
-                        } ${isToday ? "border-edge" : isGap ? "border-caution/40" : "border-edge"}`}
+                        className={`group -ml-px border border-rule p-1.5 ${view === "month" ? "min-h-24" : "min-h-48"} ${
+                          day.inMonth ? "bg-surface" : "bg-surface-sunken text-text-faint"
+                        } ${isToday ? "border-edge bg-surface-sunken" : isGap ? "border-caution/50" : ""}`}
                         data-testid="calendar-day"
                         data-date={day.key}
                       >
                         <div className="mb-1 flex items-center justify-between">
-                          <span className={`t5 ${isToday ? "font-bold text-text" : "text-text-muted"}`}>{parseKey(day.key).getDate()}</span>
+                          <span className={`t5 tnum ${isToday ? "font-medium text-text" : "text-text-muted"}`}>{parseKey(day.key).getDate()}</span>
                           <button
                             onClick={() => setAdding({ date: day.key })}
                             className="t5 text-text-muted opacity-0 transition-opacity hover:text-text group-hover:opacity-100"
