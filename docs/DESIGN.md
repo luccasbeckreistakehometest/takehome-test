@@ -691,3 +691,76 @@ data = 160px, nome = 320px, e-mail/URL = 100% da coluna. Formulário longo ganha
 - Imprima o relatório em PDF antes de chamá-lo de pronto.
 
 ---
+
+## 13. Ordem de reconstrução
+
+Ordem escolhida por dependência (fundação antes de uso) e por risco (o que mais aparece primeiro, o
+que mais vende logo depois). Cada bloco fecha num commit que compila, passa o e2e e pode ir para
+produção sozinho.
+
+| # | Bloco | Arquivos | Por que nesta posição |
+|---|---|---|---|
+| 1 | **Fundação** | `app/globals.css` (tokens, `@theme`, reset, impressão), `app/layout.tsx` (troca de `next/font`), **novo** `lib/brand-ramp.ts` + testes | Nada mais pode começar antes dos tokens e da garantia de contraste da §5.4 |
+| 2 | **Primitivas** | `components/ui.tsx` → `Button`, `Field`, `Input`, `Textarea`, `Select`, `Panel`, `Tag`/`Badge`, `Skeleton`, `EmptyState`, `ErrorBox`; `components/icons.tsx` endurecido | Todo o resto consome daqui |
+| 3 | **Varredura de emoji** | busca global por emoji em `components/**` e `app/**` | Uma passada mecânica, alto impacto visual, risco quase zero |
+| 4 | **Casca do app** | `app/layout.tsx` (header → `AppRail` + `TopBar`), `AgencyNav`, `UserMenu`, `ThemeToggle`, `GlobalSearch`, `JobsIndicator`, `ActivityBell`, `AssistantWidget` (o FAB sai de cima do conteúdo), `SiteFooter` | Resolve o D6 e enquadra todas as telas seguintes |
+| 5 | **Workspace do cliente** | `Workspace.tsx`, `SectionTabs.tsx`, `ClientDashboard.tsx`, `PulseOverviewCard`, `ClicksCard`, `PackageUsage`, `ApprovalLinkPanel` | Tela mais usada e a mais danificada (D4, D7) |
+| 6 | **Telas de dado** | `app/finance`, `app/insights`, `app/invoices`, `app/production` (`ProjectsTab`), `app/agenda`, `app/calendar` (`TimeTab`) | Onde a densidade `compact` e a `Table` provam o sistema |
+| 7 | **As entregas** ⭐ | `MonthlyReportView`, `app/print/report/[token]`, `app/print/[id]`, `ProposalPanel` + `app/proposta/[token]`, `InvoicePayView` + `app/fatura/[token]`, `app/a/[slug]` (página pública), `CarouselTab`, `DeliverableViewer` | **É a tese.** Vem depois da fundação porque depende da §10, e antes do marketing porque é o que a agência mostra ao cliente dela |
+| 8 | **Formulários** | `ClientForm`, `ProfessionalForm`, `RegistrationForm`, `AccessRequestForm`, `LeadForm`, `ContactForm`, `app/settings`, `InvoiceSettingsCard`, `BrandVoiceCard` | Depende de `Field`; grande volume, baixa variabilidade |
+| 9 | **Portal e aprovação** | `app/portal/client/[id]`, `app/aprovar/[token]`, `ApprovalLinkView`, `ApprovalTimeline`, `PortalInvoicesCard` | Também é cara de cliente; herda quase tudo do bloco 7 |
+| 10 | **Marketing** | `components/landing/LandingPage`, `Pricing`, `ShowcaseDemo`, `DifferentiatorsStrip`, `app/para-agencias`, `app/para-marcas`, `app/para-profissionais`, `app/plans`, `components/legal/*` | A reescrita mais pesada (some o hero mock, os blobs, o gradiente, as cinco seções iguais) e a que menos bloqueia as outras |
+| 11 | **Entrada e onboarding** | `app/login`, `app/criar-conta`, `app/cadastro`, `app/convite/[token]`, `WelcomeLogin`, `OneTimeLogin`, `OnboardingModal`, `Tour`, `ActivationChecklist`, `LevelUpCelebration`, `MarcaModeChoice` | Volume pequeno, mas é a primeira impressão; depois do marketing para herdar a mesma abertura |
+| 12 | **Admin** | `app/admin`, `app/admin/analytics`, `PanelTester` | Público interno; os 13 tiles viram três grupos com uma tabela |
+| 13 | **Fechamento** | folha de impressão revisada nas 5 peças, varredura de `focus-visible`, `prefers-reduced-motion`, captura de todas as telas em 1440/390 × claro/escuro para conferência | Só fecha com as telas olhadas, não com o diff lido |
+
+⭐ Se houver tempo para um bloco só, é o 7: é onde o produto deixa de parecer um app genérico e passa
+a parecer um estúdio.
+
+---
+
+## 14. Riscos e pontos em aberto
+
+1. **Peso das fontes.** Duas variáveis (Fraunces com 4 eixos + Archivo com 2) no subset `latin`.
+   Precisa ser medido depois do primeiro build: se o par passar de ~180KB de woff2, o plano B é
+   travar `SOFT`/`WONK` e servir Fraunces só nos passos de display, com Archivo assumindo o `d4`.
+2. **`opsz` disciplinado.** O eixo óptico é o melhor argumento do sistema e a coisa mais fácil de
+   esquecer. Por isso a §3.3 exige o helper: se alguém escrever `text-5xl` na mão, o `opsz` fica em
+   144 e a manchete some. Vale um teste de lint.
+3. **Whitelabel em produção.** Trocar `--accent` cru por seis tokens derivados muda a aparência de
+   toda agência que já configurou uma cor. A derivação preserva a matiz, mas o tom **muda** quando a
+   cor original reprovava — e vai mudar. É uma melhoria, e ainda assim precisa ser avisada.
+4. **Tema claro é hoje o parente pobre.** O CSS atual assume escuro por padrão e o claro só troca
+   variáveis. Com os dois temas de primeira classe, cada tela do bloco correspondente precisa ser
+   vista nos dois — o que dobra a conferência visual.
+5. **`0` versus `—`.** A regra da §9.2 tem consequência de backend: várias rotas devolvem `0` onde a
+   verdade é "sem dado". A troca para `null` precisa ser feita rota a rota, e está fora do escopo do
+   design system.
+6. **Emoji no e-mail e no WhatsApp.** A varredura do bloco 3 é só da interface. Notificação, e-mail e
+   mensagem do atendente são outro canal, com outra norma — não mexer sem decidir separadamente.
+7. **Confetes do level-up.** Mantidos como funcionalidade, mas a regra "nunca por cima de peça de
+   cliente" precisa de uma checagem de rota no componente, que hoje não existe.
+8. **`overflow-x: hidden` no `body`.** O CSS atual esconde rolagem lateral globalmente, o que mascara
+   estouro em vez de corrigir. Some na fundação — e isso vai **revelar** estouros hoje invisíveis em
+   telas que ninguém sabia que estavam quebradas. É bom, mas gera trabalho não previsto.
+9. **Não verificado nesta rodada:** nenhum teste com leitor de tela; nenhum PDF realmente impresso;
+   nenhuma medição de CLS/LCP com as fontes novas; nenhuma tela do portal do cliente, do profissional
+   ou do fluxo de aprovação foi capturada (a auditoria cobriu landing, funil, planos, home da
+   agência, workspace, formulário, finance, calendário, relatório, faturas, ajustes e admin).
+
+---
+
+## 15. Referências de estudo
+
+Estudadas pela **hierarquia, o espaço em branco e a contenção da cor de marca**, nunca por asset ou
+texto copiado: Linear e o painel da Vercel (densidade e estado), a tipografia do Notion, o navegador
+de arquivos do Figma, Pitch e Superlist (ritmo editorial dentro de produto), e, no lado das
+ferramentas de agência, Planable, Later, AgencyAnalytics e Reportei (layout de relatório e como a cor
+do cliente entra numa peça sem tomar conta dela).
+
+Fontes técnicas dos eixos e das features citadas:
+[Fraunces (Google Fonts)](https://fonts.google.com/specimen/Fraunces/about),
+[Fraunces no GitHub](https://github.com/undercasetype/Fraunces),
+[Archivo (Omnibus-Type)](https://www.omnibus-type.com/variable-fonts/),
+[OpenType features na web (Google Fonts Knowledge)](https://fonts.google.com/knowledge/using_type/implementing_open_type_features_on_the_web),
+[`font-variant-numeric` (MDN)](https://developer.mozilla.org/en-US/docs/Web/CSS/Reference/Properties/font-variant-numeric).
