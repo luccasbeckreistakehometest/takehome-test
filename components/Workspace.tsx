@@ -58,7 +58,7 @@ import {
   StrategyAnalysisView,
   VisualIdentityView,
 } from "./renderers";
-import { Button, Card, ErrorBox, Spinner, Tag } from "./ui";
+import { Button, Card, ErrorBox, Spinner } from "./ui";
 import { groupOfTab, isTabKey, resolveTab, visibleGroups, type TabKey } from "@/lib/workspace-tabs";
 
 function nextMonthLabel(): string {

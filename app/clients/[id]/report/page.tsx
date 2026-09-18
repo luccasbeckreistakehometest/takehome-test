@@ -8,7 +8,7 @@ import { currentMonth, shiftMonth, type MonthlyReportData } from "@/lib/report-a
 import type { MonthlyReport } from "@/lib/reports-db";
 import MonthlyReportView, { monthTitle } from "@/components/MonthlyReportView";
 import { buttonClass } from "@/lib/button-class";
-import { Button, Card, CopyButton, ErrorBox, Spinner } from "@/components/ui";
+import { Button, CopyButton, ErrorBox, Spinner } from "@/components/ui";
 import { Icon } from "@/components/icons";
 
 type Payload = {

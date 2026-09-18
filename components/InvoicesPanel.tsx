@@ -5,9 +5,8 @@ import Link from "next/link";
 import { api } from "@/lib/api";
 import { fmtMoney, useUiLang } from "@/lib/i18n";
 import type { InvoiceItem, InvoiceState } from "@/lib/invoice-rules";
-import { Button, Card, EmptyState, ErrorBox, Input, SectionTitle, Select, Spinner, Tag } from "./ui";
+import { Button, EmptyState, ErrorBox, Input, SectionTitle, Select, Spinner, Tag } from "./ui";
 import { buttonClass } from "@/lib/button-class";
-import { Icon } from "./icons";
 import { openAfter } from "@/lib/open-later";
 
 type Invoice = {

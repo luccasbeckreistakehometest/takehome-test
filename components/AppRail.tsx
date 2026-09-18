@@ -16,7 +16,7 @@ import { useEffect, useRef, useState } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { Icon } from "./icons";
-import { AGENCY_MORE_NAV, AGENCY_NAV_GROUPS, AGENCY_PRIMARY_NAV, navItemActive } from "@/lib/nav";
+import { AGENCY_MORE_NAV, AGENCY_NAV_GROUPS, navItemActive } from "@/lib/nav";
 
 export default function AppRail({ brandName }: { brandName: string }) {
   const pathname = usePathname() ?? "/";

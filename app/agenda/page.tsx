@@ -6,7 +6,7 @@ import type { Client } from "@/lib/types";
 import type { MeetingWithNames, ScheduledPostWithClient } from "@/lib/marketplace-db";
 import type { MeetingRecs } from "@/lib/marketplace-schemas";
 import { googleCalendarUrl } from "@/lib/gcal";
-import { Button, Card, ErrorBox, Input, Label, SectionTitle, Select, Spinner, Tag } from "@/components/ui";
+import { Button, Card, ErrorBox, Input, SectionTitle, Select, Spinner, Tag } from "@/components/ui";
 
 export default function AgendaPage() {
   const [meetings, setMeetings] = useState<MeetingWithNames[] | null>(null);

@@ -11,7 +11,7 @@ type SettingsView = AgencySettings & {
   hasTogetherKey?: boolean;
   hasHfKey?: boolean;
 };
-import { Button, Card, CopyButton, ErrorBox, Input, Label, SectionTitle } from "@/components/ui";
+import { Button, Card, ErrorBox, Input, Label, SectionTitle } from "@/components/ui";
 import InviteGenerator from "@/components/InviteGenerator";
 import ApprovalRulesCard from "@/components/ApprovalRulesCard";
 import AgencyPageCard from "@/components/AgencyPageCard";

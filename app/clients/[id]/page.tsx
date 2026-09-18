@@ -2,7 +2,6 @@
 
 import { use, useEffect, useState } from "react";
 import Link from "next/link";
-import { api } from "@/lib/api";
 import type { Client } from "@/lib/types";
 import Workspace from "@/components/Workspace";
 import { Spinner } from "@/components/ui";
