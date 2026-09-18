@@ -69,7 +69,7 @@ export default function BrandVoiceCard({ clientId }: { clientId: string }) {
     <Card className="space-y-4" id="voz-da-marca" data-testid="brand-voice-card">
       <div>
         <SectionTitle>Guardião da voz da marca</SectionTitle>
-        <p className="text-sm text-muted">
+        <p className="t3 text-text-muted">
           Antes de agendar um post ou enviar uma resposta do atendente, um clique compara o texto com o tom do briefing
           {data.tone ? <> (“{data.tone}”)</> : null} e com estas regras. Repetir o mesmo texto não gasta IA.
         </p>
@@ -93,7 +93,7 @@ export default function BrandVoiceCard({ clientId }: { clientId: string }) {
             <Input type="number" min={0} max={30} value={form.maxEmojis} onChange={(e) => setForm({ ...form, maxEmojis: e.target.value })} data-testid="voice-max-emojis" />
           </div>
         </div>
-        <div className="space-y-2 text-sm">
+        <div className="space-y-2 t3">
           <label className="flex items-center gap-2">
             <input type="checkbox" checked={form.requireCta} onChange={(e) => setForm({ ...form, requireCta: e.target.checked })} className="accent-[var(--accent)]" />
             Todo post precisa de uma chamada para ação
@@ -113,8 +113,8 @@ export default function BrandVoiceCard({ clientId }: { clientId: string }) {
         <Button onClick={save} disabled={saving} data-testid="voice-save">
           {saving ? "Salvando..." : "Salvar regras da voz"}
         </Button>
-        {saved && <span className="text-sm text-text">Aplicado ✓</span>}
-        <span className="text-xs text-muted">
+        {saved && <span className="t3 text-text">Aplicado ✓</span>}
+        <span className="t5 text-text-muted">
           {data.stats.checks} checagens · {data.stats.rewrites} reescritas em cache
         </span>
       </div>

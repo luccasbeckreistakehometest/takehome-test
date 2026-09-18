@@ -108,7 +108,7 @@ export default function AssistantWidget() {
             <Icon name="message" size={16} />
           </span>
           <div>
-            <p className="text-sm font-semibold">Assistente</p>
+            <p className="t3 font-semibold">Assistente</p>
             <p className="text-[11px] text-text-muted">
               {busy ? "executando..." : "fala que eu faço"}
             </p>
@@ -121,7 +121,7 @@ export default function AssistantWidget() {
                 setMessages([]);
                 sessionStorage.removeItem("assistant_chat");
               }}
-              className="rounded-md px-2 py-1 text-xs text-text-muted transition-colors hover:text-negative"
+              className="rounded-md px-2 py-1 t5 text-text-muted transition-colors hover:text-negative"
               title="Limpar conversa"
             >
               ⌫
@@ -129,7 +129,7 @@ export default function AssistantWidget() {
           )}
           <button
             onClick={close}
-            className="rounded-md px-2 py-1 text-sm text-text-muted transition-colors hover:text-foreground"
+            className="rounded-md px-2 py-1 t3 text-text-muted transition-colors hover:text-text"
             title="Minimizar"
           >
             ✕
@@ -141,7 +141,7 @@ export default function AssistantWidget() {
       <div ref={scrollRef} className="flex-1 space-y-2.5 overflow-y-auto p-3">
         {messages.length === 0 && (
           <div className="space-y-2 pt-4">
-            <p className="text-center text-sm text-text-muted">
+            <p className="text-center t3 text-text-muted">
               Eu <span className="font-medium text-text">executo</span> por você: crio
               demandas, agendo reuniões e posts.
             </p>
@@ -149,7 +149,7 @@ export default function AssistantWidget() {
               <button
                 key={suggestion}
                 onClick={() => send(suggestion)}
-                className="block w-full rounded-lg border border-edge bg-surface-sunken px-3 py-2 text-left text-xs text-text-muted transition-colors hover:border-edge hover:text-foreground"
+                className="block w-full rounded-lg border border-edge bg-surface-sunken px-3 py-2 text-left t5 text-text-muted transition-colors hover:border-edge hover:text-text"
               >
                 “{suggestion}”
               </button>
@@ -191,7 +191,7 @@ export default function AssistantWidget() {
             }}
             rows={1}
             placeholder="Diga o que precisa..."
-            className="max-h-24 min-h-9 flex-1 resize-none rounded-xl border border-edge bg-surface-sunken px-3 py-2 text-sm outline-none transition-colors focus:border-edge"
+            className="max-h-24 min-h-9 flex-1 resize-none rounded-xl border border-edge bg-surface-sunken px-3 py-2 t3 outline-none transition-colors focus:border-edge"
           />
           <button
             onClick={() => send()}

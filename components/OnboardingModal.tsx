@@ -107,8 +107,8 @@ export default function OnboardingModal({
     <div className="fixed inset-0 z-[80] grid place-items-center bg-black/50 p-4 backdrop-blur-sm" data-testid="welcome">
       <div className="w-full max-w-lg animate-pop-in rounded-2xl border border-edge bg-surface p-6 shadow-2xl [transform-origin:center]">
         <div className="mb-4 flex items-center justify-between">
-          <p className="text-xs font-semibold uppercase tracking-widest text-text">{flow.title}</p>
-          <button onClick={() => close("skip")} aria-label="Fechar" className="text-muted transition-colors hover:text-foreground">
+          <p className="t5 font-semibold uppercase tracking-widest text-text">{flow.title}</p>
+          <button onClick={() => close("skip")} aria-label="Fechar" className="text-text-muted transition-colors hover:text-text">
             <Icon name="x" size={18} />
           </button>
         </div>
@@ -120,12 +120,12 @@ export default function OnboardingModal({
             <Icon name={current.icon} size={24} />
           </span>
           <div>
-            <h3 className="text-lg font-semibold">{current.title}</h3>
-            <p className="mt-1 text-sm text-muted">{current.body}</p>
+            <h3 className="d4 font-semibold">{current.title}</h3>
+            <p className="mt-1 t3 text-text-muted">{current.body}</p>
             {current.href && (
               <a
                 href={current.href}
-                className="mt-3 inline-block text-sm font-medium text-text hover:underline"
+                className="mt-3 inline-block t3 font-medium text-text hover:underline"
               >
                 {current.cta} →
               </a>
@@ -146,13 +146,13 @@ export default function OnboardingModal({
             ))}
           </div>
           <div className="flex gap-2">
-            <button onClick={() => close("skip")} className="rounded-md px-3 py-1.5 text-sm text-muted hover:text-foreground" data-testid="welcome-skip">
+            <button onClick={() => close("skip")} className="rounded-md px-3 py-1.5 t3 text-text-muted hover:text-text" data-testid="welcome-skip">
               Pular
             </button>
             <button
               data-testid="welcome-next"
               onClick={() => (isLast ? close("done") : setStep((s) => s + 1))}
-              className="rounded-md bg-accent px-4 py-1.5 text-sm font-medium text-accent-ink transition-opacity hover:opacity-90"
+              className="rounded-md bg-accent px-4 py-1.5 t3 font-medium text-accent-ink transition-opacity hover:opacity-90"
             >
               {isLast ? "Começar" : "Próximo"}
             </button>

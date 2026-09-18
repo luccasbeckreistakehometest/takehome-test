@@ -20,9 +20,9 @@ import { Icon } from "@/components/icons";
 
 function Item({ title, children }: { title: string; children: React.ReactNode }) {
   return (
-    <div className="rounded-lg border border-edge bg-surface-2 p-4">
-      <p className="mb-1 text-sm font-semibold">{title}</p>
-      <div className="text-sm text-muted">{children}</div>
+    <div className="rounded-lg border border-edge bg-surface-sunken p-4">
+      <p className="mb-1 t3 font-semibold">{title}</p>
+      <div className="t3 text-text-muted">{children}</div>
     </div>
   );
 }
@@ -52,7 +52,7 @@ function CreateDemandButton({
   const [state, setState] = useState<"idle" | "creating" | "done">("idle");
   if (state === "done") {
     return (
-      <span className="inline-flex items-center gap-1.5 text-xs text-text">
+      <span className="inline-flex items-center gap-1.5 t5 text-text">
         <Icon name="check" size={13} /> Demanda criada (aba Demandas)
       </span>
     );
@@ -80,7 +80,7 @@ function CreateDemandButton({
           setState("idle");
         }
       }}
-      className="inline-flex items-center justify-center gap-1.5 rounded border border-edge bg-surface-2 px-2 py-0.5 text-xs text-muted transition-colors hover:border-edge hover:text-text disabled:opacity-50"
+      className="inline-flex items-center justify-center gap-1.5 rounded border border-edge bg-surface-sunken px-2 py-0.5 t5 text-text-muted transition-colors hover:border-edge hover:text-text disabled:opacity-50"
     >
       {state === "creating" ? (
         "Criando..."
@@ -113,7 +113,7 @@ function SchedulePostButton({
 
   if (state === "done") {
     return (
-      <span className="inline-flex items-center gap-1.5 text-xs text-text">
+      <span className="inline-flex items-center gap-1.5 t5 text-text">
         <Icon name="clock" size={13} /> Agendado <Icon name="check" size={13} /> (veja em Agenda)
       </span>
     );
@@ -122,7 +122,7 @@ function SchedulePostButton({
     return (
       <button
         onClick={() => setState("picking")}
-        className="inline-flex items-center gap-1.5 rounded border border-edge bg-surface-2 px-2 py-0.5 text-xs text-muted transition-colors hover:border-edge hover:text-text"
+        className="inline-flex items-center gap-1.5 rounded border border-edge bg-surface-sunken px-2 py-0.5 t5 text-text-muted transition-colors hover:border-edge hover:text-text"
       >
         <Icon name="clock" size={13} /> Agendar publicação
       </button>
@@ -134,7 +134,7 @@ function SchedulePostButton({
         type="datetime-local"
         value={when}
         onChange={(e) => setWhen(e.target.value)}
-        className="rounded border border-edge bg-surface-2 px-2 py-0.5 text-xs outline-none focus:border-edge"
+        className="rounded border border-edge bg-surface-sunken px-2 py-0.5 t5 outline-none focus:border-edge"
       />
       <button
         disabled={!when || state === "saving"}
@@ -157,13 +157,13 @@ function SchedulePostButton({
             setState("picking");
           }
         }}
-        className="rounded bg-accent px-2 py-0.5 text-xs font-medium text-accent-ink disabled:opacity-50"
+        className="rounded bg-accent px-2 py-0.5 t5 font-medium text-accent-ink disabled:opacity-50"
       >
         {state === "saving" ? "..." : "Confirmar"}
       </button>
       <button
         onClick={() => setState("idle")}
-        className="text-xs text-muted hover:text-foreground"
+        className="t5 text-text-muted hover:text-text"
       >
         cancelar
       </button>
@@ -207,7 +207,7 @@ function ActionButton({
           setBusy(false);
         }
       }}
-      className="inline-flex items-center justify-center gap-1.5 rounded border border-edge bg-background px-2 py-1 text-xs text-muted transition-colors hover:border-edge hover:text-text disabled:opacity-50"
+      className="inline-flex items-center justify-center gap-1.5 rounded border border-edge bg-background px-2 py-1 t5 text-text-muted transition-colors hover:border-edge hover:text-text disabled:opacity-50"
     >
       {busy ? (busyLabel ?? "...") : label}
     </button>
@@ -226,7 +226,7 @@ export function StrategyAnalysisView({
     <div className="space-y-6">
       <Card>
         <SectionTitle>Sumário executivo</SectionTitle>
-        <p className="text-sm leading-relaxed text-muted">{data.executiveSummary}</p>
+        <p className="t3 leading-relaxed text-text-muted">{data.executiveSummary}</p>
       </Card>
       <Card>
         <SectionTitle>Tendências de mercado (pesquisa real)</SectionTitle>
@@ -234,7 +234,7 @@ export function StrategyAnalysisView({
           {data.marketTrends.map((t, i) => (
             <Item key={i} title={t.trend}>
               <p>{t.implication}</p>
-              <p className="mt-2 text-xs opacity-70">Fonte: {t.source}</p>
+              <p className="mt-2 t5 opacity-70">Fonte: {t.source}</p>
             </Item>
           ))}
         </div>
@@ -243,21 +243,21 @@ export function StrategyAnalysisView({
         <SectionTitle>Target buyers — deep dive</SectionTitle>
         <div className="grid gap-3 lg:grid-cols-2">
           {data.targetBuyers.map((b, i) => (
-            <div key={i} className="rounded-lg border border-edge bg-surface-2 p-4">
+            <div key={i} className="rounded-lg border border-edge bg-surface-sunken p-4">
               <p className="font-semibold">{b.persona}</p>
-              <p className="mt-1 text-sm text-muted">{b.profile}</p>
-              <div className="mt-3 grid gap-3 text-sm text-muted sm:grid-cols-2">
+              <p className="mt-1 t3 text-text-muted">{b.profile}</p>
+              <div className="mt-3 grid gap-3 t3 text-text-muted sm:grid-cols-2">
                 <div>
-                  <p className="mb-1 text-xs font-semibold uppercase text-foreground/70">Dores</p>
+                  <p className="mb-1 t5 font-semibold uppercase text-text/70">Dores</p>
                   <List items={b.pains} />
                 </div>
                 <div>
-                  <p className="mb-1 text-xs font-semibold uppercase text-foreground/70">Desejos</p>
+                  <p className="mb-1 t5 font-semibold uppercase text-text/70">Desejos</p>
                   <List items={b.desires} />
                 </div>
               </div>
-              <p className="mt-3 text-sm text-muted">
-                <span className="font-semibold text-foreground/80">Gatilhos: </span>
+              <p className="mt-3 t3 text-text-muted">
+                <span className="font-semibold text-text/80">Gatilhos: </span>
                 {b.buyingTriggers}
               </p>
               <div className="mt-2 flex flex-wrap gap-1.5">
@@ -270,7 +270,7 @@ export function StrategyAnalysisView({
                   onClick={() =>
                     actions.onPosts(`conteúdo para a persona "${b.persona}": ${b.profile}`)
                   }
-                  className="mt-2 inline-flex items-center gap-1.5 rounded border border-edge bg-background px-2 py-1 text-xs text-muted transition-colors hover:border-edge hover:text-text"
+                  className="mt-2 inline-flex items-center gap-1.5 rounded border border-edge bg-background px-2 py-1 t5 text-text-muted transition-colors hover:border-edge hover:text-text"
                 >
                   <Icon name="edit" size={13} /> Gerar posts para esta persona
                 </button>
@@ -283,20 +283,20 @@ export function StrategyAnalysisView({
         <SectionTitle>Concorrentes</SectionTitle>
         <div className="grid gap-3 lg:grid-cols-2">
           {data.competitors.map((c, i) => (
-            <div key={i} className="rounded-lg border border-edge bg-surface-2 p-4 text-sm">
+            <div key={i} className="rounded-lg border border-edge bg-surface-sunken p-4 t3">
               <p className="font-semibold">{c.name}</p>
-              <p className="mt-1 text-muted">{c.positioning}</p>
-              <div className="mt-3 grid gap-3 text-muted sm:grid-cols-2">
+              <p className="mt-1 text-text-muted">{c.positioning}</p>
+              <div className="mt-3 grid gap-3 text-text-muted sm:grid-cols-2">
                 <div>
-                  <p className="mb-1 text-xs font-semibold uppercase text-positive/80">Forças</p>
+                  <p className="mb-1 t5 font-semibold uppercase text-positive/80">Forças</p>
                   <List items={c.strengths} />
                 </div>
                 <div>
-                  <p className="mb-1 text-xs font-semibold uppercase text-negative/80">Fraquezas</p>
+                  <p className="mb-1 t5 font-semibold uppercase text-negative/80">Fraquezas</p>
                   <List items={c.weaknesses} />
                 </div>
               </div>
-              <p className="mt-3 text-muted">
+              <p className="mt-3 text-text-muted">
                 <span className="font-semibold text-text">Oportunidade: </span>
                 {c.opportunity}
               </p>
@@ -308,16 +308,16 @@ export function StrategyAnalysisView({
         <SectionTitle>Best fits — onde apostar agora</SectionTitle>
         <div className="space-y-2">
           {data.bestFits.map((f, i) => (
-            <div key={i} className="flex items-start gap-3 rounded-lg border border-edge bg-surface-2 p-3 text-sm">
+            <div key={i} className="flex items-start gap-3 rounded-lg border border-edge bg-surface-sunken p-3 t3">
               <Tag>{f.priority}</Tag>
               <div className="flex-1">
                 <p className="font-medium">{f.recommendation}</p>
-                <p className="text-muted">{f.why}</p>
+                <p className="text-text-muted">{f.why}</p>
                 {actions && (
                   <div className="mt-2 flex flex-wrap gap-2">
                     <button
                       onClick={() => actions.onCampaign(`${f.recommendation} — ${f.why}`)}
-                      className="inline-flex items-center gap-1.5 rounded border border-edge bg-background px-2 py-1 text-xs text-muted transition-colors hover:border-edge hover:text-text"
+                      className="inline-flex items-center gap-1.5 rounded border border-edge bg-background px-2 py-1 t5 text-text-muted transition-colors hover:border-edge hover:text-text"
                     >
                       <Icon name="target" size={13} /> Gerar campanha desta aposta
                     </button>
@@ -331,7 +331,7 @@ export function StrategyAnalysisView({
                           setCreatingDemand(null);
                         }
                       }}
-                      className="inline-flex items-center justify-center gap-1.5 rounded border border-edge bg-background px-2 py-1 text-xs text-muted transition-colors hover:border-edge hover:text-text disabled:opacity-50"
+                      className="inline-flex items-center justify-center gap-1.5 rounded border border-edge bg-background px-2 py-1 t5 text-text-muted transition-colors hover:border-edge hover:text-text disabled:opacity-50"
                     >
                       {creatingDemand === i ? (
                         "IA escrevendo o brief..."
@@ -351,8 +351,8 @@ export function StrategyAnalysisView({
       <Card>
         <SectionTitle>Metas</SectionTitle>
         <div className="overflow-x-auto">
-          <table className="w-full text-left text-sm">
-            <thead className="text-xs uppercase text-muted">
+          <table className="w-full text-left t3">
+            <thead className="t5 uppercase text-text-muted">
               <tr>
                 <th className="py-2 pr-4">Meta</th>
                 <th className="py-2 pr-4">Métrica</th>
@@ -364,9 +364,9 @@ export function StrategyAnalysisView({
               {data.goals.map((g, i) => (
                 <tr key={i} className="border-t border-edge">
                   <td className="py-2 pr-4">{g.goal}</td>
-                  <td className="py-2 pr-4 text-muted">{g.metric}</td>
+                  <td className="py-2 pr-4 text-text-muted">{g.metric}</td>
                   <td className="py-2 pr-4 font-medium text-text">{g.target}</td>
-                  <td className="py-2 text-muted">{g.deadline}</td>
+                  <td className="py-2 text-text-muted">{g.deadline}</td>
                 </tr>
               ))}
             </tbody>
@@ -388,7 +388,7 @@ export function MarketPulseView({
     <div className="space-y-6">
       <Card>
         <SectionTitle>Momento do mercado</SectionTitle>
-        <p className="text-sm leading-relaxed text-muted">{data.summary}</p>
+        <p className="t3 leading-relaxed text-text-muted">{data.summary}</p>
       </Card>
       <Card>
         <SectionTitle>Destaques recentes</SectionTitle>
@@ -400,7 +400,7 @@ export function MarketPulseView({
                 <span className="text-text">Por que importa: </span>
                 {h.relevance}
               </p>
-              <p className="mt-2 text-xs opacity-70">Fonte: {h.source}</p>
+              <p className="mt-2 t5 opacity-70">Fonte: {h.source}</p>
             </Item>
           ))}
         </div>
@@ -409,11 +409,11 @@ export function MarketPulseView({
         <SectionTitle>Mudanças de tendência</SectionTitle>
         <div className="space-y-2">
           {data.trendShifts.map((t, i) => (
-            <div key={i} className="flex items-start gap-3 rounded-lg border border-edge bg-surface-2 p-3 text-sm">
+            <div key={i} className="flex items-start gap-3 rounded-lg border border-edge bg-surface-sunken p-3 t3">
               <Tag>{t.direction}</Tag>
               <div>
                 <p className="font-medium">{t.trend}</p>
-                <p className="text-muted">{t.action}</p>
+                <p className="text-text-muted">{t.action}</p>
               </div>
             </div>
           ))}
@@ -423,11 +423,11 @@ export function MarketPulseView({
         <SectionTitle>Ajustes recomendados</SectionTitle>
         <div className="space-y-2">
           {data.recommendations.map((r, i) => (
-            <div key={i} className="flex items-start gap-3 rounded-lg border border-edge bg-surface-2 p-3 text-sm">
+            <div key={i} className="flex items-start gap-3 rounded-lg border border-edge bg-surface-sunken p-3 t3">
               <Tag>{r.urgency}</Tag>
               <div className="flex-1">
                 <p className="font-medium">{r.recommendation}</p>
-                <p className="text-muted">{r.rationale}</p>
+                <p className="text-text-muted">{r.rationale}</p>
                 {actions && (
                   <div className="mt-2 flex flex-wrap gap-2">
                     <ActionButton
@@ -452,7 +452,7 @@ export function MarketPulseView({
       </Card>
       <Card>
         <SectionTitle>Watchlist</SectionTitle>
-        <div className="text-sm text-muted">
+        <div className="t3 text-text-muted">
           <List items={data.watchlist} />
         </div>
       </Card>
@@ -470,10 +470,10 @@ export function CampaignPlanView({
   return (
     <div className="space-y-6">
       <Card>
-        <p className="font-[family-name:var(--font-display)] text-xl font-semibold">
+        <p className="d4">
           {data.theme}
         </p>
-        <p className="mt-2 text-sm leading-relaxed text-muted">{data.summary}</p>
+        <p className="mt-2 t3 leading-relaxed text-text-muted">{data.summary}</p>
         {actions && (
           <div className="mt-3 flex flex-wrap gap-2">
             {actions.onSocial && (
@@ -504,13 +504,13 @@ export function CampaignPlanView({
         <SectionTitle>Semana a semana</SectionTitle>
         <div className="space-y-3">
           {data.weeks.map((w) => (
-            <div key={w.week} className="flex gap-4 rounded-lg border border-edge bg-surface-2 p-4">
-              <div className="grid size-10 shrink-0 place-items-center rounded-sm bg-surface-sunken font-[family-name:var(--font-display)] font-bold text-text">
+            <div key={w.week} className="flex gap-4 rounded-lg border border-edge bg-surface-sunken p-4">
+              <div className="d4 grid size-10 shrink-0 place-items-center rounded-sm bg-surface-sunken text-text">
                 S{w.week}
               </div>
-              <div className="flex-1 text-sm">
+              <div className="flex-1 t3">
                 <p className="font-semibold">{w.focus}</p>
-                <div className="mt-1 text-muted">
+                <div className="mt-1 text-text-muted">
                   <List items={w.actions} />
                 </div>
                 {actions && (
@@ -546,12 +546,12 @@ export function CampaignPlanView({
           <SectionTitle>Verba</SectionTitle>
           <div className="space-y-2">
             {data.budget.map((b, i) => (
-              <div key={i} className="rounded-lg border border-edge bg-surface-2 p-3 text-sm">
+              <div key={i} className="rounded-lg border border-edge bg-surface-sunken p-3 t3">
                 <div className="flex items-center justify-between">
                   <p className="font-medium">{b.item}</p>
                   <p className="font-semibold text-text">{b.allocation}</p>
                 </div>
-                <p className="mt-1 text-muted">{b.rationale}</p>
+                <p className="mt-1 text-text-muted">{b.rationale}</p>
               </div>
             ))}
           </div>
@@ -562,16 +562,16 @@ export function CampaignPlanView({
           <SectionTitle>Influenciadores recomendados (perfis reais)</SectionTitle>
           <div className="grid gap-3 lg:grid-cols-2">
             {data.influencers.map((influencer, i) => (
-              <div key={i} className="rounded-lg border border-edge bg-surface-2 p-4 text-sm">
+              <div key={i} className="rounded-lg border border-edge bg-surface-sunken p-4 t3">
                 <div className="flex flex-wrap items-center justify-between gap-2">
                   <p className="font-semibold">
                     {influencer.name}{" "}
-                    <span className="text-muted">· {influencer.platform}</span>
+                    <span className="text-text-muted">· {influencer.platform}</span>
                   </p>
                   <Tag>{influencer.followers}</Tag>
                 </div>
-                <p className="mt-1 text-muted">{influencer.whyFit}</p>
-                <div className="mt-2 flex flex-wrap items-center gap-3 text-xs">
+                <p className="mt-1 text-text-muted">{influencer.whyFit}</p>
+                <div className="mt-2 flex flex-wrap items-center gap-3 t5">
                   {influencer.profileUrl && (
                     <a
                       href={influencer.profileUrl}
@@ -583,7 +583,7 @@ export function CampaignPlanView({
                     </a>
                   )}
                   {influencer.contactEmail && (
-                    <span className="flex items-center gap-1 text-muted">
+                    <span className="flex items-center gap-1 text-text-muted">
                       <Icon name="mail" size={13} /> {influencer.contactEmail}
                       <CopyButton text={influencer.contactEmail} label="Copiar" />
                     </span>
@@ -596,7 +596,7 @@ export function CampaignPlanView({
       )}
       <Card>
         <SectionTitle>Riscos & pontos de atenção</SectionTitle>
-        <div className="text-sm text-muted">
+        <div className="t3 text-text-muted">
           <List items={data.risks} />
         </div>
       </Card>
@@ -629,13 +629,13 @@ export function RoiProjectionView({
     <div className="space-y-6">
       <Card>
         <SectionTitle>Resumo</SectionTitle>
-        <p className="text-sm leading-relaxed text-muted">{data.summary}</p>
+        <p className="t3 leading-relaxed text-text-muted">{data.summary}</p>
       </Card>
       <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
         {stats.map((s, i) => (
           <Card key={i} className="text-center">
-            <p className="text-xs uppercase tracking-wide text-muted">{s.label}</p>
-            <p className="mt-1 font-[family-name:var(--font-display)] text-2xl font-bold text-text">
+            <p className="t5 uppercase tracking-wide text-text-muted">{s.label}</p>
+            <p className="d3 mt-1 text-text">
               {s.value}
             </p>
           </Card>
@@ -644,8 +644,8 @@ export function RoiProjectionView({
       <Card>
         <SectionTitle>Métricas — antes → projetado → real</SectionTitle>
         <div className="overflow-x-auto">
-          <table className="w-full text-left text-sm">
-            <thead className="text-xs uppercase text-muted">
+          <table className="w-full text-left t3">
+            <thead className="t5 uppercase text-text-muted">
               <tr>
                 <th className="py-2 pr-4">Métrica</th>
                 <th className="py-2 pr-4">Antes</th>
@@ -658,7 +658,7 @@ export function RoiProjectionView({
               {data.metrics.map((m, i) => (
                 <tr key={i} className="border-t border-edge">
                   <td className="py-2 pr-4 font-medium">{m.metric}</td>
-                  <td className="py-2 pr-4 text-muted">{m.before}</td>
+                  <td className="py-2 pr-4 text-text-muted">{m.before}</td>
                   <td className="py-2 pr-4">{m.after}</td>
                   <td className="py-2 pr-4 font-semibold text-text">{m.uplift}</td>
                   {canEditActuals ? (
@@ -670,7 +670,7 @@ export function RoiProjectionView({
                           setSavingActuals("idle");
                         }}
                         placeholder="valor real..."
-                        className="w-28 rounded border border-edge bg-surface-2 px-2 py-1 text-xs outline-none focus:border-edge"
+                        className="w-28 rounded border border-edge bg-surface-sunken px-2 py-1 t5 outline-none focus:border-edge"
                       />
                     </td>
                   ) : (
@@ -694,32 +694,32 @@ export function RoiProjectionView({
                 });
                 setSavingActuals("saved");
               }}
-              className="rounded-md bg-accent px-3 py-1.5 text-xs font-medium text-accent-ink transition-opacity hover:opacity-90"
+              className="rounded-md bg-accent px-3 py-1.5 t5 font-medium text-accent-ink transition-opacity hover:opacity-90"
             >
               {savingActuals === "saving" ? "Salvando..." : "Salvar valores reais"}
             </button>
             {savingActuals === "saved" && (
-              <span className="inline-flex items-center gap-1.5 text-xs text-text">
+              <span className="inline-flex items-center gap-1.5 t5 text-text">
                 <Icon name="check" size={13} /> Salvos — projeção × realidade registrada
               </span>
             )}
           </div>
         )}
-        <p className="mt-3 text-sm text-muted">{data.roi.explanation}</p>
+        <p className="mt-3 t3 text-text-muted">{data.roi.explanation}</p>
       </Card>
       <Card>
         <SectionTitle>Roadmap</SectionTitle>
         <div className="space-y-3">
           {data.roadmap.map((r, i) => (
-            <div key={i} className="rounded-lg border border-edge bg-surface-2 p-4 text-sm">
+            <div key={i} className="rounded-lg border border-edge bg-surface-sunken p-4 t3">
               <div className="flex flex-wrap items-center justify-between gap-2">
                 <p className="font-semibold">{r.phase}</p>
                 <Tag>{r.period}</Tag>
               </div>
-              <div className="mt-2 text-muted">
+              <div className="mt-2 text-text-muted">
                 <List items={r.milestones} />
               </div>
-              <p className="mt-2 text-muted">
+              <p className="mt-2 text-text-muted">
                 <span className="text-text">Impacto esperado: </span>
                 {r.expectedImpact}
               </p>
@@ -751,19 +751,19 @@ export function RoiProjectionView({
           <SectionTitle>Investimento mensal</SectionTitle>
           <div className="space-y-2">
             {data.investment.map((inv, i) => (
-              <div key={i} className="rounded-lg border border-edge bg-surface-2 p-3 text-sm">
+              <div key={i} className="rounded-lg border border-edge bg-surface-sunken p-3 t3">
                 <div className="flex items-center justify-between">
                   <p className="font-medium">{inv.item}</p>
                   <p className="font-semibold text-text">{inv.monthlyCost}</p>
                 </div>
-                <p className="mt-1 text-muted">{inv.notes}</p>
+                <p className="mt-1 text-text-muted">{inv.notes}</p>
               </div>
             ))}
           </div>
         </Card>
         <Card>
           <SectionTitle>Premissas</SectionTitle>
-          <div className="text-sm text-muted">
+          <div className="t3 text-text-muted">
             <List items={data.assumptions} />
           </div>
         </Card>
@@ -813,13 +813,13 @@ export function SocialCalendarView({
     <div className="space-y-6">
       <Card>
         <SectionTitle>Estratégia do mês</SectionTitle>
-        <p className="text-sm leading-relaxed text-muted">{doc.strategySummary}</p>
+        <p className="t3 leading-relaxed text-text-muted">{doc.strategySummary}</p>
       </Card>
       <div className="grid gap-4 lg:grid-cols-2">
         {ordered.map(({ post, index }) => (
           <Card key={index}>
             <div className="mb-2 flex flex-wrap items-center gap-2">
-              <span className="grid size-9 place-items-center rounded-sm bg-surface-sunken font-[family-name:var(--font-display)] text-sm font-bold text-text">
+              <span className="t5 grid size-9 place-items-center rounded-sm bg-surface-sunken text-text">
                 {post.day}
               </span>
               <Tag>{post.channel}</Tag>
@@ -827,7 +827,7 @@ export function SocialCalendarView({
               <span className="ml-auto flex items-center gap-2">
                 {generationId && editingIndex !== index && (
                   <button
-                    className="inline-flex items-center gap-1.5 rounded border border-edge bg-surface-2 px-2 py-0.5 text-xs text-muted transition-colors hover:border-edge hover:text-text"
+                    className="inline-flex items-center gap-1.5 rounded border border-edge bg-surface-sunken px-2 py-0.5 t5 text-text-muted transition-colors hover:border-edge hover:text-text"
                     onClick={() => {
                       setEditingIndex(index);
                       setDraft({ caption: post.caption, hashtags: post.hashtags.join(" ") });
@@ -845,24 +845,24 @@ export function SocialCalendarView({
                 <textarea
                   value={draft.caption}
                   onChange={(e) => setDraft((d) => ({ ...d, caption: e.target.value }))}
-                  className="min-h-32 w-full rounded-md border border-edge bg-surface-2 p-2 text-sm outline-none"
+                  className="min-h-32 w-full rounded-md border border-edge bg-surface-sunken p-2 t3 outline-none"
                 />
                 <input
                   value={draft.hashtags}
                   onChange={(e) => setDraft((d) => ({ ...d, hashtags: e.target.value }))}
-                  className="w-full rounded-md border border-edge bg-surface-2 px-2 py-1 text-xs outline-none focus:border-edge"
+                  className="w-full rounded-md border border-edge bg-surface-sunken px-2 py-1 t5 outline-none focus:border-edge"
                   placeholder="#hashtags separadas por espaço"
                 />
                 <div className="flex gap-2">
                   <button
                     onClick={() => saveEdit(index)}
-                    className="rounded-md bg-accent px-3 py-1 text-xs font-medium text-accent-ink"
+                    className="rounded-md bg-accent px-3 py-1 t5 font-medium text-accent-ink"
                   >
                     Salvar
                   </button>
                   <button
                     onClick={() => setEditingIndex(null)}
-                    className="rounded-md border border-edge px-3 py-1 text-xs text-muted"
+                    className="rounded-md border border-edge px-3 py-1 t5 text-text-muted"
                   >
                     Cancelar
                   </button>
@@ -870,17 +870,17 @@ export function SocialCalendarView({
               </div>
             ) : (
               <>
-                <p className="mt-2 whitespace-pre-wrap text-sm text-muted">{post.caption}</p>
-                <p className="mt-2 text-xs text-text">{post.hashtags.join(" ")}</p>
+                <p className="mt-2 whitespace-pre-wrap t3 text-text-muted">{post.caption}</p>
+                <p className="mt-2 t5 text-text">{post.hashtags.join(" ")}</p>
               </>
             )}
-            <div className="mt-3 rounded-md border border-edge bg-surface-2 p-3 text-xs text-muted">
+            <div className="mt-3 rounded-md border border-edge bg-surface-sunken p-3 t5 text-text-muted">
               <p>
-                <span className="inline-flex items-center gap-1.5 font-semibold text-foreground/80"><Icon name="palette" size={13} /> Direção de arte:</span>
+                <span className="inline-flex items-center gap-1.5 font-semibold text-text/80"><Icon name="palette" size={13} /> Direção de arte:</span>
                 {post.artDirection}
               </p>
               <p className="mt-1">
-                <span className="font-semibold text-foreground/80">CTA: </span>
+                <span className="font-semibold text-text/80">CTA: </span>
                 {post.cta}
               </p>
             </div>
@@ -950,7 +950,7 @@ export function PostBatchView({
             <span className="ml-auto flex items-center gap-2">
               {generationId && editingIndex !== index && (
                 <button
-                  className="inline-flex items-center gap-1.5 rounded border border-edge bg-surface-2 px-2 py-0.5 text-xs text-muted transition-colors hover:border-edge hover:text-text"
+                  className="inline-flex items-center gap-1.5 rounded border border-edge bg-surface-sunken px-2 py-0.5 t5 text-text-muted transition-colors hover:border-edge hover:text-text"
                   onClick={() => {
                     setEditingIndex(index);
                     setDraft({ caption: post.caption, hashtags: post.hashtags.join(" ") });
@@ -968,24 +968,24 @@ export function PostBatchView({
               <textarea
                 value={draft.caption}
                 onChange={(e) => setDraft((d) => ({ ...d, caption: e.target.value }))}
-                className="min-h-32 w-full rounded-md border border-edge bg-surface-2 p-2 text-sm outline-none"
+                className="min-h-32 w-full rounded-md border border-edge bg-surface-sunken p-2 t3 outline-none"
               />
               <input
                 value={draft.hashtags}
                 onChange={(e) => setDraft((d) => ({ ...d, hashtags: e.target.value }))}
-                className="w-full rounded-md border border-edge bg-surface-2 px-2 py-1 text-xs outline-none focus:border-edge"
+                className="w-full rounded-md border border-edge bg-surface-sunken px-2 py-1 t5 outline-none focus:border-edge"
                 placeholder="#hashtags separadas por espaço"
               />
               <div className="flex gap-2">
                 <button
                   onClick={() => saveEdit(index)}
-                  className="rounded-md bg-accent px-3 py-1 text-xs font-medium text-accent-ink"
+                  className="rounded-md bg-accent px-3 py-1 t5 font-medium text-accent-ink"
                 >
                   Salvar
                 </button>
                 <button
                   onClick={() => setEditingIndex(null)}
-                  className="rounded-md border border-edge px-3 py-1 text-xs text-muted"
+                  className="rounded-md border border-edge px-3 py-1 t5 text-text-muted"
                 >
                   Cancelar
                 </button>
@@ -993,17 +993,17 @@ export function PostBatchView({
             </div>
           ) : (
             <>
-              <p className="mt-2 whitespace-pre-wrap text-sm text-muted">{post.caption}</p>
-              <p className="mt-2 text-xs text-text">{post.hashtags.join(" ")}</p>
+              <p className="mt-2 whitespace-pre-wrap t3 text-text-muted">{post.caption}</p>
+              <p className="mt-2 t5 text-text">{post.hashtags.join(" ")}</p>
             </>
           )}
-          <div className="mt-3 rounded-md border border-edge bg-surface-2 p-3 text-xs text-muted">
+          <div className="mt-3 rounded-md border border-edge bg-surface-sunken p-3 t5 text-text-muted">
             <p>
-              <span className="inline-flex items-center gap-1.5 font-semibold text-foreground/80"><Icon name="palette" size={13} /> Direção de arte:</span>
+              <span className="inline-flex items-center gap-1.5 font-semibold text-text/80"><Icon name="palette" size={13} /> Direção de arte:</span>
               {post.artDirection}
             </p>
             <p className="mt-1">
-              <span className="font-semibold text-foreground/80">CTA: </span>
+              <span className="font-semibold text-text/80">CTA: </span>
               {post.cta}
             </p>
           </div>
@@ -1035,7 +1035,7 @@ export function VisualIdentityView({ data }: { data: VisualIdentity }) {
     <div className="space-y-6">
       <Card>
         <SectionTitle>Essência da marca</SectionTitle>
-        <p className="text-sm leading-relaxed text-muted">{data.essence}</p>
+        <p className="t3 leading-relaxed text-text-muted">{data.essence}</p>
         <div className="mt-3 flex flex-wrap gap-2">
           {data.slogans.map((s, i) => (
             <Tag key={i}>“{s}”</Tag>
@@ -1047,7 +1047,7 @@ export function VisualIdentityView({ data }: { data: VisualIdentity }) {
           <SectionTitle>Conceitos de logo</SectionTitle>
           <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
             {data.logoConcepts.map((logo, i) => (
-              <div key={i} className="rounded-lg border border-edge bg-surface-2 p-4">
+              <div key={i} className="rounded-lg border border-edge bg-surface-sunken p-4">
                 <div className="grid h-28 place-items-center rounded-md bg-white p-3">
                   {/* SVG via <img> com data URI: não executa scripts */}
                   {/* eslint-disable-next-line @next/next/no-img-element */}
@@ -1057,8 +1057,8 @@ export function VisualIdentityView({ data }: { data: VisualIdentity }) {
                     className="max-h-full max-w-full"
                   />
                 </div>
-                <p className="mt-3 text-sm font-semibold">{logo.name}</p>
-                <p className="mt-1 text-xs text-muted">{logo.rationale}</p>
+                <p className="mt-3 t3 font-semibold">{logo.name}</p>
+                <p className="mt-1 t5 text-text-muted">{logo.rationale}</p>
                 <div className="mt-2">
                   <CopyButton text={logo.svg} label="Copiar SVG" />
                 </div>
@@ -1071,15 +1071,15 @@ export function VisualIdentityView({ data }: { data: VisualIdentity }) {
         <SectionTitle>Paleta</SectionTitle>
         <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
           {data.palette.map((color, i) => (
-            <div key={i} className="flex items-center gap-3 rounded-lg border border-edge bg-surface-2 p-3">
+            <div key={i} className="flex items-center gap-3 rounded-lg border border-edge bg-surface-sunken p-3">
               <span
                 className="size-12 shrink-0 rounded-md border border-edge"
                 style={{ backgroundColor: color.hex }}
               />
-              <div className="text-sm">
+              <div className="t3">
                 <p className="font-semibold">{color.name}</p>
-                <p className="font-mono text-xs text-text">{color.hex}</p>
-                <p className="text-xs text-muted">{color.usage}</p>
+                <p className="font-mono t5 text-text">{color.hex}</p>
+                <p className="t5 text-text-muted">{color.usage}</p>
               </div>
             </div>
           ))}
@@ -1098,17 +1098,17 @@ export function VisualIdentityView({ data }: { data: VisualIdentity }) {
       </Card>
       <Card>
         <SectionTitle>Tom de voz</SectionTitle>
-        <p className="text-sm text-muted">{data.toneOfVoice.description}</p>
+        <p className="t3 text-text-muted">{data.toneOfVoice.description}</p>
         <div className="mt-3 grid gap-3 sm:grid-cols-2">
-          <div className="rounded-lg border border-positive/50 bg-positive-wash p-3 text-sm">
-            <p className="mb-1 text-xs font-semibold uppercase text-positive">Faça</p>
-            <div className="text-muted">
+          <div className="rounded-lg border border-positive/50 bg-positive-wash p-3 t3">
+            <p className="mb-1 t5 font-semibold uppercase text-positive">Faça</p>
+            <div className="text-text-muted">
               <List items={data.toneOfVoice.dos} />
             </div>
           </div>
-          <div className="rounded-lg border border-negative/50 bg-negative-wash p-3 text-sm">
-            <p className="mb-1 text-xs font-semibold uppercase text-negative">Não faça</p>
-            <div className="text-muted">
+          <div className="rounded-lg border border-negative/50 bg-negative-wash p-3 t3">
+            <p className="mb-1 t5 font-semibold uppercase text-negative">Não faça</p>
+            <div className="text-text-muted">
               <List items={data.toneOfVoice.donts} />
             </div>
           </div>
@@ -1116,7 +1116,7 @@ export function VisualIdentityView({ data }: { data: VisualIdentity }) {
       </Card>
       <Card>
         <SectionTitle>Aplicações prioritárias</SectionTitle>
-        <div className="text-sm text-muted">
+        <div className="t3 text-text-muted">
           <List items={data.applications} />
         </div>
       </Card>
@@ -1141,11 +1141,11 @@ export function ClientReportView({
             label="Copiar resumo"
           />
         </div>
-        <p className="text-sm leading-relaxed text-muted">{data.executiveSummary}</p>
+        <p className="t3 leading-relaxed text-text-muted">{data.executiveSummary}</p>
       </Card>
       <Card>
         <SectionTitle>Destaques</SectionTitle>
-        <div className="text-sm text-muted">
+        <div className="t3 text-text-muted">
           <List items={data.highlights} />
         </div>
       </Card>
@@ -1153,11 +1153,11 @@ export function ClientReportView({
         <SectionTitle>Frentes de trabalho</SectionTitle>
         <div className="space-y-2">
           {data.workstreams.map((w, i) => (
-            <div key={i} className="flex items-start gap-3 rounded-lg border border-edge bg-surface-2 p-3 text-sm">
+            <div key={i} className="flex items-start gap-3 rounded-lg border border-edge bg-surface-sunken p-3 t3">
               <Tag>{w.status}</Tag>
               <div>
                 <p className="font-medium">{w.area}</p>
-                <p className="text-muted">{w.detail}</p>
+                <p className="text-text-muted">{w.detail}</p>
               </div>
             </div>
           ))}
@@ -1165,15 +1165,15 @@ export function ClientReportView({
       </Card>
       <Card>
         <SectionTitle>Qualidade das entregas</SectionTitle>
-        <p className="text-sm text-muted">{data.qualityOverview}</p>
+        <p className="t3 text-text-muted">{data.qualityOverview}</p>
       </Card>
       <div className="grid gap-6 lg:grid-cols-2">
         <Card>
           <SectionTitle>Próximos passos</SectionTitle>
           <div className="space-y-2">
             {data.nextSteps.map((step, i) => (
-              <div key={i} className="rounded-md border border-edge bg-surface-2 p-3 text-sm">
-                <p className="text-muted">{step}</p>
+              <div key={i} className="rounded-md border border-edge bg-surface-sunken p-3 t3">
+                <p className="text-text-muted">{step}</p>
                 {actions && (
                   <div className="mt-2 flex flex-wrap gap-2">
                     <ActionButton label={<><Icon name="target" size={13} /> Virar campanha</>} onClick={() => actions.onCampaign(step)} />
@@ -1190,7 +1190,7 @@ export function ClientReportView({
         </Card>
         <Card>
           <SectionTitle>Riscos & pendências</SectionTitle>
-          <div className="text-sm text-muted">
+          <div className="t3 text-text-muted">
             <List items={data.risks} />
           </div>
         </Card>
@@ -1210,13 +1210,13 @@ export function ProductRecsView({
     <div className="space-y-6">
       <Card>
         <SectionTitle>Leitura do momento</SectionTitle>
-        <p className="text-sm leading-relaxed text-muted">{data.summary}</p>
+        <p className="t3 leading-relaxed text-text-muted">{data.summary}</p>
       </Card>
       <Card>
         <SectionTitle>O que produzir/ofertar com o que você tem</SectionTitle>
         <div className="space-y-3">
           {data.opportunities.map((o, i) => (
-            <div key={i} className="rounded-lg border border-edge bg-surface-2 p-4 text-sm">
+            <div key={i} className="rounded-lg border border-edge bg-surface-sunken p-4 t3">
               <div className="flex flex-wrap items-center justify-between gap-2">
                 <p className="font-semibold">{o.name}</p>
                 <div className="flex gap-1.5">
@@ -1224,17 +1224,17 @@ export function ProductRecsView({
                   <Tag>{o.potential}</Tag>
                 </div>
               </div>
-              <p className="mt-1 text-muted">{o.whatItIs}</p>
-              <p className="mt-2 text-muted">
-                <span className="font-semibold text-foreground/80">Tendência: </span>
+              <p className="mt-1 text-text-muted">{o.whatItIs}</p>
+              <p className="mt-2 text-text-muted">
+                <span className="font-semibold text-text/80">Tendência: </span>
                 {o.trendBasis}
               </p>
-              <p className="mt-1 text-muted">
+              <p className="mt-1 text-text-muted">
                 <span className="font-semibold text-text">Viável porque: </span>
                 {o.fitWithCapabilities}
               </p>
-              <p className="mt-1 text-muted">
-                <span className="font-semibold text-foreground/80">Como começar: </span>
+              <p className="mt-1 text-text-muted">
+                <span className="font-semibold text-text/80">Como começar: </span>
                 {o.howToStart}
               </p>
               {actions && (
@@ -1262,10 +1262,10 @@ export function ProductRecsView({
         <SectionTitle>Reposicionamento do que você já faz</SectionTitle>
         <div className="space-y-2">
           {data.repositioning.map((r, i) => (
-            <div key={i} className="rounded-lg border border-edge bg-surface-2 p-3 text-sm">
+            <div key={i} className="rounded-lg border border-edge bg-surface-sunken p-3 t3">
               <p className="font-medium">{r.area}</p>
-              <p className="text-muted">{r.recommendation}</p>
-              <p className="mt-1 text-xs text-muted">
+              <p className="text-text-muted">{r.recommendation}</p>
+              <p className="mt-1 t5 text-text-muted">
                 <span className="text-text">Por quê: </span>
                 {r.why}
               </p>
@@ -1296,8 +1296,8 @@ function RawContent({ content }: { content: string }) {
   }
   return (
     <Card>
-      <p className="mb-2 text-sm text-muted">Conteúdo bruto desta versão:</p>
-      <pre className="max-h-[60vh] overflow-auto whitespace-pre-wrap rounded-md bg-surface-2 p-3 text-xs text-muted">
+      <p className="mb-2 t3 text-text-muted">Conteúdo bruto desta versão:</p>
+      <pre className="max-h-[60vh] overflow-auto whitespace-pre-wrap rounded-md bg-surface-sunken p-3 t5 text-text-muted">
         {pretty}
       </pre>
     </Card>

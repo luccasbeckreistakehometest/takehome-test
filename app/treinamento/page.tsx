@@ -41,10 +41,10 @@ export default function TrainingPage() {
   return (
     <div className="mx-auto max-w-3xl space-y-6">
       <div>
-        <h1 className="font-[family-name:var(--font-display)] text-2xl font-bold tracking-tight">
+        <h1 className="d3">
           Treinamento
         </h1>
-        <p className="mt-1 text-sm text-muted">
+        <p className="mt-1 t3 text-text-muted">
           O caminho feliz de cada papel dentro da plataforma — do briefing ao
           pagamento.
         </p>
@@ -52,7 +52,7 @@ export default function TrainingPage() {
       {TRACKS.map((track) => (
         <Card key={track.role}>
           <SectionTitle>{track.role}</SectionTitle>
-          <ol className="list-decimal space-y-2 pl-5 text-sm text-muted">
+          <ol className="list-decimal space-y-2 pl-5 t3 text-text-muted">
             {track.steps.map((step, i) => (
               <li key={i}>{step}</li>
             ))}

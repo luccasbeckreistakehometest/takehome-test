@@ -37,7 +37,7 @@ export default function ShowcaseDemo({ demo, lang }: { demo: Demo; lang: Lang })
       <Frame lang={lang}>
         <p className="t5 text-text-muted">{tx(lang, "Café Aurora · 3 posts para aprovar", "Café Aurora · 3 posts to approve")}</p>
         <div className="mt-2 rounded-sm border border-edge bg-surface p-3">
-          <p className="text-sm font-semibold">{tx(lang, "Terça · Reels do bolo de cenoura", "Tuesday · Carrot cake Reel")}</p>
+          <p className="t3 font-semibold">{tx(lang, "Terça · Reels do bolo de cenoura", "Tuesday · Carrot cake Reel")}</p>
           <div className="mt-3 flex flex-wrap gap-2">
             <span className="t5 rounded-xs bg-text px-3 py-1 font-medium text-canvas">{tx(lang, "Aprovar", "Approve")}</span>
             <span className="t5 rounded-xs border border-edge px-3 py-1">{tx(lang, "Pedir ajuste", "Ask for changes")}</span>
@@ -60,8 +60,8 @@ export default function ShowcaseDemo({ demo, lang }: { demo: Demo; lang: Lang })
               style={{ left: `${i * 2.4}rem`, background: i === 0 ? "var(--surface-sunken)" : "var(--surface)", transform: `rotate(${(i - 1) * 4}deg)` }}
             >
               <div className={`h-1.5 w-10 rounded-xs ${i === 0 ? "bg-text" : "bg-rule"}`} />
-              <div className={`mt-2 h-1.5 w-14 rounded-xs ${i === 0 ? "bg-text-muted" : "bg-rule"}`} />
-              <div className={`mt-1 h-1.5 w-12 rounded-xs ${i === 0 ? "bg-text-muted" : "bg-rule"}`} />
+              <div className={`mt-2 h-1.5 w-14 rounded-xs ${i === 0 ? "bg-text-text-muted" : "bg-rule"}`} />
+              <div className={`mt-1 h-1.5 w-12 rounded-xs ${i === 0 ? "bg-text-text-muted" : "bg-rule"}`} />
               <p className="t5 tnum absolute bottom-1.5 right-2 text-text-muted">{`${i + 1}/6`}</p>
             </div>
           ))}

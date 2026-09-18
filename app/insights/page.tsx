@@ -102,11 +102,11 @@ export default function InsightsPage() {
     <div className="space-y-6">
       <div className="flex flex-wrap items-center justify-between gap-3">
         <div>
-          <h1 className="flex items-center gap-2 font-[family-name:var(--font-display)] text-2xl font-bold tracking-tight">
+          <h1 className="d3 flex items-center gap-2">
             <Icon name="chart" size={24} className="text-text" />
             Insights
           </h1>
-          <p className="mt-1 text-sm text-muted">
+          <p className="mt-1 t3 text-text-muted">
             O andamento de tudo — demandas, clientes, campanhas e produção — em um só lugar.
           </p>
         </div>
@@ -118,7 +118,7 @@ export default function InsightsPage() {
           <div>
             <SectionTitle>Elo da agência</SectionTitle>
             <TierBadge info={data.agency.tier} />
-            <p className="mt-1.5 text-xs text-muted">{data.agency.tier.reason}</p>
+            <p className="mt-1.5 t5 text-text-muted">{data.agency.tier.reason}</p>
           </div>
           <div className="w-full max-w-xl flex-1">
             <TierProgress info={data.agency.tier} />
@@ -132,10 +132,10 @@ export default function InsightsPage() {
           <Link key={kpi.label} href={kpi.href} style={{ animationDelay: `${i * 40}ms` }} className="animate-fade-in">
             <Card hover className="h-full">
               <Icon name={kpi.icon} size={20} className="text-text" />
-              <p className="mt-2 font-[family-name:var(--font-display)] text-2xl font-bold">
+              <p className="d3 mt-2">
                 {kpi.value}
               </p>
-              <p className="text-xs text-muted">{kpi.label}</p>
+              <p className="t5 text-text-muted">{kpi.label}</p>
             </Card>
           </Link>
         ))}
@@ -146,17 +146,17 @@ export default function InsightsPage() {
         <Card>
           <SectionTitle>Funil de demandas</SectionTitle>
           {data.funnel.totalProjects === 0 ? (
-            <p className="text-sm text-muted">Nenhuma demanda ainda.</p>
+            <p className="t3 text-text-muted">Nenhuma demanda ainda.</p>
           ) : (
             <div className="space-y-2">
               {(Object.keys(data.funnel.byStatus) as ProjectStatus[]).map((status) => {
                 const value = data.funnel.byStatus[status];
                 return (
-                  <div key={status} className="flex items-center gap-3 text-sm">
-                    <span className="w-44 shrink-0 truncate text-muted">
+                  <div key={status} className="flex items-center gap-3 t3">
+                    <span className="w-44 shrink-0 truncate text-text-muted">
                       {PROJECT_STATUS_LABELS[status]}
                     </span>
-                    <div className="h-5 flex-1 overflow-hidden rounded bg-surface-2">
+                    <div className="h-5 flex-1 overflow-hidden rounded bg-surface-sunken">
                       <div
                         className="flex h-full items-center justify-end rounded-xs bg-text px-2 text-[11px] font-medium text-canvas transition-all duration-700"
                         style={{ width: `${Math.max((value / funnelMax) * 100, value ? 8 : 0)}%` }}
@@ -175,7 +175,7 @@ export default function InsightsPage() {
         <Card>
           <SectionTitle>Ritmo dos últimos 7 dias</SectionTitle>
           {data.activityByDay.length === 0 ? (
-            <p className="text-sm text-muted">Sem atividade registrada na semana.</p>
+            <p className="t3 text-text-muted">Sem atividade registrada na semana.</p>
           ) : (
             <div className="flex h-40 items-end justify-between gap-2">
               {data.activityByDay.map((day) => (
@@ -187,7 +187,7 @@ export default function InsightsPage() {
                       title={`${day.c} ações`}
                     />
                   </div>
-                  <span className="text-[10px] text-muted">
+                  <span className="text-[10px] text-text-muted">
                     {new Date(day.day + "T12:00").toLocaleDateString("pt-BR", { weekday: "short" }).slice(0, 3)}
                   </span>
                 </div>
@@ -200,13 +200,13 @@ export default function InsightsPage() {
         <Card>
           <SectionTitle>Entregáveis gerados por tipo</SectionTitle>
           {data.deliverables.total === 0 ? (
-            <p className="text-sm text-muted">Nenhum entregável gerado ainda.</p>
+            <p className="t3 text-text-muted">Nenhum entregável gerado ainda.</p>
           ) : (
             <div className="flex flex-wrap gap-2">
               {data.deliverables.byType.map((t) => (
                 <span
                   key={t.type}
-                  className="rounded-lg border border-edge bg-surface-2 px-3 py-2 text-sm"
+                  className="rounded-lg border border-edge bg-surface-sunken px-3 py-2 t3"
                 >
                   {TYPE_LABELS[t.type] ?? t.type}{" "}
                   <span className="font-semibold text-text">{t.c}</span>
@@ -224,18 +224,18 @@ export default function InsightsPage() {
             </span>
           </SectionTitle>
           {data.overdue.length === 0 ? (
-            <p className="text-sm text-muted">Nenhuma demanda atrasada. </p>
+            <p className="t3 text-text-muted">Nenhuma demanda atrasada. </p>
           ) : (
             <div className="space-y-1.5">
               {data.overdue.map((o) => (
                 <Link
                   key={o.id}
                   href={`/production?project=${o.id}`}
-                  className="flex items-center justify-between rounded-md border border-negative/30 bg-negative-wash px-3 py-2 text-sm transition-colors hover:border-negative/60"
+                  className="flex items-center justify-between rounded-md border border-negative/30 bg-negative-wash px-3 py-2 t3 transition-colors hover:border-negative/60"
                 >
                   <span className="truncate">
                     <span className="font-medium">{o.title}</span>
-                    <span className="text-muted"> · {o.clientName}</span>
+                    <span className="text-text-muted"> · {o.clientName}</span>
                   </span>
                   <Tag>{new Date(o.deadline + "T12:00").toLocaleDateString("pt-BR")}</Tag>
                 </Link>
@@ -252,14 +252,14 @@ export default function InsightsPage() {
         <Card>
           <SectionTitle>Carteira de clientes</SectionTitle>
           {data.clients.length === 0 ? (
-            <p className="text-sm text-muted">Nenhum cliente cadastrado.</p>
+            <p className="t3 text-text-muted">Nenhum cliente cadastrado.</p>
           ) : (
             <div className="space-y-2">
               {data.clients.map((c) => (
                 <Link
                   key={c.id}
                   href={`/clients/${c.id}`}
-                  className="flex items-center justify-between gap-3 rounded-md border border-edge bg-surface-2 px-3 py-2 text-sm transition-colors hover:border-edge"
+                  className="flex items-center justify-between gap-3 rounded-md border border-edge bg-surface-sunken px-3 py-2 t3 transition-colors hover:border-edge"
                 >
                   <span className="flex items-center gap-2">
                     <span
@@ -268,7 +268,7 @@ export default function InsightsPage() {
                     />
                     <span className="font-medium">{c.name}</span>
                   </span>
-                  <span className="text-xs text-muted">
+                  <span className="t5 text-text-muted">
                     {c.paidProjects} pagas · {c.generations} entregáveis
                   </span>
                 </Link>
@@ -281,20 +281,20 @@ export default function InsightsPage() {
         <Card>
           <SectionTitle>Profissionais em destaque</SectionTitle>
           {data.topProfessionals.length === 0 ? (
-            <p className="text-sm text-muted">Nenhum profissional cadastrado.</p>
+            <p className="t3 text-text-muted">Nenhum profissional cadastrado.</p>
           ) : (
             <div className="space-y-2">
               {data.topProfessionals.map((p) => (
                 <Link
                   key={p.id}
                   href={`/professionals/${p.id}`}
-                  className="flex items-center justify-between gap-3 rounded-md border border-edge bg-surface-2 px-3 py-2 text-sm transition-colors hover:border-edge"
+                  className="flex items-center justify-between gap-3 rounded-md border border-edge bg-surface-sunken px-3 py-2 t3 transition-colors hover:border-edge"
                 >
                   <span className="flex items-center gap-2">
-                    <Icon name="user" size={15} className="text-muted" />
+                    <Icon name="user" size={15} className="text-text-muted" />
                     <span className="font-medium">{p.name}</span>
                   </span>
-                  <span className="text-xs text-muted">
+                  <span className="t5 text-text-muted">
                     {p.completed} entregas
                     {p.avgScore != null && ` · nota ${p.avgScore}`}
                   </span>

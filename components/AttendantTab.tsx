@@ -144,12 +144,12 @@ export default function AttendantTab({ client }: { client: Client }) {
     <div className="space-y-6" data-testid="attendant-tab">
       <div className="flex flex-wrap items-start justify-between gap-3">
         <div>
-          <h2 className="font-[family-name:var(--font-display)] text-xl font-semibold">Atendente de WhatsApp com IA</h2>
-          <p className="mt-1 text-sm text-muted">
+          <h2 className="d4">Atendente de WhatsApp com IA</h2>
+          <p className="mt-1 t3 text-text-muted">
             Responde os clientes desta marca 24/7 na voz dela, sem inventar preço nem promessa — e chama uma pessoa quando precisa.
           </p>
         </div>
-        <div className="flex gap-2 text-xs">
+        <div className="flex gap-2 t5">
           <Tag>
             <span>{view.stats.drafts}</span> <span>rascunhos</span>
           </Tag>
@@ -168,18 +168,18 @@ export default function AttendantTab({ client }: { client: Client }) {
           {MODES.map((m) => (
             <label
               key={m.value}
-              className={`cursor-pointer rounded-md border p-3 text-sm transition-colors ${
-                form.mode === m.value ? "border-edge bg-surface-sunken" : "border-edge bg-surface-2 hover:border-muted"
+              className={`cursor-pointer rounded-md border p-3 t3 transition-colors ${
+                form.mode === m.value ? "border-edge bg-surface-sunken" : "border-edge bg-surface-sunken hover:border-muted"
               }`}
               data-testid={`mode-${m.value}`}
             >
               <input type="radio" name="attendant-mode" className="hidden" checked={form.mode === m.value} onChange={() => setForm({ ...form, mode: m.value })} />
               <span className="font-medium">{m.title}</span>
-              <span className="mt-1 block text-xs text-muted">{m.body}</span>
+              <span className="mt-1 block t5 text-text-muted">{m.body}</span>
             </label>
           ))}
         </div>
-        <div className={`rounded-md border px-3 py-2 text-xs ${view.channel.ready ? "border-positive/40 text-positive" : "border-caution/40 text-caution"}`}>
+        <div className={`rounded-md border px-3 py-2 t5 ${view.channel.ready ? "border-positive/40 text-positive" : "border-caution/40 text-caution"}`}>
           {view.channel.via === "own_number" && "Saída pelo número próprio da marca (WhatsApp Cloud API)."}
           {view.channel.via === "agency_api" && "Saída pela API do WhatsApp da agência (Mensagens → Conexões)."}
           {view.channel.via === "agency_session" && "Saída pela sessão de WhatsApp da agência (Mensagens → Conexões)."}
@@ -188,7 +188,7 @@ export default function AttendantTab({ client }: { client: Client }) {
 
         <div className="grid gap-4 md:grid-cols-2">
           <div className="space-y-3">
-            <p className="text-xs font-semibold uppercase tracking-wider text-muted">Horário comercial (modo automático)</p>
+            <p className="t5 font-semibold uppercase tracking-wider text-text-muted">Horário comercial (modo automático)</p>
             <div className="grid grid-cols-2 gap-2">
               <div>
                 <Label>Das (hora)</Label>
@@ -209,7 +209,7 @@ export default function AttendantTab({ client }: { client: Client }) {
                     onClick={() =>
                       setForm({ ...form, days: form.days.includes(i) ? form.days.filter((x) => x !== i) : [...form.days, i].sort() })
                     }
-                    className={`size-8 rounded-md border text-xs font-medium ${form.days.includes(i) ? "border-edge bg-surface-sunken text-text" : "border-edge text-muted"}`}
+                    className={`size-8 rounded-md border t5 font-medium ${form.days.includes(i) ? "border-edge bg-surface-sunken text-text" : "border-edge text-text-muted"}`}
                     aria-label={`dia ${i}`}
                   >
                     {d}
@@ -223,7 +223,7 @@ export default function AttendantTab({ client }: { client: Client }) {
             </div>
           </div>
           <div className="space-y-3">
-            <p className="text-xs font-semibold uppercase tracking-wider text-muted">Guardrails</p>
+            <p className="t5 font-semibold uppercase tracking-wider text-text-muted">Guardrails</p>
             <div className="grid grid-cols-2 gap-2">
               <div>
                 <Label>Máx. respostas automáticas por contato/dia</Label>
@@ -254,8 +254,8 @@ export default function AttendantTab({ client }: { client: Client }) {
         </div>
 
         <div className="space-y-2 border-t border-edge pt-4">
-          <p className="text-xs font-semibold uppercase tracking-wider text-muted">Número próprio da marca (opcional)</p>
-          <p className="text-xs text-muted">
+          <p className="t5 font-semibold uppercase tracking-wider text-text-muted">Número próprio da marca (opcional)</p>
+          <p className="t5 text-text-muted">
             Com o Phone Number ID e o token do WhatsApp Cloud API deste cliente, as mensagens que chegam nesse número entram aqui e as respostas saem por ele. Sem isso, o atendente usa o canal de WhatsApp da agência.
           </p>
           <div className="grid gap-3 sm:grid-cols-2">
@@ -277,13 +277,13 @@ export default function AttendantTab({ client }: { client: Client }) {
           <Button onClick={save} disabled={saving} data-testid="attendant-save">
             {saving ? "Salvando..." : "Salvar atendente"}
           </Button>
-          {saved && <span className="text-sm text-text">Aplicado ✓</span>}
+          {saved && <span className="t3 text-text">Aplicado ✓</span>}
         </div>
       </Card>
 
       <Card className="space-y-3">
         <SectionTitle>Testar o atendente</SectionTitle>
-        <p className="text-sm text-muted">
+        <p className="t3 text-text-muted">
           Simule uma mensagem chegando no WhatsApp desta marca e veja o que o atendente faria com o modo atual.
         </p>
         <div className="grid gap-2 sm:grid-cols-[1fr_2fr_auto]">
@@ -300,17 +300,17 @@ export default function AttendantTab({ client }: { client: Client }) {
           </Button>
         </div>
         {lastReply === "none" && (
-          <p className="rounded-md border border-edge bg-surface-2 p-3 text-sm text-muted" data-testid="attendant-test-result">
+          <p className="rounded-md border border-edge bg-surface-sunken p-3 t3 text-text-muted" data-testid="attendant-test-result">
             O atendente está desligado: a mensagem ficou só na caixa de entrada.
           </p>
         )}
         {lastReply && lastReply !== "none" && (
-          <div className="rounded-md border border-edge bg-surface-sunken p-3 text-sm" data-testid="attendant-test-result" data-status={lastReply.status}>
+          <div className="rounded-md border border-edge bg-surface-sunken p-3 t3" data-testid="attendant-test-result" data-status={lastReply.status}>
             <div className="flex flex-wrap items-center gap-2">
               <Tag>{STATUS_LABEL[lastReply.status]}</Tag>
-              <span className="text-xs text-muted">{REASON_LABEL[lastReply.reason] ?? lastReply.reason}</span>
+              <span className="t5 text-text-muted">{REASON_LABEL[lastReply.reason] ?? lastReply.reason}</span>
               {lastReply.confidence > 0 && (
-                <span className="text-xs text-muted">
+                <span className="t5 text-text-muted">
                   · <span>confiança</span> {Math.round(lastReply.confidence * 100)}%
                 </span>
               )}
@@ -323,7 +323,7 @@ export default function AttendantTab({ client }: { client: Client }) {
       <Card className="space-y-3">
         <SectionTitle>Respostas do atendente</SectionTitle>
         {view.replies.length === 0 ? (
-          <p className="text-sm text-muted">Nenhuma resposta gerada ainda.</p>
+          <p className="t3 text-text-muted">Nenhuma resposta gerada ainda.</p>
         ) : (
           <div className="space-y-2">
             {view.replies.map((reply) => (
@@ -338,12 +338,12 @@ export default function AttendantTab({ client }: { client: Client }) {
           <SectionTitle>Mensagens recebidas neste número</SectionTitle>
           <div className="space-y-1.5">
             {view.inbound.slice(0, 20).map((m) => (
-              <div key={m.id} className="rounded-md border border-edge bg-surface-2 px-3 py-2 text-sm">
+              <div key={m.id} className="rounded-md border border-edge bg-surface-sunken px-3 py-2 t3">
                 <div className="flex items-center justify-between gap-2">
                   <span className="font-medium">{m.fromName || m.fromAddress}</span>
-                  <span className="text-xs text-muted">{fmt(m.receivedAt)}</span>
+                  <span className="t5 text-text-muted">{fmt(m.receivedAt)}</span>
                 </div>
-                <p className="mt-0.5 text-foreground/80">{m.body}</p>
+                <p className="mt-0.5 text-text/80">{m.body}</p>
               </div>
             ))}
           </div>
@@ -366,27 +366,27 @@ function ReplyRow({
   const [busy, setBusy] = useState(false);
   const isDraft = reply.status === "draft";
   return (
-    <div className="rounded-md border border-edge bg-surface-2 p-3 text-sm" data-testid="attendant-reply" data-status={reply.status}>
+    <div className="rounded-md border border-edge bg-surface-sunken p-3 t3" data-testid="attendant-reply" data-status={reply.status}>
       <div className="flex flex-wrap items-center justify-between gap-2">
         <p>
           <span className="font-medium">{reply.contactName || reply.contactAddress}</span>{" "}
-          <span className="text-xs text-muted">· {fmt(reply.createdAt)}</span>
+          <span className="t5 text-text-muted">· {fmt(reply.createdAt)}</span>
         </p>
-        <div className="flex items-center gap-1.5 text-xs">
+        <div className="flex items-center gap-1.5 t5">
           <Tag>{reply.mode === "auto" ? "Automático" : reply.mode === "draft" ? "Rascunho" : "Desligado"}</Tag>
           <Tag>{STATUS_LABEL[reply.status]}</Tag>
           {reply.confidence > 0 && (
-            <span className="text-muted">
+            <span className="text-text-muted">
               <span>confiança</span> {Math.round(reply.confidence * 100)}%
             </span>
           )}
         </div>
       </div>
-      <p className="mt-1 text-xs text-muted">
+      <p className="mt-1 t5 text-text-muted">
         <span>Mensagem:</span> “{reply.inboundBody}”
       </p>
       {reply.reason && REASON_LABEL[reply.reason] && (
-        <p className="mt-0.5 text-xs text-muted">
+        <p className="mt-0.5 t5 text-text-muted">
           <span>Motivo:</span> {REASON_LABEL[reply.reason]}
         </p>
       )}
@@ -396,7 +396,7 @@ function ReplyRow({
           <BrandVoiceCheck clientId={reply.clientId} text={text} kind="reply" onRewrite={setText} compact />
           <div className="flex gap-2">
             <Button
-              className="!px-3 !py-1.5 text-xs"
+              className="!px-3 !py-1.5 t5"
               disabled={busy || !text.trim()}
               onClick={async () => {
                 setBusy(true);
@@ -408,7 +408,7 @@ function ReplyRow({
             </Button>
             <Button
               variant="ghost"
-              className="!px-3 !py-1.5 text-xs"
+              className="!px-3 !py-1.5 t5"
               disabled={busy}
               onClick={async () => {
                 setBusy(true);

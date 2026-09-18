@@ -27,26 +27,26 @@ export default function ApprovalTimeline({ events, compact = false }: { events: 
   return (
     <div className={`space-y-2 ${compact ? "" : "rounded-lg border border-edge bg-surface-sunken p-3"}`} data-testid="approval-timeline">
       {!compact && (
-        <p className="text-xs font-semibold uppercase tracking-wider text-text">O que aconteceu quando você aprovou</p>
+        <p className="t5 font-semibold uppercase tracking-wider text-text">O que aconteceu quando você aprovou</p>
       )}
       {events.map((event) => (
-        <div key={event.id} className="text-sm">
+        <div key={event.id} className="t3">
           <p className="font-medium">
             {event.decision === "approved" ? (
               <span>{event.actor === "client" ? "Cliente aprovou" : "Agência aprovou"}</span>
             ) : (
               <span>{event.actor === "client" ? "Cliente pediu ajustes" : "Agência pediu ajustes"}</span>
             )}{" "}
-            <span className="text-xs font-normal text-muted">{fmt(event.createdAt)}</span>
+            <span className="t5 font-normal text-text-muted">{fmt(event.createdAt)}</span>
           </p>
           {event.source === "link" && (
-            <p className="text-xs text-muted" data-testid="approval-source-link">
+            <p className="t5 text-text-muted" data-testid="approval-source-link">
               <span>Pelo link de aprovação</span>
               {event.approverName ? <span> · {event.approverName}</span> : null}
             </p>
           )}
-          {event.note && <p className="text-xs italic text-muted">“{event.note}”</p>}
-          <ul className="mt-1 space-y-0.5 text-xs text-muted">
+          {event.note && <p className="t5 italic text-text-muted">“{event.note}”</p>}
+          <ul className="mt-1 space-y-0.5 t5 text-text-muted">
             {event.actions.map((action, index) => (
               <li key={index} className="flex gap-1.5" data-action={action.type}>
                 <span className="text-text">→</span>

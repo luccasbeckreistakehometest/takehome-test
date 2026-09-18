@@ -25,10 +25,10 @@ type Post = ScheduledPostWithClient;
 type View = "month" | "week";
 
 const STATUS_STYLE: Record<Post["status"], string> = {
-  draft: "border-dashed border-caution/70 bg-caution-wash text-caution dark:text-caution",
-  scheduled: "border-edge bg-surface-sunken text-foreground",
-  published: "border-positive/60 bg-positive-wash text-positive dark:text-positive",
-  canceled: "border-edge bg-surface-2 text-muted line-through",
+  draft: "border-dashed border-caution/70 bg-caution-wash text-caution",
+  scheduled: "border-edge bg-surface-sunken text-text",
+  published: "border-positive/60 bg-positive-wash text-positive",
+  canceled: "border-edge bg-surface-sunken text-text-muted line-through",
 };
 const STATUS_LABEL: Record<Post["status"], string> = {
   draft: "Rascunho",
@@ -101,8 +101,8 @@ export default function CalendarPage() {
     <div className="space-y-6" data-testid="calendar-page">
       <div className="flex flex-wrap items-end justify-between gap-4">
         <div>
-          <h1 className="font-[family-name:var(--font-display)] text-2xl font-bold tracking-tight">Calendário de conteúdo</h1>
-          <p className="mt-1 text-sm text-muted">
+          <h1 className="d3">Calendário de conteúdo</h1>
+          <p className="mt-1 t3 text-text-muted">
             Tudo o que vai ao ar, por cliente e por dia. Rascunhos nascem das aprovações; mude o status com um clique.
           </p>
         </div>
@@ -116,10 +116,10 @@ export default function CalendarPage() {
             ))}
           </Select>
           <div className="flex rounded-md border border-edge">
-            <button onClick={() => setView("month")} className={`px-3 py-1.5 text-sm ${view === "month" ? "bg-surface-sunken text-text" : "text-muted"}`} data-testid="view-month">
+            <button onClick={() => setView("month")} className={`px-3 py-1.5 t3 ${view === "month" ? "bg-surface-sunken text-text" : "text-text-muted"}`} data-testid="view-month">
               Mês
             </button>
-            <button onClick={() => setView("week")} className={`px-3 py-1.5 text-sm ${view === "week" ? "bg-surface-sunken text-text" : "text-muted"}`} data-testid="view-week">
+            <button onClick={() => setView("week")} className={`px-3 py-1.5 t3 ${view === "week" ? "bg-surface-sunken text-text" : "text-text-muted"}`} data-testid="view-week">
               Semana
             </button>
           </div>
@@ -127,7 +127,7 @@ export default function CalendarPage() {
             <button onClick={() => setAnchor((a) => (view === "month" ? addMonths(a, -1) : addDays(a, -7)))} className="grid size-8 place-items-center rounded-md border border-edge hover:border-edge" aria-label="Anterior">
               ‹
             </button>
-            <button onClick={() => setAnchor(todayKey())} className="rounded-md border border-edge px-2 py-1 text-xs hover:border-edge">
+            <button onClick={() => setAnchor(todayKey())} className="rounded-md border border-edge px-2 py-1 t5 hover:border-edge">
               Hoje
             </button>
             <button onClick={() => setAnchor((a) => (view === "month" ? addMonths(a, 1) : addDays(a, 7)))} className="grid size-8 place-items-center rounded-md border border-edge hover:border-edge" aria-label="Próximo">
@@ -146,13 +146,13 @@ export default function CalendarPage() {
       {error && <ErrorBox message={error} />}
 
       {gaps.emptyDays.length > 0 && (
-        <div className="flex flex-wrap items-center gap-2 rounded-lg border border-caution/40 bg-caution-wash px-3 py-2 text-sm" data-testid="calendar-gaps">
+        <div className="flex flex-wrap items-center gap-2 rounded-lg border border-caution/40 bg-caution-wash px-3 py-2 t3" data-testid="calendar-gaps">
           <span className="font-medium">Buracos no calendário:</span>
           <span>
             <span data-testid="gap-count">{gaps.emptyDays.length}</span> <span>dias sem conteúdo à frente</span>
           </span>
           {longestStreak > 0 && (
-            <span className="text-xs text-muted">
+            <span className="t5 text-text-muted">
               · <span>maior sequência:</span> {longestStreak} <span>dias</span>
             </span>
           )}
@@ -161,23 +161,23 @@ export default function CalendarPage() {
               <button
                 key={day}
                 onClick={() => setAdding({ date: day })}
-                className="rounded border border-caution/50 px-1.5 py-0.5 text-xs hover:bg-caution-wash"
+                className="rounded border border-caution/50 px-1.5 py-0.5 t5 hover:bg-caution-wash"
                 title="Criar post neste dia"
               >
                 {parseKey(day).toLocaleDateString(locale, { weekday: "short", day: "2-digit" })} +
               </button>
             ))}
-            {gaps.emptyDays.length > 8 && <span className="text-xs text-muted">…</span>}
+            {gaps.emptyDays.length > 8 && <span className="t5 text-text-muted">…</span>}
           </span>
         </div>
       )}
 
       <Card className="!p-3">
         <div className="mb-2 flex items-center justify-between">
-          <p className="font-[family-name:var(--font-display)] text-lg font-semibold capitalize" data-testid="calendar-title">
+          <p className="d4 capitalize" data-testid="calendar-title">
             {title}
           </p>
-          <div className="hidden gap-2 text-[10px] uppercase tracking-wide text-muted sm:flex">
+          <div className="hidden gap-2 text-[10px] uppercase tracking-wide text-text-muted sm:flex">
             {(["draft", "scheduled", "published", "canceled"] as const).map((s) => (
               <span key={s} className={`rounded border px-1.5 py-0.5 ${STATUS_STYLE[s]}`}>
                 {STATUS_LABEL[s]}
@@ -192,7 +192,7 @@ export default function CalendarPage() {
         ) : (
           <div className="overflow-x-auto">
             <div className="min-w-[700px]">
-              <div className="grid grid-cols-7 gap-1 text-center text-[11px] font-semibold uppercase tracking-wider text-muted">
+              <div className="grid grid-cols-7 gap-1 text-center text-[11px] font-semibold uppercase tracking-wider text-text-muted">
                 {weekdayNames.map((name, i) => (
                   <div key={i} className="py-1">
                     {name}
@@ -210,16 +210,16 @@ export default function CalendarPage() {
                       <div
                         key={day.key}
                         className={`group rounded-md border p-1.5 ${view === "month" ? "min-h-24" : "min-h-48"} ${
-                          day.inMonth ? "bg-surface" : "bg-surface-2/50 opacity-50"
+                          day.inMonth ? "bg-surface" : "bg-surface-sunken/50 opacity-50"
                         } ${isToday ? "border-edge" : isGap ? "border-caution/40" : "border-edge"}`}
                         data-testid="calendar-day"
                         data-date={day.key}
                       >
                         <div className="mb-1 flex items-center justify-between">
-                          <span className={`text-xs ${isToday ? "font-bold text-text" : "text-muted"}`}>{parseKey(day.key).getDate()}</span>
+                          <span className={`t5 ${isToday ? "font-bold text-text" : "text-text-muted"}`}>{parseKey(day.key).getDate()}</span>
                           <button
                             onClick={() => setAdding({ date: day.key })}
-                            className="text-xs text-muted opacity-0 transition-opacity hover:text-text group-hover:opacity-100"
+                            className="t5 text-text-muted opacity-0 transition-opacity hover:text-text group-hover:opacity-100"
                             aria-label="Novo post neste dia"
                           >
                             +
@@ -237,10 +237,10 @@ export default function CalendarPage() {
                             >
                               {post.clientApproval === "approved" ? "✓ " : post.clientApproval === "changes_requested" ? "↩ " : post.clientApproval === "pending" ? "⏳ " : ""}
                               {post.title}
-                              {clientFilter === "all" && <span className="text-muted"> · {post.clientName}</span>}
+                              {clientFilter === "all" && <span className="text-text-muted"> · {post.clientName}</span>}
                             </button>
                           ))}
-                          {items.length > limit && <p className="text-[10px] text-muted">+{items.length - limit}</p>}
+                          {items.length > limit && <p className="text-[10px] text-text-muted">+{items.length - limit}</p>}
                         </div>
                       </div>
                     );
@@ -309,8 +309,8 @@ function PostPanel({
       <div className="max-h-[calc(100dvh-2rem)] w-full max-w-lg animate-pop-in overflow-y-auto overscroll-contain rounded-2xl border border-edge bg-surface p-5 shadow-2xl [transform-origin:center]" onClick={(e) => e.stopPropagation()} data-testid="post-panel">
         <div className="flex items-start justify-between gap-3">
           <div>
-            <p className="text-xs uppercase tracking-widest text-text">{post.clientName}</p>
-            <h3 className="font-[family-name:var(--font-display)] text-lg font-semibold">{post.title}</h3>
+            <p className="t5 uppercase tracking-widest text-text">{post.clientName}</p>
+            <h3 className="d4">{post.title}</h3>
             <div className="mt-1 flex flex-wrap gap-1.5">
               <Tag>{post.channel}</Tag>
               {post.format && <Tag>{post.format}</Tag>}
@@ -322,7 +322,7 @@ function PostPanel({
               {post.clientApproval === "changes_requested" && <Tag>Cliente pediu ajuste</Tag>}
             </div>
           </div>
-          <button onClick={onClose} className="text-muted hover:text-foreground" aria-label="Fechar" data-testid="post-close">
+          <button onClick={onClose} className="text-text-muted hover:text-text" aria-label="Fechar" data-testid="post-close">
             <Icon name="x" size={18} />
           </button>
         </div>
@@ -330,11 +330,11 @@ function PostPanel({
           <a href={`/api/files/${post.deliverableId}`} target="_blank" rel="noreferrer" className="mt-3 block">
             {/* eslint-disable-next-line @next/next/no-img-element */}
             <img src={`/api/files/${post.deliverableId}`} alt={post.title} className="max-h-48 rounded-md border border-edge object-contain" />
-            <span className="mt-1 block text-xs text-text">Peça aprovada pelo cliente ↗</span>
+            <span className="mt-1 block t5 text-text">Peça aprovada pelo cliente ↗</span>
           </a>
         )}
         {(post.clientApproval === "pending" || post.clientApproval === "changes_requested") && post.status !== "published" && post.status !== "canceled" && (
-          <div className="mt-3 flex flex-wrap items-center justify-between gap-2 rounded-md border border-edge bg-surface-2 px-3 py-2 text-xs" data-testid="post-approval-hold">
+          <div className="mt-3 flex flex-wrap items-center justify-between gap-2 rounded-md border border-edge bg-surface-sunken px-3 py-2 t5" data-testid="post-approval-hold">
             <span className="min-w-0 flex-1">
               {post.clientApproval === "pending"
                 ? "Não vai ao ar enquanto o cliente não aprovar pelo link."
@@ -353,18 +353,18 @@ function PostPanel({
           </div>
         )}
         {post.status === "scheduled" && Number(post.publishAttempts ?? 0) >= 5 && (
-          <p className="mt-3 rounded-md border border-negative/50 bg-negative-wash px-3 py-2 text-xs" data-testid="post-publish-error">
+          <p className="mt-3 rounded-md border border-negative/50 bg-negative-wash px-3 py-2 t5" data-testid="post-publish-error">
             {`Não conseguimos publicar: ${post.publishError || "erro desconhecido"}. Confira a conexão e agende de novo para tentar outra vez.`}
           </p>
         )}
         {post.clientApproval === "changes_requested" && post.clientApprovalNote && (
-          <p className="mt-3 rounded-md border border-caution/50 bg-caution-wash px-3 py-2 text-sm" data-testid="post-client-note">
-            <span className="block text-xs font-medium">{post.clientApprovalBy ? `Ajuste pedido por ${post.clientApprovalBy}` : "Ajuste pedido pelo cliente"}</span>
+          <p className="mt-3 rounded-md border border-caution/50 bg-caution-wash px-3 py-2 t3" data-testid="post-client-note">
+            <span className="block t5 font-medium">{post.clientApprovalBy ? `Ajuste pedido por ${post.clientApprovalBy}` : "Ajuste pedido pelo cliente"}</span>
             “{post.clientApprovalNote}”
           </p>
         )}
         {post.imageBrief && (
-          <p className="mt-3 whitespace-pre-wrap rounded-md border border-edge bg-surface-2 p-2 text-xs text-muted" data-testid="post-image-brief">
+          <p className="mt-3 whitespace-pre-wrap rounded-md border border-edge bg-surface-sunken p-2 t5 text-text-muted" data-testid="post-image-brief">
             {post.imageBrief}
           </p>
         )}
@@ -372,7 +372,7 @@ function PostPanel({
           <Label>Legenda</Label>
           <Textarea value={caption} onChange={(e) => setCaption(e.target.value)} placeholder="Legenda do post" data-testid="post-caption" />
           {caption !== post.caption && (
-            <Button variant="ghost" className="!px-2.5 !py-1 text-xs" onClick={() => onPatch({ caption })} data-testid="post-caption-save">
+            <Button variant="ghost" className="!px-2.5 !py-1 t5" onClick={() => onPatch({ caption })} data-testid="post-caption-save">
               Salvar legenda
             </Button>
           )}
@@ -418,7 +418,7 @@ function PostPanel({
           {post.status !== "published" && post.format !== "Carrossel" && (
             <a
               href={`/clients/${post.clientId}?tab=carousels&topic=${encodeURIComponent(post.title)}&post=${post.id}`}
-              className="inline-flex items-center gap-1.5 rounded-md border border-edge px-3.5 py-2 text-sm hover:border-edge"
+              className="inline-flex items-center gap-1.5 rounded-md border border-edge px-3.5 py-2 t3 hover:border-edge"
               data-testid="post-to-carousel"
             >
               <Icon name="layers" size={14} /> Transformar em carrossel
@@ -428,7 +428,7 @@ function PostPanel({
             Excluir
           </Button>
         </div>
-        <p className="mt-3 text-[11px] text-muted">
+        <p className="mt-3 text-[11px] text-text-muted">
           <span>Criado em</span> {new Date(post.createdAt).toLocaleDateString(locale)}
         </p>
       </div>
@@ -489,7 +489,7 @@ function QuickAdd({
   return (
     <div className="fixed inset-0 z-[70] flex items-end justify-center bg-black/40 p-4 sm:items-center" onClick={onClose}>
       <div className="max-h-[calc(100dvh-2rem)] w-full max-w-lg animate-pop-in space-y-3 overflow-y-auto overscroll-contain rounded-2xl border border-edge bg-surface p-5 shadow-2xl [transform-origin:center]" onClick={(e) => e.stopPropagation()} data-testid="quick-add">
-        <h3 className="font-[family-name:var(--font-display)] text-lg font-semibold">Novo post</h3>
+        <h3 className="d4">Novo post</h3>
         <div className="grid gap-3 sm:grid-cols-2">
           <div className="sm:col-span-2">
             <Label>Cliente</Label>
@@ -611,20 +611,20 @@ function PostLink({ post, onInsert }: { post: Post; onInsert: (url: string) => v
         <div className="min-w-48 flex-1">
           <Input value={dest} onChange={(e) => setDest(e.target.value)} placeholder="https://loja.com/produto" data-testid="post-link-dest" />
         </div>
-        <label className="flex items-center gap-1 text-xs">
+        <label className="flex items-center gap-1 t5">
           <input type="checkbox" checked={track} onChange={(e) => setTrack(e.target.checked)} data-testid="post-link-track" /> Rastrear
         </label>
-        <Button variant="ghost" className="!px-2.5 !py-1 text-xs" onClick={apply} disabled={!dest.trim()} data-testid="post-link-apply">
+        <Button variant="ghost" className="!px-2.5 !py-1 t5" onClick={apply} disabled={!dest.trim()} data-testid="post-link-apply">
           Inserir na legenda
         </Button>
       </div>
       {link && (
-        <p className="text-xs text-muted" data-testid="post-link-short">
+        <p className="t5 text-text-muted" data-testid="post-link-short">
           <span className="font-mono text-text">{link.shortUrl.replace(/^https?:\/\//, "")}</span>
           {` · ${link.clicks} clique(s)`}
         </p>
       )}
-      {error && <p className="text-xs text-negative">{error}</p>}
+      {error && <p className="t5 text-negative">{error}</p>}
     </div>
   );
 }

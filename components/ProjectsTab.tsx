@@ -151,7 +151,7 @@ export default function ProjectsTab({
   return (
     <div className="space-y-6">
       <Card className="space-y-3">
-        <p className="text-sm text-muted">
+        <p className="t3 text-text-muted">
           Demandas conectam esta conta a fotógrafos e designers da plataforma:
           brief → match por IA → produção → revisão com anotações e nota de
           qualidade → aprovação → pagamento (combinado e feito por vocês; a plataforma só registra o status).
@@ -187,21 +187,21 @@ export default function ProjectsTab({
             {error && <ErrorBox message={error} />}
             {suggestions && (
               <div className="space-y-2 border-t border-edge pt-3">
-                <p className="text-sm text-muted">{suggestions.summary}</p>
+                <p className="t3 text-text-muted">{suggestions.summary}</p>
                 {suggestions.demands.map((demand, index) => (
-                  <div key={index} className="rounded-lg border border-edge bg-surface-2 p-3 text-sm">
+                  <div key={index} className="rounded-lg border border-edge bg-surface-sunken p-3 t3">
                     <div className="flex flex-wrap items-center justify-between gap-2">
                       <p className="font-semibold">{demand.title}</p>
                       {createdFromSuggestion.has(index) ? (
-                        <span className="inline-flex items-center gap-1.5 text-xs text-text"><Icon name="check" size={13} /> Criada</span>
+                        <span className="inline-flex items-center gap-1.5 t5 text-text"><Icon name="check" size={13} /> Criada</span>
                       ) : (
-                        <Button className="!px-2.5 !py-1 text-xs" onClick={() => createFromSuggestion(index)}>
+                        <Button className="!px-2.5 !py-1 t5" onClick={() => createFromSuggestion(index)}>
                           Criar demanda
                         </Button>
                       )}
                     </div>
-                    <p className="mt-1 whitespace-pre-wrap text-xs text-muted">{demand.brief}</p>
-                    <p className="mt-1.5 text-xs text-muted">
+                    <p className="mt-1 whitespace-pre-wrap t5 text-text-muted">{demand.brief}</p>
+                    <p className="mt-1.5 t5 text-text-muted">
                       <span className="text-text">{demand.skillsNeeded.join(", ") || "skills livres"}</span>
                       {" · "}{demand.location || "local livre"} · {demand.budget || "verba a definir"} · {demand.deadline || "prazo a definir"}
                       {demand.source && ` · origem: ${demand.source}`}
@@ -226,10 +226,10 @@ export default function ProjectsTab({
                     key={option.value}
                     type="button"
                     onClick={() => setForm((f) => ({ ...f, mode: option.value }))}
-                    className={`inline-flex items-center gap-1.5 rounded-md border px-3 py-1.5 text-sm transition-colors ${
+                    className={`inline-flex items-center gap-1.5 rounded-md border px-3 py-1.5 t3 transition-colors ${
                       form.mode === option.value
                         ? "border-edge bg-surface-sunken text-text"
-                        : "border-edge bg-surface-2 text-muted hover:border-muted"
+                        : "border-edge bg-surface-sunken text-text-muted hover:border-muted"
                     }`}
                   >
                     <Icon name={option.icon} size={15} />
@@ -281,10 +281,10 @@ export default function ProjectsTab({
                             : [...f.skillsNeeded, skill],
                         }))
                       }
-                      className={`rounded-full border px-3 py-1 text-xs transition-colors ${
+                      className={`rounded-full border px-3 py-1 t5 transition-colors ${
                         active
                           ? "border-text bg-text text-canvas"
-                          : "border-edge bg-surface-2 text-muted hover:border-muted"
+                          : "border-edge bg-surface-sunken text-text-muted hover:border-muted"
                       }`}
                     >
                       {skill}
@@ -323,7 +323,7 @@ export default function ProjectsTab({
       </Card>
 
       {projects.length === 0 ? (
-        <p className="py-8 text-center text-sm text-muted">Nenhuma demanda ainda.</p>
+        <p className="py-8 text-center t3 text-text-muted">Nenhuma demanda ainda.</p>
       ) : (
         <div className="grid gap-3 sm:grid-cols-2">
           {projects.map((project) => (
@@ -336,10 +336,10 @@ export default function ProjectsTab({
                 <p className="font-semibold">{project.title}</p>
                 <Tag>{PROJECT_STATUS_LABELS[project.status]}</Tag>
               </div>
-              <p className="mt-1 text-xs text-muted">
+              <p className="mt-1 t5 text-text-muted">
                 {project.skillsNeeded.join(", ") || "skills n/d"} · {project.budget || "verba n/d"}
               </p>
-              <p className="mt-1 text-xs text-muted">
+              <p className="mt-1 t5 text-text-muted">
                 {ESCROW_LABELS[project.escrow]} · criada em{" "}
                 {new Date(project.createdAt).toLocaleString("pt-BR", {
                   day: "2-digit",
@@ -506,12 +506,12 @@ function ProjectDetail({ projectId, onBack }: { projectId: string; onBack: () =>
 
   return (
     <div className="space-y-6">
-      <button onClick={onBack} className="text-sm text-text hover:underline">
+      <button onClick={onBack} className="t3 text-text hover:underline">
         ← Todas as demandas
       </button>
       <div className="flex flex-wrap items-start justify-between gap-3">
         <div>
-          <h2 className="font-[family-name:var(--font-display)] text-2xl font-bold">
+          <h2 className="d3">
             {project.title}
           </h2>
           <div className="mt-2 flex flex-wrap gap-2">
@@ -608,14 +608,14 @@ function ProjectDetail({ projectId, onBack }: { projectId: string; onBack: () =>
           </Button>
         </Card>
       ) : (
-        project.brief && <p className="whitespace-pre-wrap text-sm text-muted">{project.brief}</p>
+        project.brief && <p className="whitespace-pre-wrap t3 text-text-muted">{project.brief}</p>
       )}
       {error && <ErrorBox message={error} />}
 
       {internal ? (
         <Card>
           <SectionTitle>Execução interna</SectionTitle>
-          <p className="text-sm text-muted">
+          <p className="t3 text-text-muted">
             Demanda gerenciada pelo time interno da agência — sem match de freelas
             nem pagamento externo. Use o sketch, as referências, o chat e as entregas com
             revisão normalmente.
@@ -626,13 +626,13 @@ function ProjectDetail({ projectId, onBack }: { projectId: string; onBack: () =>
         <SectionTitle>Profissional</SectionTitle>
         {project.applications.length > 0 && (
           <div className="space-y-2">
-            <p className="text-xs font-semibold uppercase tracking-wider text-muted">
+            <p className="t5 font-semibold uppercase tracking-wider text-text-muted">
               Candidaturas ({project.applications.length})
             </p>
             {project.applications.map((application) => (
               <div
                 key={application.id}
-                className="flex flex-wrap items-center justify-between gap-2 rounded-lg border border-edge bg-surface-2 p-3 text-sm"
+                className="flex flex-wrap items-center justify-between gap-2 rounded-lg border border-edge bg-surface-sunken p-3 t3"
               >
                 <div>
                   <Link
@@ -641,11 +641,11 @@ function ProjectDetail({ projectId, onBack }: { projectId: string; onBack: () =>
                   >
                     {application.professionalName}
                   </Link>{" "}
-                  <span className="text-xs text-muted">
+                  <span className="t5 text-text-muted">
                     ({application.professionalRole}, {application.professionalLocation})
                   </span>
                   {application.message && (
-                    <p className="text-xs text-muted">“{application.message}”</p>
+                    <p className="t5 text-text-muted">“{application.message}”</p>
                   )}
                 </div>
                 <div className="flex items-center gap-2">
@@ -653,7 +653,7 @@ function ProjectDetail({ projectId, onBack }: { projectId: string; onBack: () =>
                   {application.status === "pending" && (
                     <>
                       <Button
-                        className="!px-2.5 !py-1 text-xs"
+                        className="!px-2.5 !py-1 t5"
                         onClick={async () => {
                           await api(`/api/applications/${application.id}`, {
                             method: "PATCH",
@@ -666,7 +666,7 @@ function ProjectDetail({ projectId, onBack }: { projectId: string; onBack: () =>
                       </Button>
                       <Button
                         variant="danger"
-                        className="!px-2.5 !py-1 text-xs"
+                        className="!px-2.5 !py-1 t5"
                         onClick={async () => {
                           await api(`/api/applications/${application.id}`, {
                             method: "PATCH",
@@ -683,7 +683,7 @@ function ProjectDetail({ projectId, onBack }: { projectId: string; onBack: () =>
                     project.professionalId !== application.professionalId && (
                       <Button
                         variant="ghost"
-                        className="!px-2.5 !py-1 text-xs"
+                        className="!px-2.5 !py-1 t5"
                         onClick={() =>
                           patch({ professionalId: application.professionalId, status: "matched" })
                         }
@@ -693,14 +693,14 @@ function ProjectDetail({ projectId, onBack }: { projectId: string; onBack: () =>
                 </div>
               </div>
             ))}
-            <p className="text-xs text-muted">
+            <p className="t5 text-text-muted">
               Você pode aceitar mais de uma candidatura para comparar entregas
               (pagando ambas) e depois definir o preferido.
             </p>
           </div>
         )}
         {project.professional ? (
-          <div className="flex flex-wrap items-center justify-between gap-2 text-sm">
+          <div className="flex flex-wrap items-center justify-between gap-2 t3">
             <p>
               Vinculado:{" "}
               <Link
@@ -709,7 +709,7 @@ function ProjectDetail({ projectId, onBack }: { projectId: string; onBack: () =>
               >
                 {project.professional.name}
               </Link>{" "}
-              <span className="text-muted">({project.professional.location})</span>
+              <span className="text-text-muted">({project.professional.location})</span>
             </p>
             {project.status === "matched" && (
               <Button variant="ghost" onClick={() => patch({ professionalId: null, status: "open" })}>
@@ -735,17 +735,17 @@ function ProjectDetail({ projectId, onBack }: { projectId: string; onBack: () =>
             </div>
             {match && (
               <div className="space-y-2">
-                <p className="text-sm text-muted">{match.summary}</p>
+                <p className="t3 text-text-muted">{match.summary}</p>
                 {match.matches.map((candidate) => (
                   <div
                     key={candidate.professionalId}
-                    className="rounded-lg border border-edge bg-surface-2 p-3 text-sm"
+                    className="rounded-lg border border-edge bg-surface-sunken p-3 t3"
                   >
                     <div className="flex flex-wrap items-center justify-between gap-2">
                       <p className="font-semibold">
                         {candidate.name}{" "}
                         <span
-                          className="ml-1 font-[family-name:var(--font-display)]"
+                          className="d4 ml-1"
                           style={{ color: candidate.fit >= 75 ? "#7de2d1" : candidate.fit >= 50 ? "#e6c229" : "#f87171" }}
                         >
                           {candidate.fit}% fit
@@ -754,12 +754,12 @@ function ProjectDetail({ projectId, onBack }: { projectId: string; onBack: () =>
                       <div className="flex gap-2">
                         <Link
                           href={`/professionals/${candidate.professionalId}`}
-                          className="text-xs text-text hover:underline"
+                          className="t5 text-text hover:underline"
                         >
                           Ver portfolio →
                         </Link>
                         <Button
-                          className="!px-2.5 !py-1 text-xs"
+                          className="!px-2.5 !py-1 t5"
                           onClick={() =>
                             patch({ professionalId: candidate.professionalId, status: "matched" })
                           }
@@ -768,7 +768,7 @@ function ProjectDetail({ projectId, onBack }: { projectId: string; onBack: () =>
                         </Button>
                       </div>
                     </div>
-                    <ul className="mt-1 list-disc pl-5 text-xs text-muted">
+                    <ul className="mt-1 list-disc pl-5 t5 text-text-muted">
                       {candidate.reasons.map((reason, i) => (
                         <li key={i}>{reason}</li>
                       ))}
@@ -779,7 +779,7 @@ function ProjectDetail({ projectId, onBack }: { projectId: string; onBack: () =>
                       ))}
                     </ul>
                     {candidate.suggestedBrief && (
-                      <p className="mt-1 text-xs text-muted">
+                      <p className="mt-1 t5 text-text-muted">
                         <span className="text-text">Mini-brief: </span>
                         {candidate.suggestedBrief}
                       </p>
@@ -795,7 +795,7 @@ function ProjectDetail({ projectId, onBack }: { projectId: string; onBack: () =>
 
       <Card className="space-y-3">
         <SectionTitle>Referências (fotos base)</SectionTitle>
-        <p className="text-sm text-muted">
+        <p className="t3 text-text-muted">
           Suba as fotos que a produção deve seguir — a peça, a modelo, a equipe, o
           local — marcando o significado de cada uma. O sketch da IA e o
           profissional usam essas referências como base.
@@ -804,7 +804,7 @@ function ProjectDetail({ projectId, onBack }: { projectId: string; onBack: () =>
           <select
             value={refMeaning}
             onChange={(e) => setRefMeaning(e.target.value)}
-            className="rounded-md border border-edge bg-surface-2 px-2 py-2 text-sm text-foreground outline-none"
+            className="rounded-md border border-edge bg-surface-sunken px-2 py-2 t3 text-text outline-none"
           >
             {REFERENCE_MEANINGS.map((meaning) => (
               <option key={meaning} value={meaning}>
@@ -812,7 +812,7 @@ function ProjectDetail({ projectId, onBack }: { projectId: string; onBack: () =>
               </option>
             ))}
           </select>
-          <label className="cursor-pointer rounded-md border border-edge bg-surface-2 px-3.5 py-2 text-sm text-foreground transition-colors hover:border-edge">
+          <label className="cursor-pointer rounded-md border border-edge bg-surface-sunken px-3.5 py-2 t3 text-text transition-colors hover:border-edge">
             {refUploading ? "Enviando..." : "Enviar referência"}
             <input
               type="file"
@@ -847,7 +847,7 @@ function ProjectDetail({ projectId, onBack }: { projectId: string; onBack: () =>
             {references.map((reference) => (
               <div
                 key={reference.id}
-                className="w-36 rounded-lg border border-edge bg-surface-2 p-2"
+                className="w-36 rounded-lg border border-edge bg-surface-sunken p-2"
               >
                 {reference.mime.startsWith("video/") ? (
                   <video
@@ -866,14 +866,14 @@ function ProjectDetail({ projectId, onBack }: { projectId: string; onBack: () =>
                 )}
                 <div className="mt-1.5 flex items-center justify-between gap-1">
                   <Tag>{reference.meaning || "referência"}</Tag>
-                  <span className="flex gap-1 text-xs">
+                  <span className="flex gap-1 t5">
                     <a
                       href={`/api/files/${reference.id}?download=1`}
-                      className="text-muted hover:text-text"
+                      className="text-text-muted hover:text-text"
                       title="Baixar"
                     ></a>
                     <button
-                      className="text-muted hover:text-negative"
+                      className="text-text-muted hover:text-negative"
                       title="Excluir"
                       onClick={async () => {
                         await api(`/api/deliverables/${reference.id}`, { method: "DELETE" });
@@ -983,10 +983,10 @@ function ProjectDetail({ projectId, onBack }: { projectId: string; onBack: () =>
               <button
                 key={version.id}
                 onClick={() => setSketchIndex(index)}
-                className={`rounded-md border px-2.5 py-1 text-xs transition-colors ${
+                className={`rounded-md border px-2.5 py-1 t5 transition-colors ${
                   index === sketchIndex
                     ? "border-edge bg-surface-sunken text-text"
-                    : "border-edge bg-surface-2 text-muted hover:border-muted"
+                    : "border-edge bg-surface-sunken text-text-muted hover:border-muted"
                 }`}
               >
                 v{project.sketches.length - index} ·{" "}
@@ -1018,15 +1018,15 @@ function ProjectDetail({ projectId, onBack }: { projectId: string; onBack: () =>
                     className="mx-auto max-h-[60vh] w-auto max-w-full"
                   />
                 </div>
-                <div className="space-y-2 text-sm text-muted">
+                <div className="space-y-2 t3 text-text-muted">
                   <p>
-                    <span className="font-semibold text-foreground/80">
+                    <span className="font-semibold text-text/80">
                       Direção de arte:{" "}
                     </span>
                     {sketch.rationale}
                   </p>
                   {(sketch.neededReferences?.length ?? 0) > 0 && (
-                    <div className="rounded-md border border-caution/50 bg-caution-wash p-3 text-xs">
+                    <div className="rounded-md border border-caution/50 bg-caution-wash p-3 t5">
                       <p className="mb-1 font-semibold uppercase text-caution">
                         Para um sketch mais fiel, envie nas Referências:
                       </p>
@@ -1040,7 +1040,7 @@ function ProjectDetail({ projectId, onBack }: { projectId: string; onBack: () =>
                   <a
                     href={`data:image/svg+xml;utf8,${encodeURIComponent(sketch.svg)}`}
                     download="sketch-referencia.svg"
-                    className="inline-block rounded-md border border-edge bg-surface-2 px-3 py-1.5 text-xs transition-colors hover:border-edge hover:text-text"
+                    className="inline-block rounded-md border border-edge bg-surface-sunken px-3 py-1.5 t5 transition-colors hover:border-edge hover:text-text"
                   >Baixar SVG para enviar ao profissional
                   </a>
                 </div>
@@ -1049,7 +1049,7 @@ function ProjectDetail({ projectId, onBack }: { projectId: string; onBack: () =>
           })()
         ) : (
           !sketching && (
-            <p className="text-sm text-muted">
+            <p className="t3 text-text-muted">
               Gere um rafe visual da composição esperada (enquadramento, posição de
               produto, texto e CTA) para anexar ao brief — o profissional executa sem
               ambiguidade.
@@ -1065,11 +1065,11 @@ function ProjectDetail({ projectId, onBack }: { projectId: string; onBack: () =>
             {project.meetings.map((meeting) => (
               <div
                 key={meeting.id}
-                className="flex flex-wrap items-center justify-between gap-2 rounded-md border border-edge bg-surface-2 px-3 py-2 text-sm"
+                className="flex flex-wrap items-center justify-between gap-2 rounded-md border border-edge bg-surface-sunken px-3 py-2 t3"
               >
                 <p>
                   <span className="font-medium">{meeting.title}</span>{" "}
-                  <span className="text-muted">
+                  <span className="text-text-muted">
                     · {new Date(meeting.scheduledAt).toLocaleString("pt-BR")}
                   </span>
                   {meeting.link && (
@@ -1086,14 +1086,14 @@ function ProjectDetail({ projectId, onBack }: { projectId: string; onBack: () =>
                     href={googleCalendarUrl(meeting)}
                     target="_blank"
                     rel="noreferrer"
-                    className="ml-2 inline-flex items-center gap-1 text-muted hover:text-text"
+                    className="ml-2 inline-flex items-center gap-1 text-text-muted hover:text-text"
                     title="Adicionar ao Google Calendar (e anexar o Meet por lá)"
                   >
                     <Icon name="calendar" size={13} /> Calendar
                   </a>
                 </p>
                 <button
-                  className="text-xs text-muted hover:text-negative"
+                  className="t5 text-text-muted hover:text-negative"
                   onClick={async () => {
                     await api(`/api/meetings/${meeting.id}`, { method: "DELETE" });
                     load();
@@ -1142,18 +1142,18 @@ function ProjectDetail({ projectId, onBack }: { projectId: string; onBack: () =>
         <SectionTitle>Chat do projeto</SectionTitle>
         <div className="max-h-64 space-y-2 overflow-y-auto">
           {project.messages.length === 0 && (
-            <p className="text-sm text-muted">Nenhuma mensagem ainda.</p>
+            <p className="t3 text-text-muted">Nenhuma mensagem ainda.</p>
           )}
           {project.messages.map((message) => (
             <div
               key={message.id}
-              className={`max-w-[80%] rounded-lg px-3 py-2 text-sm ${
+              className={`max-w-[80%] rounded-lg px-3 py-2 t3 ${
                 message.sender === "agency"
-                  ? "ml-auto bg-surface-sunken text-foreground"
-                  : "bg-surface-2 text-foreground"
+                  ? "ml-auto bg-surface-sunken text-text"
+                  : "bg-surface-sunken text-text"
               }`}
             >
-              <p className="text-[10px] uppercase tracking-wide text-muted">
+              <p className="text-[10px] uppercase tracking-wide text-text-muted">
                 {message.sender === "agency" ? "Agência" : "Profissional"} ·{" "}
                 {new Date(message.createdAt).toLocaleString("pt-BR", {
                   day: "2-digit",
@@ -1170,7 +1170,7 @@ function ProjectDetail({ projectId, onBack }: { projectId: string; onBack: () =>
           <select
             value={sender}
             onChange={(e) => setSender(e.target.value as "agency" | "professional")}
-            className="rounded-md border border-edge bg-surface-2 px-2 py-2 text-xs text-muted outline-none"
+            className="rounded-md border border-edge bg-surface-sunken px-2 py-2 t5 text-text-muted outline-none"
           >
             <option value="agency">Agência</option>
             <option value="professional">Profissional</option>
@@ -1188,7 +1188,7 @@ function ProjectDetail({ projectId, onBack }: { projectId: string; onBack: () =>
       <div className="space-y-4">
         <Card className="space-y-2">
           <SectionTitle>Entregas</SectionTitle>
-          <p className="text-sm text-muted">
+          <p className="t3 text-text-muted">
             Envie a arte/foto para revisão: clique na imagem para marcar ajustes e
             rode a análise de qualidade da IA (nota 0-100 no contexto da campanha).
           </p>
@@ -1199,7 +1199,7 @@ function ProjectDetail({ projectId, onBack }: { projectId: string; onBack: () =>
               placeholder="Título da entrega (opcional)"
               className="max-w-xs"
             />
-            <label className="cursor-pointer rounded-md bg-accent px-3.5 py-2 text-sm font-medium text-accent-ink transition-opacity hover:opacity-90">
+            <label className="cursor-pointer rounded-md bg-accent px-3.5 py-2 t3 font-medium text-accent-ink transition-opacity hover:opacity-90">
               {uploading ? "Enviando..." : "Enviar imagem"}
               <input
                 type="file"

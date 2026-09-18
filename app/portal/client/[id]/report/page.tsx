@@ -65,27 +65,27 @@ export default function PortalMonthlyReportPage({ params }: { params: Promise<{ 
     <div className="space-y-6">
       <div className="flex flex-wrap items-start justify-between gap-4">
         <div>
-          <Link href={`/portal/client/${id}`} className="text-sm text-text hover:underline">
+          <Link href={`/portal/client/${id}`} className="t3 text-text hover:underline">
             ← Voltar ao portal
           </Link>
-          <p className="mt-2 text-xs uppercase tracking-widest text-text">Portal do cliente</p>
-          <h1 className="font-[family-name:var(--font-display)] text-3xl font-bold tracking-tight">
+          <p className="mt-2 t5 uppercase tracking-widest text-text">Portal do cliente</p>
+          <h1 className="d3">
             Relatório mensal
           </h1>
         </div>
         <div className="flex items-center gap-2">
-          <button onClick={() => setMonth((m) => shiftMonth(m, -1))} className="grid size-9 place-items-center rounded-md border border-edge bg-surface-2 hover:border-edge" aria-label="Mês anterior">
+          <button onClick={() => setMonth((m) => shiftMonth(m, -1))} className="grid size-9 place-items-center rounded-md border border-edge bg-surface-sunken hover:border-edge" aria-label="Mês anterior">
             ‹
           </button>
           <span className="min-w-40 text-center font-medium" data-testid="report-month">{monthTitle(month, lang)}</span>
-          <button onClick={() => setMonth((m) => shiftMonth(m, 1))} className="grid size-9 place-items-center rounded-md border border-edge bg-surface-2 hover:border-edge" aria-label="Próximo mês">
+          <button onClick={() => setMonth((m) => shiftMonth(m, 1))} className="grid size-9 place-items-center rounded-md border border-edge bg-surface-sunken hover:border-edge" aria-label="Próximo mês">
             ›
           </button>
         </div>
       </div>
 
       <Card className="flex flex-wrap items-center justify-between gap-3">
-        <p className="text-sm text-muted">
+        <p className="t3 text-text-muted">
           {payload?.report
             ? "Aqui está o que aconteceu na sua conta neste mês, com o resumo e as recomendações da equipe."
             : selfServe

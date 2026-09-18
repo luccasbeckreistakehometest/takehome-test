@@ -80,15 +80,15 @@ export default function ScopeRequestCard({ clientId }: { clientId: string }) {
       <div>
         <SectionTitle>Solicitar uma produção</SectionTitle>
         {hasPackage && data ? (
-          <p className="text-sm text-muted">{`Seu pacote em ${monthLabel(data.month, lang)}:`}</p>
+          <p className="t3 text-text-muted">{`Seu pacote em ${monthLabel(data.month, lang)}:`}</p>
         ) : (
-          <p className="text-sm text-muted">Precisa de algo? Descreva e a solicitação vira uma demanda no painel da agência na hora.</p>
+          <p className="t3 text-text-muted">Precisa de algo? Descreva e a solicitação vira uma demanda no painel da agência na hora.</p>
         )}
       </div>
       {hasPackage && data && <UsageBars usage={data.usage} />}
       {error && <ErrorBox message={error} />}
       {sent && (
-        <p className="rounded-md border border-edge bg-surface-sunken p-3 text-sm" data-testid="scope-sent" data-kind={sent}>
+        <p className="rounded-md border border-edge bg-surface-sunken p-3 t3" data-testid="scope-sent" data-kind={sent}>
           {sent === "in"
             ? "Pedido enviado! Cabe no seu pacote e a agência já recebeu."
             : "Esse pedido passa do seu pacote. Aprove o valor abaixo para a agência começar."}
@@ -109,8 +109,8 @@ export default function ScopeRequestCard({ clientId }: { clientId: string }) {
           {busy ? "Enviando..." : hasPackage ? "Continuar" : "Enviar solicitação"}
         </Button>
       ) : (
-        <div className="space-y-3 rounded-lg border border-edge bg-surface-2 p-3" data-testid="scope-review">
-          {guess.source === "ai" && guess.reasoning && <p className="text-xs text-muted">{guess.reasoning}</p>}
+        <div className="space-y-3 rounded-lg border border-edge bg-surface-sunken p-3" data-testid="scope-review">
+          {guess.source === "ai" && guess.reasoning && <p className="t5 text-text-muted">{guess.reasoning}</p>}
           <div className="grid gap-2 sm:grid-cols-[1fr_90px]">
             <Select aria-label="O que é" value={itemKey} onChange={(e) => setItemKey(e.target.value)} data-testid="scope-item">
               {data?.usage.map((u) => (
@@ -122,7 +122,7 @@ export default function ScopeRequestCard({ clientId }: { clientId: string }) {
             <Input aria-label="Quantidade" type="number" min={1} max={50} value={qty} onChange={(e) => setQty(e.target.value)} data-testid="scope-qty" />
           </div>
           {preview && (
-            <p className={`text-sm ${preview.inPackage ? "" : "font-medium text-caution dark:text-caution"}`} data-testid="scope-preview" data-in={preview.inPackage}>
+            <p className={`t3 ${preview.inPackage ? "" : "font-medium text-caution"}`} data-testid="scope-preview" data-in={preview.inPackage}>
               {preview.inPackage
                 ? `Cabe no seu pacote (sobram ${preview.remaining}).`
                 : `Isso passa do seu pacote: +${fmtMoney(preview.extraTotal, lang)}. A agência só começa depois que você aprovar.`}

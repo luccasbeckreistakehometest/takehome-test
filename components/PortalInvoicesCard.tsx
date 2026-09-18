@@ -31,24 +31,24 @@ export default function PortalInvoicesCard({ clientId }: { clientId: string }) {
     return (
       <Card data-testid="portal-invoices-empty">
         <SectionTitle>Financeiro</SectionTitle>
-        <p className="text-sm text-muted">Nenhuma fatura por aqui ainda. Quando a agência enviar, ela aparece aqui com Pix copia e cola.</p>
+        <p className="t3 text-text-muted">Nenhuma fatura por aqui ainda. Quando a agência enviar, ela aparece aqui com Pix copia e cola.</p>
       </Card>
     );
   }
   return (
     <Card data-testid="portal-invoices">
       <SectionTitle>Financeiro</SectionTitle>
-      <ul className="space-y-1.5 text-sm">
+      <ul className="space-y-1.5 t3">
         {rows.map((row) => (
           <li key={row.id}>
             <a
               href={`/fatura/${row.token}`}
-              className="flex items-center justify-between gap-2 rounded-md border border-edge bg-surface-2 px-3 py-2 hover:border-edge"
+              className="flex items-center justify-between gap-2 rounded-md border border-edge bg-surface-sunken px-3 py-2 hover:border-edge"
               data-state={row.state}
             >
               <span>
                 <span className="font-medium">{row.month}</span>{" "}
-                <span className={`text-xs ${row.state === "overdue" ? "text-negative" : "text-muted"}`}>· {LABEL[row.state]}</span>
+                <span className={`t5 ${row.state === "overdue" ? "text-negative" : "text-text-muted"}`}>· {LABEL[row.state]}</span>
               </span>
               <span className="tabular-nums">{fmtMoney(row.total, lang)}</span>
             </a>

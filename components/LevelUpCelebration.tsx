@@ -155,14 +155,14 @@ export default function LevelUpCelebration({
         style={{ borderColor: color, boxShadow: `0 12px 44px ${color}44` }}
       >
         <span
-          className="flex size-11 shrink-0 items-center justify-center rounded-full text-lg font-bold"
+          className="flex size-11 shrink-0 items-center justify-center rounded-full d4 font-bold"
           style={{ backgroundColor: `${color}22`, color, border: `2px solid ${color}` }}
           aria-hidden="true"
         ></span>
         <div className="min-w-0">
-          <p className="text-sm font-semibold text-foreground">
+          <p className="t3 font-semibold text-text">
             Você subiu para <span style={{ color }}>{tier}</span>! </p>
-          <p className="text-xs text-muted">
+          <p className="t5 text-text-muted">
             Continue assim para alcançar o próximo elo.
           </p>
         </div>
@@ -170,7 +170,7 @@ export default function LevelUpCelebration({
           type="button"
           onClick={dismiss}
           aria-label="Fechar celebração"
-          className="ml-1 shrink-0 rounded-md p-1 text-muted transition-colors hover:bg-surface-2 hover:text-foreground"
+          className="ml-1 shrink-0 rounded-md p-1 text-text-muted transition-colors hover:bg-surface-sunken hover:text-text"
         >
           ✕
         </button>

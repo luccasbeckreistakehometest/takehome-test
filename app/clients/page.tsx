@@ -24,10 +24,10 @@ export default function ClientsPage() {
   if (clients.length === 0) {
     return (
       <div className="mx-auto max-w-xl py-16 text-center">
-        <h1 className="font-[family-name:var(--font-display)] text-4xl font-bold tracking-tight">
+        <h1 className="d2">
           Sua agência, <span className="text-text">centralizada</span>.
         </h1>
-        <p className="mt-4 text-muted">
+        <p className="mt-4 text-text-muted">
           Cadastre o briefing de um cliente uma única vez e gere estratégia com
           pesquisa real de mercado, plano de campanha, ROI com roadmap, calendário
           social, identidade visual e landing pages — tudo com IA, pronto para
@@ -46,12 +46,12 @@ export default function ClientsPage() {
   return (
     <div className="space-y-6">
       <div className="flex items-center justify-between">
-        <h1 className="font-[family-name:var(--font-display)] text-2xl font-bold tracking-tight">
+        <h1 className="d3">
           Clientes
         </h1>
         <Link
           href="/clients/new"
-          className="rounded-md bg-accent px-4 py-2 text-sm font-medium text-accent-ink transition-opacity hover:opacity-90"
+          className="rounded-md bg-accent px-4 py-2 t3 font-medium text-accent-ink transition-opacity hover:opacity-90"
         >
           + Novo cliente
         </Link>
@@ -60,11 +60,11 @@ export default function ClientsPage() {
         {clients.map((client) => (
           <Link key={client.id} href={`/clients/${client.id}`}>
             <Card className="h-full transition-colors hover:border-edge">
-              <p className="font-[family-name:var(--font-display)] text-lg font-semibold">
+              <p className="d4">
                 {client.name}
               </p>
               {client.industry && (
-                <p className="mt-0.5 text-sm text-muted">{client.industry}</p>
+                <p className="mt-0.5 t3 text-text-muted">{client.industry}</p>
               )}
               <div className="mt-3 flex flex-wrap gap-1.5">
                 {client.channels.slice(0, 4).map((channel) => (
@@ -74,7 +74,7 @@ export default function ClientsPage() {
                   <Tag>+{client.channels.length - 4}</Tag>
                 )}
               </div>
-              <p className="mt-3 text-xs text-muted">
+              <p className="mt-3 t5 text-text-muted">
                 Desde{" "}
                 {new Date(client.createdAt).toLocaleDateString("pt-BR", {
                   day: "2-digit",

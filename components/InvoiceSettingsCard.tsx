@@ -52,7 +52,7 @@ export default function InvoiceSettingsCard() {
     <Card className="space-y-4" data-testid="invoice-settings">
       <div>
         <SectionTitle>Recebimentos (Pix)</SectionTitle>
-        <p className="text-sm text-muted">
+        <p className="t3 text-text-muted">
           As faturas dos clientes saem com Pix copia e cola e QR da sua chave. O pagamento cai direto na sua conta — a Marqa não passa o dinheiro nem cobra taxa. A confirmação do pagamento é sua.
         </p>
       </div>
@@ -83,8 +83,8 @@ export default function InvoiceSettingsCard() {
         <Button onClick={save} disabled={saving} data-testid="pix-save">
           {saving ? "Salvando..." : "Salvar recebimentos"}
         </Button>
-        {saved && <span className="text-sm text-text">Salvo ✓</span>}
-        <span className={`text-xs ${ready ? "text-positive dark:text-positive" : "text-muted"}`}>{ready ? "Pronto para enviar faturas" : "Faltam dados para enviar faturas"}</span>
+        {saved && <span className="t3 text-text">Salvo ✓</span>}
+        <span className={`t5 ${ready ? "text-positive" : "text-text-muted"}`}>{ready ? "Pronto para enviar faturas" : "Faltam dados para enviar faturas"}</span>
       </div>
     </Card>
   );

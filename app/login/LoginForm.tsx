@@ -45,8 +45,8 @@ export default function LoginForm({ showDevAccounts }: { showDevAccounts: boolea
   return (
     <div className="mx-auto max-w-md space-y-6 py-12">
       <div className="text-center">
-        <h1 className="font-[family-name:var(--font-display)] text-3xl font-bold tracking-tight">Entrar</h1>
-        <p className="mt-2 text-sm text-muted">Agência, marca ou profissional: cada um no seu painel.</p>
+        <h1 className="d3">Entrar</h1>
+        <p className="mt-2 t3 text-text-muted">Agência, marca ou profissional: cada um no seu painel.</p>
       </div>
       <Card>
         <form className="space-y-4" onSubmit={login} aria-label="Entrar na conta">
@@ -80,14 +80,14 @@ export default function LoginForm({ showDevAccounts }: { showDevAccounts: boolea
           <Button type="submit" className="w-full" disabled={loading || !username.trim() || !password}>
             {loading ? "Entrando..." : "Entrar"}
           </Button>
-          <p className="text-center text-xs text-muted">
+          <p className="text-center t5 text-text-muted">
             Esqueceu a senha?{" "}
             <Link href="/contato?assunto=acesso" className="text-text hover:underline">
               Fale com o suporte
             </Link>{" "}
             — se a sua conta foi criada por uma agência, ela também pode gerar uma senha nova para você.
           </p>
-          <div className="border-t border-edge pt-3 text-center text-sm text-muted">
+          <div className="border-t border-edge pt-3 text-center t3 text-text-muted">
             Ainda não tem conta?{" "}
             <Link href="/criar-conta" className="font-medium text-text hover:underline">
               Criar conta grátis →
@@ -98,19 +98,19 @@ export default function LoginForm({ showDevAccounts }: { showDevAccounts: boolea
 
       {users.length > 0 && (
         <Card>
-          <p className="mb-2 text-xs font-semibold uppercase tracking-wider text-muted">Contas disponíveis (ambiente local)</p>
+          <p className="mb-2 t5 font-semibold uppercase tracking-wider text-text-muted">Contas disponíveis (ambiente local)</p>
           <div className="space-y-1">
             {users.map((user) => (
               <button
                 key={user.username}
                 type="button"
                 onClick={() => setUsername(user.username)}
-                className="flex w-full items-center justify-between rounded-md border border-edge bg-surface-2 px-3 py-1.5 text-sm transition-colors hover:border-edge"
+                className="flex w-full items-center justify-between rounded-md border border-edge bg-surface-sunken px-3 py-1.5 t3 transition-colors hover:border-edge"
               >
                 <span>
-                  <span className="font-mono text-text">{user.username}</span> <span className="text-muted">— {user.name}</span>
+                  <span className="font-mono text-text">{user.username}</span> <span className="text-text-muted">— {user.name}</span>
                 </span>
-                <span className="text-xs text-muted">{ROLE_LABEL[user.role] ?? user.role}</span>
+                <span className="t5 text-text-muted">{ROLE_LABEL[user.role] ?? user.role}</span>
               </button>
             ))}
           </div>

@@ -57,7 +57,7 @@ export default function PrintGenerationPage({
   }, [id]);
 
   if (notFound) {
-    return <p className="py-24 text-center text-muted">Documento não encontrado.</p>;
+    return <p className="py-24 text-center text-text-muted">Documento não encontrado.</p>;
   }
   if (!generation || !client) {
     return (
@@ -88,10 +88,10 @@ export default function PrintGenerationPage({
         case "client_report":
           return <ClientReportView data={data as ClientReport} />;
         default:
-          return <pre className="whitespace-pre-wrap text-sm">{generation.content}</pre>;
+          return <pre className="whitespace-pre-wrap t3">{generation.content}</pre>;
       }
     } catch {
-      return <pre className="whitespace-pre-wrap text-sm">{generation.content}</pre>;
+      return <pre className="whitespace-pre-wrap t3">{generation.content}</pre>;
     }
   })();
 

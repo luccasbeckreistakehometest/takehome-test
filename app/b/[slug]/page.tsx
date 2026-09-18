@@ -49,12 +49,12 @@ export default async function BioPage({ params }: Props) {
           // eslint-disable-next-line @next/next/no-img-element
           <img src={`/api/b/${bio.slug}/logo`} alt={brand.name} width={88} height={88} className="size-22 rounded-2xl object-contain" />
         ) : (
-          <span className="grid size-22 place-items-center rounded-2xl font-[family-name:var(--font-display)] text-3xl font-bold" style={{ background: primary, color: ink }}>
+          <span className="d3 grid size-22 place-items-center rounded-2xl" style={{ background: primary, color: ink }}>
             {brand.name.charAt(0).toUpperCase()}
           </span>
         )}
-        <h1 className="mt-4 font-[family-name:var(--font-display)] text-2xl font-bold tracking-tight">{bio.title || brand.name}</h1>
-        {bio.bio && <p className="mt-2 whitespace-pre-line text-sm text-muted">{bio.bio}</p>}
+        <h1 className="d3 mt-4">{bio.title || brand.name}</h1>
+        {bio.bio && <p className="mt-2 whitespace-pre-line t3 text-text-muted">{bio.bio}</p>}
       </div>
 
       <ul className="mt-6 space-y-3">
@@ -71,12 +71,12 @@ export default async function BioPage({ params }: Props) {
             </a>
           </li>
         ))}
-        {buttons.length === 0 && <li className="text-center text-sm text-muted">Em breve.</li>}
+        {buttons.length === 0 && <li className="text-center t3 text-text-muted">Em breve.</li>}
       </ul>
 
       {grid.length > 0 && (
         <section className="mt-8">
-          <h2 className="mb-3 text-center text-xs font-semibold uppercase tracking-widest text-muted">Últimos posts</h2>
+          <h2 className="mb-3 text-center t5 font-semibold uppercase tracking-widest text-text-muted">Últimos posts</h2>
           <div className="grid grid-cols-3 gap-1.5" data-testid="bio-grid">
             {grid.map((item) => {
               const code = item.code ?? fallback;
@@ -84,7 +84,7 @@ export default async function BioPage({ params }: Props) {
                 // eslint-disable-next-line @next/next/no-img-element
                 <img src={`/api/b/${bio.slug}/img/${item.imageId}`} alt={item.title} width={300} height={300} className="aspect-square w-full rounded-md object-cover" />
               ) : (
-                <span className="grid aspect-square w-full place-items-center rounded-md p-2 text-center text-xs font-medium" style={{ background: primary, color: ink }}>
+                <span className="grid aspect-square w-full place-items-center rounded-md p-2 text-center t5 font-medium" style={{ background: primary, color: ink }}>
                   {item.title}
                 </span>
               );

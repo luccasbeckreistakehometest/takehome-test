@@ -38,9 +38,9 @@ export default function SalesWebhookCard({ clientId }: { clientId: string }) {
   }
 
   return (
-    <div className="rounded-lg border border-edge bg-surface-2 p-3 text-sm" data-testid="sales-webhook">
+    <div className="rounded-lg border border-edge bg-surface-sunken p-3 t3" data-testid="sales-webhook">
       <p className="font-medium">Webhook de vendas (Shopify, Mercado Livre, loja própria)</p>
-      <p className="mt-1 text-xs text-muted">
+      <p className="mt-1 t5 text-text-muted">
         Cada pedido enviado para este endereço entra como venda do cliente. O endereço tem uma chave secreta: não publique.
       </p>
       {!loaded ? (
@@ -49,10 +49,10 @@ export default function SalesWebhookCard({ clientId }: { clientId: string }) {
         </Button>
       ) : token ? (
         <div className="mt-2 space-y-2">
-          <code className="block break-all rounded bg-background px-2 py-1 text-xs">{url}</code>
+          <code className="block break-all rounded bg-background px-2 py-1 t5">{url}</code>
           <div className="flex flex-wrap gap-2">
             <CopyButton text={url} label="Copiar endereço" />
-            <button type="button" onClick={rotate} disabled={busy} className="text-xs text-muted underline hover:text-foreground">
+            <button type="button" onClick={rotate} disabled={busy} className="t5 text-text-muted underline hover:text-text">
               Gerar novo endereço
             </button>
           </div>

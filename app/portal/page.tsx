@@ -25,19 +25,19 @@ export default function PortalPage() {
   return (
     <div className="mx-auto max-w-3xl space-y-6 py-8">
       <div className="text-center">
-        <h1 className="font-[family-name:var(--font-display)] text-3xl font-bold tracking-tight">
+        <h1 className="d3">
           Entrar na plataforma
         </h1>
-        <p className="mt-2 text-sm text-muted">
+        <p className="mt-2 t3 text-text-muted">
           Cada papel tem sua própria visão: escolha como você quer entrar.
         </p>
       </div>
 
       <div className="grid gap-4 sm:grid-cols-3">
         <Card className="flex flex-col gap-3">
-          <p className="font-[family-name:var(--font-display)] text-lg font-semibold">Agência
+          <p className="d4">Agência
           </p>
-          <p className="flex-1 text-sm text-muted">
+          <p className="flex-1 t3 text-text-muted">
             Acesso completo: clientes, IA, demandas, prospecção, relatórios e
             configurações.
           </p>
@@ -47,9 +47,9 @@ export default function PortalPage() {
         </Card>
 
         <Card className="flex flex-col gap-3">
-          <p className="font-[family-name:var(--font-display)] text-lg font-semibold">Cliente
+          <p className="d4">Cliente
           </p>
-          <p className="flex-1 text-sm text-muted">
+          <p className="flex-1 t3 text-text-muted">
             Acompanhe estratégia, entregas e relatórios da sua marca.
           </p>
           <Select value={clientId} onChange={(e) => setClientId(e.target.value)}>
@@ -67,15 +67,15 @@ export default function PortalPage() {
           >
             Entrar como cliente
           </Button>
-          <Link href="/cadastro" className="text-center text-xs text-text hover:underline">
+          <Link href="/cadastro" className="text-center t5 text-text hover:underline">
             Ainda não sou cadastrado →
           </Link>
         </Card>
 
         <Card className="flex flex-col gap-3">
-          <p className="font-[family-name:var(--font-display)] text-lg font-semibold">Profissional
+          <p className="d4">Profissional
           </p>
-          <p className="flex-1 text-sm text-muted">
+          <p className="flex-1 t3 text-text-muted">
             Suas demandas, oportunidades abertas, entregas e seu elo.
           </p>
           <Select
@@ -98,13 +98,13 @@ export default function PortalPage() {
           </Button>
           <Link
             href="/professionals/new"
-            className="text-center text-xs text-text hover:underline"
+            className="text-center t5 text-text hover:underline"
           >
             Quero me cadastrar →
           </Link>
         </Card>
       </div>
-      <p className="text-center text-xs text-muted">
+      <p className="text-center t5 text-text-muted">
         Autenticação com senha/SSO entra na próxima fase — hoje os portais são
         separados por papel para validar o fluxo.
       </p>

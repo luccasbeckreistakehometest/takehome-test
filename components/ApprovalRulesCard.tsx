@@ -50,11 +50,11 @@ export default function ApprovalRulesCard() {
     <Card className="space-y-4" data-tour="settings-approval">
       <div>
         <SectionTitle>Aprovação que dispara ação</SectionTitle>
-        <p className="text-sm text-muted">
+        <p className="t3 text-text-muted">
           Quando o cliente aprova uma peça no portal, isto acontece sozinho. Cada aprovação fica registrada na linha do tempo da entrega.
         </p>
       </div>
-      <label className="flex items-start gap-3 rounded-md border border-edge bg-surface-2 p-3 text-sm">
+      <label className="flex items-start gap-3 rounded-md border border-edge bg-surface-sunken p-3 t3">
         <input
           type="checkbox"
           checked={rules.autoPostDraft}
@@ -64,7 +64,7 @@ export default function ApprovalRulesCard() {
         />
         <span>
           <span className="font-medium">Peça de rede social aprovada vira rascunho de post</span>
-          <span className="block text-xs text-muted">
+          <span className="block t5 text-text-muted">
             Imagem ou vídeo de uma demanda de conteúdo (posts, reels, stories, carrossel) entra no calendário como rascunho, com a peça anexada, para você só confirmar a data.
           </span>
         </span>
@@ -91,7 +91,7 @@ export default function ApprovalRulesCard() {
           />
         </div>
       </div>
-      <label className="flex items-start gap-3 rounded-md border border-edge bg-surface-2 p-3 text-sm">
+      <label className="flex items-start gap-3 rounded-md border border-edge bg-surface-sunken p-3 t3">
         <input
           type="checkbox"
           checked={rules.notifyWhatsapp}
@@ -101,13 +101,13 @@ export default function ApprovalRulesCard() {
         />
         <span>
           <span className="font-medium">Avisar a agência por WhatsApp</span>
-          <span className="block text-xs text-muted">
+          <span className="block t5 text-text-muted">
             A mensagem entra na fila de envio (Mensagens → Conexões). Sem canal conectado, o aviso aparece só no sino do painel.
           </span>
           {data.whatsappConnected ? (
-            <span className="mt-1 block text-xs text-positive">WhatsApp conectado ✓</span>
+            <span className="mt-1 block t5 text-positive">WhatsApp conectado ✓</span>
           ) : (
-            <span className="mt-1 block text-xs text-caution">WhatsApp ainda não conectado — o aviso vai só para o painel.</span>
+            <span className="mt-1 block t5 text-caution">WhatsApp ainda não conectado — o aviso vai só para o painel.</span>
           )}
         </span>
       </label>
@@ -125,7 +125,7 @@ export default function ApprovalRulesCard() {
         <Button onClick={save} disabled={saving} data-testid="rules-save">
           {saving ? "Salvando..." : "Salvar regras"}
         </Button>
-        {saved && <span className="text-sm text-text">Aplicado ✓</span>}
+        {saved && <span className="t3 text-text">Aplicado ✓</span>}
       </div>
     </Card>
   );

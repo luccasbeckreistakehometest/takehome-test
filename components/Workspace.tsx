@@ -238,7 +238,7 @@ export default function Workspace({
 
       {kitSteps && (
         <Card>
-          <p className="mb-3 text-sm text-muted">
+          <p className="mb-3 t3 text-text-muted">
             Kit completo: a partir do briefing, a plataforma gera estratégia, campanha,
             ROI, identidade, social e landing page em sequência — cada etapa aproveita a
             anterior.
@@ -292,10 +292,10 @@ export default function Workspace({
             const group = groups.find((g) => g.key === e.target.value);
             if (group) setTab(group.tabs[0].key);
           }}
-          className="w-full rounded-md border border-edge bg-surface px-3 py-2 text-sm font-medium"
+          className="w-full rounded-md border border-edge bg-surface px-3 py-2 t3 font-medium"
         >
           {groups.map((g) => (
-            <option key={g.key} value={g.key} className="bg-surface text-foreground">
+            <option key={g.key} value={g.key} className="bg-surface text-text">
               {g.label}
             </option>
           ))}
@@ -308,10 +308,10 @@ export default function Workspace({
           data-testid="workspace-tab-select"
           value={tab}
           onChange={(e) => setTab(e.target.value as TabKey)}
-          className="w-full rounded-md border border-edge bg-surface px-3 py-2 text-sm font-medium text-text"
+          className="w-full rounded-md border border-edge bg-surface px-3 py-2 t3 font-medium text-text"
         >
           {(groups.find((g) => g.key === activeGroup)?.tabs ?? []).map(({ key, label }) => (
-            <option key={key} value={key} className="bg-surface text-foreground">
+            <option key={key} value={key} className="bg-surface text-text">
               {label}
             </option>
           ))}
@@ -400,13 +400,13 @@ export default function Workspace({
           <BrandAssets clientId={client.id} />
           {viewerRole === "client" ? (
             <Card>
-              <p className="text-sm text-muted">
+              <p className="t3 text-text-muted">
                 Para apagar a sua marca e todos os dados dela, use <Link href="/conta" className="text-text hover:underline">Minha conta → Excluir minha conta</Link>.
               </p>
             </Card>
           ) : (
             <Card className="flex flex-wrap items-center justify-between gap-3">
-              <p className="text-sm text-muted">
+              <p className="t3 text-text-muted">
                 Excluir este cliente remove também todo o histórico de gerações.
               </p>
               <Button variant="danger" onClick={deleteClient}>

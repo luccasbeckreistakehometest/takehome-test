@@ -79,16 +79,16 @@ export default function FinancePage() {
     <div className="space-y-6" data-testid="finance-page">
       <div className="flex flex-wrap items-end justify-between gap-4">
         <div>
-          <h1 className="flex items-center gap-2 font-[family-name:var(--font-display)] text-2xl font-bold tracking-tight">
+          <h1 className="d3 flex items-center gap-2">
             <Icon name="money" size={24} className="text-text" /> Horas & margem
           </h1>
-          <p className="mt-1 text-sm text-muted">Quanto cada cliente paga por mês contra quanto ele custa em horas da equipe. Quem dá prejuízo aparece em vermelho.</p>
+          <p className="mt-1 t3 text-text-muted">Quanto cada cliente paga por mês contra quanto ele custa em horas da equipe. Quem dá prejuízo aparece em vermelho.</p>
         </div>
         <div className="flex flex-wrap items-center gap-2">
-          <button onClick={() => setMonth((m) => shiftMonth(m, -1))} className="grid size-9 place-items-center rounded-md border border-edge bg-surface-2 hover:border-edge" aria-label="Mês anterior">‹</button>
+          <button onClick={() => setMonth((m) => shiftMonth(m, -1))} className="grid size-9 place-items-center rounded-md border border-edge bg-surface-sunken hover:border-edge" aria-label="Mês anterior">‹</button>
           <span className="min-w-40 text-center font-medium" data-testid="finance-month">{monthLabel(month, lang)}</span>
-          <button onClick={() => setMonth((m) => shiftMonth(m, 1))} className="grid size-9 place-items-center rounded-md border border-edge bg-surface-2 hover:border-edge" aria-label="Próximo mês">›</button>
-          <a href={`/api/finance/margin?month=${month}&format=csv&lang=${lang}`} className="inline-flex items-center gap-1.5 rounded-md border border-edge bg-surface-2 px-3 py-2 text-sm hover:border-edge" data-testid="finance-csv">
+          <button onClick={() => setMonth((m) => shiftMonth(m, 1))} className="grid size-9 place-items-center rounded-md border border-edge bg-surface-sunken hover:border-edge" aria-label="Próximo mês">›</button>
+          <a href={`/api/finance/margin?month=${month}&format=csv&lang=${lang}`} className="inline-flex items-center gap-1.5 rounded-md border border-edge bg-surface-sunken px-3 py-2 t3 hover:border-edge" data-testid="finance-csv">
             <Icon name="doc" size={15} /> Exportar CSV
           </a>
         </div>
@@ -111,18 +111,18 @@ export default function FinancePage() {
               { label: "Clientes sinalizados", value: String(report.totals.flagged) },
             ].map((kpi) => (
               <Card key={kpi.label}>
-                <p className="text-[11px] font-semibold uppercase tracking-wider text-muted">{kpi.label}</p>
-                <p className={`mt-1 font-[family-name:var(--font-display)] text-2xl font-bold ${kpi.negative ? "text-negative" : ""}`}>{kpi.value}</p>
-                {kpi.hint && <p className="text-xs text-muted">{kpi.hint}</p>}
+                <p className="text-[11px] font-semibold uppercase tracking-wider text-text-muted">{kpi.label}</p>
+                <p className={`n2 mt-1 ${kpi.negative ? "text-negative" : ""}`}>{kpi.value}</p>
+                {kpi.hint && <p className="t5 text-text-muted">{kpi.hint}</p>}
               </Card>
             ))}
           </div>
 
           <Card className="!p-0">
             <div className="overflow-x-auto">
-              <table className="w-full min-w-[720px] text-sm" data-testid="margin-table">
+              <table className="w-full min-w-[720px] t3" data-testid="margin-table">
                 <thead>
-                  <tr className="border-b border-edge text-left text-[11px] uppercase tracking-wider text-muted">
+                  <tr className="border-b border-edge text-left text-[11px] uppercase tracking-wider text-text-muted">
                     <th className="px-4 py-2">Cliente</th>
                     <th className="px-4 py-2">Fee mensal</th>
                     <th className="px-4 py-2">Recebido</th>
@@ -136,7 +136,7 @@ export default function FinancePage() {
                 <tbody>
                   {report.rows.length === 0 && (
                     <tr>
-                      <td colSpan={8} className="px-4 py-6 text-center text-muted">Nenhuma hora apontada e nenhum fee cadastrado neste mês. Aponte horas na aba Horas de cada cliente.</td>
+                      <td colSpan={8} className="px-4 py-6 text-center text-text-muted">Nenhuma hora apontada e nenhum fee cadastrado neste mês. Aponte horas na aba Horas de cada cliente.</td>
                     </tr>
                   )}
                   {report.rows.map((row) => (
@@ -150,20 +150,20 @@ export default function FinancePage() {
                           min={0}
                           value={fees[row.clientId] ?? ""}
                           onChange={(e) => setFees({ ...fees, [row.clientId]: e.target.value })}
-                          className="w-28 rounded-md border border-edge bg-surface-2 px-2 py-1 text-sm outline-none focus:border-edge"
+                          className="w-28 rounded-md border border-edge bg-surface-sunken px-2 py-1 t3 outline-none focus:border-edge"
                           aria-label={`Fee de ${row.name}`}
                         />
                       </td>
-                      <td className="px-4 py-2 text-muted" data-testid="margin-received">{report.received?.[row.clientId] ? money(report.received[row.clientId]) : "—"}</td>
+                      <td className="px-4 py-2 text-text-muted" data-testid="margin-received">{report.received?.[row.clientId] ? money(report.received[row.clientId]) : "—"}</td>
                       <td className="px-4 py-2">{formatHours(row.minutes)}</td>
                       <td className="px-4 py-2">{money(row.cost)}</td>
                       <td className={`px-4 py-2 font-medium ${row.margin < 0 ? "text-negative" : ""}`} data-testid="margin-cell">
                         {money(row.margin)}
-                        {row.marginPct !== null && <span className="ml-1 text-xs text-muted">({row.marginPct}%)</span>}
+                        {row.marginPct !== null && <span className="ml-1 t5 text-text-muted">({row.marginPct}%)</span>}
                       </td>
-                      <td className="px-4 py-2 text-muted">{row.effectiveHourlyRate !== null ? `${money(row.effectiveHourlyRate)}/h` : "—"}</td>
+                      <td className="px-4 py-2 text-text-muted">{row.effectiveHourlyRate !== null ? `${money(row.effectiveHourlyRate)}/h` : "—"}</td>
                       <td className="px-4 py-2">
-                        <span className={`rounded-full border px-2 py-0.5 text-xs font-medium ${MARGIN_STYLE[row.status]}`}>{MARGIN_LABEL[row.status]}</span>
+                        <span className={`rounded-full border px-2 py-0.5 t5 font-medium ${MARGIN_STYLE[row.status]}`}>{MARGIN_LABEL[row.status]}</span>
                       </td>
                     </tr>
                   ))}
@@ -175,7 +175,7 @@ export default function FinancePage() {
           <Card className="space-y-4">
             <div>
               <SectionTitle>Custos e meta</SectionTitle>
-              <p className="text-sm text-muted">O custo/hora da equipe interna vale para todo apontamento sem profissional. Profissionais com custo próprio entram pelo valor deles.</p>
+              <p className="t3 text-text-muted">O custo/hora da equipe interna vale para todo apontamento sem profissional. Profissionais com custo próprio entram pelo valor deles.</p>
             </div>
             <div className="grid gap-3 sm:grid-cols-3">
               <div>
@@ -189,17 +189,17 @@ export default function FinancePage() {
             </div>
             {report.rates.length > 0 && (
               <div>
-                <p className="mb-1 text-xs font-semibold uppercase tracking-wider text-muted">Custo/hora por profissional</p>
+                <p className="mb-1 t5 font-semibold uppercase tracking-wider text-text-muted">Custo/hora por profissional</p>
                 <div className="grid gap-2 sm:grid-cols-3">
                   {report.rates.map((p) => (
-                    <div key={p.id} className="flex items-center gap-2 rounded-md border border-edge bg-surface-2 px-3 py-2 text-sm">
+                    <div key={p.id} className="flex items-center gap-2 rounded-md border border-edge bg-surface-sunken px-3 py-2 t3">
                       <span className="min-w-0 flex-1 truncate">{p.name}</span>
                       <input
                         type="number"
                         min={0}
                         value={rates.professionals[p.id] ?? ""}
                         onChange={(e) => setRates({ ...rates, professionals: { ...rates.professionals, [p.id]: e.target.value } })}
-                        className="w-24 rounded-md border border-edge bg-surface px-2 py-1 text-sm outline-none focus:border-edge"
+                        className="w-24 rounded-md border border-edge bg-surface px-2 py-1 t3 outline-none focus:border-edge"
                         aria-label={`Custo/hora de ${p.name}`}
                         data-testid="rate-professional"
                       />
@@ -212,7 +212,7 @@ export default function FinancePage() {
               <Button onClick={save} disabled={saving} data-testid="finance-save">
                 {saving ? "Salvando..." : "Salvar custos e fees"}
               </Button>
-              {saved && <span className="text-sm text-text">Aplicado ✓</span>}
+              {saved && <span className="t3 text-text">Aplicado ✓</span>}
             </div>
           </Card>
         </>

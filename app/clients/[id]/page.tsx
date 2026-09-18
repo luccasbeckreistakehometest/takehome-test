@@ -32,14 +32,14 @@ export default function ClientPage({
   if (failed) {
     return (
       <div className="py-24 text-center">
-        <p className="text-muted">
+        <p className="text-text-muted">
           Não consegui carregar este cliente (conexão lenta, navegador limitado ou
           cliente inexistente).
         </p>
         <div className="mt-4 flex items-center justify-center gap-4">
           <button
             onClick={() => setAttempt((a) => a + 1)}
-            className="rounded-md bg-accent px-4 py-2 text-sm font-medium text-accent-ink"
+            className="rounded-md bg-accent px-4 py-2 t3 font-medium text-accent-ink"
           >
             Tentar de novo
           </button>

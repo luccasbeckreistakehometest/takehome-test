@@ -28,8 +28,8 @@ export default async function CriarContaPage({
   return (
     <div className="mx-auto max-w-2xl space-y-6 py-12">
       <div className="text-center">
-        <h1 className="font-[family-name:var(--font-display)] text-3xl font-bold tracking-tight">Criar conta</h1>
-        <p className="mt-2 text-sm text-muted">
+        <h1 className="d3">Criar conta</h1>
+        <p className="mt-2 t3 text-text-muted">
           {chosen && chosen.monthlyPrice > 0
             ? `Plano escolhido: ${chosen.name}. Depois do cadastro você vai direto para o pagamento (pré-pago, sem renovação automática).`
             : "Comece grátis. Você pode evoluir para um plano depois."}
@@ -43,7 +43,7 @@ export default async function CriarContaPage({
           period={isBillingPeriod(period) ? period : undefined}
         />
       </Card>
-      <p className="text-center text-sm text-muted">
+      <p className="text-center t3 text-text-muted">
         Já tem conta?{" "}
         <Link href="/login" className="text-text hover:underline">
           Entrar

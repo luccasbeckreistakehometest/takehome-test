@@ -23,16 +23,16 @@ export default function ClicksCard({ clientId, onOpen }: { clientId: string; onO
         <p className="flex items-center gap-2 font-medium">
           <Icon name="link" size={16} className="text-text" /> Cliques (30 dias)
         </p>
-        <button type="button" onClick={onOpen} className="text-sm text-text hover:underline">
+        <button type="button" onClick={onOpen} className="t3 text-text hover:underline">
           {links.length ? "Links e bio" : "Criar link rastreável"}
         </button>
       </div>
       {links.length === 0 ? (
-        <p className="mt-1 text-sm text-muted">Crie links com UTM automático e uma página de link na bio. Os cliques entram no relatório e no &quot;o que funciona&quot;.</p>
+        <p className="mt-1 t3 text-text-muted">Crie links com UTM automático e uma página de link na bio. Os cliques entram no relatório e no &quot;o que funciona&quot;.</p>
       ) : (
         <>
-          <p className="mt-1 font-[family-name:var(--font-display)] text-3xl font-bold text-text" data-testid="clicks-total">{total}</p>
-          <ul className="mt-1 space-y-0.5 text-xs text-muted">
+          <p className="d3 mt-1 text-text" data-testid="clicks-total">{total}</p>
+          <ul className="mt-1 space-y-0.5 t5 text-text-muted">
             {top.map((l) => (
               <li key={l.code}>{`${l.label || l.destUrl}: ${l.clicks30}`}</li>
             ))}

@@ -49,18 +49,18 @@ export default async function AnalyticsPage({ searchParams }: Props) {
     <div className="space-y-6" data-testid="admin-analytics">
       <div className="flex flex-wrap items-end justify-between gap-3">
         <div>
-          <p className="text-xs uppercase tracking-widest text-muted">
+          <p className="t5 uppercase tracking-widest text-text-muted">
             <Link href="/admin" className="hover:text-text">Admin</Link> / Analytics
           </p>
-          <h1 className="font-[family-name:var(--font-display)] text-2xl font-bold tracking-tight">Funil e origens</h1>
-          <p className="mt-1 text-sm text-muted">Sem cookie: um visitante é um hash que muda todo dia. Eventos crus ficam 90 dias; o resumo diário fica.</p>
+          <h1 className="d3">Funil e origens</h1>
+          <p className="mt-1 t3 text-text-muted">Sem cookie: um visitante é um hash que muda todo dia. Eventos crus ficam 90 dias; o resumo diário fica.</p>
         </div>
-        <a href={`/api/admin/analytics?format=csv&days=${days}`} className="rounded-md border border-edge bg-surface-2 px-3 py-2 text-sm hover:border-edge">
+        <a href={`/api/admin/analytics?format=csv&days=${days}`} className="rounded-md border border-edge bg-surface-sunken px-3 py-2 t3 hover:border-edge">
           Baixar CSV
         </a>
       </div>
 
-      <div className="flex flex-wrap gap-2 text-sm">
+      <div className="flex flex-wrap gap-2 t3">
         {[7, 30, 90].map((d) => (
           <Link key={d} href={qs({ days: d })} className={`rounded-full border px-3 py-1 ${d === days ? "border-text bg-text text-canvas" : "border-edge"}`}>
             {`${d} dias`}
@@ -78,10 +78,10 @@ export default async function AnalyticsPage({ searchParams }: Props) {
       </div>
 
       <section className="rounded-xl border border-edge bg-surface p-5" data-testid="analytics-funnel">
-        <h2 className="mb-3 text-sm font-semibold uppercase tracking-wider text-text">Funil</h2>
+        <h2 className="mb-3 t3 font-semibold uppercase tracking-wider text-text">Funil</h2>
         <ul className="space-y-2">
           {rows.map((row) => (
-            <li key={row.step} className="grid grid-cols-[150px_1fr_110px] items-center gap-3 text-sm" data-step={row.step} data-count={row.count}>
+            <li key={row.step} className="grid grid-cols-[150px_1fr_110px] items-center gap-3 t3" data-step={row.step} data-count={row.count}>
               <span>{STEP_LABEL[row.step]}</span>
               <svg viewBox="0 0 100 8" preserveAspectRatio="none" className="h-3 w-full" aria-hidden>
                 <rect x="0" y="0" width="100" height="8" rx="2" className="fill-surface-2" />
@@ -89,7 +89,7 @@ export default async function AnalyticsPage({ searchParams }: Props) {
               </svg>
               <span className="text-right tabular-nums">
                 {row.count}
-                {row.rate !== null && <span className="ml-1 text-xs text-muted">{`${row.rate}%`}</span>}
+                {row.rate !== null && <span className="ml-1 t5 text-text-muted">{`${row.rate}%`}</span>}
               </span>
             </li>
           ))}
@@ -98,9 +98,9 @@ export default async function AnalyticsPage({ searchParams }: Props) {
 
       <div className="grid gap-6 lg:grid-cols-2">
         <section className="rounded-xl border border-edge bg-surface p-5">
-          <h2 className="mb-3 text-sm font-semibold uppercase tracking-wider text-text">Visitantes por dia</h2>
+          <h2 className="mb-3 t3 font-semibold uppercase tracking-wider text-text">Visitantes por dia</h2>
           {visitors.length === 0 ? (
-            <p className="text-sm text-muted">Sem visitas no período.</p>
+            <p className="t3 text-text-muted">Sem visitas no período.</p>
           ) : (
             <svg viewBox={`0 0 ${visitors.length * 10} 60`} className="h-36 w-full" role="img" aria-label="Visitantes por dia">
               {visitors.map((v, i) => (
@@ -112,10 +112,10 @@ export default async function AnalyticsPage({ searchParams }: Props) {
           )}
         </section>
         <section className="rounded-xl border border-edge bg-surface p-5">
-          <h2 className="mb-3 text-sm font-semibold uppercase tracking-wider text-text">Origens e campanhas</h2>
+          <h2 className="mb-3 t3 font-semibold uppercase tracking-wider text-text">Origens e campanhas</h2>
           <div className="overflow-x-auto">
-            <table className="w-full min-w-[320px] text-left text-sm" data-testid="analytics-sources">
-              <thead className="text-xs uppercase text-muted">
+            <table className="w-full min-w-[320px] text-left t3" data-testid="analytics-sources">
+              <thead className="t5 uppercase text-text-muted">
                 <tr>
                   <th className="py-1.5 pr-2">Origem</th>
                   <th className="py-1.5 pr-2">Campanha</th>
@@ -123,13 +123,13 @@ export default async function AnalyticsPage({ searchParams }: Props) {
                   <th className="py-1.5 text-right">Cadastros</th>
                 </tr>
               </thead>
-              <tbody className="divide-y divide-edge">
+              <tbody className="divide-y divide-rule">
                 {sources.map((s) => (
                   <tr key={`${s.source}-${s.campaign}`}>
                     <td className="py-1.5 pr-2">
                       <Link href={qs({ source: s.source || "(direto)" })} className="hover:text-text">{s.source || "(direto)"}</Link>
                     </td>
-                    <td className="py-1.5 pr-2 text-muted">{s.campaign || "—"}</td>
+                    <td className="py-1.5 pr-2 text-text-muted">{s.campaign || "—"}</td>
                     <td className="py-1.5 pr-2 text-right tabular-nums">{s.visitors}</td>
                     <td className="py-1.5 text-right tabular-nums">{s.signups}</td>
                   </tr>
@@ -141,10 +141,10 @@ export default async function AnalyticsPage({ searchParams }: Props) {
       </div>
 
       <section className="rounded-xl border border-edge bg-surface p-5">
-        <h2 className="mb-3 text-sm font-semibold uppercase tracking-wider text-text">Cadastros recentes (1º toque)</h2>
+        <h2 className="mb-3 t3 font-semibold uppercase tracking-wider text-text">Cadastros recentes (1º toque)</h2>
         <div className="overflow-x-auto">
-          <table className="w-full min-w-[480px] text-left text-sm" data-testid="analytics-signups">
-            <thead className="text-xs uppercase text-muted">
+          <table className="w-full min-w-[480px] text-left t3" data-testid="analytics-signups">
+            <thead className="t5 uppercase text-text-muted">
               <tr>
                 <th className="py-1.5 pr-2">Conta</th>
                 <th className="py-1.5 pr-2">Público</th>
@@ -153,14 +153,14 @@ export default async function AnalyticsPage({ searchParams }: Props) {
                 <th className="py-1.5">Quando</th>
               </tr>
             </thead>
-            <tbody className="divide-y divide-edge">
+            <tbody className="divide-y divide-rule">
               {signups.map((s) => (
                 <tr key={s.username}>
-                  <td className="py-1.5 pr-2 font-mono text-xs">{s.username}</td>
+                  <td className="py-1.5 pr-2 font-mono t5">{s.username}</td>
                   <td className="py-1.5 pr-2">{AUDIENCE_LABEL[s.audience] ?? s.audience}</td>
                   <td className="py-1.5 pr-2">{s.utm.source || "(direto)"}</td>
-                  <td className="py-1.5 pr-2 text-muted">{s.utm.campaign || "—"}</td>
-                  <td className="py-1.5 text-xs text-muted">{s.createdAt.slice(0, 10)}</td>
+                  <td className="py-1.5 pr-2 text-text-muted">{s.utm.campaign || "—"}</td>
+                  <td className="py-1.5 t5 text-text-muted">{s.createdAt.slice(0, 10)}</td>
                 </tr>
               ))}
             </tbody>
@@ -169,23 +169,23 @@ export default async function AnalyticsPage({ searchParams }: Props) {
       </section>
 
       <section className="rounded-xl border border-edge bg-surface p-5">
-        <h2 className="mb-1 text-sm font-semibold uppercase tracking-wider text-text">Primeiros passos concluídos</h2>
-        <p className="mb-3 text-xs text-muted">Contas que concluíram cada passo do checklist no período (papel:passo).</p>
+        <h2 className="mb-1 t3 font-semibold uppercase tracking-wider text-text">Primeiros passos concluídos</h2>
+        <p className="mb-3 t5 text-text-muted">Contas que concluíram cada passo do checklist no período (papel:passo).</p>
         {activation.length === 0 ? (
-          <p className="text-sm text-muted">Nenhum passo concluído no período.</p>
+          <p className="t3 text-text-muted">Nenhum passo concluído no período.</p>
         ) : (
           <div className="overflow-x-auto">
-            <table className="w-full min-w-[320px] text-left text-sm" data-testid="analytics-activation">
-              <thead className="text-xs uppercase text-muted">
+            <table className="w-full min-w-[320px] text-left t3" data-testid="analytics-activation">
+              <thead className="t5 uppercase text-text-muted">
                 <tr>
                   <th className="py-1.5 pr-2">Passo</th>
                   <th className="py-1.5 text-right">Contas</th>
                 </tr>
               </thead>
-              <tbody className="divide-y divide-edge">
+              <tbody className="divide-y divide-rule">
                 {activation.map((a) => (
                   <tr key={a.step}>
-                    <td className="py-1.5 pr-2 font-mono text-xs">{a.step}</td>
+                    <td className="py-1.5 pr-2 font-mono t5">{a.step}</td>
                     <td className="py-1.5 text-right tabular-nums">{a.accounts}</td>
                   </tr>
                 ))}

@@ -85,7 +85,7 @@ export default function AgencyPageCard({ origin }: { origin: string }) {
     <Card className="space-y-5" id="pagina-publica" data-testid="agency-page-card" data-tour="settings-agency-page">
       <div>
         <SectionTitle>Página pública da agência</SectionTitle>
-        <p className="text-sm text-muted">
+        <p className="t3 text-text-muted">
           Sua vitrine sem login: serviços, trabalhos, clientes e depoimentos, com um formulário que vira prospect e avisa você na hora.
         </p>
       </div>
@@ -94,16 +94,16 @@ export default function AgencyPageCard({ origin }: { origin: string }) {
         <div>
           <Label>Endereço público</Label>
           <div className="flex items-center gap-1">
-            <span className="shrink-0 text-sm text-muted">{origin}/a/</span>
+            <span className="shrink-0 t3 text-text-muted">{origin}/a/</span>
             <Input value={config.slug} onChange={(e) => setConfig({ ...config, slug: e.target.value })} placeholder={normalizeSlug(data.agencyName)} data-testid="page-slug" />
           </div>
         </div>
-        <label className="flex items-center gap-2 rounded-md border border-edge bg-surface-2 px-3 py-2 text-sm">
+        <label className="flex items-center gap-2 rounded-md border border-edge bg-surface-sunken px-3 py-2 t3">
           <input type="checkbox" checked={config.published} onChange={(e) => setConfig({ ...config, published: e.target.checked })} className="accent-[var(--accent)]" data-testid="page-published" />
           Publicada
         </label>
       </div>
-      <div className="flex flex-wrap items-center gap-2 text-xs text-muted">
+      <div className="flex flex-wrap items-center gap-2 t5 text-text-muted">
         <span className="font-mono" data-testid="page-url">{publicUrl}</span>
         <CopyButton text={publicUrl} label="Copiar link" />
         {config.published && data.config.slug && (
@@ -140,22 +140,22 @@ export default function AgencyPageCard({ origin }: { origin: string }) {
 
       <div className="space-y-2 border-t border-edge pt-4">
         <div className="flex items-center justify-between">
-          <p className="text-xs font-semibold uppercase tracking-wider text-muted">Depoimentos</p>
+          <p className="t5 font-semibold uppercase tracking-wider text-text-muted">Depoimentos</p>
           <button
             type="button"
-            className="text-xs text-text hover:underline"
+            className="t5 text-text hover:underline"
             onClick={() => setConfig({ ...config, testimonials: [...config.testimonials, { author: "", role: "", text: "" }] })}
             data-testid="testimonial-add"
           >
             + Adicionar depoimento
           </button>
         </div>
-        {config.testimonials.length === 0 && <p className="text-xs text-muted">Nenhum depoimento ainda — cole o que um cliente disse sobre o trabalho.</p>}
+        {config.testimonials.length === 0 && <p className="t5 text-text-muted">Nenhum depoimento ainda — cole o que um cliente disse sobre o trabalho.</p>}
         {config.testimonials.map((t, i) => (
-          <div key={i} className="grid gap-2 rounded-md border border-edge bg-surface-2 p-3 sm:grid-cols-[1fr_1fr_auto]" data-testid="testimonial-row">
+          <div key={i} className="grid gap-2 rounded-md border border-edge bg-surface-sunken p-3 sm:grid-cols-[1fr_1fr_auto]" data-testid="testimonial-row">
             <Input value={t.author} onChange={(e) => setTestimonial(i, { author: e.target.value })} placeholder="Quem disse" data-testid="testimonial-author" />
             <Input value={t.role} onChange={(e) => setTestimonial(i, { role: e.target.value })} placeholder="Cargo / empresa" />
-            <button type="button" className="text-xs text-muted hover:text-negative" onClick={() => setConfig({ ...config, testimonials: config.testimonials.filter((_, j) => j !== i) })}>
+            <button type="button" className="t5 text-text-muted hover:text-negative" onClick={() => setConfig({ ...config, testimonials: config.testimonials.filter((_, j) => j !== i) })}>
               Remover
             </button>
             <div className="sm:col-span-3">
@@ -167,19 +167,19 @@ export default function AgencyPageCard({ origin }: { origin: string }) {
 
       <div className="grid gap-4 border-t border-edge pt-4 md:grid-cols-2">
         <div>
-          <p className="text-xs font-semibold uppercase tracking-wider text-muted">Mostrar no portfólio</p>
-          <p className="mb-2 text-xs text-muted">Entregas em imagem. Marque só o que o cliente autorizou divulgar.</p>
+          <p className="t5 font-semibold uppercase tracking-wider text-text-muted">Mostrar no portfólio</p>
+          <p className="mb-2 t5 text-text-muted">Entregas em imagem. Marque só o que o cliente autorizou divulgar.</p>
           {data.portfolio.length === 0 ? (
-            <p className="text-xs text-muted">Nenhuma entrega em imagem ainda.</p>
+            <p className="t5 text-text-muted">Nenhuma entrega em imagem ainda.</p>
           ) : (
             <div className="max-h-56 space-y-1 overflow-y-auto">
               {data.portfolio.map((item) => (
-                <label key={item.id} className="flex items-center gap-2 rounded-md border border-edge bg-surface-2 px-2.5 py-1.5 text-sm" data-testid="portfolio-option">
+                <label key={item.id} className="flex items-center gap-2 rounded-md border border-edge bg-surface-sunken px-2.5 py-1.5 t3" data-testid="portfolio-option">
                   <input type="checkbox" checked={portfolioIds.includes(item.id)} onChange={() => setPortfolioIds((l) => toggle(l, item.id))} className="accent-[var(--accent)]" />
                   {/* eslint-disable-next-line @next/next/no-img-element */}
                   <img src={`/api/files/${item.id}`} alt="" className="size-8 rounded object-cover" />
                   <span className="min-w-0 flex-1 truncate">
-                    {item.title} <span className="text-xs text-muted">· {item.clientName}</span>
+                    {item.title} <span className="t5 text-text-muted">· {item.clientName}</span>
                   </span>
                 </label>
               ))}
@@ -187,15 +187,15 @@ export default function AgencyPageCard({ origin }: { origin: string }) {
           )}
         </div>
         <div>
-          <p className="text-xs font-semibold uppercase tracking-wider text-muted">Clientes na página</p>
-          <label className="mb-2 flex items-center gap-2 text-xs text-muted">
+          <p className="t5 font-semibold uppercase tracking-wider text-text-muted">Clientes na página</p>
+          <label className="mb-2 flex items-center gap-2 t5 text-text-muted">
             <input type="checkbox" checked={config.showClients} onChange={(e) => setConfig({ ...config, showClients: e.target.checked })} className="accent-[var(--accent)]" />
             Mostrar a faixa “quem confia na gente”
           </label>
-          <p className="mb-2 text-xs text-muted">Marque apenas quem consentiu em aparecer. O logo vem dos arquivos de identidade visual do cliente; sem logo, mostra o nome.</p>
+          <p className="mb-2 t5 text-text-muted">Marque apenas quem consentiu em aparecer. O logo vem dos arquivos de identidade visual do cliente; sem logo, mostra o nome.</p>
           <div className="max-h-56 space-y-1 overflow-y-auto">
             {data.clients.map((client) => (
-              <label key={client.id} className="flex items-center gap-2 rounded-md border border-edge bg-surface-2 px-2.5 py-1.5 text-sm" data-testid="showcase-option">
+              <label key={client.id} className="flex items-center gap-2 rounded-md border border-edge bg-surface-sunken px-2.5 py-1.5 t3" data-testid="showcase-option">
                 <input type="checkbox" checked={clientIds.includes(client.id)} onChange={() => setClientIds((l) => toggle(l, client.id))} className="accent-[var(--accent)]" />
                 <span className="min-w-0 flex-1 truncate">{client.name}</span>
                 {client.hasLogo && <span className="text-[10px] uppercase tracking-wide text-text">logo</span>}
@@ -210,30 +210,30 @@ export default function AgencyPageCard({ origin }: { origin: string }) {
         <Button onClick={save} disabled={saving} data-testid="page-save">
           {saving ? "Salvando..." : "Salvar página"}
         </Button>
-        {saved && <span className="text-sm text-text">Aplicado ✓</span>}
+        {saved && <span className="t3 text-text">Aplicado ✓</span>}
       </div>
 
       <div className="space-y-2 border-t border-edge pt-4">
-        <p className="text-xs font-semibold uppercase tracking-wider text-muted">Leads recebidos</p>
+        <p className="t5 font-semibold uppercase tracking-wider text-text-muted">Leads recebidos</p>
         {data.leads.length === 0 ? (
-          <p className="text-xs text-muted">Nenhum lead ainda. Compartilhe o link da página nas redes e na bio.</p>
+          <p className="t5 text-text-muted">Nenhum lead ainda. Compartilhe o link da página nas redes e na bio.</p>
         ) : (
           <div className="space-y-1">
             {data.leads.map((lead) => (
-              <div key={lead.id} className="flex flex-wrap items-center justify-between gap-2 rounded-md border border-edge bg-surface-2 px-3 py-2 text-sm" data-testid="lead-row">
+              <div key={lead.id} className="flex flex-wrap items-center justify-between gap-2 rounded-md border border-edge bg-surface-sunken px-3 py-2 t3" data-testid="lead-row">
                 <div className="min-w-0">
                   <p className="font-medium">
-                    {lead.name} <span className="text-xs text-muted">· +{lead.whatsapp}</span>
+                    {lead.name} <span className="t5 text-text-muted">· +{lead.whatsapp}</span>
                   </p>
-                  <p className="truncate text-xs text-muted">{lead.need}</p>
+                  <p className="truncate t5 text-text-muted">{lead.need}</p>
                 </div>
-                <div className="text-right text-xs text-muted">
+                <div className="text-right t5 text-text-muted">
                   <p>{BUDGET_BAND_LABELS[lead.budgetBand as BudgetBand]?.[lang === "en" ? "en" : "pt"] ?? lead.budgetBand}</p>
                   <p>{new Date(lead.createdAt).toLocaleDateString(lang === "en" ? "en-US" : "pt-BR")}</p>
                 </div>
               </div>
             ))}
-            <a href="/prospecting" className="inline-block text-xs text-text hover:underline">
+            <a href="/prospecting" className="inline-block t5 text-text hover:underline">
               Ver na prospecção →
             </a>
           </div>

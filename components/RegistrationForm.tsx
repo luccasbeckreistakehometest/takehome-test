@@ -91,20 +91,20 @@ export default function RegistrationForm({
   if (!role) {
     return (
       <div className="space-y-3">
-        <p className="text-sm text-muted">Que tipo de conta você quer criar?</p>
+        <p className="t3 text-text-muted">Que tipo de conta você quer criar?</p>
         <div className="grid gap-3 sm:grid-cols-3">
           {(Object.keys(ROLE_INFO) as Role[]).map((r) => (
             <button
               key={r}
               type="button"
               onClick={() => setRole(r)}
-              className="group flex flex-col items-start gap-2 rounded-xl border border-edge bg-surface-2 p-4 text-left transition-all hover:-translate-y-0.5 hover:border-edge"
+              className="group flex flex-col items-start gap-2 rounded-xl border border-edge bg-surface-sunken p-4 text-left transition-all hover:-translate-y-0.5 hover:border-edge"
             >
               <span className="grid size-10 place-items-center rounded-lg bg-surface-sunken text-text transition-colors group-hover:bg-surface-sunken group-hover:text-text-ink">
                 <Icon name={ROLE_INFO[r].icon} size={20} />
               </span>
               <span className="font-semibold">{ROLE_INFO[r].label}</span>
-              <span className="text-xs text-muted">{ROLE_INFO[r].blurb}</span>
+              <span className="t5 text-text-muted">{ROLE_INFO[r].blurb}</span>
             </button>
           ))}
         </div>
@@ -115,11 +115,11 @@ export default function RegistrationForm({
   const header = (
     <>
       {!fixedRole && (
-        <button type="button" onClick={() => setRole(null)} className="text-xs text-muted transition-colors hover:text-foreground">
+        <button type="button" onClick={() => setRole(null)} className="t5 text-text-muted transition-colors hover:text-text">
           ← trocar tipo de conta
         </button>
       )}
-      <div className="flex items-center gap-2 rounded-md border border-edge bg-surface-2 px-3 py-2 text-sm">
+      <div className="flex items-center gap-2 rounded-md border border-edge bg-surface-sunken px-3 py-2 t3">
         <Icon name={ROLE_INFO[role].icon} size={16} className="text-text" />
         <span className="font-medium">{ROLE_INFO[role].label}</span>
       </div>
@@ -166,7 +166,7 @@ export default function RegistrationForm({
             <Input id="reg-country" autoComplete="country-name" value={form.country} onChange={(e) => setForm({ ...form, country: e.target.value })} />
           </div>
           {!token && (
-            <p className="text-xs text-muted sm:col-span-2" data-testid="reg-brand-house-note">
+            <p className="t5 text-text-muted sm:col-span-2" data-testid="reg-brand-house-note">
               Sua marca fica com o time da Marqa: a gente pode ver os dados para dar suporte e, se você escolher ter uma
               agência cuidando, para fazer as entregas. Outras agências não veem nada.
             </p>
@@ -206,7 +206,7 @@ export default function RegistrationForm({
           required
           data-testid="reg-email"
         />
-        <p className="mt-1 text-xs text-muted">Você entra com ele (ou com o usuário que vamos mostrar).</p>
+        <p className="mt-1 t5 text-text-muted">Você entra com ele (ou com o usuário que vamos mostrar).</p>
       </div>
 
       <div>
@@ -231,7 +231,7 @@ export default function RegistrationForm({
         <input id="reg-website" tabIndex={-1} autoComplete="off" value={form.website} onChange={(e) => setForm({ ...form, website: e.target.value })} />
       </div>
 
-      <label className="flex items-start gap-2 text-sm text-muted" htmlFor="reg-terms">
+      <label className="flex items-start gap-2 t3 text-text-muted" htmlFor="reg-terms">
         <input
           id="reg-terms"
           type="checkbox"

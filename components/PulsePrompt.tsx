@@ -40,7 +40,7 @@ export default function PulsePrompt({ clientId, refreshKey = 0 }: { clientId: st
   if (!next) {
     return thanks ? (
       <Card className="border-positive/40 bg-positive-wash" data-testid="pulse-thanks">
-        <p className="text-sm">Obrigado! Sua resposta chegou na agência. </p>
+        <p className="t3">Obrigado! Sua resposta chegou na agência. </p>
       </Card>
     ) : null;
   }
@@ -67,9 +67,9 @@ export default function PulsePrompt({ clientId, refreshKey = 0 }: { clientId: st
 
   return (
     <Card className="border-edge bg-surface-sunken" data-testid="pulse-prompt" data-kind={next.kind}>
-      <p className="text-xs uppercase tracking-widest text-text">Pulso rápido</p>
-      <p className="mt-1 font-[family-name:var(--font-display)] text-lg font-semibold">{next.title}</p>
-      <p className="text-sm text-muted">{next.subtitle}</p>
+      <p className="t5 uppercase tracking-widest text-text">Pulso rápido</p>
+      <p className="d4 mt-1">{next.title}</p>
+      <p className="t3 text-text-muted">{next.subtitle}</p>
       <div className="mt-3 flex flex-wrap gap-2">
         {next.kind === "nps"
           ? Array.from({ length: 11 }, (_, i) => i).map((n) => (
@@ -77,7 +77,7 @@ export default function PulsePrompt({ clientId, refreshKey = 0 }: { clientId: st
                 key={n}
                 type="button"
                 onClick={() => setScore(n)}
-                className={`size-9 rounded-md border text-sm font-medium transition-colors ${score === n ? "border-text bg-text text-canvas" : "border-edge bg-surface hover:bg-surface-sunken"}`}
+                className={`size-9 rounded-md border t3 font-medium transition-colors ${score === n ? "border-text bg-text text-canvas" : "border-edge bg-surface hover:bg-surface-sunken"}`}
                 data-testid="nps-score"
                 data-score={n}
               >

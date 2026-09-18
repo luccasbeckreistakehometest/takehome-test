@@ -56,9 +56,9 @@ export default function ContactForm({
 
   if (sent) {
     return (
-      <div role="status" className="rounded-lg border border-edge bg-surface-sunken p-4 text-sm" data-testid="contact-sent">
-        <p className="font-semibold text-foreground">{access ? "Pedido recebido." : "Mensagem recebida."}</p>
-        <p className="mt-1 text-muted">
+      <div role="status" className="rounded-lg border border-edge bg-surface-sunken p-4 t3" data-testid="contact-sent">
+        <p className="font-semibold text-text">{access ? "Pedido recebido." : "Mensagem recebida."}</p>
+        <p className="mt-1 text-text-muted">
           {access
             ? "Vamos avaliar e responder no e-mail informado com o convite de acesso."
             : "Respondemos no e-mail informado, normalmente em até 2 dias úteis."}
@@ -71,7 +71,7 @@ export default function ContactForm({
   return (
     <form className="space-y-3" onSubmit={submit} aria-label={access ? "Pedir acesso" : "Fale com a gente"}>
       {access && (
-        <p className="text-sm text-muted">
+        <p className="t3 text-text-muted">
           O cadastro de agências está por convite no momento. Conte sobre a sua e liberamos o acesso.
         </p>
       )}
@@ -116,7 +116,7 @@ export default function ContactForm({
         <label htmlFor={id("fax")}>Fax</label>
         <input id={id("fax")} tabIndex={-1} autoComplete="off" value={form.fax} onChange={(e) => setForm({ ...form, fax: e.target.value })} />
       </div>
-      <p className="text-xs text-muted">
+      <p className="t5 text-text-muted">
         Usamos estes dados só para responder você (veja a <a href="/privacidade" className="text-text hover:underline">Política de Privacidade</a>).
       </p>
       {error && <ErrorBox message={error} />}

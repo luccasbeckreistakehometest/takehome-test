@@ -195,33 +195,33 @@ export default function PlansView() {
   if (data.role === "admin" && data.revenue) {
     return (
       <div className="space-y-6">
-        <h1 className="flex items-center gap-2 font-[family-name:var(--font-display)] text-2xl font-bold tracking-tight">
+        <h1 className="d3 flex items-center gap-2">
           <Icon name="money" size={24} className="text-text" /> Receita & planos
         </h1>
         <div className="grid gap-3 sm:grid-cols-3">
           <Card>
-            <p className="text-xs uppercase text-muted">Receita confirmada</p>
+            <p className="t5 uppercase text-text-muted">Receita confirmada</p>
             <p className="mt-1 text-3xl font-bold text-text">{brl(data.revenue.total)}</p>
           </Card>
           <Card>
-            <p className="text-xs uppercase text-muted">Planos pagos vigentes (valor mensal)</p>
+            <p className="t5 uppercase text-text-muted">Planos pagos vigentes (valor mensal)</p>
             <p className="mt-1 text-3xl font-bold">{brl(data.revenue.mrr)}</p>
           </Card>
           <Card>
-            <p className="text-xs uppercase text-muted">Bloqueio de IA por saldo</p>
+            <p className="t5 uppercase text-text-muted">Bloqueio de IA por saldo</p>
             <div className="mt-2 flex items-center gap-2">
               <Button variant={data.enforced ? "danger" : "ghost"} onClick={toggleEnforce}>
                 {data.enforced ? "Ligado para todos" : "Só planos grátis"}
               </Button>
             </div>
-            <p className="mt-2 text-xs text-muted">
+            <p className="mt-2 t5 text-text-muted">
               Planos grátis param quando os coins acabam, sempre. Ligado, vale também para planos pagos e para a agência da
               casa. Com BILLING_ENFORCED=true no servidor, fica sempre ligado.
             </p>
           </Card>
         </div>
         <Card>
-          <p className="text-sm text-muted">
+          <p className="t3 text-text-muted">
             Usuários, planos, coins, pagamentos e reprocessamento ficam no{" "}
             <Link href="/admin" className="text-text hover:underline">
               painel do admin
@@ -242,26 +242,26 @@ export default function PlansView() {
     <div className="space-y-6">
       <div className="flex flex-wrap items-end justify-between gap-3">
         <div>
-          <h1 className="font-[family-name:var(--font-display)] text-2xl font-bold tracking-tight">Planos & coins</h1>
-          <p className="mt-1 text-sm text-muted" data-testid="plan-summary">
-            Plano atual: <strong className="text-foreground">{current?.name}</strong>
+          <h1 className="d3">Planos & coins</h1>
+          <p className="mt-1 t3 text-text-muted" data-testid="plan-summary">
+            Plano atual: <strong className="text-text">{current?.name}</strong>
             {currentPaid ? ` · pago até ${fmtDate(data.subscription?.renewsAt)}` : ` · cota renova em ${fmtDate(data.subscription?.renewsAt)}`}
           </p>
-          <p className="text-sm text-muted">
+          <p className="t3 text-text-muted">
             Carteira: <strong className="text-text" data-testid="wallet-coins">{Math.floor(data.wallet?.coins ?? 0)} coins</strong>
             {" "}({Math.floor(data.wallet?.planCoins ?? 0)} da cota do mês + {Math.floor(data.wallet?.purchasedCoins ?? 0)} comprados)
             {" · "}uso no mês: {Math.round(data.usageThisMonth ?? 0)}
           </p>
         </div>
         {!data.purchaseBlocked && (
-        <div className="flex flex-wrap gap-1 rounded-lg border border-edge bg-surface-2 p-1" role="group" aria-label="Período de pagamento">
+        <div className="flex flex-wrap gap-1 rounded-lg border border-edge bg-surface-sunken p-1" role="group" aria-label="Período de pagamento">
           {Object.entries(data.periods).map(([key, p]) => (
             <button
               key={key}
               type="button"
               aria-pressed={period === key}
               onClick={() => setPeriod(key)}
-              className={`rounded-md px-3 py-1.5 text-xs transition-colors ${period === key ? "bg-text text-canvas" : "text-text-muted hover:text-text"}`}
+              className={`rounded-md px-3 py-1.5 t5 transition-colors ${period === key ? "bg-text text-canvas" : "text-text-muted hover:text-text"}`}
             >
               {p.label}
             </button>
@@ -270,7 +270,7 @@ export default function PlansView() {
         )}
       </div>
 
-      <p className={`rounded-md border border-edge bg-surface-2 px-3 py-2 text-xs text-muted ${data.purchaseBlocked ? "hidden" : ""}`}>
+      <p className={`rounded-md border border-edge bg-surface-sunken px-3 py-2 t5 text-text-muted ${data.purchaseBlocked ? "hidden" : ""}`}>
         Preços em reais (R$), cobrados pelo Mercado Pago.{" "}
         {sub?.available
           ? "Assinatura no cartão: renova sozinha no período escolhido; cancele quando quiser e o plano vale até o fim do período pago. Ou pague um período à vista (Pix, boleto ou cartão), sem renovação."
@@ -283,12 +283,12 @@ export default function PlansView() {
       </p>
 
       {returned && (
-        <p role="status" className="rounded-md border border-edge bg-surface-sunken px-3 py-2 text-sm text-text">
+        <p role="status" className="rounded-md border border-edge bg-surface-sunken px-3 py-2 t3 text-text">
           {returned}
         </p>
       )}
       {note && (
-        <p role="status" className="rounded-md border border-edge bg-surface-sunken px-3 py-2 text-sm text-text">
+        <p role="status" className="rounded-md border border-edge bg-surface-sunken px-3 py-2 t3 text-text">
           {note}
         </p>
       )}
@@ -300,7 +300,7 @@ export default function PlansView() {
             <p className="flex items-center gap-2 font-medium">
               <Icon name="money" size={16} className="text-text" /> Assinatura no cartão (Mercado Pago)
             </p>
-            <p className="mt-1 text-sm text-muted">
+            <p className="mt-1 t3 text-text-muted">
               {sub.cancelAtPeriodEnd
                 ? `Cancelada — o plano vale até ${fmtDate(sub.renewsAt)} e depois volta para o grátis.`
                 : `Próxima cobrança em ${fmtDate(sub.renewsAt)}. Sem fidelidade: cancele quando quiser.`}
@@ -316,7 +316,7 @@ export default function PlansView() {
 
       {askEmail && (
         <Card className="space-y-2 border-edge" data-testid="subscription-email">
-          <p className="text-sm">Qual e-mail você usa no Mercado Pago? A assinatura fica ligada a ele.</p>
+          <p className="t3">Qual e-mail você usa no Mercado Pago? A assinatura fica ligada a ele.</p>
           <div className="flex flex-wrap gap-2">
             <div className="min-w-56 flex-1">
               <Input type="email" value={email} onChange={(e) => setEmail(e.target.value)} placeholder="voce@exemplo.com" aria-label="E-mail do Mercado Pago" />
@@ -337,14 +337,14 @@ export default function PlansView() {
 
       {data.purchaseBlocked && (
         <Card data-testid="purchase-blocked">
-          <p className="text-sm">{data.purchaseBlocked}</p>
+          <p className="t3">{data.purchaseBlocked}</p>
         </Card>
       )}
 
       {wanted && !returned && !data.purchaseBlocked && (
         <Card className="border-edge" data-testid="checkout-continue">
-          <p className="text-sm text-muted">Plano escolhido</p>
-          <p className="mt-1 text-lg font-semibold">
+          <p className="t3 text-text-muted">Plano escolhido</p>
+          <p className="mt-1 d4 font-semibold">
             {wanted.name} · {periodInfo.label} · {brl(priceFor(wanted.monthlyPrice))}
           </p>
           <Button className="mt-3" disabled={busy} onClick={() => checkout({ kind: "plan", planId: wanted.id, period })}>
@@ -366,11 +366,11 @@ export default function PlansView() {
                   RECOMENDADO
                 </span>
               )}
-              <p className="text-sm font-semibold uppercase tracking-wide text-muted">{plan.name}</p>
-              <p className="mt-2 font-[family-name:var(--font-display)] text-3xl font-bold">
+              <p className="t3 font-semibold uppercase tracking-wide text-text-muted">{plan.name}</p>
+              <p className="d3 mt-2">
                 {free ? "Grátis" : brl(priceFor(plan.monthlyPrice))}
                 {!free && (
-                  <span className="text-sm font-normal text-muted">
+                  <span className="t3 font-normal text-text-muted">
                     /{periodInfo.months === 1 ? "mês" : `${periodInfo.months} meses`}
                   </span>
                 )}
@@ -378,7 +378,7 @@ export default function PlansView() {
               <div className="mt-1">
                 <Tag>{plan.unlimited ? "IA sem cota (uso justo)" : QUALITY_LABEL[plan.quality]}</Tag>
               </div>
-              <ul className="mt-4 flex-1 space-y-1.5 text-sm text-muted">
+              <ul className="mt-4 flex-1 space-y-1.5 t3 text-text-muted">
                 {plan.highlights.map((h) => (
                   <li key={h} className="flex items-start gap-1.5">
                     <Icon name="check" size={14} className="mt-0.5 shrink-0 text-text" /> {h}
@@ -418,18 +418,18 @@ export default function PlansView() {
             <Icon name="sparkle" size={15} /> Coins avulsos
           </span>
         </SectionTitle>
-        <p className="mb-3 text-sm text-muted">
+        <p className="mb-3 t3 text-text-muted">
           Cada ação de IA consome coins; ações que falham não são cobradas. Coins comprados não expiram.
         </p>
         <div className="grid gap-3 sm:grid-cols-3">
           {data.packs.map((pack) => (
-            <div key={pack.id} className="rounded-lg border border-edge bg-surface-2 p-4 text-center">
-              <p className="font-[family-name:var(--font-display)] text-2xl font-bold text-text">
+            <div key={pack.id} className="rounded-lg border border-edge bg-surface-sunken p-4 text-center">
+              <p className="d3 text-text">
                 {pack.coins}
-                {pack.bonus > 0 && <span className="text-sm text-positive"> +{pack.bonus}</span>}
+                {pack.bonus > 0 && <span className="t3 text-positive"> +{pack.bonus}</span>}
               </p>
-              <p className="text-xs text-muted">coins{pack.bonus > 0 && " (com bônus)"}</p>
-              <p className="mt-2 text-lg font-semibold">{brl(pack.price)}</p>
+              <p className="t5 text-text-muted">coins{pack.bonus > 0 && " (com bônus)"}</p>
+              <p className="mt-2 d4 font-semibold">{brl(pack.price)}</p>
               <Button className="mt-2 w-full" variant="ghost" disabled={busy} onClick={() => checkout({ kind: "coins", packId: pack.id })}>
                 Comprar
               </Button>

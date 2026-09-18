@@ -97,16 +97,16 @@ export default function ProductionPage() {
     <div className="space-y-6">
       <div className="flex flex-wrap items-end justify-between gap-4">
         <div>
-          <h1 className="font-[family-name:var(--font-display)] text-2xl font-bold tracking-tight">
+          <h1 className="d3">
             Produção
           </h1>
-          <p className="mt-1 flex items-center gap-1.5 text-sm text-muted">
+          <p className="mt-1 flex items-center gap-1.5 t3 text-text-muted">
             <Icon name="kanban" size={15} />
             Arraste os cards entre as colunas para mudar a etapa do pipeline.
           </p>
         </div>
         <div className="w-full sm:w-64">
-          <label className="mb-1 block text-xs font-medium uppercase tracking-wide text-muted">
+          <label className="mb-1 block t5 font-medium uppercase tracking-wide text-text-muted">
             Filtrar por cliente
           </label>
           <Select
@@ -154,9 +154,9 @@ export default function ProductionPage() {
                 isOver ? "border-edge bg-surface-sunken" : "border-transparent"
               }`}
             >
-              <p className="mb-2 flex items-center justify-between px-1 text-xs font-semibold uppercase tracking-wider text-muted">
+              <p className="mb-2 flex items-center justify-between px-1 t5 font-semibold uppercase tracking-wider text-text-muted">
                 {PROJECT_STATUS_LABELS[status]}
-                <span className="rounded-full bg-surface-2 px-2 py-0.5">{column.length}</span>
+                <span className="rounded-full bg-surface-sunken px-2 py-0.5">{column.length}</span>
               </p>
               <div className="min-h-24 space-y-2">
                 {column.map((project) => {
@@ -176,12 +176,12 @@ export default function ProductionPage() {
                         setDraggingId(null);
                         setDragOverStatus(null);
                       }}
-                      className={`block cursor-grab rounded-lg border border-edge bg-surface p-3 text-sm transition-colors hover:border-edge active:cursor-grabbing ${
+                      className={`block cursor-grab rounded-lg border border-edge bg-surface p-3 t3 transition-colors hover:border-edge active:cursor-grabbing ${
                         isDragging ? "opacity-40" : ""
                       }`}
                     >
                       <p className="font-medium">{project.title}</p>
-                      <p className="mt-1 text-xs text-muted">
+                      <p className="mt-1 t5 text-text-muted">
                         {clients[project.clientId] ?? "—"}
                         {project.deadline && ` · até ${project.deadline}`}
                       </p>
@@ -189,7 +189,7 @@ export default function ProductionPage() {
                         {project.mode === "internal" && <Tag>interna</Tag>}
                         {project.escrow === "held" && <Tag>escrow</Tag>}
                         {isSaving && (
-                          <span className="ml-auto text-xs text-muted">
+                          <span className="ml-auto t5 text-text-muted">
                             <Spinner />
                           </span>
                         )}
@@ -198,7 +198,7 @@ export default function ProductionPage() {
                   );
                 })}
                 {column.length === 0 && (
-                  <p className="rounded-lg border border-dashed border-edge p-3 text-center text-xs text-muted">
+                  <p className="rounded-lg border border-dashed border-edge p-3 text-center t5 text-text-muted">
                     {isOver ? "soltar aqui" : "vazio"}
                   </p>
                 )}

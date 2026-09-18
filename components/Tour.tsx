@@ -173,28 +173,28 @@ export default function Tour({ kind, refId }: { kind: TourKind | null; refId?: s
         data-anchor={anchor}
         data-mode={placement.mode}
       >
-        <p className="text-xs font-semibold uppercase tracking-widest text-text">{`${step + 1} / ${total}`}</p>
-        <h3 className="mt-1 text-lg font-semibold">{s.t}</h3>
-        <p className="mt-1 text-sm text-muted">{s.b}</p>
+        <p className="t5 font-semibold uppercase tracking-widest text-text">{`${step + 1} / ${total}`}</p>
+        <h3 className="mt-1 d4 font-semibold">{s.t}</h3>
+        <p className="mt-1 t3 text-text-muted">{s.b}</p>
         <div className="mt-4 flex flex-wrap items-center justify-between gap-2">
-          <button onClick={() => finish("tour_skip")} className="text-sm text-muted hover:text-foreground" data-testid="tour-skip">
+          <button onClick={() => finish("tour_skip")} className="t3 text-text-muted hover:text-text" data-testid="tour-skip">
             Pular
           </button>
           <div className="flex flex-wrap justify-end gap-2">
             {step > 0 && (
-              <button onClick={() => go(step - 1)} className="rounded-md border border-edge px-3 py-1.5 text-sm">
+              <button onClick={() => go(step - 1)} className="rounded-md border border-edge px-3 py-1.5 t3">
                 Voltar
               </button>
             )}
             {more && (
-              <button onClick={() => go(step + 1)} className="rounded-md border border-edge px-3 py-1.5 text-sm text-text" data-testid="tour-more">
+              <button onClick={() => go(step + 1)} className="rounded-md border border-edge px-3 py-1.5 t3 text-text" data-testid="tour-more">
                 Ver todos os diferenciais
               </button>
             )}
             <button
               data-testid="tour-next"
               onClick={() => (last ? finish("tour_done") : go(step + 1))}
-              className="rounded-md bg-accent px-4 py-1.5 text-sm font-medium text-accent-ink"
+              className="rounded-md bg-accent px-4 py-1.5 t3 font-medium text-accent-ink"
             >
               {last ? "Entendi" : "Próximo"}
             </button>

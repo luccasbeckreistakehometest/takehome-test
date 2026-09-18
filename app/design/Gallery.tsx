@@ -263,7 +263,7 @@ export default function Gallery() {
           <div className="grid gap-px overflow-hidden rounded-md border border-rule bg-rule md:grid-cols-2">
             {[
               { k: "text", c: "text-text", n: "18,20 / 16,42" },
-              { k: "text-muted", c: "text-text-muted", n: "5,60 / 4,97" },
+              { k: "text-text-muted", c: "text-text-muted", n: "5,60 / 4,97" },
               { k: "text-faint", c: "text-text-faint", n: "3,66 / 3,25" },
               { k: "edge (estrutural)", c: "text-text", n: "3,66 / 3,25 — delimita input e seleção" },
               { k: "rule (decorativa)", c: "text-text", n: "1,42 / 1,54 — nunca sozinha" },

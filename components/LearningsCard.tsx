@@ -50,13 +50,13 @@ function HighlightTile({ title, h, l, lang, tone }: { title: string; h: Highligh
   const value = useValue(l, lang);
   return (
     <div className={`rounded-lg border p-3 ${tone === "good" ? "border-positive/40 bg-positive-wash" : "border-negative/40 bg-negative-wash"}`} data-testid={tone === "good" ? "learning-best" : "learning-worst"} data-dimension={h.dimension} data-key={h.key}>
-      <p className="text-[11px] font-semibold uppercase tracking-wider text-muted">{title}</p>
-      <p className="mt-1 font-[family-name:var(--font-display)] text-lg font-bold capitalize">{groupLabel(h.dimension, h.key, toLang(lang))}</p>
-      <p className={`text-xs ${tone === "good" ? "text-positive" : "text-negative"}`}>
+      <p className="text-[11px] font-semibold uppercase tracking-wider text-text-muted">{title}</p>
+      <p className="d4 mt-1 capitalize">{groupLabel(h.dimension, h.key, toLang(lang))}</p>
+      <p className={`t5 ${tone === "good" ? "text-positive" : "text-negative"}`}>
         {h.liftPct >= 0 ? "+" : ""}
         {h.liftPct}% <span>vs média</span>
       </p>
-      <p className="text-xs text-muted">
+      <p className="t5 text-text-muted">
         {value(h.avg)} · {h.posts} <span>posts</span>
       </p>
     </div>
@@ -68,9 +68,9 @@ export function LearningsSummary({ learnings: l, reading, lang, compact = false 
   const value = useValue(l, lang);
   if (!l.hasEnoughData || !l.metric) {
     return (
-      <div className="space-y-1 text-sm" data-testid="learnings-thin" data-reason={l.reason ?? ""}>
-        <p className="text-muted">{l.reason ? REASON_TEXT[l.reason] : ""}</p>
-        <p className="text-xs text-muted">
+      <div className="space-y-1 t3" data-testid="learnings-thin" data-reason={l.reason ?? ""}>
+        <p className="text-text-muted">{l.reason ? REASON_TEXT[l.reason] : ""}</p>
+        <p className="t5 text-text-muted">
           <span>Posts publicados no mês:</span> {l.postsPublished} · <span>com resultado:</span> {l.postsAnalyzed}
         </p>
       </div>
@@ -79,7 +79,7 @@ export function LearningsSummary({ learnings: l, reading, lang, compact = false 
   const bests = ORDER.map((d) => l.best[d]).filter((h): h is Highlight => h !== null);
   return (
     <div className="space-y-3" data-testid="learnings-ready">
-      <p className="text-xs text-muted">
+      <p className="t5 text-text-muted">
         <span>Resultado medido:</span> <span>{METRIC_TEXT[l.metric]}</span> · <span>nos</span> {l.windowDays} <span>dias após cada post</span> · <span>média</span> {value(l.baseline)} · {l.postsAnalyzed} <span>posts</span>
       </p>
       <div className="grid gap-2 sm:grid-cols-2 lg:grid-cols-4">
@@ -89,8 +89,8 @@ export function LearningsSummary({ learnings: l, reading, lang, compact = false 
         {l.worst && <HighlightTile title="O que menos funcionou" h={l.worst} l={l} lang={lang} tone="bad" />}
       </div>
       {reading && reading.lines.length > 0 && (
-        <div className="rounded-md border border-edge bg-surface-sunken p-3 text-sm" data-testid="learnings-reading">
-          <p className="mb-1 flex items-center gap-2 text-xs font-semibold uppercase tracking-wider text-text">
+        <div className="rounded-md border border-edge bg-surface-sunken p-3 t3" data-testid="learnings-reading">
+          <p className="mb-1 flex items-center gap-2 t5 font-semibold uppercase tracking-wider text-text">
             <Icon name="sparkle" size={13} /> <span>Leitura da IA</span>
             {reading.demo && <Tag>exemplo — sem chave de IA</Tag>}
           </p>
@@ -103,11 +103,11 @@ export function LearningsSummary({ learnings: l, reading, lang, compact = false 
       )}
       {!compact && (
         <details>
-          <summary className="cursor-pointer text-xs text-text">Ver todos os grupos</summary>
+          <summary className="cursor-pointer t5 text-text">Ver todos os grupos</summary>
           <div className="mt-2 grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
             {ORDER.map((dim) =>
               l.dimensions[dim].length === 0 ? null : (
-                <div key={dim} className="rounded-md border border-edge bg-surface-2 p-2 text-xs">
+                <div key={dim} className="rounded-md border border-edge bg-surface-sunken p-2 t5">
                   <p className="mb-1 font-semibold">{DIM_NAME[dim]}</p>
                   {l.dimensions[dim].map((g) => (
                     <p key={g.key} className="flex justify-between gap-2">
@@ -169,11 +169,11 @@ export default function LearningsCard({ clientId, canGenerate = true }: { client
       <div className="flex flex-wrap items-center justify-between gap-2">
         <SectionTitle>O que funciona pra este cliente</SectionTitle>
         <div className="flex items-center gap-1">
-          <button onClick={() => setMonth((m) => shiftMonth(m, -1))} className="grid size-7 place-items-center rounded-md border border-edge text-sm hover:border-edge" aria-label="Mês anterior" data-testid="learnings-prev">
+          <button onClick={() => setMonth((m) => shiftMonth(m, -1))} className="grid size-7 place-items-center rounded-md border border-edge t3 hover:border-edge" aria-label="Mês anterior" data-testid="learnings-prev">
             ‹
           </button>
-          <span className="min-w-32 text-center text-xs font-medium capitalize" data-testid="learnings-month">{monthLabel(month, lang)}</span>
-          <button onClick={() => setMonth((m) => shiftMonth(m, 1))} className="grid size-7 place-items-center rounded-md border border-edge text-sm hover:border-edge" aria-label="Próximo mês">
+          <span className="min-w-32 text-center t5 font-medium capitalize" data-testid="learnings-month">{monthLabel(month, lang)}</span>
+          <button onClick={() => setMonth((m) => shiftMonth(m, 1))} className="grid size-7 place-items-center rounded-md border border-edge t3 hover:border-edge" aria-label="Próximo mês">
             ›
           </button>
         </div>
@@ -184,10 +184,10 @@ export default function LearningsCard({ clientId, canGenerate = true }: { client
         <div className="space-y-3">
           <LearningsSummary learnings={data.learnings} reading={data.reading} lang={lang} />
           {data.clicks && data.clicks.postsWithLinks > 0 && (
-            <div className="rounded-md border border-edge bg-surface-2 p-3 text-sm" data-testid="learnings-clicks">
-              <p className="text-xs font-semibold uppercase tracking-wide text-muted">Cliques nos links dos posts</p>
+            <div className="rounded-md border border-edge bg-surface-sunken p-3 t3" data-testid="learnings-clicks">
+              <p className="t5 font-semibold uppercase tracking-wide text-text-muted">Cliques nos links dos posts</p>
               <p className="mt-1">{`${data.clicks.totalClicks} cliques em ${data.clicks.postsWithLinks} post(s) publicados com link`}</p>
-              <ul className="mt-1 space-y-0.5 text-xs text-muted">
+              <ul className="mt-1 space-y-0.5 t5 text-text-muted">
                 {data.clicks.byFormat.slice(0, 3).map((row) => (
                   <li key={row.key}>{`${row.key}: ${row.avg} cliques por post`}</li>
                 ))}
@@ -195,7 +195,7 @@ export default function LearningsCard({ clientId, canGenerate = true }: { client
             </div>
           )}
           {data.panel && (
-            <p className="text-xs text-muted" data-testid="learnings-panel">
+            <p className="t5 text-text-muted" data-testid="learnings-panel">
               {data.panel.calibration
                 ? `Painel de público: acertou ${data.panel.calibration.hits} de ${data.panel.calibration.total} testes que foram ao ar (${data.panel.calibration.pct}%).`
                 : "Painel de público: ainda sem dados suficientes para saber se ele acerta (precisa de 5 testes que foram ao ar)."}
@@ -203,10 +203,10 @@ export default function LearningsCard({ clientId, canGenerate = true }: { client
           )}
           {data.learnings.hasEnoughData && canGenerate && (!data.reading || data.readingStale) && (
             <div className="flex flex-wrap items-center gap-2">
-              <Button variant="ghost" className="!px-3 !py-1.5 text-xs" onClick={generate} disabled={busy} data-testid="learnings-generate">
+              <Button variant="ghost" className="!px-3 !py-1.5 t5" onClick={generate} disabled={busy} data-testid="learnings-generate">
                 <Icon name="sparkle" size={13} /> {busy ? "Lendo os números..." : data.readingStale ? "Atualizar leitura da IA" : "Gerar leitura da IA (3 linhas)"}
               </Button>
-              {data.readingStale && <span className="text-xs text-muted">os números mudaram desde a última leitura</span>}
+              {data.readingStale && <span className="t5 text-text-muted">os números mudaram desde a última leitura</span>}
             </div>
           )}
           {error && <ErrorBox message={error} />}

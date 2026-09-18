@@ -41,8 +41,8 @@ export default function ConvitePage({ params }: { params: Promise<{ token: strin
   if (!data.valid) {
     return (
       <div className="mx-auto max-w-md py-16 text-center">
-        <h1 className="font-[family-name:var(--font-display)] text-2xl font-bold">Convite indisponível</h1>
-        <p className="mt-3 text-muted">
+        <h1 className="d3">Convite indisponível</h1>
+        <p className="mt-3 text-text-muted">
           {data.reason === "expired"
             ? "Este convite expirou."
             : data.reason === "accepted"
@@ -62,16 +62,16 @@ export default function ConvitePage({ params }: { params: Promise<{ token: strin
       style={data.agency ? { ["--accent" as string]: data.agency.accentColor } : undefined}
     >
       <div className="text-center">
-        <p className="text-xs uppercase tracking-widest text-text">Você foi convidado</p>
+        <p className="t5 uppercase tracking-widest text-text">Você foi convidado</p>
         {data.agency && (
-          <p className="mt-2 text-sm text-muted" data-testid="invite-agency">
-            Convite de <strong className="text-foreground">{data.agency.name}</strong>
+          <p className="mt-2 t3 text-text-muted" data-testid="invite-agency">
+            Convite de <strong className="text-text">{data.agency.name}</strong>
           </p>
         )}
-        <h1 className="mt-1 font-[family-name:var(--font-display)] text-3xl font-bold tracking-tight">
+        <h1 className="d3 mt-1">
           Cadastro de {ROLE_LABEL[data.role ?? "client"]}
         </h1>
-        {data.note && <p className="mt-2 text-sm text-muted">{data.note}</p>}
+        {data.note && <p className="mt-2 t3 text-text-muted">{data.note}</p>}
       </div>
       <Card>
         <RegistrationForm fixedRole={data.role} token={token} />

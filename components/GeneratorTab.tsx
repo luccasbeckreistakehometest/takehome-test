@@ -107,7 +107,7 @@ export default function GeneratorTab({
   return (
     <div className="space-y-6">
       <Card className="space-y-4">
-        <p className="text-sm text-muted">{description}</p>
+        <p className="t3 text-text-muted">{description}</p>
         {fields.length > 0 && (
           <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
             {fields.map((field) => (
@@ -154,7 +154,7 @@ export default function GeneratorTab({
             {!generating && <span className="opacity-75">{` · ${actionCost(type)} coins`}</span>}
           </Button>
           {selected && (
-            <label className="flex items-center gap-2 text-sm text-muted">
+            <label className="flex items-center gap-2 t3 text-text-muted">
               <input
                 type="checkbox"
                 checked={refineFromSelected}
@@ -174,7 +174,7 @@ export default function GeneratorTab({
       {loadingHistory ? (
         <Spinner label="Carregando histórico..." />
       ) : history.length === 0 ? (
-        <p className="py-8 text-center text-sm text-muted">
+        <p className="py-8 text-center t3 text-text-muted">
           Nenhuma geração ainda. Preencha os parâmetros e clique em “{generateLabel}”.
         </p>
       ) : (
@@ -184,10 +184,10 @@ export default function GeneratorTab({
               <button
                 key={generation.id}
                 onClick={() => setSelectedId(generation.id)}
-                className={`rounded-md border px-3 py-1.5 text-xs transition-colors ${
+                className={`rounded-md border px-3 py-1.5 t5 transition-colors ${
                   generation.id === selectedId
                     ? "border-edge bg-surface-sunken text-text"
-                    : "border-edge bg-surface text-muted hover:border-muted"
+                    : "border-edge bg-surface text-text-muted hover:border-muted"
                 }`}
               >
                 {new Date(generation.createdAt).toLocaleString("pt-BR", {
@@ -204,10 +204,10 @@ export default function GeneratorTab({
                   href={`/print/${selected.id}`}
                   target="_blank"
                   rel="noreferrer"
-                  className="rounded-md border border-edge bg-surface px-2.5 py-1 text-xs text-muted transition-colors hover:border-edge hover:text-text"
+                  className="rounded-md border border-edge bg-surface px-2.5 py-1 t5 text-text-muted transition-colors hover:border-edge hover:text-text"
                 >PDF
                 </a>
-                <Button variant="danger" className="!px-2.5 !py-1 text-xs" onClick={removeSelected}>
+                <Button variant="danger" className="!px-2.5 !py-1 t5" onClick={removeSelected}>
                   Excluir versão
                 </Button>
               </span>
@@ -215,15 +215,15 @@ export default function GeneratorTab({
           </div>
           {selected && (
             <div>
-              <h2 className="mb-4 font-[family-name:var(--font-display)] text-lg font-semibold">
+              <h2 className="d4 mb-4">
                 {selected.title}
               </h2>
               <SafeRender generation={selected} render={render} />
             </div>
           )}
           {history.length >= 2 && (
-            <details className="rounded-lg border border-edge bg-surface-2">
-              <summary className="cursor-pointer px-4 py-2.5 text-sm font-medium text-muted transition-colors hover:text-foreground">
+            <details className="rounded-lg border border-edge bg-surface-sunken">
+              <summary className="cursor-pointer px-4 py-2.5 t3 font-medium text-text-muted transition-colors hover:text-text">
                 Comparar versões lado a lado
               </summary>
               <div className="border-t border-edge p-4">
@@ -249,10 +249,10 @@ function SafeRender({
   } catch {
     return (
       <Card>
-        <p className="mb-2 text-sm text-muted">
+        <p className="mb-2 t3 text-text-muted">
           Não foi possível renderizar esta versão — conteúdo bruto:
         </p>
-        <pre className="max-h-96 overflow-auto whitespace-pre-wrap rounded-md bg-surface-2 p-3 text-xs text-muted">
+        <pre className="max-h-96 overflow-auto whitespace-pre-wrap rounded-md bg-surface-sunken p-3 t5 text-text-muted">
           {generation.content}
         </pre>
       </Card>

@@ -143,34 +143,34 @@ export default function ApprovalLinkView({
           // eslint-disable-next-line @next/next/no-img-element
           <img src={agency.logoUrl} alt={agency.name} className="size-11 rounded-lg object-contain" />
         ) : (
-          <span className="grid size-11 place-items-center rounded-sm bg-surface-sunken font-[family-name:var(--font-display)] text-lg font-bold text-text">
+          <span className="d4 grid size-11 place-items-center rounded-sm bg-surface-sunken text-text">
             {agency.name.charAt(0).toUpperCase()}
           </span>
         )}
         <div className="min-w-0">
-          <p className="truncate font-[family-name:var(--font-display)] text-lg font-semibold" data-testid="approval-agency">
+          <p className="d4 truncate" data-testid="approval-agency">
             {agency.name}
           </p>
-          {agency.tagline && <p className="truncate text-xs text-muted">{agency.tagline}</p>}
+          {agency.tagline && <p className="truncate t5 text-text-muted">{agency.tagline}</p>}
         </div>
       </header>
 
       {expired ? (
         <section className="rounded-2xl border border-edge bg-surface p-6 text-center" data-testid="approval-expired">
-          <h1 className="font-[family-name:var(--font-display)] text-2xl font-bold">{t.expiredTitle}</h1>
-          <p className="mt-2 text-sm text-muted">{t.expiredBody}</p>
+          <h1 className="d3">{t.expiredTitle}</h1>
+          <p className="mt-2 t3 text-text-muted">{t.expiredBody}</p>
         </section>
       ) : (
         <>
           <section>
-            <p className="text-xs font-semibold uppercase tracking-widest text-text">
+            <p className="t5 font-semibold uppercase tracking-widest text-text">
               {t.for} {clientName}
             </p>
-            <h1 className="mt-1 font-[family-name:var(--font-display)] text-2xl font-bold leading-tight">{t.intro}</h1>
-            <p className="mt-2 text-xs text-muted">
+            <h1 className="d3 mt-1">{t.intro}</h1>
+            <p className="mt-2 t5 text-text-muted">
               {t.noPassword} {t.until} {new Date(expiresAt).toLocaleDateString(locale, { timeZone: "UTC" })}.
             </p>
-            <label className="mt-4 block text-xs font-medium text-muted" htmlFor="approver-name">
+            <label className="mt-4 block t5 font-medium text-text-muted" htmlFor="approver-name">
               {t.who}
             </label>
             <input
@@ -182,13 +182,13 @@ export default function ApprovalLinkView({
                 if (!approver) setApprover(storedName());
               }}
               placeholder={t.whoPh}
-              className="mt-1 w-full rounded-lg border border-edge bg-surface-2 px-3 py-2.5 text-base outline-none focus:border-edge"
+              className="mt-1 w-full rounded-lg border border-edge bg-surface-sunken px-3 py-2.5 t2 outline-none focus:border-edge"
               data-testid="approver-name"
             />
           </section>
 
           {error && (
-            <p role="alert" className="rounded-lg border border-negative/50 bg-negative-wash px-3 py-2 text-sm text-negative">
+            <p role="alert" className="rounded-lg border border-negative/50 bg-negative-wash px-3 py-2 t3 text-negative">
               {error}
             </p>
           )}
@@ -208,7 +208,7 @@ export default function ApprovalLinkView({
           </ul>
 
           {pending.length === 0 ? (
-            <p className="rounded-2xl border border-positive/40 bg-positive-wash p-4 text-center text-sm font-medium" data-testid="approval-all-done">
+            <p className="rounded-2xl border border-positive/40 bg-positive-wash p-4 text-center t3 font-medium" data-testid="approval-all-done">
               {t.allDone}
             </p>
           ) : (
@@ -218,7 +218,7 @@ export default function ApprovalLinkView({
                   type="button"
                   onClick={approveAll}
                   disabled={busy !== null}
-                  className="w-full rounded-xl bg-accent px-4 py-3 text-base font-semibold text-accent-ink disabled:opacity-50"
+                  className="w-full rounded-xl bg-accent px-4 py-3 t2 font-semibold text-accent-ink disabled:opacity-50"
                   data-testid="approve-all"
                 >
                   {t.approveAll} ({pending.length})
@@ -251,36 +251,36 @@ function ItemCard({
   const [note, setNote] = useState("");
   const status =
     item.decision === "approved"
-      ? { label: t.approved, cls: "border-positive/50 bg-positive-wash text-positive dark:text-positive" }
+      ? { label: t.approved, cls: "border-positive/50 bg-positive-wash text-positive" }
       : item.decision === "changes_requested"
-        ? { label: t.requested, cls: "border-caution/50 bg-caution-wash text-caution dark:text-caution" }
-        : { label: t.pending, cls: "border-edge bg-surface-2 text-muted" };
+        ? { label: t.requested, cls: "border-caution/50 bg-caution-wash text-caution" }
+        : { label: t.pending, cls: "border-edge bg-surface-sunken text-text-muted" };
   return (
     <li className="overflow-hidden rounded-2xl border border-edge bg-surface" data-testid="approval-item" data-kind={item.kind} data-id={item.id} data-decision={item.decision}>
       {item.imageId && (
         // eslint-disable-next-line @next/next/no-img-element
-        <img src={`/api/approve/${token}/file/${item.imageId}`} alt={item.title} className="max-h-[70vh] w-full bg-surface-2 object-contain" />
+        <img src={`/api/approve/${token}/file/${item.imageId}`} alt={item.title} className="max-h-[70vh] w-full bg-surface-sunken object-contain" />
       )}
       <div className="space-y-3 p-4">
         <div className="flex items-start justify-between gap-2">
           <div className="min-w-0">
-            <p className="text-[11px] uppercase tracking-wider text-muted">
+            <p className="text-[11px] uppercase tracking-wider text-text-muted">
               {item.kind === "post"
                 ? `${t.post} · ${item.channel}${item.format ? ` · ${item.format}` : ""} · ${t.on} ${new Date(item.scheduledFor).toLocaleDateString(locale, { day: "2-digit", month: "short" })}`
                 : `${t.delivery} · ${item.projectTitle}`}
             </p>
             <h2 className="font-semibold">{item.title}</h2>
           </div>
-          <span className={`shrink-0 rounded-full border px-2 py-0.5 text-xs ${status.cls}`}>{status.label}</span>
+          <span className={`shrink-0 rounded-full border px-2 py-0.5 t5 ${status.cls}`}>{status.label}</span>
         </div>
         {item.kind === "post" && item.caption && (
-          <p className="whitespace-pre-wrap text-sm leading-relaxed">
+          <p className="whitespace-pre-wrap t3 leading-relaxed">
             {item.caption}
             {item.hashtags.length > 0 && <span className="mt-1 block text-text">{item.hashtags.map((h) => (h.startsWith("#") ? h : `#${h}`)).join(" ")}</span>}
           </p>
         )}
         {item.decision === "changes_requested" && item.note && (
-          <p className="rounded-lg border border-caution/40 bg-caution-wash px-3 py-2 text-sm">“{item.note}”</p>
+          <p className="rounded-lg border border-caution/40 bg-caution-wash px-3 py-2 t3">“{item.note}”</p>
         )}
         {item.decision !== "approved" &&
           (asking ? (
@@ -290,7 +290,7 @@ function ItemCard({
                 onChange={(e) => setNote(e.target.value)}
                 maxLength={1000}
                 placeholder={t.notePh}
-                className="min-h-24 w-full rounded-lg border border-edge bg-surface-2 px-3 py-2 text-base outline-none focus:border-edge"
+                className="min-h-24 w-full rounded-lg border border-edge bg-surface-sunken px-3 py-2 t2 outline-none focus:border-edge"
                 data-testid="changes-note"
               />
               <div className="flex gap-2">

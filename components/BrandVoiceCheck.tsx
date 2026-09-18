@@ -86,11 +86,11 @@ export default function BrandVoiceCheck({
   return (
     <div className="space-y-2" data-testid="voice-check" data-verdict={result && !stale ? result.verdict : "none"}>
       <div className="flex flex-wrap items-center gap-2">
-        <Button variant="ghost" className="!px-2.5 !py-1 text-xs" onClick={check} disabled={busy !== null || !text.trim()} data-testid="voice-check-run">
+        <Button variant="ghost" className="!px-2.5 !py-1 t5" onClick={check} disabled={busy !== null || !text.trim()} data-testid="voice-check-run">
           <Icon name="sparkle" size={13} /> {busy === "check" ? "Checando..." : result && !stale ? "Checar de novo" : "Checar voz da marca"}
         </Button>
         {onRewrite && (
-          <Button variant="ghost" className="!px-2.5 !py-1 text-xs" onClick={rewrite} disabled={busy !== null || !text.trim()} data-testid="voice-rewrite">
+          <Button variant="ghost" className="!px-2.5 !py-1 t5" onClick={rewrite} disabled={busy !== null || !text.trim()} data-testid="voice-rewrite">
             <Icon name="edit" size={13} /> {busy === "rewrite" ? "Reescrevendo..." : "Reescrever no tom"}
           </Button>
         )}
@@ -99,14 +99,14 @@ export default function BrandVoiceCheck({
             {VERDICT_LABEL[result.verdict]} · {result.toneScore}/100
           </span>
         )}
-        {result && !stale && result.cached && <span className="text-[10px] uppercase tracking-wide text-muted">cache</span>}
-        {stale && <span className="text-[11px] text-muted">texto mudou — cheque de novo</span>}
+        {result && !stale && result.cached && <span className="text-[10px] uppercase tracking-wide text-text-muted">cache</span>}
+        {stale && <span className="text-[11px] text-text-muted">texto mudou — cheque de novo</span>}
       </div>
       {busy === "check" && <Spinner label="Comparando com o briefing e a política da marca..." />}
       {error && <ErrorBox message={error} />}
       {result && !stale && (
-        <div className={`rounded-md border p-3 text-xs ${compact ? "" : "space-y-2"}`} data-testid="voice-result">
-          <div className="h-1.5 w-full overflow-hidden rounded-full bg-surface-2">
+        <div className={`rounded-md border p-3 t5 ${compact ? "" : "space-y-2"}`} data-testid="voice-result">
+          <div className="h-1.5 w-full overflow-hidden rounded-full bg-surface-sunken">
             <div className={`h-full rounded-full ${result.toneScore >= 70 ? "bg-positive" : result.toneScore >= 50 ? "bg-caution" : "bg-negative"}`} style={{ width: `${result.toneScore}%` }} />
           </div>
           {result.issues.length > 0 && (
@@ -119,7 +119,7 @@ export default function BrandVoiceCheck({
             </ul>
           )}
           {result.toneNotes.length > 0 && (
-            <ul className="mt-2 space-y-0.5 text-muted">
+            <ul className="mt-2 space-y-0.5 text-text-muted">
               {result.toneNotes.map((n, i) => (
                 <li key={i}>· {n}</li>
               ))}
@@ -128,7 +128,7 @@ export default function BrandVoiceCheck({
           {result.claims.length > 0 && (
             <ul className="mt-2 space-y-0.5 text-caution">
               {result.claims.map((c, i) => (
-                <li key={i}>“{c.text}” — <span className="text-muted">{c.why}</span>
+                <li key={i}>“{c.text}” — <span className="text-text-muted">{c.why}</span>
                 </li>
               ))}
             </ul>
@@ -140,7 +140,7 @@ export default function BrandVoiceCheck({
               ))}
             </ul>
           )}
-          <p className="mt-2 flex items-center gap-2 text-[10px] uppercase tracking-wide text-muted">
+          <p className="mt-2 flex items-center gap-2 text-[10px] uppercase tracking-wide text-text-muted">
             {result.demo && <Tag>exemplo — sem chave de IA</Tag>}
             <Link href={`/clients/${clientId}?tab=briefing#voz-da-marca`} className="text-text hover:underline">
               Regras da voz →

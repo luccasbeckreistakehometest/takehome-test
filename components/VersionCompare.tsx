@@ -39,9 +39,9 @@ function VersionColumn({
   const total = versions.length;
   return (
     <div className="space-y-3">
-      <div className="rounded-lg border border-edge bg-surface-2 p-3">
+      <div className="rounded-lg border border-edge bg-surface-sunken p-3">
         <div className="mb-2 flex items-center justify-between gap-2">
-          <span className="inline-flex items-center gap-1.5 text-sm font-semibold text-text">
+          <span className="inline-flex items-center gap-1.5 t3 font-semibold text-text">
             <Icon name="doc" size={14} /> Versão {label}
           </span>
           {generation && generation.id === latestId && <Tag>mais recente</Tag>}
@@ -54,7 +54,7 @@ function VersionColumn({
           ))}
         </Select>
         {generation && (
-          <p className="mt-2 inline-flex items-center gap-1.5 text-xs text-muted">
+          <p className="mt-2 inline-flex items-center gap-1.5 t5 text-text-muted">
             <Icon name="clock" size={13} /> Gerada em {formatDate(generation.createdAt)}
           </p>
         )}
@@ -63,13 +63,13 @@ function VersionColumn({
         // key por id garante remount quando a versão muda (renderers com estado
         // interno, como o calendário social, reinicializam a partir do novo dado)
         <div key={generation.id}>
-          <h3 className="mb-3 font-[family-name:var(--font-display)] text-base font-semibold">
+          <h3 className="d4 mb-3">
             {generation.title}
           </h3>
           <GenerationContent generation={generation} />
         </div>
       ) : (
-        <p className="py-8 text-center text-sm text-muted">Selecione uma versão.</p>
+        <p className="py-8 text-center t3 text-text-muted">Selecione uma versão.</p>
       )}
     </div>
   );
@@ -137,7 +137,7 @@ export default function VersionCompare({
     return (
       <Card>
         <SectionTitle>Comparar versões — {label}</SectionTitle>
-        <p className="text-sm text-muted">
+        <p className="t3 text-text-muted">
           {versions.length === 0
             ? "Nenhuma versão gerada ainda — não há o que comparar."
             : "Só existe 1 versão desta geração. Gere outra versão para poder comparar lado a lado."}
@@ -155,11 +155,11 @@ export default function VersionCompare({
           <SectionTitle>Comparar versões — {label}</SectionTitle>
           <Tag>{versions.length} versões</Tag>
         </div>
-        <p className="text-sm text-muted">
+        <p className="t3 text-text-muted">
           Escolha duas versões deste entregável para ver as diferenças lado a lado.
         </p>
         {sameSelected && (
-          <p className="mt-2 inline-flex items-center gap-1.5 text-xs text-caution">
+          <p className="mt-2 inline-flex items-center gap-1.5 t5 text-caution">
             <Icon name="x" size={13} /> As duas colunas apontam para a mesma versão —
             escolha versões diferentes para comparar.
           </p>

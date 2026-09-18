@@ -63,7 +63,7 @@ export default function PanelTester({
 
   if (!open) {
     return (
-      <button type="button" onClick={() => { setVariants([initial, ""]); setOpen(true); }} className="inline-flex items-center gap-1.5 text-xs font-medium text-text hover:underline" data-testid="panel-open">
+      <button type="button" onClick={() => { setVariants([initial, ""]); setOpen(true); }} className="inline-flex items-center gap-1.5 t5 font-medium text-text hover:underline" data-testid="panel-open">
         <Icon name="users" size={13} /> {label}
       </button>
     );
@@ -71,26 +71,26 @@ export default function PanelTester({
 
   const scores = test ? variantScores(test.result, test.variants.length) : [];
   return (
-    <div className="space-y-3 rounded-lg border border-edge bg-surface-2 p-3" data-testid="panel-tester">
+    <div className="space-y-3 rounded-lg border border-edge bg-surface-sunken p-3" data-testid="panel-tester">
       <div className="flex items-center justify-between gap-2">
-        <p className="text-sm font-medium">Painel de público (simulação)</p>
-        <button type="button" onClick={() => setOpen(false)} className="text-muted hover:text-foreground" aria-label="Fechar">
+        <p className="t3 font-medium">Painel de público (simulação)</p>
+        <button type="button" onClick={() => setOpen(false)} className="text-text-muted hover:text-text" aria-label="Fechar">
           <Icon name="x" size={14} />
         </button>
       </div>
       {variants.map((v, i) => (
         <div key={i}>
-          <p className="mb-1 text-xs font-semibold text-muted">{`Versão ${LETTERS[i]}`}</p>
+          <p className="mb-1 t5 font-semibold text-text-muted">{`Versão ${LETTERS[i]}`}</p>
           <Textarea value={v} onChange={(e) => setVariants(variants.map((x, j) => (j === i ? e.target.value : x)))} data-testid="panel-variant" />
         </div>
       ))}
       <div className="flex flex-wrap items-center gap-2">
         {variants.length < 3 && (
-          <button type="button" className="text-xs text-text hover:underline" onClick={() => setVariants([...variants, ""])}>
+          <button type="button" className="t5 text-text hover:underline" onClick={() => setVariants([...variants, ""])}>
             + Versão C
           </button>
         )}
-        <Button className="!px-3 !py-1.5 text-xs" onClick={run} disabled={busy || variants.filter((v) => v.trim().length >= 3).length < 2} data-testid="panel-run">
+        <Button className="!px-3 !py-1.5 t5" onClick={run} disabled={busy || variants.filter((v) => v.trim().length >= 3).length < 2} data-testid="panel-run">
           {busy ? "O painel está lendo..." : "Testar · 2 coins"}
         </Button>
       </div>
@@ -102,13 +102,13 @@ export default function PanelTester({
             {cached && <Tag>mesmo teste de antes — sem custo</Tag>}
             {test.demo && <Tag>exemplo (modo de teste)</Tag>}
           </div>
-          <p className="text-sm">
+          <p className="t3">
             <strong>{`Vencedora: versão ${LETTERS[test.result.winner]}`}</strong> — {test.result.why}
           </p>
-          <p className="text-xs text-muted">{`Ajuste sugerido: ${test.result.fix}`}</p>
+          <p className="t5 text-text-muted">{`Ajuste sugerido: ${test.result.fix}`}</p>
           <div className="overflow-x-auto">
-            <table className="w-full min-w-[420px] text-left text-xs" data-testid="panel-table">
-              <thead className="text-muted">
+            <table className="w-full min-w-[420px] text-left t5" data-testid="panel-table">
+              <thead className="text-text-muted">
                 <tr>
                   <th className="py-1 pr-2">Persona</th>
                   {test.variants.map((_, v) => (
@@ -116,7 +116,7 @@ export default function PanelTester({
                   ))}
                 </tr>
               </thead>
-              <tbody className="divide-y divide-edge">
+              <tbody className="divide-y divide-rule">
                 {test.personas.map((p) => (
                   <tr key={p.name}>
                     <td className="py-1 pr-2 align-top font-medium">{p.name}</td>
@@ -127,7 +127,7 @@ export default function PanelTester({
                           {cell ? (
                             <>
                               <span className="block">{`para ${cell.stopScroll}/10 · clareza ${cell.clarity}/10 · ${cell.wouldClick ? "clicaria" : "não clicaria"}`}</span>
-                              <span className="block text-muted">{`“${cell.quote}”`}</span>
+                              <span className="block text-text-muted">{`“${cell.quote}”`}</span>
                             </>
                           ) : (
                             "—"
@@ -147,14 +147,14 @@ export default function PanelTester({
             </table>
           </div>
           <div className="flex flex-wrap gap-2">
-            <Button variant="ghost" className="!px-3 !py-1.5 text-xs" onClick={() => onApply(test.variants[test.result.winner])} data-testid="panel-apply">
+            <Button variant="ghost" className="!px-3 !py-1.5 t5" onClick={() => onApply(test.variants[test.result.winner])} data-testid="panel-apply">
               Usar a vencedora
             </Button>
             {test.variants.map((_, v) =>
               scheduled.includes(v) ? (
-                <span key={v} className="text-xs text-text">{`Versão ${LETTERS[v]} no calendário ✓`}</span>
+                <span key={v} className="t5 text-text">{`Versão ${LETTERS[v]} no calendário ✓`}</span>
               ) : (
-                <button key={v} type="button" className="text-xs text-text hover:underline" onClick={() => schedule(v)}>
+                <button key={v} type="button" className="t5 text-text hover:underline" onClick={() => schedule(v)}>
                   {`Agendar versão ${LETTERS[v]} para comparar`}
                 </button>
               )
@@ -162,7 +162,7 @@ export default function PanelTester({
           </div>
         </div>
       )}
-      <p className="text-[11px] text-muted" data-testid="panel-disclaimer">
+      <p className="text-[11px] text-text-muted" data-testid="panel-disclaimer">
         Simulação com personas da estratégia — serve pra descartar opções fracas, não substitui teste real. Depois, os cliques reais dizem se o painel acertou.
       </p>
     </div>

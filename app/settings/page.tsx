@@ -41,7 +41,7 @@ const INTEGRATIONS: {
 const STATUS_BADGE: Record<IntegrationStatus, { label: string; cls: string }> = {
   live: { label: "Ativo", cls: "border-positive/40 bg-positive-wash text-positive" },
   beta: { label: "Beta", cls: "border-caution/40 bg-caution-wash text-caution" },
-  soon: { label: "Em breve", cls: "border-edge text-muted" },
+  soon: { label: "Em breve", cls: "border-edge text-text-muted" },
 };
 
 export default function SettingsPage() {
@@ -78,7 +78,7 @@ export default function SettingsPage() {
 
   return (
     <div className="mx-auto max-w-3xl space-y-6">
-      <h1 className="font-[family-name:var(--font-display)] text-2xl font-bold tracking-tight">
+      <h1 className="d3">
         Configurações
       </h1>
 
@@ -106,7 +106,7 @@ export default function SettingsPage() {
                 type="color"
                 value={settings.accentColor}
                 onChange={(e) => setSettings({ ...settings, accentColor: e.target.value })}
-                className="h-9 w-12 cursor-pointer rounded-md border border-edge bg-surface-2"
+                className="h-9 w-12 cursor-pointer rounded-md border border-edge bg-surface-sunken"
               />
               <Input
                 value={settings.accentColor}
@@ -116,23 +116,23 @@ export default function SettingsPage() {
           </div>
         </div>
         <div className="flex items-center gap-4 border-t border-edge pt-4">
-          <div className="grid size-14 shrink-0 place-items-center overflow-hidden rounded-lg border border-edge bg-surface-2">
+          <div className="grid size-14 shrink-0 place-items-center overflow-hidden rounded-lg border border-edge bg-surface-sunken">
             {settings.logoMime ? (
               // eslint-disable-next-line @next/next/no-img-element
               <img src={`/api/settings/logo?v=${logoVersion}`} alt="logo" className="size-full object-contain" />
             ) : (
-              <span className="text-xl font-bold text-text">
+              <span className="d4 font-bold text-text">
                 {settings.agencyName.charAt(0).toUpperCase()}
               </span>
             )}
           </div>
           <div>
             <Label>Logo da agência</Label>
-            <p className="mb-2 text-xs text-muted">
+            <p className="mb-2 t5 text-text-muted">
               Aparece no cabeçalho e nas telas que o cliente/profissional vê ao entrar pelo convite.
             </p>
             <div className="flex items-center gap-2">
-              <label className="cursor-pointer rounded-md border border-edge bg-surface-2 px-3 py-1.5 text-sm transition-colors hover:border-edge">
+              <label className="cursor-pointer rounded-md border border-edge bg-surface-sunken px-3 py-1.5 t3 transition-colors hover:border-edge">
                 Enviar logo
                 <input
                   type="file"
@@ -158,7 +158,7 @@ export default function SettingsPage() {
                     setSettings((prev) => (prev ? { ...prev, logoMime: "" } : prev));
                     setLogoVersion((v) => v + 1);
                   }}
-                  className="rounded-md border border-edge px-3 py-1.5 text-sm text-muted transition-colors hover:border-negative/60 hover:text-negative"
+                  className="rounded-md border border-edge px-3 py-1.5 t3 text-text-muted transition-colors hover:border-negative/60 hover:text-negative"
                 >
                   Remover
                 </button>
@@ -167,13 +167,13 @@ export default function SettingsPage() {
           </div>
         </div>
         {!settings.canManagePlatform && (
-          <p className="border-t border-edge pt-4 text-xs text-muted">
+          <p className="border-t border-edge pt-4 t5 text-text-muted">
             O modo de IA, as landing pages e as chaves de API são definidos pelo admin da plataforma.
           </p>
         )}
         {settings.canManagePlatform && (
         <div className="space-y-2 border-t border-edge pt-4">
-          <p className="text-xs font-semibold uppercase tracking-wider text-muted">
+          <p className="t5 font-semibold uppercase tracking-wider text-text-muted">
             Custo & features de IA
           </p>
           <div className="grid gap-2 sm:grid-cols-3">
@@ -198,10 +198,10 @@ export default function SettingsPage() {
             ).map((mode) => (
               <label
                 key={mode.value}
-                className={`cursor-pointer rounded-md border p-3 text-sm transition-colors ${
+                className={`cursor-pointer rounded-md border p-3 t3 transition-colors ${
                   settings.aiMode === mode.value
                     ? "border-edge bg-surface-sunken"
-                    : "border-edge bg-surface-2 hover:border-muted"
+                    : "border-edge bg-surface-sunken hover:border-muted"
                 }`}
               >
                 <input
@@ -212,11 +212,11 @@ export default function SettingsPage() {
                   onChange={() => setSettings({ ...settings, aiMode: mode.value })}
                 />
                 <span className="font-medium">{mode.label}</span>
-                <span className="mt-1 block text-xs text-muted">{mode.desc}</span>
+                <span className="mt-1 block t5 text-text-muted">{mode.desc}</span>
               </label>
             ))}
           </div>
-          <label className="flex items-start gap-3 rounded-md border border-edge bg-surface-2 p-3 text-sm">
+          <label className="flex items-start gap-3 rounded-md border border-edge bg-surface-sunken p-3 t3">
             <input
               type="checkbox"
               checked={settings.landingPagesEnabled}
@@ -227,7 +227,7 @@ export default function SettingsPage() {
             />
             <span>
               <span className="font-medium">Gerador de landing pages</span>
-              <span className="block text-xs text-muted">
+              <span className="block t5 text-text-muted">
                 É o entregável que mais consome tokens (HTML completo). Desligado, a
                 aba some do workspace e o kit completo pula essa etapa.
               </span>
@@ -241,15 +241,15 @@ export default function SettingsPage() {
             value={settings.houseStyle}
             onChange={(e) => setSettings({ ...settings, houseStyle: e.target.value })}
             placeholder="Diretrizes da agência que valem para todos os clientes: tom, o que nunca fazer, formatos preferidos..."
-            className="min-h-20 w-full rounded-md border border-edge bg-surface-2 px-3 py-2 text-sm outline-none focus:border-edge"
+            className="min-h-20 w-full rounded-md border border-edge bg-surface-sunken px-3 py-2 t3 outline-none focus:border-edge"
           />
         </div>
         {settings.canManagePlatform && (
         <div className="space-y-2 border-t border-edge pt-4">
-          <p className="text-xs font-semibold uppercase tracking-wider text-muted">
+          <p className="t5 font-semibold uppercase tracking-wider text-text-muted">
             Chaves de API
           </p>
-          <p className="text-xs text-muted">
+          <p className="t5 text-text-muted">
             As chaves ficam apenas no banco local e nunca voltam ao navegador.
             Deixe em branco para manter a atual; digite <code>clear</code> para
             apagar.
@@ -279,7 +279,7 @@ export default function SettingsPage() {
                 {settings.hasGoogleAiKey ? (
                   <span className="normal-case text-text">configurada ✓</span>
                 ) : (
-                  <span className="normal-case text-muted">
+                  <span className="normal-case text-text-muted">
                     opcional — aistudio.google.com
                   </span>
                 )}
@@ -295,9 +295,9 @@ export default function SettingsPage() {
             </div>
           </div>
 
-          <div className="mt-4 rounded-lg border border-edge bg-surface-2 p-4">
+          <div className="mt-4 rounded-lg border border-edge bg-surface-sunken p-4">
             <Label>Conceitos de imagem (grátis, gera várias)</Label>
-            <p className="mb-3 text-xs text-muted">
+            <p className="mb-3 t5 text-text-muted">
               Para <strong>testar e mostrar</strong> direções visuais sem custo. O botão
               “Gerar 4 conceitos” em cada demanda usa este provedor. (Para mockup
               <em> fiel</em> compondo foto real de produto/modelo, use o Google AI acima.)
@@ -312,13 +312,13 @@ export default function SettingsPage() {
                     imageProvider: e.target.value as "huggingface" | "together" | "pollinations",
                   })
                 }
-                className="w-full rounded-md border border-edge bg-surface px-3 py-2 text-sm text-foreground outline-none focus:border-edge"
+                className="w-full rounded-md border border-edge bg-surface px-3 py-2 t3 text-text outline-none focus:border-edge"
               >
                 <option value="huggingface">Hugging Face — FLUX.1-dev · melhor qualidade (chave grátis)</option>
                 <option value="together">Together AI — FLUX.1-schnell-Free · rápido (chave grátis)</option>
                 <option value="pollinations">Pollinations — sem chave, qualidade menor</option>
               </select>
-              <p className="mt-1 text-xs text-muted">
+              <p className="mt-1 t5 text-text-muted">
                 Recomendado: <strong>Hugging Face FLUX.1-dev</strong> — a melhor qualidade grátis.
                 Crie um token em huggingface.co → Settings → Access Tokens (não pede cartão).
               </p>
@@ -330,7 +330,7 @@ export default function SettingsPage() {
                   {settings.hasHfKey ? (
                     <span className="normal-case text-text">configurada ✓</span>
                   ) : (
-                    <span className="normal-case text-muted">para FLUX.1-dev</span>
+                    <span className="normal-case text-text-muted">para FLUX.1-dev</span>
                   )}
                 </Label>
                 <Input
@@ -346,7 +346,7 @@ export default function SettingsPage() {
                   {settings.hasTogetherKey ? (
                     <span className="normal-case text-text">configurada ✓</span>
                   ) : (
-                    <span className="normal-case text-muted">para FLUX-schnell</span>
+                    <span className="normal-case text-text-muted">para FLUX-schnell</span>
                   )}
                 </Label>
                 <Input
@@ -367,7 +367,7 @@ export default function SettingsPage() {
           <Button onClick={save} disabled={saving}>
             {saving ? "Salvando..." : "Salvar configurações"}
           </Button>
-          {saved && <span className="text-sm text-text">Aplicado ✓</span>}
+          {saved && <span className="t3 text-text">Aplicado ✓</span>}
         </div>
       </Card>
 
@@ -387,7 +387,7 @@ export default function SettingsPage() {
 
       <Card className="space-y-3">
         <SectionTitle>Integrações</SectionTitle>
-        <p className="text-sm text-muted">
+        <p className="t3 text-text-muted">
           <span className="text-positive">Ativo</span> = já funciona com sua credencial.{" "}
           <span className="text-caution">Beta</span> = gancho pronto, falta plugar o token.{" "}
           Mensagens ficam em <strong>Mensagens → Conexões</strong>; dados e vendas de cada
@@ -399,11 +399,11 @@ export default function SettingsPage() {
             return (
               <div
                 key={integration.name}
-                className="flex items-center justify-between gap-2 rounded-md border border-edge bg-surface-2 px-3 py-2 text-sm"
+                className="flex items-center justify-between gap-2 rounded-md border border-edge bg-surface-sunken px-3 py-2 t3"
               >
                 <div className="min-w-0">
                   <p className="truncate font-medium">{integration.name}</p>
-                  <p className="truncate text-xs text-muted">
+                  <p className="truncate t5 text-text-muted">
                     {integration.area}
                     {integration.where && ` · ${integration.where}`}
                   </p>

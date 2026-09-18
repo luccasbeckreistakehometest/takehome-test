@@ -88,7 +88,7 @@ export function LangToggle() {
         localStorage.setItem("uiLang", current === "en" ? "pt" : "en");
         window.location.reload();
       }}
-      className="rounded-md border border-edge bg-surface-2 px-2 py-1 text-xs font-semibold text-muted transition-colors hover:border-edge hover:text-text"
+      className="rounded-md border border-edge bg-surface-sunken px-2 py-1 t5 font-semibold text-text-muted transition-colors hover:border-edge hover:text-text"
       title="Idioma da interface / UI language"
     >
       PT/EN

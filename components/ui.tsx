@@ -419,7 +419,7 @@ export function Switch({
         <span
           className={cx(
             "absolute top-0.5 size-3.5 rounded-full transition-[left] duration-[var(--dur-1)] ease-[var(--ease)]",
-            checked ? "left-4 bg-brand-ink" : "left-0.5 bg-text-muted",
+            checked ? "left-4 bg-brand-ink" : "left-0.5 bg-text-text-muted",
           )}
         />
       </span>
@@ -518,6 +518,58 @@ export function Card({
 }
 
 /** Eyebrow: o único lugar com caixa alta, no máximo um por seção, e neutro. */
+/**
+ * Cabeçalho de tela de ferramenta: olho, título em display, lede na medida de
+ * leitura e as ações à direita. Existe para as doze telas pararem de inventar
+ * cada uma o seu cabeçalho — era por isso que o mesmo produto tinha títulos em
+ * 2xl, 3xl e 4xl na mesma sessão.
+ */
+export function PageHeader({
+  eyebrow,
+  title,
+  lede,
+  actions,
+}: {
+  eyebrow?: string;
+  title: string;
+  lede?: ReactNode;
+  actions?: ReactNode;
+}) {
+  return (
+    <header className="mb-8 flex flex-wrap items-end justify-between gap-4 border-b border-edge pb-5">
+      <div className="min-w-0">
+        {eyebrow && <p className="t6 text-text-muted">{eyebrow}</p>}
+        <h1 className="d3 mt-2">{title}</h1>
+        {lede && <p className="t3 measure-lede mt-2 text-text-muted">{lede}</p>}
+      </div>
+      {actions && <div className="flex flex-wrap items-center gap-2">{actions}</div>}
+    </header>
+  );
+}
+
+/**
+ * Faixa de figuras: rótulo em cima, número tabular embaixo, régua entre as
+ * colunas. Substitui a fileira de cartões iguais com um número gigante no meio
+ * — que era o mesmo desenho em sete telas diferentes.
+ */
+export function FigureRow({
+  items,
+}: {
+  items: { label: string; value: ReactNode; note?: ReactNode }[];
+}) {
+  return (
+    <dl className="grid gap-x-8 gap-y-5 border-y border-edge py-4 sm:grid-cols-2 lg:grid-cols-4">
+      {items.map((item) => (
+        <div key={item.label} className="min-w-0">
+          <dt className="t6 text-text-muted">{item.label}</dt>
+          <dd className="n2 mt-1 truncate">{item.value}</dd>
+          {item.note && <p className="t5 mt-0.5 text-text-muted">{item.note}</p>}
+        </div>
+      ))}
+    </dl>
+  );
+}
+
 export function SectionTitle({ children }: { children: ReactNode }) {
   return <h3 className="t6 mb-3 text-text-muted">{children}</h3>;
 }
@@ -789,7 +841,7 @@ export function Spinner({ label }: { label?: string }) {
     <span className="t5 inline-flex items-center gap-2 text-text-muted">
       <span
         aria-hidden
-        className="size-4 animate-spin rounded-full border-2 border-rule border-t-text-muted"
+        className="size-4 animate-spin rounded-full border-2 border-rule border-t-text-text-muted"
       />
       {label}
     </span>

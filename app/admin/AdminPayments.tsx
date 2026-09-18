@@ -72,7 +72,7 @@ export default function AdminPayments({ agency = "" }: { agency?: string }) {
     <div className="space-y-4">
       <Card>
         <SectionTitle>Reprocessar pagamento</SectionTitle>
-        <p className="mb-3 text-sm text-muted">
+        <p className="mb-3 t3 text-text-muted">
           Relê o pagamento no Mercado Pago e aplica o estado (idempotente). Use quando o webhook falhou ou o cliente pagou e
           não recebeu.
         </p>
@@ -89,7 +89,7 @@ export default function AdminPayments({ agency = "" }: { agency?: string }) {
           </Button>
         </form>
         {msg && (
-          <p role="status" className="mt-2 text-sm text-text">
+          <p role="status" className="mt-2 t3 text-text">
             {msg}
           </p>
         )}
@@ -103,8 +103,8 @@ export default function AdminPayments({ agency = "" }: { agency?: string }) {
       <Card>
         <SectionTitle>Pagamentos do Mercado Pago ({payments.length})</SectionTitle>
         <div className="overflow-x-auto">
-          <table className="w-full min-w-[640px] text-left text-sm" data-testid="admin-payments">
-            <thead className="text-xs uppercase text-muted">
+          <table className="w-full min-w-[640px] text-left t3" data-testid="admin-payments">
+            <thead className="t5 uppercase text-text-muted">
               <tr>
                 <th className="py-2 pr-3">Quando</th>
                 <th className="py-2 pr-3">Pagamento</th>
@@ -114,19 +114,19 @@ export default function AdminPayments({ agency = "" }: { agency?: string }) {
                 <th className="py-2" />
               </tr>
             </thead>
-            <tbody className="divide-y divide-edge">
+            <tbody className="divide-y divide-rule">
               {payments.map((p) => (
                 <tr key={p.id}>
                   <td className="py-2 pr-3 whitespace-nowrap">{when(p.updatedAt ?? p.createdAt)}</td>
                   <td className="py-2 pr-3">
                     <p className="font-mono">{p.id}</p>
-                    <p className="text-xs text-muted">{p.externalReference.split("|").slice(0, 1).concat(p.externalReference.split("|").slice(3)).join(" · ")}</p>
+                    <p className="t5 text-text-muted">{p.externalReference.split("|").slice(0, 1).concat(p.externalReference.split("|").slice(3)).join(" · ")}</p>
                   </td>
-                  <td className="py-2 pr-3 text-xs">{p.accountType ? `${p.accountType} · ${p.accountId?.slice(0, 8)}` : "—"}</td>
+                  <td className="py-2 pr-3 t5">{p.accountType ? `${p.accountType} · ${p.accountId?.slice(0, 8)}` : "—"}</td>
                   <td className="py-2 pr-3">{fmtMoney(p.amount)}</td>
                   <td className="py-2 pr-3">
                     <Tag>{STATUS[p.status] ?? p.status}</Tag>
-                    {p.detail && <p className="mt-1 text-xs text-muted">{p.detail}</p>}
+                    {p.detail && <p className="mt-1 t5 text-text-muted">{p.detail}</p>}
                   </td>
                   <td className="py-2 text-right">
                     <Button variant="ghost" disabled={busy} onClick={() => reprocess(p.id)}>
@@ -137,7 +137,7 @@ export default function AdminPayments({ agency = "" }: { agency?: string }) {
               ))}
               {payments.length === 0 && (
                 <tr>
-                  <td colSpan={6} className="py-3 text-muted">
+                  <td colSpan={6} className="py-3 text-text-muted">
                     Nenhum pagamento recebido ainda.
                   </td>
                 </tr>
@@ -150,8 +150,8 @@ export default function AdminPayments({ agency = "" }: { agency?: string }) {
       <Card>
         <SectionTitle>Lançamentos recentes</SectionTitle>
         <div className="overflow-x-auto">
-          <table className="w-full min-w-[560px] text-left text-sm">
-            <thead className="text-xs uppercase text-muted">
+          <table className="w-full min-w-[560px] text-left t3">
+            <thead className="t5 uppercase text-text-muted">
               <tr>
                 <th className="py-2 pr-3">Quando</th>
                 <th className="py-2 pr-3">Conta</th>
@@ -160,11 +160,11 @@ export default function AdminPayments({ agency = "" }: { agency?: string }) {
                 <th className="py-2 text-right">R$</th>
               </tr>
             </thead>
-            <tbody className="divide-y divide-edge">
+            <tbody className="divide-y divide-rule">
               {transactions.map((t) => (
                 <tr key={t.id}>
                   <td className="py-1.5 pr-3 whitespace-nowrap">{when(t.createdAt)}</td>
-                  <td className="py-1.5 pr-3 text-xs">
+                  <td className="py-1.5 pr-3 t5">
                     {t.accountType} · {t.accountId.slice(0, 8)}
                   </td>
                   <td className="py-1.5 pr-3">{t.description}</td>

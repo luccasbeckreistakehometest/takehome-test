@@ -21,7 +21,7 @@ const ROLE_LABEL: Record<string, string> = { admin: "Admin", agency: "Agência",
 
 function Notice({ text }: { text: string }) {
   return (
-    <p role="status" className="rounded-md border border-edge bg-surface-sunken px-3 py-2 text-sm text-text">
+    <p role="status" className="rounded-md border border-edge bg-surface-sunken px-3 py-2 t3 text-text">
       {text}
     </p>
   );
@@ -45,13 +45,13 @@ export default function AccountSettings() {
   return (
     <div className="mx-auto max-w-2xl space-y-6">
       <div>
-        <h1 className="font-[family-name:var(--font-display)] text-2xl font-bold tracking-tight">Minha conta</h1>
-        <p className="mt-1 text-sm text-muted">
+        <h1 className="d3">Minha conta</h1>
+        <p className="mt-1 t3 text-text-muted">
           {ROLE_LABEL[account.role] ?? account.role} · usuário <span className="font-mono text-text">{account.username}</span>
         </p>
       </div>
       {(forced || account.mustChangePassword) && (
-        <p role="alert" className="rounded-md border border-caution/50 bg-caution-wash px-3 py-2 text-sm">
+        <p role="alert" className="rounded-md border border-caution/50 bg-caution-wash px-3 py-2 t3">
           Você entrou com uma senha provisória. Crie a sua senha agora.
         </p>
       )}
@@ -163,7 +163,7 @@ function SessionsCard() {
   return (
     <Card>
       <SectionTitle>Aparelhos conectados</SectionTitle>
-      <p className="mb-3 text-sm text-muted">Perdeu o celular ou entrou num computador de outra pessoa? Encerre todas as sessões de uma vez.</p>
+      <p className="mb-3 t3 text-text-muted">Perdeu o celular ou entrou num computador de outra pessoa? Encerre todas as sessões de uma vez.</p>
       <Button variant="ghost" onClick={logoutAll} data-testid="logout-all">
         Sair de todos os dispositivos
       </Button>
@@ -193,7 +193,7 @@ function DataCard({ account }: { account: Account }) {
   return (
     <Card>
       <SectionTitle>Seus dados (LGPD)</SectionTitle>
-      <p className="text-sm text-muted">
+      <p className="t3 text-text-muted">
         {account.consentAt
           ? `Termos aceitos em ${new Date(account.consentAt).toLocaleDateString("pt-BR")} (versão ${account.consentVersion}).`
           : "Conta criada antes do aceite registrado dos termos."}{" "}
@@ -203,15 +203,15 @@ function DataCard({ account }: { account: Account }) {
       </p>
       <a
         href="/api/account/export"
-        className="mt-3 inline-flex items-center rounded-md border border-edge bg-surface-2 px-3.5 py-2 text-sm hover:border-muted"
+        className="mt-3 inline-flex items-center rounded-md border border-edge bg-surface-sunken px-3.5 py-2 t3 hover:border-muted"
         data-testid="export-data"
       >
         Baixar meus dados (JSON)
       </a>
 
       <form className="mt-6 space-y-3 border-t border-edge pt-4" onSubmit={remove} aria-label="Excluir minha conta">
-        <p className="text-sm font-medium text-negative">Excluir minha conta</p>
-        <p className="text-sm text-muted">
+        <p className="t3 font-medium text-negative">Excluir minha conta</p>
+        <p className="t3 text-text-muted">
           {account.role === "client"
             ? "Se você criou a marca sozinho, tudo dela é apagado. Se a conta foi criada por uma agência, só o seu acesso sai; os arquivos do trabalho continuam com a agência."
             : account.role === "professional"

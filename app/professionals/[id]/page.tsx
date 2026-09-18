@@ -51,7 +51,7 @@ export default function ProfessionalPage({
   useEffect(load, [load]);
 
   if (notFound) {
-    return <p className="py-24 text-center text-muted">Profissional não encontrado.</p>;
+    return <p className="py-24 text-center text-text-muted">Profissional não encontrado.</p>;
   }
   if (!profile) {
     return (
@@ -67,10 +67,10 @@ export default function ProfessionalPage({
       <ActivationChecklist expect="professional" />
       <div className="flex flex-wrap items-start justify-between gap-4">
         <div>
-          <h1 className="font-[family-name:var(--font-display)] text-3xl font-bold tracking-tight">
+          <h1 className="d3">
             {profile.name}
           </h1>
-          <p className="mt-1 text-sm text-muted">
+          <p className="mt-1 t3 text-text-muted">
             {ROLE_LABELS[profile.role]} · {profile.location}
             {profile.priceRange && ` · ${profile.priceRange}`}
           </p>
@@ -106,8 +106,8 @@ export default function ProfessionalPage({
               { label: "Demandas ativas", value: profile.stats.active },
             ].map((stat) => (
               <Card key={stat.label} className="text-center">
-                <p className="text-xs uppercase tracking-wide text-muted">{stat.label}</p>
-                <p className="mt-1 font-[family-name:var(--font-display)] text-2xl font-bold text-text">
+                <p className="t5 uppercase tracking-wide text-text-muted">{stat.label}</p>
+                <p className="d3 mt-1 text-text">
                   {stat.value}
                 </p>
               </Card>
@@ -122,20 +122,20 @@ export default function ProfessionalPage({
               ))}
             </div>
             {profile.specialties && (
-              <p className="mt-3 text-sm text-muted">
-                <span className="font-semibold text-foreground/80">Especialidades: </span>
+              <p className="mt-3 t3 text-text-muted">
+                <span className="font-semibold text-text/80">Especialidades: </span>
                 {profile.specialties}
               </p>
             )}
             {profile.marketFocus && (
-              <p className="mt-1 text-sm text-muted">
-                <span className="font-semibold text-foreground/80">Foco de mercado: </span>
+              <p className="mt-1 t3 text-text-muted">
+                <span className="font-semibold text-text/80">Foco de mercado: </span>
                 {profile.marketFocus}
               </p>
             )}
-            {profile.bio && <p className="mt-3 text-sm text-muted">{profile.bio}</p>}
+            {profile.bio && <p className="mt-3 t3 text-text-muted">{profile.bio}</p>}
             {(profile.email || profile.phone) && (
-              <p className="mt-3 text-xs text-muted">
+              <p className="mt-3 t5 text-text-muted">
                 {profile.email} {profile.phone && `· ${profile.phone}`}
               </p>
             )}
@@ -151,7 +151,7 @@ export default function ProfessionalPage({
                     href={item.url}
                     target="_blank"
                     rel="noreferrer"
-                    className="rounded-md border border-edge bg-surface-2 px-3 py-1.5 text-sm text-muted transition-colors hover:border-edge hover:text-text"
+                    className="rounded-md border border-edge bg-surface-sunken px-3 py-1.5 t3 text-text-muted transition-colors hover:border-edge hover:text-text"
                   >
                     {item.title || item.url} ↗
                   </a>
@@ -163,10 +163,10 @@ export default function ProfessionalPage({
           <Card data-tour="pro-earnings">
             <SectionTitle>Meus ganhos</SectionTitle>
             <div className="grid gap-3 sm:grid-cols-2">
-              <div className="rounded-lg border border-edge bg-surface-2 p-3 text-sm">
-                <p className="text-xs uppercase tracking-wide text-muted">A receber (pagamento combinado)</p>
+              <div className="rounded-lg border border-edge bg-surface-sunken p-3 t3">
+                <p className="t5 uppercase tracking-wide text-text-muted">A receber (pagamento combinado)</p>
                 {profile.projects.filter((p) => p.escrow === "held").length === 0 ? (
-                  <p className="mt-1 text-muted">Nada reservado no momento.</p>
+                  <p className="mt-1 text-text-muted">Nada reservado no momento.</p>
                 ) : (
                   profile.projects
                     .filter((p) => p.escrow === "held")
@@ -177,10 +177,10 @@ export default function ProfessionalPage({
                     ))
                 )}
               </div>
-              <div className="rounded-lg border border-edge bg-surface-2 p-3 text-sm">
-                <p className="text-xs uppercase tracking-wide text-muted">Recebido (demandas pagas)</p>
+              <div className="rounded-lg border border-edge bg-surface-sunken p-3 t3">
+                <p className="t5 uppercase tracking-wide text-text-muted">Recebido (demandas pagas)</p>
                 {profile.projects.filter((p) => p.status === "paid").length === 0 ? (
-                  <p className="mt-1 text-muted">Nenhum pagamento ainda.</p>
+                  <p className="mt-1 text-text-muted">Nenhum pagamento ainda.</p>
                 ) : (
                   profile.projects
                     .filter((p) => p.status === "paid")
@@ -199,17 +199,17 @@ export default function ProfessionalPage({
           <Card id="demandas" className="scroll-mt-20" data-tour="pro-projects">
             <SectionTitle>Minhas demandas</SectionTitle>
             {profile.projects.length === 0 ? (
-              <p className="text-sm text-muted">Nenhuma demanda vinculada ainda.</p>
+              <p className="t3 text-text-muted">Nenhuma demanda vinculada ainda.</p>
             ) : (
               <div className="space-y-2">
                 {profile.projects.map((project) => (
                   <div
                     key={project.id}
-                    className="flex flex-wrap items-center justify-between gap-2 rounded-lg border border-edge bg-surface-2 p-3 text-sm"
+                    className="flex flex-wrap items-center justify-between gap-2 rounded-lg border border-edge bg-surface-sunken p-3 t3"
                   >
                     <div>
                       <p className="font-medium">{project.title}</p>
-                      <p className="text-xs text-muted">
+                      <p className="t5 text-text-muted">
                         Verba: {project.budget || "n/d"} · Prazo: {project.deadline || "n/d"}
                       </p>
                     </div>
@@ -217,7 +217,7 @@ export default function ProfessionalPage({
                       <Tag>{PROJECT_STATUS_LABELS[project.status]}</Tag>
                       <Link
                         href={`/clients/${project.clientId}?project=${project.id}`}
-                        className="text-xs text-text hover:underline"
+                        className="t5 text-text hover:underline"
                       >
                         Abrir →
                       </Link>
@@ -231,7 +231,7 @@ export default function ProfessionalPage({
           <Card id="oportunidades" className="scroll-mt-20" data-tour="pro-opportunities">
             <SectionTitle>Oportunidades abertas na plataforma</SectionTitle>
             {profile.opportunities.length === 0 ? (
-              <p className="text-sm text-muted">Nenhuma demanda aberta no momento.</p>
+              <p className="t3 text-text-muted">Nenhuma demanda aberta no momento.</p>
             ) : (
               <div className="space-y-2">
                 {profile.opportunities.map((project) => {
@@ -241,7 +241,7 @@ export default function ProfessionalPage({
                   return (
                     <div
                       key={project.id}
-                      className="rounded-lg border border-edge bg-surface-2 p-3 text-sm"
+                      className="rounded-lg border border-edge bg-surface-sunken p-3 t3"
                     >
                       <div className="flex flex-wrap items-center justify-between gap-2">
                         <p className="font-medium">{project.title}</p>
@@ -250,7 +250,7 @@ export default function ProfessionalPage({
                         ) : (
                           applyingTo !== project.id && (
                             <Button
-                              className="!px-2.5 !py-1 text-xs"
+                              className="!px-2.5 !py-1 t5"
                               onClick={() => {
                                 setApplyingTo(project.id);
                                 setPitch("");
@@ -260,17 +260,17 @@ export default function ProfessionalPage({
                           )
                         )}
                       </div>
-                      <p className="mt-1 text-xs text-muted">
+                      <p className="mt-1 t5 text-text-muted">
                         {project.agencyName && <>{project.agencyName} · </>}
                         Skills: {project.skillsNeeded.join(", ") || "n/d"} · Local:{" "}
                         {project.location || "remoto"} · Verba: {project.budget || "n/d"}
                       </p>
                       {project.brief && (
-                        <p className="mt-1 text-xs text-muted">{project.brief.slice(0, 200)}</p>
+                        <p className="mt-1 t5 text-text-muted">{project.brief.slice(0, 200)}</p>
                       )}
                       {applyingTo === project.id && !application && (
                         <div className="mt-3 space-y-2 rounded-md border border-edge bg-background p-3">
-                          <p className="text-xs font-semibold uppercase tracking-wide text-muted">
+                          <p className="t5 font-semibold uppercase tracking-wide text-text-muted">
                             Mensagem de apresentação
                           </p>
                           <textarea
@@ -278,11 +278,11 @@ export default function ProfessionalPage({
                             value={pitch}
                             onChange={(e) => setPitch(e.target.value)}
                             placeholder="Por que você é a pessoa certa para este job? Cite experiência no segmento, trabalhos parecidos do portfolio, disponibilidade..."
-                            className="min-h-24 w-full rounded-md border border-edge bg-surface-2 p-2 text-sm outline-none focus:border-edge"
+                            className="min-h-24 w-full rounded-md border border-edge bg-surface-sunken p-2 t3 outline-none focus:border-edge"
                           />
                           <div className="flex gap-2">
                             <Button
-                              className="!px-3 !py-1.5 text-xs"
+                              className="!px-3 !py-1.5 t5"
                               disabled={sendingApplication}
                               onClick={async () => {
                                 setSendingApplication(true);
@@ -306,7 +306,7 @@ export default function ProfessionalPage({
                             </Button>
                             <Button
                               variant="ghost"
-                              className="!px-3 !py-1.5 text-xs"
+                              className="!px-3 !py-1.5 t5"
                               onClick={() => setApplyingTo(null)}
                             >
                               Cancelar
@@ -322,7 +322,7 @@ export default function ProfessionalPage({
           </Card>
 
           <Card className="flex items-center justify-between">
-            <p className="text-sm text-muted">Remover este perfil da plataforma.</p>
+            <p className="t3 text-text-muted">Remover este perfil da plataforma.</p>
             <Button
               variant="danger"
               onClick={async () => {
@@ -354,7 +354,7 @@ function PortfolioGallery({ professionalId }: { professionalId: string }) {
     <Card id="portfolio" className="scroll-mt-20" data-tour="pro-portfolio">
       <div className="flex items-center justify-between">
         <SectionTitle>Portfolio na plataforma</SectionTitle>
-        <label className="cursor-pointer rounded-md border border-edge bg-surface-2 px-3 py-1.5 text-xs transition-colors hover:border-edge">
+        <label className="cursor-pointer rounded-md border border-edge bg-surface-sunken px-3 py-1.5 t5 transition-colors hover:border-edge">
           {uploading ? "Enviando..." : "Adicionar imagem"}
           <input
             type="file"
@@ -384,7 +384,7 @@ function PortfolioGallery({ professionalId }: { professionalId: string }) {
         </label>
       </div>
       {assets.length === 0 ? (
-        <p className="text-sm text-muted">
+        <p className="t3 text-text-muted">
           Suba seus melhores trabalhos — o match da IA e as agências veem esta vitrine.
         </p>
       ) : (
@@ -402,7 +402,7 @@ function PortfolioGallery({ professionalId }: { professionalId: string }) {
                   await api(`/api/professional-assets/${asset.id}`, { method: "DELETE" });
                   load();
                 }}
-                className="absolute right-1 top-1 hidden rounded bg-black/70 px-1.5 text-xs text-white group-hover:block"
+                className="absolute right-1 top-1 hidden rounded bg-black/70 px-1.5 t5 text-white group-hover:block"
               >
                 ✕
               </button>
