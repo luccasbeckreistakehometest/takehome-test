@@ -897,6 +897,15 @@ continua em aberto.
    landing escapava com margem negativa, que tira o padding mas não o teto.
    Resolvido com `.main-shell:has(> .full-bleed)`.
 
+5. **A capa do documento não saía no papel.** A folha de impressão escondia
+   `header` por TAG, e a capa da peça era um `<header>`. Quem mandasse o
+   relatório para o PDF perdia a capa inteira. A regra passa a mirar a casca
+   por classe (`.app-chrome`, `.no-print`, `.app-rail`).
+6. **Dois `<header>` na mesma página.** O bloco de título das telas virou um
+   segundo `<header>`, e `locator("header")` passou a casar com dois elementos
+   — quebrando um teste que não tinha nada a ver com design. Cabeçalho de
+   página é bloco de título, não o cabeçalho do documento HTML.
+
 ### 16.3 Varreduras medidas (não estimadas)
 
 | Varredura | Alcance |
