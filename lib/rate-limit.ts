@@ -1,7 +1,6 @@
 // Limites de uso em memória (janela deslizante). Um processo só (VPS com um
 // container), então memória basta; um restart zera as contagens — aceitável
-// nesta escala. Chaves por IP (primeiro X-Forwarded-For, que o Caddy define)
-// e por conta.
+// nesta escala. Chaves por IP (ver clientIp, no fim do arquivo) e por conta.
 
 export type RateLimitVerdict = { ok: boolean; remaining: number; retryAfterMs: number };
 
@@ -87,11 +86,25 @@ export function limiterFor(name: LimitName): RateLimiter {
   return namedLimiter(name, LIMITS[name]());
 }
 
+// IP do cliente para as chaves de limite. Usa a ÚLTIMA entrada de
+// X-Forwarded-For, não a primeira: o Caddy ACRESCENTA o endereço de quem
+// abriu a conexão ao que o chamador já tinha mandado, então a primeira
+// entrada é escrita pelo próprio atacante — bastava mandar
+// "X-Forwarded-For: <lixo>" mudando a cada requisição para zerar qualquer
+// limite por IP (login, cadastro, contato, IA, webhook). A última entrada é a
+// que o nosso proxy escreveu e é a única em que dá para confiar. No servidor o
+// Caddy roda com `trusted_proxies private_ranges`, então ele descarta a cadeia
+// que chega de fora da rede do Docker antes de acrescentar a sua.
+// Sem cabeçalho nenhum (chamada direta ao container, testes) caímos no
+// x-real-ip — o endereço do soquete, valor único que só o proxy escreve — e,
+// na falta dele, numa chave fixa: o Request do Next não expõe o soquete, e
+// preferimos um balde único a um limite que não conta nada.
 export function clientIp(request: Request): string {
   const forwarded = request.headers.get("x-forwarded-for");
   if (forwarded) {
-    const first = forwarded.split(",")[0].trim();
-    if (first) return first.slice(0, 64);
+    const chain = forwarded.split(",");
+    const last = chain[chain.length - 1].trim();
+    if (last) return last.slice(0, 64);
   }
   return request.headers.get("x-real-ip")?.trim().slice(0, 64) || "local";
 }
