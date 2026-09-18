@@ -7,6 +7,7 @@ import { useUiLang } from "@/lib/i18n";
 import { currentMonth, shiftMonth, type MonthlyReportData } from "@/lib/report-aggregate";
 import type { MonthlyReport } from "@/lib/reports-db";
 import MonthlyReportView, { monthTitle } from "@/components/MonthlyReportView";
+import { buttonClass } from "@/lib/button-class";
 import { Button, Card, CopyButton, ErrorBox, Spinner } from "@/components/ui";
 import { Icon } from "@/components/icons";
 
@@ -66,101 +67,129 @@ export default function ClientMonthlyReportPage({ params }: { params: Promise<{ 
   const portalUrl = `${origin}/portal/client/${id}/report?month=${month}`;
 
   return (
-    <div className="space-y-6">
-      <div className="flex flex-wrap items-start justify-between gap-4">
-        <div>
-          <Link href={`/clients/${id}`} className="text-sm text-text hover:underline">
-            ← Voltar ao cliente
-          </Link>
-          <h1 className="mt-1 font-[family-name:var(--font-display)] text-3xl font-bold tracking-tight">
-            Relatório mensal
-          </h1>
-          {payload && <p className="mt-1 text-sm text-muted">{payload.client.name}</p>}
+    // A tela da agência é a PRÉ-VISUALIZAÇÃO da peça: controles em cima, num
+    // bloco que não imprime, e o documento na mancha de 160mm — a mesma do
+    // papel. Antes o relatório era uma pilha de cartões de largura total, e a
+    // versão de impressão era outra tela.
+    <div>
+      <div className="no-print">
+        <div className="flex flex-wrap items-end justify-between gap-4 border-b border-edge pb-5">
+          <div>
+            <Link href={`/clients/${id}`} className="t5 text-text-muted underline-offset-4 hover:underline">
+              Voltar ao cliente
+            </Link>
+            <h1 className="d3 mt-2">Relatório mensal</h1>
+            {payload && <p className="t5 mt-1 text-text-muted">{payload.client.name}</p>}
+          </div>
+          <div className="flex items-center gap-2">
+            <button
+              onClick={() => setMonth((m) => shiftMonth(m, -1))}
+              className="grid size-9 place-items-center rounded-sm border border-edge text-text-muted hover:bg-surface-sunken"
+              aria-label="Mês anterior"
+              data-testid="report-prev"
+            >
+              <Icon name="chevron-left" size={16} />
+            </button>
+            <span className="t3 min-w-40 text-center font-medium" data-testid="report-month">
+              {monthTitle(month, lang)}
+            </span>
+            <button
+              onClick={() => setMonth((m) => shiftMonth(m, 1))}
+              className="grid size-9 place-items-center rounded-sm border border-edge text-text-muted hover:bg-surface-sunken"
+              aria-label="Próximo mês"
+              data-testid="report-next"
+            >
+              <Icon name="chevron-right" size={16} />
+            </button>
+          </div>
         </div>
-        <div className="flex items-center gap-2">
-          <button
-            onClick={() => setMonth((m) => shiftMonth(m, -1))}
-            className="grid size-9 place-items-center rounded-md border border-edge bg-surface-2 hover:border-edge"
-            aria-label="Mês anterior"
-            data-testid="report-prev"
-          >
-            ‹
-          </button>
-          <span className="min-w-40 text-center font-medium" data-testid="report-month">
-            {monthTitle(month, lang)}
-          </span>
-          <button
-            onClick={() => setMonth((m) => shiftMonth(m, 1))}
-            className="grid size-9 place-items-center rounded-md border border-edge bg-surface-2 hover:border-edge"
-            aria-label="Próximo mês"
-            data-testid="report-next"
-          >
-            ›
-          </button>
-        </div>
-      </div>
 
-      <Card className="flex flex-wrap items-center justify-between gap-3">
-        <div className="text-sm text-muted">
-          <p>
-            Os números vêm da própria conta: entregas e aprovações, posts, métricas e vendas do mês. A IA escreve o resumo executivo e as recomendações.
-          </p>
-          {payload?.report && (
-            <p className="mt-1 text-xs">
-              Resumo gerado em{" "}
-              {new Date(payload.report.createdAt).toLocaleString(lang === "en" ? "en-US" : "pt-BR")}
+        <div className="mt-5 flex flex-wrap items-end justify-between gap-4">
+          <div className="measure-prose">
+            <p className="t5 text-text-muted">
+              Os números vêm da própria conta: entregas e aprovações, posts, métricas e vendas do
+              mês. A IA escreve o resumo executivo e as recomendações.
             </p>
-          )}
+            {payload?.report && (
+              <p className="t5 tnum mt-1 text-text-faint">
+                Resumo gerado em{" "}
+                {new Date(payload.report.createdAt).toLocaleString(lang === "en" ? "en-US" : "pt-BR")}
+              </p>
+            )}
+          </div>
+          <div className="flex flex-wrap items-center gap-2">
+            <Button onClick={generate} disabled={generating} data-testid="report-generate">
+              {generating ? "Gerando resumo..." : payload?.report ? "Regerar resumo com IA" : "Gerar resumo com IA"}
+            </Button>
+            {payload?.report && (
+              <>
+                <a
+                  href={`/print/report/${payload.report.token}`}
+                  target="_blank"
+                  rel="noreferrer"
+                  className={buttonClass("secondary")}
+                  data-testid="report-print-link"
+                >
+                  Versão para imprimir / PDF
+                </a>
+                <CopyButton text={printUrl} label="Copiar link público" />
+                <CopyButton text={portalUrl} label="Copiar link do portal" />
+              </>
+            )}
+          </div>
         </div>
-        <div className="flex flex-wrap items-center gap-2">
-          <Button onClick={generate} disabled={generating} data-testid="report-generate">
-            <Icon name="sparkle" size={15} />
-            {generating ? "Gerando resumo..." : payload?.report ? "Regerar resumo com IA" : "Gerar resumo com IA"}
-          </Button>
-          {payload?.report && (
-            <>
-              <a
-                href={`/print/report/${payload.report.token}`}
-                target="_blank"
-                rel="noreferrer"
-                className="inline-flex items-center gap-1.5 rounded-md border border-edge bg-surface-2 px-3 py-2 text-sm hover:border-edge"
-                data-testid="report-print-link"
-              >
-                <Icon name="doc" size={15} /> Versão para imprimir / PDF
-              </a>
-              <CopyButton text={printUrl} label="Copiar link público" />
-              <CopyButton text={portalUrl} label="Copiar link do portal" />
-            </>
-          )}
-        </div>
-      </Card>
 
-      {error && <ErrorBox message={error} />}
-      {generating && <Spinner label="A IA está lendo os números do mês e escrevendo o resumo..." />}
+        {error && (
+          <div className="mt-4">
+            <ErrorBox message={error} />
+          </div>
+        )}
+        {generating && (
+          <p className="mt-4">
+            <Spinner label="A IA está lendo os números do mês e escrevendo o resumo..." />
+          </p>
+        )}
+      </div>
 
       {!payload ? (
         <div className="grid place-items-center py-16">
           <Spinner label="Carregando o mês..." />
         </div>
       ) : (
-        <MonthlyReportView data={payload.data} summary={payload.report?.summary ?? null} lang={lang} />
+        <article className="doc mt-10 px-8 py-10 sm:px-12">
+          <header className="doc-cover">
+            <div className="doc-rule" />
+            <p className="t6 mt-4 text-n-500">Relatório mensal</p>
+            <h2 className="d2 mt-3" style={{ ["--soft" as string]: 20 }}>
+              {payload.client.name}
+            </h2>
+            <p className="t1 tnum mt-2 text-n-500">{monthTitle(month, lang)}</p>
+          </header>
+          <div className="mt-10">
+            <MonthlyReportView data={payload.data} summary={payload.report?.summary ?? null} lang={lang} />
+          </div>
+        </article>
       )}
 
       {payload && payload.history.length > 0 && (
-        <Card>
-          <p className="mb-2 text-xs font-semibold uppercase tracking-wider text-muted">Relatórios já gerados</p>
-          <div className="flex flex-wrap gap-2">
+        <section className="no-print mt-10 border-t border-edge pt-3">
+          <p className="t6 text-text-muted">Relatórios já gerados</p>
+          <div className="mt-2 flex flex-wrap gap-2">
             {payload.history.map((h) => (
               <button
                 key={h.month}
                 onClick={() => setMonth(h.month)}
-                className={`rounded-md border px-3 py-1 text-sm ${h.month === month ? "border-edge text-text" : "border-edge text-muted hover:border-edge"}`}
+                className={`t5 rounded-xs border px-3 py-1 ${
+                  h.month === month
+                    ? "border-edge bg-surface-sunken font-medium text-text"
+                    : "border-rule text-text-muted hover:bg-surface-sunken"
+                }`}
               >
                 {monthTitle(h.month, lang)}
               </button>
             ))}
           </div>
-        </Card>
+        </section>
       )}
     </div>
   );

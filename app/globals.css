@@ -168,6 +168,20 @@
 /* ---------- 5. Tema Tailwind ---------------------------------------------
    `inline` porque os valores são variáveis que trocam com o tema. */
 @theme inline {
+  --color-n-0: var(--n-0);
+  --color-n-50: var(--n-50);
+  --color-n-100: var(--n-100);
+  --color-n-150: var(--n-150);
+  --color-n-200: var(--n-200);
+  --color-n-300: var(--n-300);
+  --color-n-400: var(--n-400);
+  --color-n-500: var(--n-500);
+  --color-n-600: var(--n-600);
+  --color-n-700: var(--n-700);
+  --color-n-800: var(--n-800);
+  --color-n-900: var(--n-900);
+  --color-n-950: var(--n-950);
+
   --color-canvas: var(--canvas);
   --color-surface: var(--surface);
   --color-surface-sunken: var(--surface-sunken);
@@ -824,9 +838,29 @@ hr {
   max-width: 100%;
   min-width: 0;
   margin-inline: auto;
-  background: var(--n-0);
-  color: var(--n-900);
   border-radius: 0;
+  /* O documento é PAPEL, nos dois temas e na impressão: os papéis da §5.2 são
+     redeclarados aqui com os valores do tema claro. Sem isto, uma peça aberta
+     no tema escuro herdava texto claro sobre folha branca — e a peça é
+     justamente o que a agência mostra ao cliente dela. */
+  color-scheme: light;
+  background: var(--n-0);
+  --canvas: var(--n-0);
+  --surface: var(--n-0);
+  --surface-sunken: var(--n-50);
+  --surface-raised: var(--n-0);
+  --text: var(--n-900);
+  --text-muted: var(--n-500);
+  --text-faint: var(--n-400);
+  --rule: var(--n-150);
+  --edge: var(--n-400);
+  --positive: #1b6b44;
+  --positive-wash: #eef3f0;
+  --negative: #a32b22;
+  --negative-wash: #f8eeed;
+  --caution: #7a5200;
+  --caution-wash: #f4f1eb;
+  color: var(--text);
 }
 .doc-rule {
   height: 3px;
