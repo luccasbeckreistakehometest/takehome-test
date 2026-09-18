@@ -68,7 +68,7 @@ export default function PortalMonthlyReportPage({ params }: { params: Promise<{ 
           <Link href={`/portal/client/${id}`} className="t3 text-text hover:underline">
             ← Voltar ao portal
           </Link>
-          <p className="mt-2 t5 uppercase tracking-widest text-text">Portal do cliente</p>
+          <p className="mt-2 t6 text-text-muted">Portal do cliente</p>
           <h1 className="d3">
             Relatório mensal
           </h1>

@@ -44,7 +44,7 @@ export default function GlobalSearch() {
       onClick={() => setOpen(false)}
     >
       <div
-        className="w-full max-w-lg rounded-xl border border-edge bg-surface shadow-e2"
+        className="w-full max-w-lg rounded-md border border-edge bg-surface shadow-e2"
         onClick={(e) => e.stopPropagation()}
       >
         <input
@@ -76,7 +76,7 @@ export default function GlobalSearch() {
                   <span className="font-medium">{result.label}</span>{" "}
                   <span className="t5 text-text-muted">{result.sublabel}</span>
                 </span>
-                <span className="text-[10px] uppercase tracking-wide text-text">
+                <span className="t6 text-text">
                   {result.type}
                 </span>
               </button>

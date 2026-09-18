@@ -67,7 +67,7 @@ export default function PulsePrompt({ clientId, refreshKey = 0 }: { clientId: st
 
   return (
     <Card className="border-edge bg-surface-sunken" data-testid="pulse-prompt" data-kind={next.kind}>
-      <p className="t5 uppercase tracking-widest text-text">Pulso rápido</p>
+      <p className="t6 text-text-muted">Pulso rápido</p>
       <p className="d4 mt-1">{next.title}</p>
       <p className="t3 text-text-muted">{next.subtitle}</p>
       <div className="mt-3 flex flex-wrap gap-2">
@@ -89,7 +89,7 @@ export default function PulsePrompt({ clientId, refreshKey = 0 }: { clientId: st
                 key={n}
                 type="button"
                 onClick={() => setScore(n)}
-                className={`rounded-xl border px-4 py-2 text-2xl transition-transform hover:-translate-y-0.5 ${score === n ? "border-edge bg-surface-sunken" : "border-edge bg-surface"}`}
+                className={`rounded-md border px-4 py-2 text-2xl transition-transform hover:-translate-y-0.5 ${score === n ? "border-edge bg-surface-sunken" : "border-edge bg-surface"}`}
                 data-testid="pulse-face"
                 data-score={n}
                 aria-label={n === 1 ? "Insatisfeito" : n === 2 ? "Neutro" : "Satisfeito"}

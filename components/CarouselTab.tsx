@@ -223,7 +223,7 @@ function CarouselEditor({ clientId, carousel, onChanged }: { clientId: string; c
             </option>
           ))}
         </Select>
-        <a href={`/api/carousels/${carousel.id}/zip`} className="inline-flex items-center gap-1.5 rounded-md bg-accent px-3.5 py-2 t3 font-medium text-accent-ink" data-testid="carousel-zip">
+        <a href={`/api/carousels/${carousel.id}/zip`} className="inline-flex items-center gap-1.5 rounded-md bg-brand-solid px-3.5 py-2 t3 font-medium text-brand-ink" data-testid="carousel-zip">
           <Icon name="download" size={14} /> Baixar tudo (ZIP)
         </a>
         <button type="button" onClick={remove} className="ml-auto t5 text-negative hover:underline">
@@ -234,7 +234,7 @@ function CarouselEditor({ clientId, carousel, onChanged }: { clientId: string; c
 
       <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-3">
         {content.slides.map((slide, index) => (
-          <div key={index} className="space-y-2 rounded-xl border border-edge bg-surface p-3" data-testid="carousel-slide" data-hash={hashes[index] ?? ""}>
+          <div key={index} className="space-y-2 rounded-md border border-edge bg-surface p-3" data-testid="carousel-slide" data-hash={hashes[index] ?? ""}>
             {/* eslint-disable-next-line @next/next/no-img-element */}
             <img
               src={`/api/carousels/${carousel.id}/slide/${index}?v=${hashes[index] ?? ""}`}

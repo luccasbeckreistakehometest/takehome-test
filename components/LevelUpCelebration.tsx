@@ -151,7 +151,7 @@ export default function LevelUpCelebration({
 
       {/* Toast da conquista */}
       <div
-        className="animate-levelup pointer-events-auto relative flex max-w-sm items-center gap-3 rounded-2xl border bg-surface px-5 py-4"
+        className="animate-levelup pointer-events-auto relative flex max-w-sm items-center gap-3 rounded-md border bg-surface px-5 py-4"
         style={{ borderColor: color, boxShadow: `0 12px 44px ${color}44` }}
       >
         <span

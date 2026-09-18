@@ -198,15 +198,15 @@ export default function PlansView() {
         <h1 className="d3">Receita & planos</h1>
         <div className="grid gap-x-8 gap-y-5 border-y border-edge py-4 sm:grid-cols-3">
           <Card>
-            <p className="t5 uppercase text-text-muted">Receita confirmada</p>
+            <p className="t6 text-text-muted">Receita confirmada</p>
             <p className="mt-1 text-3xl font-bold text-text">{brl(data.revenue.total)}</p>
           </Card>
           <Card>
-            <p className="t5 uppercase text-text-muted">Planos pagos vigentes (valor mensal)</p>
+            <p className="t6 text-text-muted">Planos pagos vigentes (valor mensal)</p>
             <p className="mt-1 text-3xl font-bold">{brl(data.revenue.mrr)}</p>
           </Card>
           <Card>
-            <p className="t5 uppercase text-text-muted">Bloqueio de IA por saldo</p>
+            <p className="t6 text-text-muted">Bloqueio de IA por saldo</p>
             <div className="mt-2 flex items-center gap-2">
               <Button variant={data.enforced ? "danger" : "ghost"} onClick={toggleEnforce}>
                 {data.enforced ? "Ligado para todos" : "Só planos grátis"}
@@ -364,7 +364,7 @@ export default function PlansView() {
                   RECOMENDADO
                 </span>
               )}
-              <p className="t3 font-semibold uppercase tracking-wide text-text-muted">{plan.name}</p>
+              <p className="t5 font-medium text-text-muted">{plan.name}</p>
               <p className="d3 mt-2">
                 {free ? "Grátis" : brl(priceFor(plan.monthlyPrice))}
                 {!free && (

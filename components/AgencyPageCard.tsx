@@ -198,7 +198,7 @@ export default function AgencyPageCard({ origin }: { origin: string }) {
               <label key={client.id} className="flex items-center gap-2 rounded-md border border-edge bg-surface-sunken px-2.5 py-1.5 t3" data-testid="showcase-option">
                 <input type="checkbox" checked={clientIds.includes(client.id)} onChange={() => setClientIds((l) => toggle(l, client.id))} className="accent-[var(--accent)]" />
                 <span className="min-w-0 flex-1 truncate">{client.name}</span>
-                {client.hasLogo && <span className="text-[10px] uppercase tracking-wide text-text">logo</span>}
+                {client.hasLogo && <span className="t6 text-text">logo</span>}
               </label>
             ))}
           </div>

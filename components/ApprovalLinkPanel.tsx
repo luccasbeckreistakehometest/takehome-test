@@ -95,7 +95,7 @@ export default function ApprovalLinkPanel({ clientId }: { clientId: string }) {
     <div className="space-y-4" data-testid="approval-link-panel">
       {error && <ErrorBox message={error} />}
       {created && (
-        <div className="space-y-3 rounded-xl border border-edge bg-surface-sunken p-4" data-testid="approval-link-created">
+        <div className="space-y-3 rounded-md border border-edge bg-surface-sunken p-4" data-testid="approval-link-created">
           <p className="t3 font-medium">Link pronto. O cliente abre no celular e aprova sem senha.</p>
           <p className="break-all rounded-md border border-edge bg-surface px-2 py-1.5 font-mono t5" data-testid="approval-link-url">
             {created.url}
@@ -105,7 +105,7 @@ export default function ApprovalLinkPanel({ clientId }: { clientId: string }) {
               href={created.whatsappUrl}
               target="_blank"
               rel="noreferrer"
-              className="inline-flex items-center gap-1.5 rounded-md bg-accent px-3.5 py-2 t3 font-medium text-accent-ink"
+              className="inline-flex items-center gap-1.5 rounded-md bg-brand-solid px-3.5 py-2 t3 font-medium text-brand-ink"
               data-testid="approval-link-whatsapp"
             >
               <Icon name="whatsapp" size={15} /> Enviar no WhatsApp
@@ -214,7 +214,7 @@ export function ApprovalLinkDialog({
   return (
     <div className="fixed inset-0 z-[70] flex items-end justify-center scrim p-4 sm:items-center" onClick={onClose}>
       <div
-        className="max-h-[90vh] w-full max-w-lg overflow-y-auto rounded-2xl border border-edge bg-surface p-5 shadow-e2"
+        className="max-h-[90vh] w-full max-w-lg overflow-y-auto rounded-md border border-edge bg-surface p-5 shadow-e2"
         onClick={(e) => e.stopPropagation()}
         data-testid="approval-link-dialog"
       >
@@ -249,7 +249,7 @@ export function ApprovalLinkDialog({
 export function ApprovalLinkCard({ clientId, clientName }: { clientId: string; clientName: string }) {
   const [open, setOpen] = useState(false);
   return (
-    <div className="flex flex-wrap items-center justify-between gap-3 rounded-xl border border-edge bg-surface p-5 shadow-sm" data-testid="approval-link-card">
+    <div className="flex flex-wrap items-center justify-between gap-3 rounded-md border border-edge bg-surface p-5 shadow-sm" data-testid="approval-link-card">
       <div>
         <p className="flex items-center gap-2 font-medium">
           <Icon name="check" size={16} className="text-text" /> Aprovação por link

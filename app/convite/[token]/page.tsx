@@ -62,7 +62,7 @@ export default function ConvitePage({ params }: { params: Promise<{ token: strin
       style={data.agency ? { ["--accent" as string]: data.agency.accentColor } : undefined}
     >
       <div className="text-center">
-        <p className="t5 uppercase tracking-widest text-text">Você foi convidado</p>
+        <p className="t6 text-text-muted">Você foi convidado</p>
         {data.agency && (
           <p className="mt-2 t3 text-text-muted" data-testid="invite-agency">
             Convite de <strong className="text-text">{data.agency.name}</strong>

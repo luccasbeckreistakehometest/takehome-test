@@ -295,7 +295,7 @@ export default function DeliverableViewer({ deliverable }: { deliverable: Delive
               <p className={annotation.resolved ? "text-text-muted line-through" : ""}>
                 <span className="mr-2 font-bold text-text">#{index + 1}</span>
                 {annotation.comment}
-                <span className="ml-2 text-[10px] uppercase tracking-wide text-text-muted">
+                <span className="ml-2 t6 text-text-muted">
                   {REVIEW_ROLE_LABELS[annotation.author] ?? annotation.author} →{" "}
                   {annotation.audience === "all"
                     ? "todos"
@@ -364,7 +364,7 @@ export default function DeliverableViewer({ deliverable }: { deliverable: Delive
           </p>
           <div className="grid gap-3 t3 text-text-muted sm:grid-cols-2">
             <div>
-              <p className="mb-1 t5 font-semibold uppercase text-positive">
+              <p className="mb-1 t6 text-positive">
                 Pontos fortes
               </p>
               <ul className="list-disc space-y-0.5 pl-4">
@@ -374,7 +374,7 @@ export default function DeliverableViewer({ deliverable }: { deliverable: Delive
               </ul>
             </div>
             <div>
-              <p className="mb-1 t5 font-semibold uppercase text-caution">
+              <p className="mb-1 t6 text-caution">
                 Melhorias
               </p>
               <ul className="list-disc space-y-0.5 pl-4">
@@ -386,7 +386,7 @@ export default function DeliverableViewer({ deliverable }: { deliverable: Delive
           </div>
           {reviewContent.revisionNotes.length > 0 && (
             <div className="rounded-md border border-caution/50 bg-caution-wash p-3 t3 text-text-muted">
-              <p className="mb-1 t5 font-semibold uppercase text-caution">
+              <p className="mb-1 t6 text-caution">
                 Notas de revisão para o profissional
               </p>
               <ul className="list-disc space-y-0.5 pl-4">
@@ -401,7 +401,7 @@ export default function DeliverableViewer({ deliverable }: { deliverable: Delive
 
       {/* Comentários — thread genérica para qualquer entregável (texto ou imagem) */}
       <div className="space-y-3 border-t border-edge pt-4">
-        <h3 className="t5 flex items-center gap-1.5 uppercase tracking-wider text-text">
+        <h3 className="t6 flex items-center gap-1.5 text-text-muted">
           <Icon name="message" size={15} />
           Comentários
           {comments.length > 0 && (
@@ -426,7 +426,7 @@ export default function DeliverableViewer({ deliverable }: { deliverable: Delive
                     {c.authorName || REVIEW_ROLE_LABELS[c.author] || c.author}
                   </span>
                   <div className="flex items-center gap-2">
-                    <span className="text-[10px] uppercase tracking-wide text-text-muted">
+                    <span className="t6 text-text-muted">
                       {formatDate(c.createdAt)}
                     </span>
                     <button

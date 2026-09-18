@@ -100,7 +100,7 @@ export function RequestList({
             <div className="mt-2 flex flex-wrap gap-2">
               {actor === "client" ? (
                 <>
-                  <button type="button" onClick={() => onDecide(r.id, "approved")} className="rounded-md bg-accent px-3 py-1.5 t5 font-medium text-accent-ink" data-testid="scope-approve">
+                  <button type="button" onClick={() => onDecide(r.id, "approved")} className="rounded-md bg-brand-solid px-3 py-1.5 t5 font-medium text-brand-ink" data-testid="scope-approve">
                     {`Aprovar extra de ${fmtMoney(r.extraPrice, lang)}`}
                   </button>
                   <button type="button" onClick={() => onDecide(r.id, "declined")} className="rounded-md border border-edge px-3 py-1.5 t5" data-testid="scope-decline">
@@ -138,7 +138,7 @@ export function PackageSummaryCard({ clientId, onOpen }: { clientId: string; onO
   if (!data) return null;
   const pending = data.requests.filter((r) => r.status === "pending_client").length;
   return (
-    <div className="rounded-xl border border-edge bg-surface p-5 shadow-sm" data-testid="package-summary">
+    <div className="rounded-md border border-edge bg-surface p-5 shadow-sm" data-testid="package-summary">
       <div className="flex flex-wrap items-center justify-between gap-2">
         <p className="flex items-center gap-2 font-medium">
           <Icon name="package" size={16} className="text-text" />

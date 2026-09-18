@@ -104,7 +104,7 @@ export default function AdminPayments({ agency = "" }: { agency?: string }) {
         <SectionTitle>Pagamentos do Mercado Pago ({payments.length})</SectionTitle>
         <div className="overflow-x-auto">
           <table className="w-full min-w-[640px] text-left t3" data-testid="admin-payments">
-            <thead className="t5 uppercase text-text-muted">
+            <thead className="t6 text-text-muted">
               <tr>
                 <th className="py-2 pr-3">Quando</th>
                 <th className="py-2 pr-3">Pagamento</th>
@@ -151,7 +151,7 @@ export default function AdminPayments({ agency = "" }: { agency?: string }) {
         <SectionTitle>Lançamentos recentes</SectionTitle>
         <div className="overflow-x-auto">
           <table className="w-full min-w-[560px] text-left t3">
-            <thead className="t5 uppercase text-text-muted">
+            <thead className="t6 text-text-muted">
               <tr>
                 <th className="py-2 pr-3">Quando</th>
                 <th className="py-2 pr-3">Conta</th>

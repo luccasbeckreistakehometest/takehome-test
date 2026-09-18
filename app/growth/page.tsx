@@ -45,7 +45,7 @@ export default async function GrowthPage() {
             key={card.key}
             href={card.href}
             data-testid={`growth-${card.key}`}
-            className="card-hover flex flex-col rounded-xl border border-edge bg-surface p-5 shadow-sm"
+            className="card-hover flex flex-col rounded-md border border-edge bg-surface p-5 shadow-sm"
           >
             <span className="flex items-center gap-2 font-medium">
               <Icon name={card.icon} size={18} className="text-text" /> {card.title}

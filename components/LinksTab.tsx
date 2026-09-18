@@ -154,7 +154,7 @@ export default function LinksTab({ client }: { client: Client }) {
             <Textarea id="bio-text" value={bio.bio} maxLength={280} onChange={(e) => setBio({ ...bio, bio: e.target.value })} placeholder="O que a marca faz, em uma frase." />
           </div>
           <div>
-            <p className="mb-1 t5 font-medium uppercase tracking-wide text-text-muted">Botões (até 8)</p>
+            <p className="mb-1 t6 text-text-muted">Botões (até 8)</p>
             {bio.buttons.length === 0 ? (
               <p className="t3 text-text-muted">Crie um link ao lado para virar botão.</p>
             ) : (

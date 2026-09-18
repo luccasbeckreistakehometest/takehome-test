@@ -38,7 +38,7 @@ export default function ClientPage({
         <div className="mt-4 flex items-center justify-center gap-4">
           <button
             onClick={() => setAttempt((a) => a + 1)}
-            className="rounded-md bg-accent px-4 py-2 t3 font-medium text-accent-ink"
+            className="rounded-md bg-brand-solid px-4 py-2 t3 font-medium text-brand-ink"
           >
             Tentar de novo
           </button>

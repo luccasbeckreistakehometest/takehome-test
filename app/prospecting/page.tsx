@@ -161,7 +161,7 @@ export default function ProspectingPage() {
                 : "border-edge bg-surface-sunken"
             }`}
           >
-            <p className="t5 font-semibold uppercase tracking-wide text-text-muted">
+            <p className="t6 text-text-muted">
               Última busca: {lastSearch.query} ·{" "}
               {new Date(lastSearch.createdAt).toLocaleString("pt-BR")} ·{" "}
               {lastSearch.resultCount} resultado(s)

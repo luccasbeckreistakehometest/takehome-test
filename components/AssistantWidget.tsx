@@ -191,7 +191,7 @@ export default function AssistantWidget() {
             }}
             rows={1}
             placeholder="Diga o que precisa..."
-            className="max-h-24 min-h-9 flex-1 resize-none rounded-xl border border-edge bg-surface-sunken px-3 py-2 t3 outline-none transition-colors focus:border-edge"
+            className="max-h-24 min-h-9 flex-1 resize-none rounded-md border border-edge bg-surface-sunken px-3 py-2 t3 outline-none transition-colors focus:border-edge"
           />
           <button
             onClick={() => send()}

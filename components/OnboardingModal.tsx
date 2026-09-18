@@ -152,7 +152,7 @@ export default function OnboardingModal({
             <button
               data-testid="welcome-next"
               onClick={() => (isLast ? close("done") : setStep((s) => s + 1))}
-              className="rounded-md bg-accent px-4 py-1.5 t3 font-medium text-accent-ink transition-opacity hover:opacity-90"
+              className="rounded-md bg-brand-solid px-4 py-1.5 t3 font-medium text-brand-ink transition-opacity hover:opacity-90"
             >
               {isLast ? "Começar" : "Próximo"}
             </button>

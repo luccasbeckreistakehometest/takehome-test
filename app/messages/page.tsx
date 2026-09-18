@@ -632,7 +632,7 @@ function Outbox({ outbox, onRefresh }: { outbox: OutboxMessage[]; onRefresh: () 
                 <span className="flex items-center gap-1.5">
                   <Icon name={m.channel === "whatsapp" ? "whatsapp" : "instagram"} size={15} />
                   <span className="t5 text-text-muted">{m.toAddress}</span>
-                  <span className="text-[10px] uppercase text-text-muted">· {m.mode}</span>
+                  <span className="t6 text-text-muted">· {m.mode}</span>
                 </span>
                 <span className={`t5 font-semibold ${STATUS_STYLE[m.status] ?? "text-text-muted"}`}>
                   {m.status}

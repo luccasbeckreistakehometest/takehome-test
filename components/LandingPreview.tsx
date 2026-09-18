@@ -15,7 +15,7 @@ export default function LandingPreview({ generation }: { generation: Generation 
           <Button variant="ghost">Baixar HTML </Button>
         </a>
       </div>
-      <div className="overflow-hidden rounded-xl border border-edge bg-white">
+      <div className="overflow-hidden rounded-md border border-edge bg-white">
         <iframe
           src={htmlUrl}
           sandbox="allow-scripts"

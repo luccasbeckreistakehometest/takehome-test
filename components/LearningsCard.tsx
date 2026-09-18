@@ -90,7 +90,7 @@ export function LearningsSummary({ learnings: l, reading, lang, compact = false 
       </div>
       {reading && reading.lines.length > 0 && (
         <div className="rounded-md border border-edge bg-surface-sunken p-3 t3" data-testid="learnings-reading">
-          <p className="mb-1 flex items-center gap-2 t5 font-semibold uppercase tracking-wider text-text">
+          <p className="mb-1 flex items-center gap-2 t6 text-text-muted">
             <Icon name="sparkle" size={13} /> <span>Leitura da IA</span>
             {reading.demo && <Tag>exemplo — sem chave de IA</Tag>}
           </p>
@@ -185,7 +185,7 @@ export default function LearningsCard({ clientId, canGenerate = true }: { client
           <LearningsSummary learnings={data.learnings} reading={data.reading} lang={lang} />
           {data.clicks && data.clicks.postsWithLinks > 0 && (
             <div className="rounded-md border border-edge bg-surface-sunken p-3 t3" data-testid="learnings-clicks">
-              <p className="t5 font-semibold uppercase tracking-wide text-text-muted">Cliques nos links dos posts</p>
+              <p className="t6 text-text-muted">Cliques nos links dos posts</p>
               <p className="mt-1">{`${data.clicks.totalClicks} cliques em ${data.clicks.postsWithLinks} post(s) publicados com link`}</p>
               <ul className="mt-1 space-y-0.5 t5 text-text-muted">
                 {data.clicks.byFormat.slice(0, 3).map((row) => (

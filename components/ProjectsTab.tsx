@@ -127,10 +127,10 @@ export default function ProjectsTab({
   if (!projects) {
     return (
       <div className="space-y-3">
-        <Skeleton className="h-24 w-full rounded-xl" />
+        <Skeleton className="h-24 w-full rounded-md" />
         <div className="grid gap-3 sm:grid-cols-2">
-          <Skeleton className="h-24 w-full rounded-xl" />
-          <Skeleton className="h-24 w-full rounded-xl" />
+          <Skeleton className="h-24 w-full rounded-md" />
+          <Skeleton className="h-24 w-full rounded-md" />
         </div>
       </div>
     );
@@ -330,7 +330,7 @@ export default function ProjectsTab({
             <button
               key={project.id}
               onClick={() => setSelectedId(project.id)}
-              className="rounded-xl border border-edge bg-surface p-4 text-left transition-colors hover:border-edge"
+              className="rounded-md border border-edge bg-surface p-4 text-left transition-colors hover:border-edge"
             >
               <div className="flex items-start justify-between gap-2">
                 <p className="font-semibold">{project.title}</p>
@@ -456,8 +456,8 @@ function ProjectDetail({ projectId, onBack }: { projectId: string; onBack: () =>
     return (
       <div className="space-y-6">
         <Skeleton className="h-8 w-64 rounded-md" />
-        <Skeleton className="h-40 w-full rounded-xl" />
-        <Skeleton className="h-40 w-full rounded-xl" />
+        <Skeleton className="h-40 w-full rounded-md" />
+        <Skeleton className="h-40 w-full rounded-md" />
       </div>
     );
   }
@@ -1027,7 +1027,7 @@ function ProjectDetail({ projectId, onBack }: { projectId: string; onBack: () =>
                   </p>
                   {(sketch.neededReferences?.length ?? 0) > 0 && (
                     <div className="rounded-md border border-caution/50 bg-caution-wash p-3 t5">
-                      <p className="mb-1 font-semibold uppercase text-caution">
+                      <p className="mb-1 t6 text-caution">
                         Para um sketch mais fiel, envie nas Referências:
                       </p>
                       <ul className="list-disc space-y-0.5 pl-4">
@@ -1153,7 +1153,7 @@ function ProjectDetail({ projectId, onBack }: { projectId: string; onBack: () =>
                   : "bg-surface-sunken text-text"
               }`}
             >
-              <p className="text-[10px] uppercase tracking-wide text-text-muted">
+              <p className="t6 text-text-muted">
                 {message.sender === "agency" ? "Agência" : "Profissional"} ·{" "}
                 {new Date(message.createdAt).toLocaleString("pt-BR", {
                   day: "2-digit",
@@ -1199,7 +1199,7 @@ function ProjectDetail({ projectId, onBack }: { projectId: string; onBack: () =>
               placeholder="Título da entrega (opcional)"
               className="max-w-xs"
             />
-            <label className="cursor-pointer rounded-md bg-accent px-3.5 py-2 t3 font-medium text-accent-ink transition-opacity hover:opacity-90">
+            <label className="cursor-pointer rounded-md bg-brand-solid px-3.5 py-2 t3 font-medium text-brand-ink transition-opacity hover:opacity-90">
               {uploading ? "Enviando..." : "Enviar imagem"}
               <input
                 type="file"

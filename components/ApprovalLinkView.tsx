@@ -156,14 +156,14 @@ export default function ApprovalLinkView({
       </header>
 
       {expired ? (
-        <section className="rounded-2xl border border-edge bg-surface p-6 text-center" data-testid="approval-expired">
+        <section className="rounded-md border border-edge bg-surface p-6 text-center" data-testid="approval-expired">
           <h1 className="d3">{t.expiredTitle}</h1>
           <p className="mt-2 t3 text-text-muted">{t.expiredBody}</p>
         </section>
       ) : (
         <>
           <section>
-            <p className="t5 font-semibold uppercase tracking-widest text-text">
+            <p className="t6 text-text-muted">
               {t.for} {clientName}
             </p>
             <h1 className="d3 mt-1">{t.intro}</h1>
@@ -208,7 +208,7 @@ export default function ApprovalLinkView({
           </ul>
 
           {pending.length === 0 ? (
-            <p className="rounded-2xl border border-positive/40 bg-positive-wash p-4 text-center t3 font-medium" data-testid="approval-all-done">
+            <p className="rounded-md border border-positive/40 bg-positive-wash p-4 text-center t3 font-medium" data-testid="approval-all-done">
               {t.allDone}
             </p>
           ) : (
@@ -218,7 +218,7 @@ export default function ApprovalLinkView({
                   type="button"
                   onClick={approveAll}
                   disabled={busy !== null}
-                  className="w-full rounded-xl bg-accent px-4 py-3 t2 font-semibold text-accent-ink disabled:opacity-50"
+                  className="w-full rounded-sm bg-brand-solid px-4 py-3 t2 font-medium text-brand-ink transition-[filter] hover:brightness-95 disabled:bg-surface-sunken disabled:text-text-faint"
                   data-testid="approve-all"
                 >
                   {t.approveAll} ({pending.length})
@@ -256,7 +256,7 @@ function ItemCard({
         ? { label: t.requested, cls: "border-caution/50 bg-caution-wash text-caution" }
         : { label: t.pending, cls: "border-edge bg-surface-sunken text-text-muted" };
   return (
-    <li className="overflow-hidden rounded-2xl border border-edge bg-surface" data-testid="approval-item" data-kind={item.kind} data-id={item.id} data-decision={item.decision}>
+    <li className="overflow-hidden rounded-md border border-edge bg-surface" data-testid="approval-item" data-kind={item.kind} data-id={item.id} data-decision={item.decision}>
       {item.imageId && (
         // eslint-disable-next-line @next/next/no-img-element
         <img src={`/api/approve/${token}/file/${item.imageId}`} alt={item.title} className="max-h-[70vh] w-full bg-surface-sunken object-contain" />
@@ -264,7 +264,7 @@ function ItemCard({
       <div className="space-y-3 p-4">
         <div className="flex items-start justify-between gap-2">
           <div className="min-w-0">
-            <p className="text-[11px] uppercase tracking-wider text-text-muted">
+            <p className="t6 text-text-muted">
               {item.kind === "post"
                 ? `${t.post} · ${item.channel}${item.format ? ` · ${item.format}` : ""} · ${t.on} ${new Date(item.scheduledFor).toLocaleDateString(locale, { day: "2-digit", month: "short" })}`
                 : `${t.delivery} · ${item.projectTitle}`}
@@ -300,7 +300,7 @@ function ItemCard({
                   onClick={async () => {
                     if (await onDecide("changes_requested", note)) setAsking(false);
                   }}
-                  className="flex-1 rounded-lg bg-accent px-3 py-2.5 font-medium text-accent-ink disabled:opacity-40"
+                  className="flex-1 rounded-lg bg-brand-solid px-3 py-2.5 font-medium text-brand-ink disabled:opacity-40"
                   data-testid="changes-send"
                 >
                   {t.send}
@@ -316,7 +316,7 @@ function ItemCard({
                 type="button"
                 disabled={busy}
                 onClick={() => onDecide("approved")}
-                className="flex-1 rounded-lg bg-accent px-3 py-2.5 font-semibold text-accent-ink disabled:opacity-50"
+                className="flex-1 rounded-lg bg-brand-solid px-3 py-2.5 font-semibold text-brand-ink disabled:opacity-50"
                 data-testid="item-approve"
               >
                 {t.approve}

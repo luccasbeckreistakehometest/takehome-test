@@ -340,7 +340,7 @@ export default function ClientPortalPage({
                     : "bg-surface-sunken"
                 }`}
               >
-                <p className="text-[10px] uppercase tracking-wide text-text-muted">
+                <p className="t6 text-text-muted">
                   {message.sender === "client" ? "Você" : "Agência"}
                 </p>
                 {message.text}

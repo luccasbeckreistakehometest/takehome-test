@@ -70,7 +70,7 @@ export default function BrandAssets({ clientId }: { clientId: string }) {
               className="flex flex-wrap items-center justify-between gap-2 rounded-md border border-edge bg-surface-sunken px-3 py-2 t3"
             >
               <span className="flex items-center gap-2">
-                <span className="font-mono t5 uppercase text-text">
+                <span className="font-mono t5 text-text">
                   .{asset.ext}
                 </span>
                 <span className="font-medium">{asset.title}</span>

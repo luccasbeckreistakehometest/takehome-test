@@ -85,7 +85,7 @@ export default function AiRadarTab({ client }: { client: Client }) {
         </div>
         {error && <ErrorBox message={error} />}
         <div className="space-y-2">
-          <p className="t5 font-medium uppercase tracking-wide text-text-muted">{`Perguntas de quem compra (até ${data.maxQuestions})`}</p>
+          <p className="t6 text-text-muted">{`Perguntas de quem compra (até ${data.maxQuestions})`}</p>
           {draft.map((q, i) => (
             <div key={i} className="flex items-center gap-2">
               <Input value={q} onChange={(e) => setDraft(draft.map((x, j) => (j === i ? e.target.value : x)))} aria-label={`Pergunta ${i + 1}`} data-testid="radar-question" />
@@ -169,7 +169,7 @@ function RadarResult({ run, trend, sample = false }: { run: Run; trend: number |
             <li key={line}>{line}</li>
           ))}
         </ul>
-        <p className="mt-3 t5 font-semibold uppercase tracking-wide text-text-muted">O que fazer agora</p>
+        <p className="mt-3 t6 text-text-muted">O que fazer agora</p>
         <ol className="mt-1 list-decimal space-y-1 pl-5 t3" data-testid="radar-actions">
           {s.actions.map((a) => (
             <li key={a}>{a}</li>
@@ -180,7 +180,7 @@ function RadarResult({ run, trend, sample = false }: { run: Run; trend: number |
         <SectionTitle>Pergunta por pergunta</SectionTitle>
         <div className="overflow-x-auto">
           <table className="w-full min-w-[560px] text-left t3">
-            <thead className="t5 uppercase text-text-muted">
+            <thead className="t6 text-text-muted">
               <tr>
                 <th className="py-1.5 pr-2">Pergunta</th>
                 <th className="py-1.5 pr-2">Marcas citadas</th>

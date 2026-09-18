@@ -185,7 +185,7 @@ export default function FinancePage() {
             </div>
             {report.rates.length > 0 && (
               <div>
-                <p className="mb-1 t5 font-semibold uppercase tracking-wider text-text-muted">Custo/hora por profissional</p>
+                <p className="mb-1 t6 text-text-muted">Custo/hora por profissional</p>
                 <div className="grid gap-2 sm:grid-cols-3">
                   {report.rates.map((p) => (
                     <div key={p.id} className="flex items-center gap-2 rounded-md border border-edge bg-surface-sunken px-3 py-2 t3">

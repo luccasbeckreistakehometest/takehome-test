@@ -49,7 +49,7 @@ export default async function AnalyticsPage({ searchParams }: Props) {
     <div className="space-y-6" data-testid="admin-analytics">
       <div className="flex flex-wrap items-end justify-between gap-3">
         <div>
-          <p className="t5 uppercase tracking-widest text-text-muted">
+          <p className="t6 text-text-muted">
             <Link href="/admin" className="hover:text-text">Admin</Link> / Analytics
           </p>
           <h1 className="d3">Funil e origens</h1>
@@ -77,8 +77,8 @@ export default async function AnalyticsPage({ searchParams }: Props) {
         )}
       </div>
 
-      <section className="rounded-xl border border-edge bg-surface p-5" data-testid="analytics-funnel">
-        <h2 className="mb-3 t3 font-semibold uppercase tracking-wider text-text">Funil</h2>
+      <section className="rounded-md border border-edge bg-surface p-5" data-testid="analytics-funnel">
+        <h2 className="mb-3 d4">Funil</h2>
         <ul className="space-y-2">
           {rows.map((row) => (
             <li key={row.step} className="grid grid-cols-[150px_1fr_110px] items-center gap-3 t3" data-step={row.step} data-count={row.count}>
@@ -97,8 +97,8 @@ export default async function AnalyticsPage({ searchParams }: Props) {
       </section>
 
       <div className="grid gap-6 lg:grid-cols-2">
-        <section className="rounded-xl border border-edge bg-surface p-5">
-          <h2 className="mb-3 t3 font-semibold uppercase tracking-wider text-text">Visitantes por dia</h2>
+        <section className="rounded-md border border-edge bg-surface p-5">
+          <h2 className="mb-3 d4">Visitantes por dia</h2>
           {visitors.length === 0 ? (
             <p className="t3 text-text-muted">Sem visitas no período.</p>
           ) : (
@@ -111,11 +111,11 @@ export default async function AnalyticsPage({ searchParams }: Props) {
             </svg>
           )}
         </section>
-        <section className="rounded-xl border border-edge bg-surface p-5">
-          <h2 className="mb-3 t3 font-semibold uppercase tracking-wider text-text">Origens e campanhas</h2>
+        <section className="rounded-md border border-edge bg-surface p-5">
+          <h2 className="mb-3 d4">Origens e campanhas</h2>
           <div className="overflow-x-auto">
             <table className="w-full min-w-[320px] text-left t3" data-testid="analytics-sources">
-              <thead className="t5 uppercase text-text-muted">
+              <thead className="t6 text-text-muted">
                 <tr>
                   <th className="py-1.5 pr-2">Origem</th>
                   <th className="py-1.5 pr-2">Campanha</th>
@@ -140,11 +140,11 @@ export default async function AnalyticsPage({ searchParams }: Props) {
         </section>
       </div>
 
-      <section className="rounded-xl border border-edge bg-surface p-5">
-        <h2 className="mb-3 t3 font-semibold uppercase tracking-wider text-text">Cadastros recentes (1º toque)</h2>
+      <section className="rounded-md border border-edge bg-surface p-5">
+        <h2 className="mb-3 d4">Cadastros recentes (1º toque)</h2>
         <div className="overflow-x-auto">
           <table className="w-full min-w-[480px] text-left t3" data-testid="analytics-signups">
-            <thead className="t5 uppercase text-text-muted">
+            <thead className="t6 text-text-muted">
               <tr>
                 <th className="py-1.5 pr-2">Conta</th>
                 <th className="py-1.5 pr-2">Público</th>
@@ -168,15 +168,15 @@ export default async function AnalyticsPage({ searchParams }: Props) {
         </div>
       </section>
 
-      <section className="rounded-xl border border-edge bg-surface p-5">
-        <h2 className="mb-1 t3 font-semibold uppercase tracking-wider text-text">Primeiros passos concluídos</h2>
+      <section className="rounded-md border border-edge bg-surface p-5">
+        <h2 className="mb-1 d4">Primeiros passos concluídos</h2>
         <p className="mb-3 t5 text-text-muted">Contas que concluíram cada passo do checklist no período (papel:passo).</p>
         {activation.length === 0 ? (
           <p className="t3 text-text-muted">Nenhum passo concluído no período.</p>
         ) : (
           <div className="overflow-x-auto">
             <table className="w-full min-w-[320px] text-left t3" data-testid="analytics-activation">
-              <thead className="t5 uppercase text-text-muted">
+              <thead className="t6 text-text-muted">
                 <tr>
                   <th className="py-1.5 pr-2">Passo</th>
                   <th className="py-1.5 text-right">Contas</th>

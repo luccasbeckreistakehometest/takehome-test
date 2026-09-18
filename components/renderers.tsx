@@ -157,7 +157,7 @@ function SchedulePostButton({
             setState("picking");
           }
         }}
-        className="rounded bg-accent px-2 py-0.5 t5 font-medium text-accent-ink disabled:opacity-50"
+        className="rounded bg-brand-solid px-2 py-0.5 t5 font-medium text-brand-ink disabled:opacity-50"
       >
         {state === "saving" ? "..." : "Confirmar"}
       </button>
@@ -248,11 +248,11 @@ export function StrategyAnalysisView({
               <p className="t3 measure-lede mt-2 text-text-muted">{b.profile}</p>
               <div className="mt-3 grid gap-3 t3 text-text-muted sm:grid-cols-2">
                 <div>
-                  <p className="mb-1 t5 font-semibold uppercase text-text/70">Dores</p>
+                  <p className="mb-1 t6 text-text-muted">Dores</p>
                   <List items={b.pains} />
                 </div>
                 <div>
-                  <p className="mb-1 t5 font-semibold uppercase text-text/70">Desejos</p>
+                  <p className="mb-1 t6 text-text-muted">Desejos</p>
                   <List items={b.desires} />
                 </div>
               </div>
@@ -288,11 +288,11 @@ export function StrategyAnalysisView({
               <p className="mt-1 text-text-muted">{c.positioning}</p>
               <div className="mt-3 grid gap-3 text-text-muted sm:grid-cols-2">
                 <div>
-                  <p className="mb-1 t5 font-semibold uppercase text-positive/80">Forças</p>
+                  <p className="mb-1 t6 text-positive">Forças</p>
                   <List items={c.strengths} />
                 </div>
                 <div>
-                  <p className="mb-1 t5 font-semibold uppercase text-negative/80">Fraquezas</p>
+                  <p className="mb-1 t6 text-negative">Fraquezas</p>
                   <List items={c.weaknesses} />
                 </div>
               </div>
@@ -352,7 +352,7 @@ export function StrategyAnalysisView({
         <SectionTitle>Metas</SectionTitle>
         <div className="overflow-x-auto">
           <table className="w-full text-left t3">
-            <thead className="t5 uppercase text-text-muted">
+            <thead className="t6 text-text-muted">
               <tr>
                 <th className="py-2 pr-4">Meta</th>
                 <th className="py-2 pr-4">Métrica</th>
@@ -645,7 +645,7 @@ export function RoiProjectionView({
         <SectionTitle>Métricas — antes → projetado → real</SectionTitle>
         <div className="overflow-x-auto">
           <table className="w-full text-left t3">
-            <thead className="t5 uppercase text-text-muted">
+            <thead className="t6 text-text-muted">
               <tr>
                 <th className="py-2 pr-4">Métrica</th>
                 <th className="py-2 pr-4">Antes</th>
@@ -694,7 +694,7 @@ export function RoiProjectionView({
                 });
                 setSavingActuals("saved");
               }}
-              className="rounded-md bg-accent px-3 py-1.5 t5 font-medium text-accent-ink transition-opacity hover:opacity-90"
+              className="rounded-md bg-brand-solid px-3 py-1.5 t5 font-medium text-brand-ink transition-opacity hover:opacity-90"
             >
               {savingActuals === "saving" ? "Salvando..." : "Salvar valores reais"}
             </button>
@@ -856,7 +856,7 @@ export function SocialCalendarView({
                 <div className="flex gap-2">
                   <button
                     onClick={() => saveEdit(index)}
-                    className="rounded-md bg-accent px-3 py-1 t5 font-medium text-accent-ink"
+                    className="rounded-md bg-brand-solid px-3 py-1 t5 font-medium text-brand-ink"
                   >
                     Salvar
                   </button>
@@ -979,7 +979,7 @@ export function PostBatchView({
               <div className="flex gap-2">
                 <button
                   onClick={() => saveEdit(index)}
-                  className="rounded-md bg-accent px-3 py-1 t5 font-medium text-accent-ink"
+                  className="rounded-md bg-brand-solid px-3 py-1 t5 font-medium text-brand-ink"
                 >
                   Salvar
                 </button>
@@ -1101,13 +1101,13 @@ export function VisualIdentityView({ data }: { data: VisualIdentity }) {
         <p className="t3 text-text-muted">{data.toneOfVoice.description}</p>
         <div className="mt-3 grid gap-3 sm:grid-cols-2">
           <div className="rounded-lg border border-positive/50 bg-positive-wash p-3 t3">
-            <p className="mb-1 t5 font-semibold uppercase text-positive">Faça</p>
+            <p className="mb-1 t6 text-positive">Faça</p>
             <div className="text-text-muted">
               <List items={data.toneOfVoice.dos} />
             </div>
           </div>
           <div className="rounded-lg border border-negative/50 bg-negative-wash p-3 t3">
-            <p className="mb-1 t5 font-semibold uppercase text-negative">Não faça</p>
+            <p className="mb-1 t6 text-negative">Não faça</p>
             <div className="text-text-muted">
               <List items={data.toneOfVoice.donts} />
             </div>
@@ -1313,7 +1313,7 @@ export function GenerationContent({ generation }: { generation: Generation }) {
   // Landing page é HTML, não JSON: mostra o preview em iframe isolado.
   if (type === "landing_page") {
     return (
-      <div className="overflow-hidden rounded-xl border border-edge bg-white">
+      <div className="overflow-hidden rounded-md border border-edge bg-white">
         <iframe
           src={`/api/generations/${generation.id}/html`}
           sandbox="allow-scripts"

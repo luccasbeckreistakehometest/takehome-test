@@ -27,7 +27,7 @@ export default function ApprovalTimeline({ events, compact = false }: { events: 
   return (
     <div className={`space-y-2 ${compact ? "" : "rounded-lg border border-edge bg-surface-sunken p-3"}`} data-testid="approval-timeline">
       {!compact && (
-        <p className="t5 font-semibold uppercase tracking-wider text-text">O que aconteceu quando você aprovou</p>
+        <p className="t6 text-text-muted">O que aconteceu quando você aprovou</p>
       )}
       {events.map((event) => (
         <div key={event.id} className="t3">

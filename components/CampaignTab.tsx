@@ -154,7 +154,7 @@ export default function CampaignTab({ client }: { client: Client }) {
         <Card className="space-y-4" data-testid="campaign-review" data-status={review.campaign.status}>
           <div className="flex flex-wrap items-start justify-between gap-3">
             <div>
-              <p className="t5 uppercase tracking-widest text-text">Revisão da campanha</p>
+              <p className="t6 text-text-muted">Revisão da campanha</p>
               <h3 className="d4" data-testid="campaign-theme">{review.campaign.theme}</h3>
               <p className="t3 measure-lede mt-2 text-text-muted">{review.campaign.summary}</p>
               <div className="mt-2 flex flex-wrap gap-1.5">

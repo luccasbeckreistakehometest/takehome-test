@@ -107,7 +107,7 @@ export default function PackageTab({ clientId }: { clientId: string }) {
         )}
         {draft.length > 0 && (
           <div className="space-y-2">
-            <div className="hidden grid-cols-[1.4fr_1fr_70px_100px_32px] gap-2 text-[11px] uppercase tracking-wide text-text-muted sm:grid">
+            <div className="hidden grid-cols-[1.4fr_1fr_70px_100px_32px] gap-2 t6 text-text-muted sm:grid">
               <span>Item</span>
               <span>Unidade</span>
               <span>Por mês</span>

@@ -10,7 +10,7 @@
 //  · A cor da marca aparece num papel só: o botão primário. Manchete, número,
 //    eyebrow, ícone e régua são tinta neutra (§5.5).
 //  · Saíram as manchas borradas de cor, o texto em gradiente, o cartão flutuante
-//    de painel falso, o ícone de "IA" e o rounded-2xl — todos da lista proibida.
+//    de painel falso, o ícone de "IA" e o rounded-md — todos da lista proibida.
 //  · O contador animado saiu: o número aparecia como 0 até o elemento entrar na
 //    tela, e "0 não é vazio" (§9.2). O número agora é o número.
 

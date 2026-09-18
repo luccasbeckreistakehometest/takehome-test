@@ -371,9 +371,9 @@ export default function VoiceBriefing({
   return (
     <Card>
       <div data-testid="voice" data-state={phase}>
-        <p className="t5 font-semibold uppercase tracking-widest text-text">Briefing falado</p>
+        <p className="t6 text-text-muted">Briefing falado</p>
         <h2 className="d4 mt-1">Conte sobre a marca</h2>
-        <div className="mt-4 rounded-xl border border-edge bg-surface-sunken p-4 t3 leading-relaxed" data-testid="voice-prompt">“{prompt}”</div>
+        <div className="mt-4 rounded-md border border-edge bg-surface-sunken p-4 t3 leading-relaxed" data-testid="voice-prompt">“{prompt}”</div>
         <div className="mt-2 flex items-center gap-3 t5">
           {voiceOn ? (
             <button type="button" onClick={() => void replay()} className="font-semibold text-text hover:underline" data-testid="voice-replay">▶ Ouvir</button>
@@ -418,11 +418,11 @@ export default function VoiceBriefing({
         {briefing && (
           <div className="mt-6 grid gap-4 sm:grid-cols-2" data-testid="voice-review">
             <div>
-              <p className="t5 font-semibold uppercase tracking-widest text-text-muted">O que eu ouvi</p>
+              <p className="t6 text-text-muted">O que eu ouvi</p>
               <ul className="mt-2 space-y-2 t3 text-text-muted">{turns.map((t, i) => <li key={i} className="rounded-lg bg-surface-sunken px-3 py-2">“{t}”</li>)}</ul>
             </div>
             <div>
-              <p className="t5 font-semibold uppercase tracking-widest text-text-muted">O que eu entendi</p>
+              <p className="t6 text-text-muted">O que eu entendi</p>
               <p className="mt-2 t3">{briefing.summary}</p>
               <dl className="mt-3 space-y-1 t3">
                 {(Object.keys(LABELS) as (keyof typeof LABELS)[]).map((k) => briefing.fields[k as keyof typeof briefing.fields] ? (

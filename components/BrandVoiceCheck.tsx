@@ -99,7 +99,7 @@ export default function BrandVoiceCheck({
             {VERDICT_LABEL[result.verdict]} · {result.toneScore}/100
           </span>
         )}
-        {result && !stale && result.cached && <span className="text-[10px] uppercase tracking-wide text-text-muted">cache</span>}
+        {result && !stale && result.cached && <span className="t6 text-text-muted">cache</span>}
         {stale && <span className="text-[11px] text-text-muted">texto mudou — cheque de novo</span>}
       </div>
       {busy === "check" && <Spinner label="Comparando com o briefing e a política da marca..." />}
@@ -140,7 +140,7 @@ export default function BrandVoiceCheck({
               ))}
             </ul>
           )}
-          <p className="mt-2 flex items-center gap-2 text-[10px] uppercase tracking-wide text-text-muted">
+          <p className="mt-2 flex items-center gap-2 t6 text-text-muted">
             {result.demo && <Tag>exemplo — sem chave de IA</Tag>}
             <Link href={`/clients/${clientId}?tab=briefing#voz-da-marca`} className="text-text hover:underline">
               Regras da voz →

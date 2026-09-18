@@ -22,9 +22,9 @@ export default async function LinksOverviewPage() {
       {rows.length === 0 ? (
         <p className="rounded-md border border-dashed border-edge p-4 t3 text-text-muted">Cadastre um cliente para criar os primeiros links.</p>
       ) : (
-        <div className="overflow-x-auto rounded-xl border border-edge bg-surface">
+        <div className="overflow-x-auto rounded-md border border-edge bg-surface">
           <table className="w-full min-w-[520px] text-left t3" data-testid="links-overview">
-            <thead className="t5 uppercase text-text-muted">
+            <thead className="t6 text-text-muted">
               <tr>
                 <th className="px-4 py-2">Cliente</th>
                 <th className="px-4 py-2 text-right">Links</th>

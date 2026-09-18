@@ -410,7 +410,7 @@ export default function SettingsPage() {
                   </p>
                 </div>
                 <span
-                  className={`shrink-0 rounded-xs border px-2 py-0.5 text-[10px] uppercase tracking-wide ${badge.cls}`}
+                  className={`shrink-0 rounded-xs border px-2 py-0.5 t6 ${badge.cls}`}
                 >
                   {badge.label}
                 </span>

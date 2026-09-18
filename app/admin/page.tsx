@@ -152,7 +152,7 @@ export default function AdminPage() {
           </Link>
           <Link
             href="/plans"
-            className="rounded-md bg-accent px-4 py-2 t3 font-medium text-accent-ink transition-opacity hover:opacity-90"
+            className="rounded-md bg-brand-solid px-4 py-2 t3 font-medium text-brand-ink transition-opacity hover:opacity-90"
           >
             Receita & bloqueio
           </Link>
@@ -220,7 +220,7 @@ export default function AdminPage() {
           </p>
         </div>
         <div className="mt-2 h-2 overflow-hidden rounded-full bg-surface-sunken" aria-hidden="true">
-          <div className={`h-full ${spendPct >= 100 ? "bg-negative" : spendPct > 75 ? "bg-caution" : "bg-accent"}`} style={{ width: `${spendPct}%` }} />
+          <div className={`h-full ${spendPct >= 100 ? "bg-negative" : spendPct > 75 ? "bg-caution" : "bg-brand-solid"}`} style={{ width: `${spendPct}%` }} />
         </div>
         <p className="mt-2 t5 text-text-muted">
           {spendPct >= 100 ? "Teto atingido: a IA está pausada até amanhã (UTC). " : ""}
@@ -466,7 +466,7 @@ function AiUsage({ ai }: { ai: Overview["ai"] }) {
         </p>
         <div className="overflow-x-auto">
           <table className="w-full min-w-[560px] text-left t3">
-            <thead className="t5 uppercase text-text-muted">
+            <thead className="t6 text-text-muted">
               <tr>
                 <th className="py-2 pr-3">Conta</th>
                 <th className="py-2 pr-3 text-right">Receita</th>
@@ -507,7 +507,7 @@ function AiUsage({ ai }: { ai: Overview["ai"] }) {
         <SectionTitle>Custo por ação e modelo (30 dias)</SectionTitle>
         <div className="overflow-x-auto">
           <table className="w-full min-w-[520px] text-left t3">
-            <thead className="t5 uppercase text-text-muted">
+            <thead className="t6 text-text-muted">
               <tr>
                 <th className="py-2 pr-3">Ação</th>
                 <th className="py-2 pr-3">Modelo</th>
@@ -541,7 +541,7 @@ function AiUsage({ ai }: { ai: Overview["ai"] }) {
         <SectionTitle>Gasto por dia (US$, estimado pelo uso de tokens)</SectionTitle>
         <div className="overflow-x-auto">
           <table className="w-full min-w-[360px] text-left t3">
-            <thead className="t5 uppercase text-text-muted">
+            <thead className="t6 text-text-muted">
               <tr>
                 <th className="py-2 pr-3">Dia</th>
                 <th className="py-2 pr-3 text-right">Chamadas</th>
@@ -571,7 +571,7 @@ function AiUsage({ ai }: { ai: Overview["ai"] }) {
         <SectionTitle>Uso por conta (30 dias)</SectionTitle>
         <div className="overflow-x-auto">
           <table className="w-full min-w-[480px] text-left t3" data-testid="admin-ai-accounts">
-            <thead className="t5 uppercase text-text-muted">
+            <thead className="t6 text-text-muted">
               <tr>
                 <th className="py-2 pr-3">Conta</th>
                 <th className="py-2 pr-3 text-right">Chamadas</th>

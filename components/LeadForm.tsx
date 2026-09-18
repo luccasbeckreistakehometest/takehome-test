@@ -30,7 +30,7 @@ export default function LeadForm({ slug, agencyName }: { slug: string; agencyNam
 
   if (sent) {
     return (
-      <div className="rounded-xl border border-positive/40 bg-positive-wash p-5 t3" data-testid="lead-sent">
+      <div className="rounded-md border border-positive/40 bg-positive-wash p-5 t3" data-testid="lead-sent">
         <p className="d4">Recebemos! </p>
         <p className="mt-1 text-text-muted">A equipe da {agencyName} vai te chamar no WhatsApp em breve.</p>
       </div>

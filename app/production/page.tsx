@@ -144,11 +144,11 @@ export default function ProductionPage() {
                 setDraggingId(null);
                 if (id) moveProject(id, status);
               }}
-              className={`w-64 shrink-0 rounded-xl border p-2 transition-colors ${
+              className={`w-64 shrink-0 rounded-md border p-2 transition-colors ${
                 isOver ? "border-edge bg-surface-sunken" : "border-transparent"
               }`}
             >
-              <p className="mb-2 flex items-center justify-between px-1 t5 font-semibold uppercase tracking-wider text-text-muted">
+              <p className="mb-2 flex items-center justify-between px-1 t6 text-text-muted">
                 {PROJECT_STATUS_LABELS[status]}
                 <span className="tnum text-text-faint">{column.length}</span>
               </p>

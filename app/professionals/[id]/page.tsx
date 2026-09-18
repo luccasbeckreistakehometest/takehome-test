@@ -270,7 +270,7 @@ export default function ProfessionalPage({
                       )}
                       {applyingTo === project.id && !application && (
                         <div className="mt-3 space-y-2 rounded-md border border-edge bg-background p-3">
-                          <p className="t5 font-semibold uppercase tracking-wide text-text-muted">
+                          <p className="t6 text-text-muted">
                             Mensagem de apresentação
                           </p>
                           <textarea

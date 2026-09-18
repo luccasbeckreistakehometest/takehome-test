@@ -92,7 +92,7 @@ export default function AdminUsers({ agency = "" }: { agency?: string }) {
         </div>
         <div className="overflow-x-auto">
           <table className="w-full min-w-[640px] text-left t3" data-testid="admin-users">
-            <thead className="t5 uppercase text-text-muted">
+            <thead className="t6 text-text-muted">
               <tr>
                 <th className="py-2 pr-3">Conta</th>
                 <th className="py-2 pr-3">Papel</th>

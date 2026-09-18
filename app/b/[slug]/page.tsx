@@ -47,9 +47,9 @@ export default async function BioPage({ params }: Props) {
       <div className="flex flex-col items-center text-center">
         {brand.logo ? (
           // eslint-disable-next-line @next/next/no-img-element
-          <img src={`/api/b/${bio.slug}/logo`} alt={brand.name} width={88} height={88} className="size-22 rounded-2xl object-contain" />
+          <img src={`/api/b/${bio.slug}/logo`} alt={brand.name} width={88} height={88} className="size-22 rounded-md object-contain" />
         ) : (
-          <span className="d3 grid size-22 place-items-center rounded-2xl" style={{ background: primary, color: ink }}>
+          <span className="d3 grid size-22 place-items-center rounded-md" style={{ background: primary, color: ink }}>
             {brand.name.charAt(0).toUpperCase()}
           </span>
         )}
@@ -63,7 +63,7 @@ export default async function BioPage({ params }: Props) {
             <a
               href={`/l/${b.code}`}
               rel="nofollow"
-              className="block rounded-2xl px-5 py-4 text-center font-semibold shadow-sm transition-transform hover:-translate-y-0.5"
+              className="block rounded-md px-5 py-4 text-center font-semibold shadow-sm transition-transform hover:-translate-y-0.5"
               style={{ background: primary, color: ink }}
               data-testid="bio-button"
             >
@@ -76,7 +76,7 @@ export default async function BioPage({ params }: Props) {
 
       {grid.length > 0 && (
         <section className="mt-8">
-          <h2 className="mb-3 text-center t5 font-semibold uppercase tracking-widest text-text-muted">Últimos posts</h2>
+          <h2 className="mb-3 text-center t6 text-text-muted">Últimos posts</h2>
           <div className="grid grid-cols-3 gap-1.5" data-testid="bio-grid">
             {grid.map((item) => {
               const code = item.code ?? fallback;

@@ -65,9 +65,9 @@ export default function MarcaModeChoice({
 
   return (
     <div className="scrim fixed inset-0 z-[80] grid place-items-center p-4">
-      <div className="w-full max-w-2xl animate-pop-in rounded-2xl border border-edge bg-surface p-6 shadow-e2 [transform-origin:center]">
+      <div className="w-full max-w-2xl animate-pop-in rounded-md border border-edge bg-surface p-6 shadow-e2 [transform-origin:center]">
         <div className="mb-1 flex items-center justify-between">
-          <p className="t5 font-semibold uppercase tracking-widest text-text">
+          <p className="t6 text-text-muted">
             Como você quer trabalhar?
           </p>
           <button onClick={onClose} aria-label="Fechar" className="text-text-muted transition-colors hover:text-text">
@@ -85,9 +85,9 @@ export default function MarcaModeChoice({
               key={String(m.self)}
               onClick={() => choose(m.self)}
               disabled={busy !== null}
-              className="group flex flex-col rounded-xl border border-edge bg-surface-sunken p-5 text-left transition-all hover:-translate-y-0.5 hover:border-edge disabled:opacity-60"
+              className="group flex flex-col rounded-md border border-edge bg-surface-sunken p-5 text-left transition-all hover:-translate-y-0.5 hover:border-edge disabled:opacity-60"
             >
-              <span className="grid size-11 place-items-center rounded-xl bg-surface-sunken text-text transition-colors group-hover:bg-surface-sunken group-hover:text-text-ink">
+              <span className="grid size-11 place-items-center rounded-md bg-surface-sunken text-text transition-colors group-hover:bg-surface-sunken group-hover:text-text-ink">
                 <Icon name={m.icon} size={22} />
               </span>
               <span className="mt-3 d4 font-semibold">{m.title}</span>

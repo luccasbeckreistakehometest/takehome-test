@@ -18,7 +18,7 @@ export default function ClicksCard({ clientId, onOpen }: { clientId: string; onO
   const total = links.reduce((sum, l) => sum + l.clicks30, 0);
   const top = [...links].sort((a, b) => b.clicks30 - a.clicks30).slice(0, 3).filter((l) => l.clicks30 > 0);
   return (
-    <div className="rounded-xl border border-edge bg-surface p-5 shadow-sm" data-testid="clicks-card">
+    <div className="rounded-md border border-edge bg-surface p-5 shadow-sm" data-testid="clicks-card">
       <div className="flex flex-wrap items-center justify-between gap-2">
         <p className="flex items-center gap-2 font-medium">
           <Icon name="link" size={16} className="text-text" /> Cliques (30 dias)

@@ -72,7 +72,7 @@ export default function ActivityBell({
       {open && (
         <>
           <div className="fixed inset-0 z-[60]" onClick={() => setOpen(false)} />
-          <div className="fixed right-4 top-16 z-[70] max-h-96 w-80 overflow-y-auto rounded-xl border border-edge bg-surface p-2 shadow-e2 animate-pop-in [transform-origin:top_right]">
+          <div className="fixed right-4 top-16 z-[70] max-h-96 w-80 overflow-y-auto rounded-md border border-edge bg-surface p-2 shadow-e2 animate-pop-in [transform-origin:top_right]">
           {items.length === 0 ? (
             <p className="p-3 t3 text-text-muted">Nada por aqui ainda.</p>
           ) : (
@@ -84,7 +84,7 @@ export default function ActivityBell({
                 className="block rounded-md p-2.5 t3 transition-colors hover:bg-surface-sunken"
               >
                 <p>{item.text}</p>
-                <p className="mt-0.5 text-[10px] uppercase tracking-wide text-text-muted">
+                <p className="mt-0.5 t6 text-text-muted">
                   {new Date(item.createdAt).toLocaleString("pt-BR", {
                     day: "2-digit",
                     month: "2-digit",

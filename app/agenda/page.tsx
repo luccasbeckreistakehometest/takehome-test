@@ -169,7 +169,7 @@ export default function AgendaPage() {
                       <span className="flex items-center gap-2 t5">
                         {post.status === "scheduled" && (
                           <button
-                            className="rounded bg-accent px-2 py-0.5 font-medium text-accent-ink"
+                            className="rounded bg-brand-solid px-2 py-0.5 font-medium text-brand-ink"
                             onClick={async () => {
                               await api(`/api/scheduled-posts/${post.id}`, {
                                 method: "PATCH",
