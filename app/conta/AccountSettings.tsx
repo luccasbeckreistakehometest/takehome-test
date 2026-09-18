@@ -203,7 +203,7 @@ function DataCard({ account }: { account: Account }) {
       </p>
       <a
         href="/api/account/export"
-        className="mt-3 inline-flex items-center rounded-md border border-edge bg-surface-sunken px-3.5 py-2 t3 hover:border-muted"
+        className="mt-3 inline-flex items-center rounded-md border border-edge bg-surface-sunken px-3.5 py-2 t3 hover:border-edge"
         data-testid="export-data"
       >
         Baixar meus dados (JSON)

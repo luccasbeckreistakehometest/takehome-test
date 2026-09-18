@@ -117,7 +117,7 @@ export default function CampaignTab({ client }: { client: Client }) {
                     key={c}
                     type="button"
                     onClick={() => toggleChannel(c)}
-                    className={`rounded-full border px-3 py-1 t5 ${form.channels.includes(c) ? "border-edge bg-surface-sunken text-text" : "border-edge text-text-muted hover:border-muted"}`}
+                    className={`rounded-xs border px-3 py-1 t5 ${form.channels.includes(c) ? "border-edge bg-surface-sunken text-text" : "border-edge text-text-muted hover:border-edge"}`}
                     data-testid="campaign-channel"
                     data-channel={c}
                     aria-pressed={form.channels.includes(c)}

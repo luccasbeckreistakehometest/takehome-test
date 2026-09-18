@@ -131,10 +131,10 @@ export default function ProfessionalForm({
                         : [...form.skills, skill]
                     )
                   }
-                  className={`rounded-full border px-3 py-1 t5 transition-colors ${
+                  className={`rounded-xs border px-3 py-1 t5 transition-colors ${
                     active
                       ? "border-text bg-text text-canvas"
-                      : "border-edge bg-surface-sunken text-text-muted hover:border-muted"
+                      : "border-edge bg-surface-sunken text-text-muted hover:border-edge"
                   }`}
                 >
                   {skill}

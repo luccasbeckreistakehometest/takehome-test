@@ -182,7 +182,7 @@ export default function DeliverableViewer({ deliverable }: { deliverable: Delive
             Baixar </a>
           {latestReview && (
             <span
-              className="t5 rounded-full border px-3 py-1"
+              className="t5 rounded-xs border px-3 py-1"
               style={{
                 borderColor: scoreColor(latestReview.score),
                 color: scoreColor(latestReview.score),

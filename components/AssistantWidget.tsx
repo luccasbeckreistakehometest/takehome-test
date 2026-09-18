@@ -170,9 +170,9 @@ export default function AssistantWidget() {
         ))}
         {busy && (
           <div className="flex w-fit items-center gap-1.5 rounded-sm bg-surface-sunken px-3 py-2.5">
-            <span className="size-1.5 animate-bounce rounded-full bg-muted [animation-delay:0ms]" />
-            <span className="size-1.5 animate-bounce rounded-full bg-muted [animation-delay:150ms]" />
-            <span className="size-1.5 animate-bounce rounded-full bg-muted [animation-delay:300ms]" />
+            <span className="size-1.5 animate-bounce rounded-full bg-text-muted [animation-delay:0ms]" />
+            <span className="size-1.5 animate-bounce rounded-full bg-text-muted [animation-delay:150ms]" />
+            <span className="size-1.5 animate-bounce rounded-full bg-text-muted [animation-delay:300ms]" />
           </div>
         )}
       </div>

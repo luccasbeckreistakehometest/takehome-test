@@ -62,13 +62,13 @@ export default async function AnalyticsPage({ searchParams }: Props) {
 
       <div className="flex flex-wrap gap-2 t3">
         {[7, 30, 90].map((d) => (
-          <Link key={d} href={qs({ days: d })} className={`rounded-full border px-3 py-1 ${d === days ? "border-text bg-text text-canvas" : "border-edge"}`}>
+          <Link key={d} href={qs({ days: d })} className={`rounded-xs border px-3 py-1 ${d === days ? "border-text bg-text text-canvas" : "border-edge"}`}>
             {`${d} dias`}
           </Link>
         ))}
         <span className="mx-1 w-px bg-edge" />
         {["", ...AUDIENCES].map((a) => (
-          <Link key={a || "all"} href={qs({ audience: a })} className={`rounded-full border px-3 py-1 ${a === audience ? "border-text bg-text text-canvas" : "border-edge"}`}>
+          <Link key={a || "all"} href={qs({ audience: a })} className={`rounded-xs border px-3 py-1 ${a === audience ? "border-text bg-text text-canvas" : "border-edge"}`}>
             {AUDIENCE_LABEL[a]}
           </Link>
         ))}

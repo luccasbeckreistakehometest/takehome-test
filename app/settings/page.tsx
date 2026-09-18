@@ -201,7 +201,7 @@ export default function SettingsPage() {
                 className={`cursor-pointer rounded-md border p-3 t3 transition-colors ${
                   settings.aiMode === mode.value
                     ? "border-edge bg-surface-sunken"
-                    : "border-edge bg-surface-sunken hover:border-muted"
+                    : "border-edge bg-surface-sunken hover:border-edge"
                 }`}
               >
                 <input
@@ -409,7 +409,7 @@ export default function SettingsPage() {
                   </p>
                 </div>
                 <span
-                  className={`shrink-0 rounded-full border px-2 py-0.5 text-[10px] uppercase tracking-wide ${badge.cls}`}
+                  className={`shrink-0 rounded-xs border px-2 py-0.5 text-[10px] uppercase tracking-wide ${badge.cls}`}
                 >
                   {badge.label}
                 </span>

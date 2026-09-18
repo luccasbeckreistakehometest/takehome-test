@@ -169,7 +169,7 @@ export default function AttendantTab({ client }: { client: Client }) {
             <label
               key={m.value}
               className={`cursor-pointer rounded-md border p-3 t3 transition-colors ${
-                form.mode === m.value ? "border-edge bg-surface-sunken" : "border-edge bg-surface-sunken hover:border-muted"
+                form.mode === m.value ? "border-edge bg-surface-sunken" : "border-edge bg-surface-sunken hover:border-edge"
               }`}
               data-testid={`mode-${m.value}`}
             >

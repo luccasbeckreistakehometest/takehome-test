@@ -101,9 +101,9 @@ export default function AdminPage() {
     return (
       <div className="space-y-6">
         <Skeleton className="h-9 w-56" />
-        <div className="grid gap-3 sm:grid-cols-3 lg:grid-cols-6">
+        <div className="grid gap-x-8 gap-y-5 border-y border-edge py-4 sm:grid-cols-3 lg:grid-cols-6">
           {Array.from({ length: 6 }).map((_, i) => (
-            <Skeleton key={i} className="h-24" />
+            <Skeleton key={i} className="h-12" />
           ))}
         </div>
       </div>
@@ -179,7 +179,11 @@ export default function AdminPage() {
         </select>
       </div>
 
-      <div role="tablist" aria-label="Seções do admin" className="flex gap-1 overflow-x-auto rounded-lg border border-edge bg-surface-sunken p-1">
+      <div
+        role="tablist"
+        aria-label="Seções do admin"
+        className="flex gap-6 overflow-x-auto border-b border-edge"
+      >
         {TABS.map((t) => (
           <button
             key={t.key}
@@ -187,7 +191,11 @@ export default function AdminPage() {
             type="button"
             aria-selected={tab === t.key}
             onClick={() => setTab(t.key)}
-            className={`whitespace-nowrap rounded-md px-3 py-1.5 t3 transition-colors ${tab === t.key ? "bg-accent text-accent-ink" : "text-text-muted hover:text-text"}`}
+            className={`t3 -mb-px whitespace-nowrap border-b-2 py-2 transition-colors duration-[var(--dur-1)] ${
+              tab === t.key
+                ? "border-text font-medium text-text"
+                : "border-transparent text-text-muted hover:text-text"
+            }`}
             data-testid={`admin-tab-${t.key}`}
           >
             {t.label}
@@ -292,15 +300,19 @@ export default function AdminPage() {
         </div>
       </Card>
 
-      <div className="grid gap-3 sm:grid-cols-3 lg:grid-cols-6">
+      {/* Treze ladrilhos iguais com um ícone e um número gigante viram uma
+          faixa de figuras: o número é Archivo tabular (o Fraunces ignora tnum),
+          o rótulo é t6, e o ícone decorativo sai. */}
+      <dl className="grid gap-x-8 gap-y-5 border-y border-edge py-4 sm:grid-cols-3 lg:grid-cols-6">
         {kpis.map((k) => (
-          <Card key={k.label} hover>
-            <Icon name={k.icon} size={20} className="text-text" />
-            <p className="d3 mt-2">{k.value}</p>
-            <p className="t5 text-text-muted">{k.label}</p>
-          </Card>
+          <div key={k.label} className="min-w-0">
+            <dt className="t6 text-text-muted">{k.label}</dt>
+            <dd className={`n2 mt-1 truncate ${k.value === "0" ? "text-text-faint" : ""}`}>
+              {k.value}
+            </dd>
+          </div>
         ))}
-      </div>
+      </dl>
 
       <div className="grid gap-6 lg:grid-cols-2">
         <Card>

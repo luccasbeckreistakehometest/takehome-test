@@ -841,7 +841,7 @@ export function Spinner({ label }: { label?: string }) {
     <span className="t5 inline-flex items-center gap-2 text-text-muted">
       <span
         aria-hidden
-        className="size-4 animate-spin rounded-full border-2 border-rule border-t-text-text-muted"
+        className="size-4 animate-spin rounded-full border-2 border-rule border-t-text"
       />
       {label}
     </span>

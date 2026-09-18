@@ -229,7 +229,7 @@ export default function ProjectsTab({
                     className={`inline-flex items-center gap-1.5 rounded-md border px-3 py-1.5 t3 transition-colors ${
                       form.mode === option.value
                         ? "border-edge bg-surface-sunken text-text"
-                        : "border-edge bg-surface-sunken text-text-muted hover:border-muted"
+                        : "border-edge bg-surface-sunken text-text-muted hover:border-edge"
                     }`}
                   >
                     <Icon name={option.icon} size={15} />
@@ -281,10 +281,10 @@ export default function ProjectsTab({
                             : [...f.skillsNeeded, skill],
                         }))
                       }
-                      className={`rounded-full border px-3 py-1 t5 transition-colors ${
+                      className={`rounded-xs border px-3 py-1 t5 transition-colors ${
                         active
                           ? "border-text bg-text text-canvas"
-                          : "border-edge bg-surface-sunken text-text-muted hover:border-muted"
+                          : "border-edge bg-surface-sunken text-text-muted hover:border-edge"
                       }`}
                     >
                       {skill}
@@ -986,7 +986,7 @@ function ProjectDetail({ projectId, onBack }: { projectId: string; onBack: () =>
                 className={`rounded-md border px-2.5 py-1 t5 transition-colors ${
                   index === sketchIndex
                     ? "border-edge bg-surface-sunken text-text"
-                    : "border-edge bg-surface-sunken text-text-muted hover:border-muted"
+                    : "border-edge bg-surface-sunken text-text-muted hover:border-edge"
                 }`}
               >
                 v{project.sketches.length - index} ·{" "}

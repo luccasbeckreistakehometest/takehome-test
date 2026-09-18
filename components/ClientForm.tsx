@@ -92,8 +92,8 @@ export default function ClientForm({
     <form onSubmit={submit} className="space-y-5">
       {!initial && (
         <div className="flex flex-wrap items-center gap-2" data-tour="briefing-mode">
-          <button type="button" onClick={() => setMode("text")} className={`rounded-full border px-3 py-1.5 t3 transition-colors ${mode === "text" ? "border-edge bg-surface-sunken text-text" : "border-edge text-text-muted hover:text-text"}`} data-testid="mode-text">Digitar o briefing</button>
-          <button type="button" onClick={() => setMode("voice")} className={`rounded-full border px-3 py-1.5 t3 transition-colors ${mode === "voice" ? "border-edge bg-surface-sunken text-text" : "border-edge text-text-muted hover:text-text"}`} data-testid="mode-voice">Falar o briefing</button>
+          <button type="button" onClick={() => setMode("text")} className={`rounded-xs border px-3 py-1.5 t3 transition-colors ${mode === "text" ? "border-edge bg-surface-sunken text-text" : "border-edge text-text-muted hover:text-text"}`} data-testid="mode-text">Digitar o briefing</button>
+          <button type="button" onClick={() => setMode("voice")} className={`rounded-xs border px-3 py-1.5 t3 transition-colors ${mode === "voice" ? "border-edge bg-surface-sunken text-text" : "border-edge text-text-muted hover:text-text"}`} data-testid="mode-voice">Falar o briefing</button>
           {voiceBriefingId && <span className="t5 text-positive">Preenchido por voz — revise e salve</span>}
         </div>
       )}
@@ -221,10 +221,10 @@ export default function ClientForm({
                   key={channel}
                   type="button"
                   onClick={() => toggleChannel(channel)}
-                  className={`rounded-full border px-3 py-1 t5 transition-colors ${
+                  className={`rounded-xs border px-3 py-1 t5 transition-colors ${
                     active
                       ? "border-text bg-text text-canvas"
-                      : "border-edge bg-surface-sunken text-text-muted hover:border-muted"
+                      : "border-edge bg-surface-sunken text-text-muted hover:border-edge"
                   }`}
                 >
                   {channel}

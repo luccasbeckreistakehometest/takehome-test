@@ -187,7 +187,7 @@ export default function GeneratorTab({
                 className={`rounded-md border px-3 py-1.5 t5 transition-colors ${
                   generation.id === selectedId
                     ? "border-edge bg-surface-sunken text-text"
-                    : "border-edge bg-surface text-text-muted hover:border-muted"
+                    : "border-edge bg-surface text-text-muted hover:border-edge"
                 }`}
               >
                 {new Date(generation.createdAt).toLocaleString("pt-BR", {

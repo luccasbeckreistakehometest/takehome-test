@@ -271,7 +271,7 @@ function ItemCard({
             </p>
             <h2 className="font-semibold">{item.title}</h2>
           </div>
-          <span className={`shrink-0 rounded-full border px-2 py-0.5 t5 ${status.cls}`}>{status.label}</span>
+          <span className={`shrink-0 rounded-xs border px-2 py-0.5 t5 ${status.cls}`}>{status.label}</span>
         </div>
         {item.kind === "post" && item.caption && (
           <p className="whitespace-pre-wrap t3 leading-relaxed">

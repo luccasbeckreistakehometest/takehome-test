@@ -95,7 +95,7 @@ export default function BrandVoiceCheck({
           </Button>
         )}
         {result && !stale && (
-          <span className={`rounded-full border px-2 py-0.5 text-[11px] font-medium ${VERDICT_STYLE[result.verdict]}`} data-testid="voice-verdict">
+          <span className={`rounded-xs border px-2 py-0.5 text-[11px] font-medium ${VERDICT_STYLE[result.verdict]}`} data-testid="voice-verdict">
             {VERDICT_LABEL[result.verdict]} · {result.toneScore}/100
           </span>
         )}
