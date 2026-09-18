@@ -4,7 +4,7 @@ import { useCallback, useEffect, useState } from "react";
 import { api } from "@/lib/api";
 import { fmtMoney, useUiLang } from "@/lib/i18n";
 import { quotaCheck } from "@/lib/scope-rules";
-import { Button, Card, ErrorBox, Input, SectionTitle, Select, Textarea } from "./ui";
+import { Button, ErrorBox, Input, SectionTitle, Select, Textarea } from "./ui";
 import { monthLabel, RequestList, UsageBars, type PackagePayload, type RequestDecision } from "./PackageUsage";
 
 type Guess = { itemKey: string; qty: number; confidence: number; reasoning: string; source: "ai" | "rules" | "manual"; noPackage?: boolean };
@@ -76,7 +76,7 @@ export default function ScopeRequestCard({ clientId }: { clientId: string }) {
   }
 
   return (
-    <Card className="space-y-4" data-testid="scope-request-card">
+    <section className="border-t border-edge pt-3 space-y-4" data-testid="scope-request-card">
       <div>
         <SectionTitle>Solicitar uma produção</SectionTitle>
         {hasPackage && data ? (
@@ -129,7 +129,7 @@ export default function ScopeRequestCard({ clientId }: { clientId: string }) {
             </p>
           )}
           <div className="flex flex-wrap gap-2">
-            <Button onClick={send} disabled={busy || !itemKey} data-testid="scope-send">
+            <Button variant="secondary" onClick={send} disabled={busy || !itemKey} data-testid="scope-send">
               {preview && !preview.inPackage ? "Enviar e ver o valor" : "Enviar pedido"}
             </Button>
             <Button variant="ghost" onClick={() => setGuess(null)}>
@@ -139,6 +139,6 @@ export default function ScopeRequestCard({ clientId }: { clientId: string }) {
         </div>
       )}
       {data && data.requests.length > 0 && <RequestList requests={data.requests.slice(0, 6)} actor="client" onDecide={decide} />}
-    </Card>
+    </section>
   );
 }

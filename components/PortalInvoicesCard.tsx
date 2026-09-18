@@ -3,7 +3,7 @@
 import { useEffect, useState } from "react";
 import { fmtMoney, useUiLang } from "@/lib/i18n";
 import type { InvoiceState } from "@/lib/invoice-rules";
-import { Card, SectionTitle } from "./ui";
+import { SectionTitle } from "./ui";
 
 type Row = { id: string; month: string; total: number; dueDate: string; state: InvoiceState; token: string; paidAt: string | null };
 
@@ -29,14 +29,14 @@ export default function PortalInvoicesCard({ clientId }: { clientId: string }) {
   if (!rows) return null;
   if (rows.length === 0) {
     return (
-      <Card data-testid="portal-invoices-empty">
+      <section data-testid="portal-invoices-empty" className="border-t border-edge pt-3">
         <SectionTitle>Financeiro</SectionTitle>
         <p className="t3 text-text-muted">Nenhuma fatura por aqui ainda. Quando a agência enviar, ela aparece aqui com Pix copia e cola.</p>
-      </Card>
+      </section>
     );
   }
   return (
-    <Card data-testid="portal-invoices">
+    <section data-testid="portal-invoices" className="border-t border-edge pt-3">
       <SectionTitle>Financeiro</SectionTitle>
       <ul className="space-y-1.5 t3">
         {rows.map((row) => (
@@ -55,6 +55,6 @@ export default function PortalInvoicesCard({ clientId }: { clientId: string }) {
           </li>
         ))}
       </ul>
-    </Card>
+    </section>
   );
 }
