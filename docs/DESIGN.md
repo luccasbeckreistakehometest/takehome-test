@@ -203,3 +203,94 @@ display é aberta (1,5 — quinta). `tracking` em `em` para escalar junto com o 
    itálico.
 
 ---
+
+## 4. Grade e ritmo
+
+### 4.1 Três grades, não uma
+
+O produto tem três naturezas e cada uma tem a sua grade. A escala é a mesma; o que muda é o
+enquadramento.
+
+**A · Editorial** — landing, funis, página pública da agência, planos, jurídico.
+Contêiner 1280px, margem lateral 32 / 24 / 16 (desktop / tablet / mobile), **12 colunas**, goteira 24.
+Assimetria nomeada, usada com intenção:
+
+| Split | Colunas | Para quê |
+|---|---|---|
+| `lead` | 7 + 5 | abertura de seção: manchete e lede à esquerda, figura ou dado à direita |
+| `lead-rev` | 5 + 7 | a seção seguinte, para o olho não cair no mesmo lugar duas vezes |
+| `doc` | 8 + 4 | texto corrido + trilho de notas / âncoras |
+| `prose` | 6 centradas | prosa longa (FAQ, jurídico) |
+| `bleed` | 12, sangrando | **uma** imagem de largura total por página, no máximo |
+
+Regra: **duas seções seguidas nunca usam o mesmo split.** Foi exatamente esse o erro da landing atual.
+
+**B · Ferramenta** — app da agência.
+Trilho fixo de 248px à esquerda (colapsa para 64px em ≤1200px, vira gaveta em ≤900px) + conteúdo
+fluido com `max-width: 1180px`. Dentro do conteúdo, 12 colunas, goteira 16 (densidade `compact`).
+Layouts típicos: `8+4` (trabalho + contexto), `12` (tabela), `6+6` (comparação).
+
+**C · Documento** — relatório, proposta, fatura, versão de impressão, carrossel.
+Uma medida só, centrada: **160mm de mancha** numa página A4 retrato (210×297mm), margens
+`24mm 25mm 22mm`. Na tela a mesma peça renderiza a 720px com as mesmas proporções, para que a
+pré-visualização seja a peça. Cabeçalho corrente (cliente · período) e numeração em figura tabular.
+
+### 4.2 Ritmo vertical
+
+Linha de base de **4px**, preferência forte por múltiplos de 8. Toda altura de bloco fecha em 8.
+As `line-height` da §3.2 já são múltiplos de 4 por construção.
+
+Espaçamento entre seções — é aqui que a página passa a ter compasso em vez de `py-24` no mundo todo:
+
+| Contexto | Entre blocos irmãos | Entre seções | Depois de uma abertura `d1`/`d2` |
+|---|---|---|---|
+| Editorial | 32 | **96** (mobile 64) | 40 |
+| Ferramenta | 16 | 32 | 20 |
+| Documento | 24 | 48 (quebra de página quando couber) | 32 |
+
+**Proximidade importa mais do que a régua.** Coisas relacionadas ficam a 8–16px; coisas não
+relacionadas, a 32px ou mais, e com régua entre elas. A tela do workspace hoje usa 24px entre tudo,
+e é por isso que onze cartões diferentes parecem um fluxo só.
+
+### 4.3 Escala de espaçamento
+
+```
+--space-3xs 2    --space-2xs 4    --space-xs 6    --space-sm 8
+--space-md  12   --space-lg  16   --space-xl 20   --space-2xl 24
+--space-3xl 32   --space-4xl 40   --space-5xl 56  --space-6xl 72
+--space-7xl 96   --space-8xl 128
+```
+
+Nada fora desta lista. Sem `p-[13px]`.
+
+### 4.4 Densidade é uma decisão
+
+A densidade é um token de contêiner, não uma propriedade de componente. O mesmo `<Table>` serve o
+relatório e a tela de margem.
+
+```css
+[data-density="comfortable"] { --row-h: 48px; --pad-x: 24px; --pad-y: 20px; --gap: 24px; --ui-size: 16px; }
+[data-density="compact"]     { --row-h: 32px; --pad-x: 12px; --pad-y:  8px; --gap: 12px; --ui-size: 13px; }
+```
+
+- `comfortable`: landing, funis, página pública, relatório, proposta, fatura, onboarding, jurídico.
+- `compact`: workspace, produção, agenda, finance/insights, faturas (lista), admin, calendário, kanban.
+
+Alvo de toque: **mínimo 40×40px de área clicável em qualquer densidade**, mesmo quando o alvo visível
+tem 32px de altura (a diferença entra como padding transparente). No mobile, 44×44.
+
+### 4.5 Raio — sinal, não decoração
+
+O raio diz o que a coisa é. Um produto em que tudo é `rounded-2xl` não diz nada.
+
+| Token | Valor | Onde |
+|---|---|---|
+| `r-none` | 0 | tabela, superfície de documento, coluna editorial, régua, impressão |
+| `r-sm` | 3px | input, botão, checkbox, badge, chip, célula selecionada |
+| `r-md` | 6px | painel, menu, popover, diálogo, imagem de entregável |
+| `r-full` | 9999px | **só** avatar e ponto de status |
+
+Proibido: `rounded-xl`, `rounded-2xl`, `rounded-3xl`. A "pílula" de navegação some junto (vira a aba
+sublinhada da §11).
+
+---
