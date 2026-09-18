@@ -17,33 +17,43 @@ export default function DifferentiatorsStrip() {
   }, []);
   const items = expanded ? STRIP_ITEMS : STRIP_ITEMS.slice(0, COLLAPSED);
   return (
-    <div className="space-y-2">
-      <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4" data-testid="differentiators">
-        {items.map((item) => (
+    // Índice de novidades, não oito cartões iguais: numeral tabular, régua entre
+    // linhas, duas colunas e nenhum selo colorido — "novo" é uma palavra.
+    <section className="border-b border-edge pb-2">
+      <div className="grid sm:grid-cols-2 sm:gap-x-10" data-testid="differentiators">
+        {items.map((item, i) => (
           <Link
             key={item.anchor}
             href={item.href as never}
             data-tour={item.anchor}
             data-testid="differentiator"
-            className="group flex flex-col gap-2 rounded-xl border border-edge bg-surface p-4 transition-colors hover:border-accent/60"
+            className="group flex items-baseline gap-3 border-t border-rule py-3"
           >
-            <span className="flex items-center justify-between gap-2">
-              <span className="grid size-9 place-items-center rounded-lg bg-accent/10 text-accent">
-                <Icon name={item.icon} size={18} />
+            <span className="idx t5 w-6 shrink-0">{String(i + 1).padStart(2, "0")}</span>
+            <span className="min-w-0 flex-1">
+              <span className="t3 block font-medium">
+                {item.title}
+                {item.isNew && <span className="t6 ml-2 align-middle text-text-faint">novo</span>}
               </span>
-              {item.isNew && <span className="rounded-full bg-accent/15 px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wide text-accent">Novo</span>}
+              <span className="t5 measure-prose mt-0.5 block text-text-muted">{item.body}</span>
+              <span className="t5 mt-1 inline-flex items-center gap-1 font-medium underline-offset-4 group-hover:underline">
+                {item.cta}
+                <Icon name="arrow-right" size={16} />
+              </span>
             </span>
-            <p className="font-[family-name:var(--font-display)] text-sm font-semibold leading-tight">{item.title}</p>
-            <p className="flex-1 text-xs text-muted">{item.body}</p>
-            <span className="text-xs font-medium text-accent group-hover:underline">{item.cta} →</span>
           </Link>
         ))}
       </div>
       {STRIP_ITEMS.length > COLLAPSED && (
-        <button type="button" onClick={() => setExpanded((v) => !v)} className="text-sm font-medium text-accent hover:underline" data-testid="differentiators-toggle">
+        <button
+          type="button"
+          onClick={() => setExpanded((v) => !v)}
+          className="t5 mt-3 font-medium underline-offset-4 hover:underline"
+          data-testid="differentiators-toggle"
+        >
           {expanded ? "Mostrar menos" : `Ver todos os diferenciais (${STRIP_ITEMS.length})`}
         </button>
       )}
-    </div>
+    </section>
   );
 }

@@ -39,7 +39,7 @@ export default function BrandAssets({ clientId }: { clientId: string }) {
           ))}
         </select>
         <label className="cursor-pointer rounded-md border border-edge bg-surface-2 px-3.5 py-2 text-sm transition-colors hover:border-accent">
-          {uploading ? "Enviando..." : "⬆ Enviar arquivo"}
+          {uploading ? "Enviando..." : "Enviar arquivo"}
           <input
             type="file"
             className="hidden"
@@ -77,8 +77,7 @@ export default function BrandAssets({ clientId }: { clientId: string }) {
                 <Tag>{ASSET_KIND_LABELS[asset.kind]}</Tag>
               </span>
               <span className="flex gap-2 text-xs">
-                <a href={`/api/assets/${asset.id}`} className="text-accent hover:underline">
-                  ⬇ Baixar
+                <a href={`/api/assets/${asset.id}`} className="text-accent hover:underline">Baixar
                 </a>
                 <button
                   className="text-muted hover:text-red-400"

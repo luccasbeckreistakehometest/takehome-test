@@ -172,16 +172,14 @@ export default function DeliverableViewer({ deliverable }: { deliverable: Delive
               disabled={deciding}
               onClick={approveHere}
               title="Aprova a peça em nome do cliente e dispara as automações"
-            >
-              ✅ Aprovar peça
+            >Aprovar peça
             </Button>
           )}
           <a
             href={`/api/files/${deliverable.id}?download=1`}
             className="rounded border border-edge bg-surface-2 px-2 py-1 text-xs text-muted transition-colors hover:border-accent hover:text-accent"
           >
-            Baixar ⬇
-          </a>
+            Baixar </a>
           {latestReview && (
             <span
               className="rounded-full border px-3 py-1 font-[family-name:var(--font-display)] text-sm font-bold"
@@ -194,7 +192,7 @@ export default function DeliverableViewer({ deliverable }: { deliverable: Delive
             </span>
           )}
           <Button variant="ghost" onClick={runReview} disabled={reviewing}>
-            {reviewing ? "Analisando..." : latestReview ? "Reanalisar com IA" : "🔍 Analisar com IA"}
+            {reviewing ? "Analisando..." : latestReview ? "Reanalisar com IA" : "Analisar com IA"}
           </Button>
         </div>
       </div>

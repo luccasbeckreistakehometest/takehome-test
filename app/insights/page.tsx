@@ -224,7 +224,7 @@ export default function InsightsPage() {
             </span>
           </SectionTitle>
           {data.overdue.length === 0 ? (
-            <p className="text-sm text-muted">Nenhuma demanda atrasada. 🎯</p>
+            <p className="text-sm text-muted">Nenhuma demanda atrasada. </p>
           ) : (
             <div className="space-y-1.5">
               {data.overdue.map((o) => (

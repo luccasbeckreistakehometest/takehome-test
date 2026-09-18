@@ -93,7 +93,7 @@ export default function ClientForm({
       {!initial && (
         <div className="flex flex-wrap items-center gap-2" data-tour="briefing-mode">
           <button type="button" onClick={() => setMode("text")} className={`rounded-full border px-3 py-1.5 text-sm transition-colors ${mode === "text" ? "border-accent bg-accent/10 text-accent" : "border-edge text-muted hover:text-foreground"}`} data-testid="mode-text">Digitar o briefing</button>
-          <button type="button" onClick={() => setMode("voice")} className={`rounded-full border px-3 py-1.5 text-sm transition-colors ${mode === "voice" ? "border-accent bg-accent/10 text-accent" : "border-edge text-muted hover:text-foreground"}`} data-testid="mode-voice">🎙 Falar o briefing</button>
+          <button type="button" onClick={() => setMode("voice")} className={`rounded-full border px-3 py-1.5 text-sm transition-colors ${mode === "voice" ? "border-accent bg-accent/10 text-accent" : "border-edge text-muted hover:text-foreground"}`} data-testid="mode-voice">Falar o briefing</button>
           {voiceBriefingId && <span className="text-xs text-emerald-400">Preenchido por voz — revise e salve</span>}
         </div>
       )}

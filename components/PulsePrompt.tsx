@@ -40,7 +40,7 @@ export default function PulsePrompt({ clientId, refreshKey = 0 }: { clientId: st
   if (!next) {
     return thanks ? (
       <Card className="border-emerald-500/40 bg-emerald-500/5" data-testid="pulse-thanks">
-        <p className="text-sm">Obrigado! Sua resposta chegou na agência. 🙌</p>
+        <p className="text-sm">Obrigado! Sua resposta chegou na agência. </p>
       </Card>
     ) : null;
   }

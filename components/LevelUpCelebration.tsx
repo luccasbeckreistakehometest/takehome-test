@@ -158,13 +158,10 @@ export default function LevelUpCelebration({
           className="flex size-11 shrink-0 items-center justify-center rounded-full text-lg font-bold"
           style={{ backgroundColor: `${color}22`, color, border: `2px solid ${color}` }}
           aria-hidden="true"
-        >
-          ⬆
-        </span>
+        ></span>
         <div className="min-w-0">
           <p className="text-sm font-semibold text-foreground">
-            Você subiu para <span style={{ color }}>{tier}</span>! 🎉
-          </p>
+            Você subiu para <span style={{ color }}>{tier}</span>! </p>
           <p className="text-xs text-muted">
             Continue assim para alcançar o próximo elo.
           </p>

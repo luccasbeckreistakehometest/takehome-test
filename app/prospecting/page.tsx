@@ -123,7 +123,7 @@ export default function ProspectingPage() {
         </div>
         <div className="flex flex-wrap items-center gap-3">
           <Button onClick={discover} disabled={searching || !form.niche || !form.region}>
-            {searching ? "Pesquisando..." : "🔎 Descobrir potenciais clientes"}
+            {searching ? "Pesquisando..." : "Descobrir potenciais clientes"}
           </Button>
           <button
             onClick={() => setManualOpen((v) => !v)}
@@ -228,8 +228,7 @@ export default function ProspectingPage() {
                         className="font-medium text-accent hover:underline"
                         onClick={() => setProposalFor((v) => (v === prospect.id ? null : prospect.id))}
                         data-testid="proposal-toggle"
-                      >
-                        ✦ Proposta em 5 min
+                      >Proposta em 5 min
                       </button>
                       {prospect.status === "new" && (
                         <button
@@ -248,8 +247,7 @@ export default function ProspectingPage() {
                           }
                         }}
                       >
-                        Converter em cliente ✦
-                      </button>
+                        Converter em cliente </button>
                       <button
                         className="text-muted hover:text-red-400"
                         onClick={() => setStatus(prospect, "discarded")}

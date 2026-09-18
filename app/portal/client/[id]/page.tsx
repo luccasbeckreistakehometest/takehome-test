@@ -164,8 +164,7 @@ export default function ClientPortalPage({
               <a
                 href={`/clients/${client.id}`}
                 className="inline-flex items-center gap-1.5 rounded-md bg-accent px-4 py-2 text-sm font-medium text-accent-ink transition-opacity hover:opacity-90"
-              >
-                ⚙ Abrir meu workspace →
+              >Abrir meu workspace →
               </a>
               {client.canChooseMode !== false && (
                 <button
@@ -210,8 +209,7 @@ export default function ClientPortalPage({
           href={`/portal/client/${client.id}/report`}
           data-testid="portal-monthly-report"
           className="inline-flex items-center gap-1.5 rounded-md bg-accent px-4 py-2 text-sm font-medium text-accent-ink transition-opacity hover:opacity-90"
-        >
-          📊 Ver relatório do mês →
+        >Ver relatório do mês →
         </a>
       </Card>
 
@@ -253,8 +251,7 @@ export default function ClientPortalPage({
                               <a
                                 href={`/api/files/${deliverable.id}?download=1`}
                                 className="text-xs text-muted transition-colors hover:text-accent"
-                              >
-                                ⬇ {deliverable.title}
+                              >{deliverable.title}
                               </a>
                               <div className="flex flex-wrap items-center gap-1.5">
                                 <Tag>{APPROVAL_STATUS_LABELS[deliverable.approvalStatus]}</Tag>
@@ -265,8 +262,7 @@ export default function ClientPortalPage({
                                       disabled={busyDeliverable === deliverable.id}
                                       onClick={() => decideDeliverable(deliverable.id, "approved")}
                                       data-testid="approve-deliverable"
-                                    >
-                                      ✅ Aprovar
+                                    >Aprovar
                                     </Button>
                                     <Button
                                       variant="ghost"
@@ -302,8 +298,7 @@ export default function ClientPortalPage({
                       <Button
                         className="!px-3 !py-1.5 text-xs"
                         onClick={() => approveProject(project.id, true)}
-                      >
-                        ✅ Aprovar tudo
+                      >Aprovar tudo
                       </Button>
                       <Button
                         variant="ghost"
@@ -383,9 +378,7 @@ export default function ClientPortalPage({
                   href={`/api/generations/${landing.id}/html?download=1`}
                   className="rounded-md border border-edge bg-surface-2 px-2 py-1.5 text-sm text-muted transition-colors hover:border-accent hover:text-accent"
                   title="Baixar HTML"
-                >
-                  ⬇
-                </a>
+                ></a>
               </span>
             ))}
           </div>
@@ -403,8 +396,7 @@ export default function ClientPortalPage({
               target="_blank"
               rel="noreferrer"
               className="rounded-md border border-edge bg-surface-2 px-3 py-1.5 text-sm text-muted transition-colors hover:border-accent hover:text-accent"
-            >
-              📄 Salvar em PDF
+            >Salvar em PDF
             </a>
           </div>
           <ClientReportView data={JSON.parse(report.content) as ClientReport} />

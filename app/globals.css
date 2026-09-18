@@ -489,6 +489,12 @@ hr {
   hanging-punctuation: first last;
 }
 
+/* Trilho da ferramenta (§4.1B): 248px fixos acima de 1024px; abaixo disso
+   vira gaveta e some do fluxo. */
+.app-rail {
+  width: var(--rail-w);
+}
+
 /* ---------- Casca da página ----------------------------------------------
    O <main> do layout carrega a medida da FERRAMENTA (§4.1B). Uma peça
    editorial precisa dos 1280 e das margens próprias, e antes disso escapava
@@ -506,6 +512,10 @@ hr {
 .main-shell:has(> .full-bleed) {
   max-width: none;
   padding: 0;
+}
+/* Véu da gaveta e de diálogos: tinta do fim da rampa, nos dois temas. */
+.scrim {
+  background: color-mix(in oklab, var(--n-950) 55%, transparent);
 }
 
 /* ---------- Grade editorial (§4.1A) ---------------------------------------

@@ -103,8 +103,7 @@ export default function PortalMonthlyReportPage({ params }: { params: Promise<{ 
               target="_blank"
               rel="noreferrer"
               className="rounded-md border border-edge bg-surface-2 px-3 py-2 text-sm hover:border-accent"
-            >
-              📄 Salvar em PDF
+            >Salvar em PDF
             </a>
           )}
         </div>

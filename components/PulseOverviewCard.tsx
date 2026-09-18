@@ -64,9 +64,9 @@ export default function PulseOverviewCard({ mode }: { mode: "home" | "full" }) {
   if (mode === "home" && rows.length === 0) {
     return (
       <Card data-testid="pulse-overview" data-mode={mode}>
-        <SectionTitle>💓 Pulso dos clientes</SectionTitle>
+        <SectionTitle>Pulso dos clientes</SectionTitle>
         <p className="text-sm text-muted">
-          {data.answered === 0 ? "Nenhuma resposta ainda — os clientes respondem no portal depois de cada aprovação e uma vez por mês." : "Nenhum cliente em risco. 🎉"}
+          {data.answered === 0 ? "Nenhuma resposta ainda — os clientes respondem no portal depois de cada aprovação e uma vez por mês." : "Nenhum cliente em risco. "}
         </p>
         <Link href="/insights#pulso" className="mt-2 inline-block text-xs text-accent hover:underline">
           Ver tendência por cliente →
@@ -77,7 +77,7 @@ export default function PulseOverviewCard({ mode }: { mode: "home" | "full" }) {
   return (
     <Card data-testid="pulse-overview" data-mode={mode} id={mode === "full" ? "pulso" : undefined}>
       <div className="flex items-center justify-between">
-        <SectionTitle>{mode === "home" ? "💓 Clientes em risco" : "💓 Pulso dos clientes"}</SectionTitle>
+        <SectionTitle>{mode === "home" ? "Clientes em risco" : "Pulso dos clientes"}</SectionTitle>
         {mode === "home" && (
           <Link href="/insights#pulso" className="text-xs text-accent hover:underline">
             Ver todos →
@@ -129,7 +129,7 @@ export function ClientPulseCard({ clientId }: { clientId: string }) {
   return (
     <Card data-testid="client-pulse">
       <div className="flex flex-wrap items-center justify-between gap-2">
-        <SectionTitle>💓 Pulso do cliente</SectionTitle>
+        <SectionTitle>Pulso do cliente</SectionTitle>
         <RiskBadge level={view.risk.level} />
       </div>
       <div className="flex flex-wrap items-center gap-4 text-sm">

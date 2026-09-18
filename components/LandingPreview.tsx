@@ -12,7 +12,7 @@ export default function LandingPreview({ generation }: { generation: Generation 
           <Button variant="ghost">Abrir em nova aba ↗</Button>
         </a>
         <a href={`${htmlUrl}?download=1`}>
-          <Button variant="ghost">Baixar HTML ⬇</Button>
+          <Button variant="ghost">Baixar HTML </Button>
         </a>
       </div>
       <div className="overflow-hidden rounded-xl border border-edge bg-white">

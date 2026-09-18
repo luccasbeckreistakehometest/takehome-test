@@ -4,7 +4,7 @@ import { useCallback, useEffect, useRef, useState } from "react";
 import Link from "next/link";
 import type { ActivationRole, ActivationStep } from "@/lib/activation-rules";
 import { ACTIVATION_EVENT } from "@/lib/activation-events";
-import { Card, SectionTitle } from "./ui";
+
 import { Icon } from "./icons";
 
 type Payload = {
@@ -78,50 +78,83 @@ export default function ActivationChecklist({ expect, intro }: { expect: Activat
   const { progress } = data;
 
   return (
-    <Card className="space-y-3" data-testid="activation-checklist" data-role={data.role} data-done={progress.done}>
-      <div className="flex flex-wrap items-center justify-between gap-2">
-        <SectionTitle>{progress.complete ? "Primeiros passos concluídos" : "Primeiros passos"}</SectionTitle>
-        <span className="text-xs font-medium text-muted" data-testid="activation-count">{`${progress.done} de ${progress.total}`}</span>
+    // Lista de ativação: régua entre passos, marcador de estado em vez de
+    // cartão dentro de cartão, e a barra de progresso como fio de 2px — não
+    // como faixa laranja no meio da tela (§5.5: a marca já é o botão da capa).
+    <section
+      className="border-y border-edge py-4"
+      data-testid="activation-checklist"
+      data-role={data.role}
+      data-done={progress.done}
+    >
+      <div className="flex flex-wrap items-baseline justify-between gap-2">
+        <p className="t6 text-text-muted">
+          {progress.complete ? "Primeiros passos concluídos" : "Primeiros passos"}
+        </p>
+        <span className="t5 tnum text-text-muted" data-testid="activation-count">{`${progress.done} de ${progress.total}`}</span>
       </div>
-      {intro && !progress.complete && <p className="-mt-1 text-sm text-muted">{intro}</p>}
-      <div className="h-1.5 overflow-hidden rounded-full bg-surface-2" role="progressbar" aria-valuenow={progress.pct} aria-valuemin={0} aria-valuemax={100} aria-label="Progresso dos primeiros passos">
-        <div className="h-full rounded-full bg-accent transition-all duration-500" style={{ width: `${progress.pct}%` }} />
+      {intro && !progress.complete && <p className="t3 mt-1 text-text-muted">{intro}</p>}
+      <div
+        className="mt-3 h-0.5 bg-surface-sunken"
+        role="progressbar"
+        aria-valuenow={progress.pct}
+        aria-valuemin={0}
+        aria-valuemax={100}
+        aria-label="Progresso dos primeiros passos"
+      >
+        <div
+          className="h-full bg-text transition-[width] duration-[var(--dur-3)] ease-[var(--ease)]"
+          style={{ width: `${progress.pct}%` }}
+        />
       </div>
-      <ol className="grid gap-2 sm:grid-cols-2">
+      <ol className="mt-1 grid sm:grid-cols-2 sm:gap-x-8">
         {data.steps.map((step) => (
-          <li key={step.key} data-testid="activation-step" data-key={step.key} data-done={step.done ? "true" : "false"}>
+          <li
+            key={step.key}
+            data-testid="activation-step"
+            data-key={step.key}
+            data-done={step.done ? "true" : "false"}
+            className="border-b border-rule"
+          >
             <Link
               href={step.href as never}
               onClick={(e) => follow(e, step.href)}
-              className={`flex h-full gap-3 rounded-lg border p-3 transition-colors ${
-                step.done ? "border-edge bg-surface-2/60" : "border-edge bg-surface-2 hover:border-accent/60"
-              }`}
+              className="flex items-baseline gap-3 py-2.5"
             >
               <span
-                className={`grid size-6 shrink-0 place-items-center rounded-full border text-accent-ink ${
-                  step.done ? "border-accent bg-accent" : "border-edge bg-surface"
+                className={`mt-1 grid size-4 shrink-0 place-items-center rounded-full border ${
+                  step.done ? "border-text bg-text text-canvas" : "border-edge"
                 }`}
                 aria-hidden="true"
               >
-                {step.done && <Icon name="check" size={14} />}
+                {step.done && <Icon name="check" size={16} className="size-3" />}
               </span>
-              <span>
-                <span className={`block text-sm font-medium ${step.done ? "text-muted line-through" : ""}`}>{step.label}</span>
-                <span className="block text-xs text-muted">{step.hint}</span>
+              <span className="min-w-0">
+                <span className={`t3 block font-medium ${step.done ? "text-text-faint line-through" : ""}`}>
+                  {step.label}
+                </span>
+                <span className="t5 block text-text-muted">{step.hint}</span>
               </span>
             </Link>
           </li>
         ))}
       </ol>
-      <div className="flex flex-wrap items-center justify-between gap-2">
-        <p className="text-sm text-muted">
-          {progress.complete ? "Tudo pronto — você já usou o essencial." : "Pode fechar quando quiser; os passos continuam marcando sozinhos."}
+      <div className="mt-3 flex flex-wrap items-baseline justify-between gap-2">
+        <p className="t5 text-text-muted">
+          {progress.complete
+            ? "Tudo pronto — você já usou o essencial."
+            : "Pode fechar quando quiser; os passos continuam marcando sozinhos."}
         </p>
-        <button type="button" onClick={dismiss} className="text-sm font-medium text-accent hover:underline" data-testid="activation-dismiss">
+        <button
+          type="button"
+          onClick={dismiss}
+          className="t5 font-medium underline-offset-4 hover:underline"
+          data-testid="activation-dismiss"
+        >
           {progress.complete ? "Fechar" : "Ocultar"}
         </button>
       </div>
-      {error && <p className="text-xs text-red-500">{error}</p>}
-    </Card>
+      {error && <p className="t5 mt-2 text-negative">{error}</p>}
+    </section>
   );
 }

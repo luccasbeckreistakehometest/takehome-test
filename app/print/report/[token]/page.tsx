@@ -50,8 +50,7 @@ export default function PrintMonthlyReportPage({ params }: { params: Promise<{ t
       <button
         onClick={() => window.print()}
         className="fixed bottom-6 right-6 z-50 rounded-full bg-accent px-5 py-3 font-medium text-accent-ink shadow-lg transition-opacity hover:opacity-90 print:hidden"
-      >
-        📄 Salvar como PDF
+      >Salvar como PDF
       </button>
       <div className="mb-6 border-b-2 border-foreground pb-4">
         <p className="text-xs font-bold uppercase tracking-widest text-accent">{payload.agency.name}</p>

@@ -90,7 +90,7 @@ export default function ScopeRequestCard({ clientId }: { clientId: string }) {
       {sent && (
         <p className="rounded-md border border-accent/40 bg-accent/5 p-3 text-sm" data-testid="scope-sent" data-kind={sent}>
           {sent === "in"
-            ? "✅ Pedido enviado! Cabe no seu pacote e a agência já recebeu."
+            ? "Pedido enviado! Cabe no seu pacote e a agência já recebeu."
             : "Esse pedido passa do seu pacote. Aprove o valor abaixo para a agência começar."}
         </p>
       )}
@@ -106,7 +106,7 @@ export default function ScopeRequestCard({ clientId }: { clientId: string }) {
       />
       {!guess ? (
         <Button onClick={hasPackage ? next : send} disabled={busy || text.trim().length < 3} data-testid="scope-next">
-          {busy ? "Enviando..." : hasPackage ? "Continuar" : "📋 Enviar solicitação"}
+          {busy ? "Enviando..." : hasPackage ? "Continuar" : "Enviar solicitação"}
         </Button>
       ) : (
         <div className="space-y-3 rounded-lg border border-edge bg-surface-2 p-3" data-testid="scope-review">

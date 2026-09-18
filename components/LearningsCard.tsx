@@ -167,7 +167,7 @@ export default function LearningsCard({ clientId, canGenerate = true }: { client
   return (
     <Card data-testid="learnings-card">
       <div className="flex flex-wrap items-center justify-between gap-2">
-        <SectionTitle>🔎 O que funciona pra este cliente</SectionTitle>
+        <SectionTitle>O que funciona pra este cliente</SectionTitle>
         <div className="flex items-center gap-1">
           <button onClick={() => setMonth((m) => shiftMonth(m, -1))} className="grid size-7 place-items-center rounded-md border border-edge text-sm hover:border-accent" aria-label="Mês anterior" data-testid="learnings-prev">
             ‹

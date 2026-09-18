@@ -181,17 +181,17 @@ export default function SettingsPage() {
               [
                 {
                   value: "economy",
-                  label: "💸 Econômico",
+                  label: "Econômico",
                   desc: "Modelo mais barato (Sonnet) em tudo. Menor custo possível.",
                 },
                 {
                   value: "balanced",
-                  label: "⚖️ Equilibrado",
+                  label: "Equilibrado",
                   desc: "Sonnet nos entregáveis táticos; Opus em estratégia, identidade, match e análise de arte.",
                 },
                 {
                   value: "premium",
-                  label: "👑 Premium",
+                  label: "Premium",
                   desc: "Opus (modelo topo) em todas as gerações. Máxima qualidade, maior custo.",
                 },
               ] as const

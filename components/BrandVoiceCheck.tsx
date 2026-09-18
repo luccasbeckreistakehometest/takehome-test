@@ -128,8 +128,7 @@ export default function BrandVoiceCheck({
           {result.claims.length > 0 && (
             <ul className="mt-2 space-y-0.5 text-amber-500">
               {result.claims.map((c, i) => (
-                <li key={i}>
-                  ⚑ “{c.text}” — <span className="text-muted">{c.why}</span>
+                <li key={i}>“{c.text}” — <span className="text-muted">{c.why}</span>
                 </li>
               ))}
             </ul>

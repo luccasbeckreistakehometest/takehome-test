@@ -77,7 +77,7 @@ export default function AgendaPage() {
           </p>
         </div>
         <Button onClick={recommend} disabled={recommending}>
-          {recommending ? "Analisando as contas..." : "✦ Recomendar reuniões (IA)"}
+          {recommending ? "Analisando as contas..." : "Recomendar reuniões (IA)"}
         </Button>
       </div>
       {recommending && (
@@ -368,8 +368,7 @@ function MeetingRow({
             rel="noreferrer"
             className="text-muted hover:text-accent"
             title="Adicionar ao Google Calendar"
-          >
-            📅 Calendar
+          >Calendar
           </a>
           <button className="text-muted hover:text-accent" onClick={() => setEditing(true)}>
             Editar

@@ -4,7 +4,7 @@ export const metadata = { title: "Treinamento" };
 
 const TRACKS = [
   {
-    role: "🏢 Agência",
+    role: "Agência",
     steps: [
       "Cadastre o cliente com o briefing mais completo possível (aba Briefing) — ele alimenta toda a IA.",
       "Rode a Estratégia & Deep Dive: a IA pesquisa o mercado real e define personas, concorrentes, apostas e metas.",
@@ -18,7 +18,7 @@ const TRACKS = [
     ],
   },
   {
-    role: "👤 Cliente",
+    role: "Cliente",
     steps: [
       "Receba o link de cadastro da agência e preencha o briefing da sua empresa (5 minutos).",
       "Acesse seu portal para acompanhar produções, baixar arquivos e ler os relatórios executivos.",
@@ -26,7 +26,7 @@ const TRACKS = [
     ],
   },
   {
-    role: "📸 Profissional (fotógrafo/designer)",
+    role: "Profissional (fotógrafo/designer)",
     steps: [
       "Cadastre seu perfil com localização, skills, especialidades e portfolio — é isso que o match da IA usa.",
       "Acompanhe as Oportunidades abertas no seu portal e o chat de cada demanda vinculada.",

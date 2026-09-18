@@ -404,8 +404,7 @@ function ReplyRow({
                 setBusy(false);
               }}
               data-testid="reply-send"
-            >
-              ✅ Aprovar e enviar
+            >Aprovar e enviar
             </Button>
             <Button
               variant="ghost"

@@ -222,11 +222,10 @@ export default function Workspace({
             href={`/clients/${client.id}/report`}
             data-testid="open-monthly-report"
             className="inline-flex items-center gap-1.5 rounded-md border border-edge bg-surface-2 px-3.5 py-2 text-sm transition-colors hover:border-accent hover:text-accent"
-          >
-            📊 Relatório mensal
+          >Relatório mensal
           </Link>
           <Button onClick={runFullKit} disabled={kitRunning}>
-            {kitRunning ? "Gerando kit..." : "✦ Gerar kit completo"}
+            {kitRunning ? "Gerando kit..." : "Gerar kit completo"}
           </Button>
         </div>
       </div>

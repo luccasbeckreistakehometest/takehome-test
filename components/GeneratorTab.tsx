@@ -205,8 +205,7 @@ export default function GeneratorTab({
                   target="_blank"
                   rel="noreferrer"
                   className="rounded-md border border-edge bg-surface px-2.5 py-1 text-xs text-muted transition-colors hover:border-accent hover:text-accent"
-                >
-                  📄 PDF
+                >PDF
                 </a>
                 <Button variant="danger" className="!px-2.5 !py-1 text-xs" onClick={removeSelected}>
                   Excluir versão

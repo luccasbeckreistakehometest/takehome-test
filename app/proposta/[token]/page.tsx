@@ -206,7 +206,7 @@ export default function PublicProposalPage({ params }: { params: Promise<{ token
 
       {accepted ? (
         <Card className="space-y-3 border-emerald-500/40" data-testid="proposal-accepted">
-          <p className="font-[family-name:var(--font-display)] text-xl font-semibold">Proposta aceita! 🎉</p>
+          <p className="font-[family-name:var(--font-display)] text-xl font-semibold">Proposta aceita! </p>
           <p className="text-sm text-muted">A agência já foi avisada e vai entrar em contato para o kickoff.</p>
           {accepted.login ? (
             <div className="rounded-md border border-edge bg-surface-2 p-3 text-sm">

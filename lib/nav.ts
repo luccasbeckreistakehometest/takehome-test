@@ -23,6 +23,20 @@ export const AGENCY_MORE_NAV: NavItem[] = [
   { href: "/plans", label: "Planos", icon: "money", tour: "nav-plans" },
 ];
 
+// Grupos do trilho lateral (§4.1B). A lista acima continua sendo a fonte da
+// verdade — aqui só se diz em que bloco cada item mora, para o trilho ter
+// hierarquia em vez de doze linhas iguais.
+const primaryByHref = (href: string): NavItem => {
+  const found = AGENCY_PRIMARY_NAV.find((item) => item.href === href);
+  if (!found) throw new Error(`nav: item ${href} não existe em AGENCY_PRIMARY_NAV`);
+  return found;
+};
+
+export const AGENCY_NAV_GROUPS: { label: string; items: NavItem[] }[] = [
+  { label: "Operação", items: ["/", "/clients", "/production", "/calendar"].map(primaryByHref) },
+  { label: "Crescimento", items: ["/growth", "/messages", "/insights"].map(primaryByHref) },
+];
+
 function pathMatches(pathname: string, prefix: string): boolean {
   if (prefix === "/") return pathname === "/";
   return pathname === prefix || pathname.startsWith(`${prefix}/`);

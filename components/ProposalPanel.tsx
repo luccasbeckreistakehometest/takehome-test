@@ -79,7 +79,7 @@ export default function ProposalPanel({ prospectId, onAccepted }: { prospectId: 
           </Select>
         </div>
         <Button onClick={generate} disabled={generating} data-testid="proposal-generate">
-          {generating ? "Escrevendo a proposta..." : "✦ Gerar proposta pública"}
+          {generating ? "Escrevendo a proposta..." : "Gerar proposta pública"}
         </Button>
       </div>
       {generating && <Spinner label="A IA está montando a página: pitch, escopo, pacotes e cronograma (~1 min)..." />}

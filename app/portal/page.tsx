@@ -35,8 +35,7 @@ export default function PortalPage() {
 
       <div className="grid gap-4 sm:grid-cols-3">
         <Card className="flex flex-col gap-3">
-          <p className="font-[family-name:var(--font-display)] text-lg font-semibold">
-            🏢 Agência
+          <p className="font-[family-name:var(--font-display)] text-lg font-semibold">Agência
           </p>
           <p className="flex-1 text-sm text-muted">
             Acesso completo: clientes, IA, demandas, prospecção, relatórios e
@@ -48,8 +47,7 @@ export default function PortalPage() {
         </Card>
 
         <Card className="flex flex-col gap-3">
-          <p className="font-[family-name:var(--font-display)] text-lg font-semibold">
-            👤 Cliente
+          <p className="font-[family-name:var(--font-display)] text-lg font-semibold">Cliente
           </p>
           <p className="flex-1 text-sm text-muted">
             Acompanhe estratégia, entregas e relatórios da sua marca.
@@ -75,8 +73,7 @@ export default function PortalPage() {
         </Card>
 
         <Card className="flex flex-col gap-3">
-          <p className="font-[family-name:var(--font-display)] text-lg font-semibold">
-            📸 Profissional
+          <p className="font-[family-name:var(--font-display)] text-lg font-semibold">Profissional
           </p>
           <p className="flex-1 text-sm text-muted">
             Suas demandas, oportunidades abertas, entregas e seu elo.

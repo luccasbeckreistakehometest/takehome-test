@@ -121,7 +121,7 @@ function IdeasContent() {
             onClick={generate}
             disabled={generating || (audience !== "agency" && !targetId)}
           >
-            {generating ? "Gerando..." : "💡 Gerar ideias com base nas trends de hoje"}
+            {generating ? "Gerando..." : "Gerar ideias com base nas trends de hoje"}
           </Button>
           {generating && (
             <Spinner label="Pesquisando tendências recentes e cruzando com a plataforma (2-4 min)..." />
@@ -173,8 +173,7 @@ function IdeasContent() {
                           `/clients/${targetClient.id}?tab=campaign_plan&focus=${encodeURIComponent(focusText)}`
                         )
                       }
-                    >
-                      🎯 Gerar campanha com esta ideia
+                    >Gerar campanha com esta ideia
                     </Button>
                     <Button
                       variant="ghost"
@@ -212,7 +211,7 @@ function IdeasContent() {
                     >
                       {creatingDemand === i
                         ? "IA escrevendo o brief..."
-                        : "📋 Criar demanda desta ideia (IA escreve o brief)"}
+                        : "Criar demanda desta ideia (IA escreve o brief)"}
                     </Button>
                     <Button
                       variant="ghost"
@@ -222,8 +221,7 @@ function IdeasContent() {
                           `/clients/${targetClient.id}?tab=strategy_analysis`
                         )
                       }
-                    >
-                      🔬 Estudo de mercado da conta
+                    >Estudo de mercado da conta
                     </Button>
                   </div>
                 )}

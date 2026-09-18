@@ -1,7 +1,9 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
+import { usePathname } from "next/navigation";
 import { api } from "@/lib/api";
+import { Icon } from "@/components/icons";
 
 type ChatMessage = { role: "user" | "assistant"; content: string };
 
@@ -14,7 +16,14 @@ const SUGGESTIONS = [
 // Assistente flutuante global: fala em linguagem natural e executa ações
 // reais na plataforma (demandas, reuniões, posts). A conversa persiste
 // entre páginas (sessionStorage) enquanto o navegador estiver aberto.
+// Rotas em que o painel NUNCA aparece: são a peça que a agência mostra ao
+// cliente dela (relatório, proposta, fatura, página pública, aprovação) ou a
+// versão de impressão. Um botão flutuante da ferramenta em cima do documento
+// do cliente é o erro que motivou esta regra (§13, bloco 4).
+const DOC_ROUTES = [/^\/print\//, /\/report$/, /^\/proposta\//, /^\/fatura\//, /^\/aprovar\//, /^\/a\//];
+
 export default function AssistantWidget() {
+  const pathname = usePathname() ?? "/";
   const [open, setOpen] = useState(false);
   const [closing, setClosing] = useState(false);
 
@@ -72,31 +81,35 @@ export default function AssistantWidget() {
     }
   }
 
+  if (DOC_ROUTES.some((re) => re.test(pathname))) return null;
+
   if (!open) {
     return (
       <button
         onClick={() => setOpen(true)}
-        className="animate-pop-in fixed bottom-5 right-5 z-50 grid size-14 place-items-center rounded-full bg-accent text-2xl text-accent-ink shadow-2xl transition-transform hover:scale-105"
+        aria-label="Abrir assistente"
+        className="no-print t5 fixed bottom-5 right-5 z-50 inline-flex h-10 items-center gap-2 rounded-sm border border-edge bg-surface px-3 font-medium shadow-e1 transition-colors duration-[var(--dur-1)] hover:bg-surface-sunken"
         title="Assistente — fale o que precisa e ele executa"
       >
-        ✦
+        <Icon name="message" size={16} />
+        Assistente
       </button>
     );
   }
 
   return (
-    <div className={`fixed bottom-5 right-5 z-50 flex h-[34rem] w-[24rem] max-w-[calc(100vw-2.5rem)] flex-col overflow-hidden rounded-2xl border border-edge bg-surface shadow-2xl ${
+    <div className={`no-print fixed bottom-5 right-5 z-50 flex h-[34rem] w-[24rem] max-w-[calc(100vw-2.5rem)] flex-col overflow-hidden rounded-md border border-edge bg-surface shadow-e2 ${
         closing ? "animate-pop-out" : "animate-pop-in"
       }`}>
       {/* Cabeçalho */}
-      <div className="flex items-center justify-between border-b border-edge bg-surface-2 px-4 py-3">
+      <div className="flex items-center justify-between border-b border-rule bg-surface-sunken px-4 py-3">
         <div className="flex items-center gap-2.5">
-          <span className="grid size-8 place-items-center rounded-full bg-accent text-sm text-accent-ink">
-            ✦
+          <span className="grid size-8 place-items-center rounded-full bg-text text-canvas">
+            <Icon name="message" size={16} />
           </span>
           <div>
             <p className="text-sm font-semibold">Assistente</p>
-            <p className="text-[11px] text-muted">
+            <p className="text-[11px] text-text-muted">
               {busy ? "executando..." : "fala que eu faço"}
             </p>
           </div>
@@ -108,7 +121,7 @@ export default function AssistantWidget() {
                 setMessages([]);
                 sessionStorage.removeItem("assistant_chat");
               }}
-              className="rounded-md px-2 py-1 text-xs text-muted transition-colors hover:text-red-400"
+              className="rounded-md px-2 py-1 text-xs text-text-muted transition-colors hover:text-negative"
               title="Limpar conversa"
             >
               ⌫
@@ -116,7 +129,7 @@ export default function AssistantWidget() {
           )}
           <button
             onClick={close}
-            className="rounded-md px-2 py-1 text-sm text-muted transition-colors hover:text-foreground"
+            className="rounded-md px-2 py-1 text-sm text-text-muted transition-colors hover:text-foreground"
             title="Minimizar"
           >
             ✕
@@ -128,15 +141,15 @@ export default function AssistantWidget() {
       <div ref={scrollRef} className="flex-1 space-y-2.5 overflow-y-auto p-3">
         {messages.length === 0 && (
           <div className="space-y-2 pt-4">
-            <p className="text-center text-sm text-muted">
-              Eu <span className="text-accent">executo</span> por você: crio
+            <p className="text-center text-sm text-text-muted">
+              Eu <span className="font-medium text-text">executo</span> por você: crio
               demandas, agendo reuniões e posts.
             </p>
             {SUGGESTIONS.map((suggestion) => (
               <button
                 key={suggestion}
                 onClick={() => send(suggestion)}
-                className="block w-full rounded-lg border border-edge bg-surface-2 px-3 py-2 text-left text-xs text-muted transition-colors hover:border-accent hover:text-foreground"
+                className="block w-full rounded-lg border border-edge bg-surface-sunken px-3 py-2 text-left text-xs text-text-muted transition-colors hover:border-accent hover:text-foreground"
               >
                 “{suggestion}”
               </button>
@@ -146,17 +159,17 @@ export default function AssistantWidget() {
         {messages.map((message, index) => (
           <div
             key={index}
-            className={`max-w-[85%] whitespace-pre-wrap rounded-2xl px-3 py-2 text-sm ${
+            className={`t3 max-w-[85%] whitespace-pre-wrap rounded-sm px-3 py-2 ${
               message.role === "user"
-                ? "ml-auto rounded-br-sm bg-accent text-accent-ink"
-                : "rounded-bl-sm bg-surface-2"
+                ? "ml-auto bg-text text-canvas"
+                : "rounded-bl-sm bg-surface-sunken"
             }`}
           >
             {message.content}
           </div>
         ))}
         {busy && (
-          <div className="flex w-fit items-center gap-1.5 rounded-2xl rounded-bl-sm bg-surface-2 px-3 py-2.5">
+          <div className="flex w-fit items-center gap-1.5 rounded-sm bg-surface-sunken px-3 py-2.5">
             <span className="size-1.5 animate-bounce rounded-full bg-muted [animation-delay:0ms]" />
             <span className="size-1.5 animate-bounce rounded-full bg-muted [animation-delay:150ms]" />
             <span className="size-1.5 animate-bounce rounded-full bg-muted [animation-delay:300ms]" />
@@ -178,16 +191,14 @@ export default function AssistantWidget() {
             }}
             rows={1}
             placeholder="Diga o que precisa..."
-            className="max-h-24 min-h-9 flex-1 resize-none rounded-xl border border-edge bg-surface-2 px-3 py-2 text-sm outline-none transition-colors focus:border-accent"
+            className="max-h-24 min-h-9 flex-1 resize-none rounded-xl border border-edge bg-surface-sunken px-3 py-2 text-sm outline-none transition-colors focus:border-accent"
           />
           <button
             onClick={() => send()}
             disabled={busy || !input.trim()}
-            className="grid size-9 shrink-0 place-items-center rounded-xl bg-accent text-accent-ink transition-opacity hover:opacity-90 disabled:opacity-40"
+            className="grid size-9 shrink-0 place-items-center rounded-sm bg-brand-solid text-brand-ink transition-[filter] duration-[var(--dur-1)] hover:brightness-95 disabled:bg-surface-sunken disabled:text-text-faint"
             title="Enviar"
-          >
-            ➤
-          </button>
+          ></button>
         </div>
       </div>
     </div>

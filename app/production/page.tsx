@@ -186,8 +186,8 @@ export default function ProductionPage() {
                         {project.deadline && ` · até ${project.deadline}`}
                       </p>
                       <div className="mt-1.5 flex items-center gap-1">
-                        {project.mode === "internal" && <Tag>🏠 interna</Tag>}
-                        {project.escrow === "held" && <Tag>💰 escrow</Tag>}
+                        {project.mode === "internal" && <Tag>interna</Tag>}
+                        {project.escrow === "held" && <Tag>escrow</Tag>}
                         {isSaving && (
                           <span className="ml-auto text-xs text-muted">
                             <Spinner />

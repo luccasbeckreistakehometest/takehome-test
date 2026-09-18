@@ -81,7 +81,7 @@ export default function ProfessionalPage({
         </div>
         <div className="flex gap-2">
           <Link href={`/ideas?audience=professional&targetId=${profile.id}`}>
-            <Button variant="ghost">💡 Ideias para mim</Button>
+            <Button variant="ghost">Ideias para mim</Button>
           </Link>
           <Button variant="ghost" onClick={() => setEditing((e) => !e)}>
             {editing ? "Fechar edição" : "Editar perfil"}
@@ -255,8 +255,7 @@ export default function ProfessionalPage({
                                 setApplyingTo(project.id);
                                 setPitch("");
                               }}
-                            >
-                              ✋ Candidatar-se
+                            >Candidatar-se
                             </Button>
                           )
                         )}
@@ -356,7 +355,7 @@ function PortfolioGallery({ professionalId }: { professionalId: string }) {
       <div className="flex items-center justify-between">
         <SectionTitle>Portfolio na plataforma</SectionTitle>
         <label className="cursor-pointer rounded-md border border-edge bg-surface-2 px-3 py-1.5 text-xs transition-colors hover:border-accent">
-          {uploading ? "Enviando..." : "⬆ Adicionar imagem"}
+          {uploading ? "Enviando..." : "Adicionar imagem"}
           <input
             type="file"
             accept="image/jpeg,image/png,image/webp,image/gif"

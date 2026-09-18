@@ -469,7 +469,7 @@ function ProjectDetail({ projectId, onBack }: { projectId: string; onBack: () =>
   const nextActions: { label: string; icon?: IconName; body: Record<string, unknown> }[] = [];
   if (internal) {
     if (project.status === "open") {
-      nextActions.push({ label: "🚀 Iniciar produção", body: { status: "in_progress" } });
+      nextActions.push({ label: "Iniciar produção", body: { status: "in_progress" } });
     }
     if (project.status === "in_review") {
       nextActions.push({ label: "Aprovar entrega", icon: "check", body: { status: "approved" } });
@@ -687,8 +687,7 @@ function ProjectDetail({ projectId, onBack }: { projectId: string; onBack: () =>
                         onClick={() =>
                           patch({ professionalId: application.professionalId, status: "matched" })
                         }
-                      >
-                        ⭐ Definir como preferido
+                      >Definir como preferido
                       </Button>
                     )}
                 </div>
@@ -814,7 +813,7 @@ function ProjectDetail({ projectId, onBack }: { projectId: string; onBack: () =>
             ))}
           </select>
           <label className="cursor-pointer rounded-md border border-edge bg-surface-2 px-3.5 py-2 text-sm text-foreground transition-colors hover:border-accent">
-            {refUploading ? "Enviando..." : "⬆ Enviar referência"}
+            {refUploading ? "Enviando..." : "Enviar referência"}
             <input
               type="file"
               accept="image/jpeg,image/png,image/webp,image/gif,video/mp4,video/quicktime,video/webm"
@@ -872,9 +871,7 @@ function ProjectDetail({ projectId, onBack }: { projectId: string; onBack: () =>
                       href={`/api/files/${reference.id}?download=1`}
                       className="text-muted hover:text-accent"
                       title="Baixar"
-                    >
-                      ⬇
-                    </a>
+                    ></a>
                     <button
                       className="text-muted hover:text-red-400"
                       title="Excluir"
@@ -1044,8 +1041,7 @@ function ProjectDetail({ projectId, onBack }: { projectId: string; onBack: () =>
                     href={`data:image/svg+xml;utf8,${encodeURIComponent(sketch.svg)}`}
                     download="sketch-referencia.svg"
                     className="inline-block rounded-md border border-edge bg-surface-2 px-3 py-1.5 text-xs transition-colors hover:border-accent hover:text-accent"
-                  >
-                    ⬇ Baixar SVG para enviar ao profissional
+                  >Baixar SVG para enviar ao profissional
                   </a>
                 </div>
               </div>
@@ -1204,7 +1200,7 @@ function ProjectDetail({ projectId, onBack }: { projectId: string; onBack: () =>
               className="max-w-xs"
             />
             <label className="cursor-pointer rounded-md bg-accent px-3.5 py-2 text-sm font-medium text-accent-ink transition-opacity hover:opacity-90">
-              {uploading ? "Enviando..." : "⬆ Enviar imagem"}
+              {uploading ? "Enviando..." : "Enviar imagem"}
               <input
                 type="file"
                 accept="image/jpeg,image/png,image/webp,image/gif"

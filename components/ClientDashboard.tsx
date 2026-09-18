@@ -70,7 +70,7 @@ export default function ClientDashboard({
       {client.selfServe && <ActivationChecklist expect="brand" />}
       {isNew && !client.selfServe && (
         <Card className="border-accent/40 bg-accent/5">
-          <SectionTitle>👋 Comece por aqui</SectionTitle>
+          <SectionTitle>Comece por aqui</SectionTitle>
           <ol className="mt-1 list-decimal space-y-1.5 pl-5 text-sm text-muted">
             <li>
               Complete o <button className="text-accent hover:underline" onClick={() => onNavigate("briefing")}>briefing</button> — ele alimenta toda a IA.
@@ -79,7 +79,7 @@ export default function ClientDashboard({
               Gere a <button className="text-accent hover:underline" onClick={() => onNavigate("strategy_analysis")}>Estratégia & Deep Dive</button> (pesquisa real de mercado).
             </li>
             <li>
-              Rode o <button className="text-accent hover:underline" onClick={onRunKit}>✦ Kit completo</button> — campanha, ROI, identidade e social de uma vez.
+              Rode o <button className="text-accent hover:underline" onClick={onRunKit}>Kit completo</button> — campanha, ROI, identidade e social de uma vez.
             </li>
           </ol>
         </Card>
@@ -115,24 +115,22 @@ export default function ClientDashboard({
       <Card>
         <SectionTitle>Ações rápidas</SectionTitle>
         <div className="flex flex-wrap gap-2">
-          <Button onClick={onRunKit}>✦ Gerar kit completo</Button>
+          <Button onClick={onRunKit}>Gerar kit completo</Button>
           <Button variant="ghost" onClick={() => onNavigate("projects")}>
             + Nova demanda
           </Button>
-          <Button variant="ghost" onClick={() => onNavigate("market_pulse")}>
-            📡 Rodar radar de mercado
+          <Button variant="ghost" onClick={() => onNavigate("market_pulse")}>Rodar radar de mercado
           </Button>
-          <Button variant="ghost" onClick={() => onNavigate("client_report")}>
-            📄 Gerar relatório
+          <Button variant="ghost" onClick={() => onNavigate("client_report")}>Gerar relatório
           </Button>
           <Link href={`/ideas?audience=client&targetId=${client.id}`}>
-            <Button variant="ghost">💡 Ideias para esta conta</Button>
+            <Button variant="ghost">Ideias para esta conta</Button>
           </Link>
           <Link href={`/portal/client/${client.id}`}>
-            <Button variant="ghost">👤 Ver como cliente</Button>
+            <Button variant="ghost">Ver como cliente</Button>
           </Link>
           <Link href="/plans">
-            <Button variant="ghost">💎 Planos & coins</Button>
+            <Button variant="ghost">Planos & coins</Button>
           </Link>
         </div>
       </Card>
@@ -227,9 +225,7 @@ export default function ClientDashboard({
                       target="_blank"
                       rel="noreferrer"
                       className="text-xs text-muted hover:text-accent"
-                    >
-                      📅
-                    </a>
+                    ></a>
                   </div>
                 ))}
               </div>
