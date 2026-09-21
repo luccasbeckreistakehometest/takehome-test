@@ -115,22 +115,22 @@ export default function CalendarPage() {
               </option>
             ))}
           </Select>
-          <div className="flex rounded-md border border-edge">
-            <button onClick={() => setView("month")} className={`px-3 py-1.5 t3 ${view === "month" ? "bg-surface-sunken text-text" : "text-text-muted"}`} data-testid="view-month">
+          <div className="flex rounded-sm border border-edge">
+            <button onClick={() => setView("month")} className={`t3 hit-40 px-3 py-1.5 ${view === "month" ? "bg-surface-sunken text-text" : "text-text-muted"}`} data-testid="view-month">
               Mês
             </button>
-            <button onClick={() => setView("week")} className={`px-3 py-1.5 t3 ${view === "week" ? "bg-surface-sunken text-text" : "text-text-muted"}`} data-testid="view-week">
+            <button onClick={() => setView("week")} className={`t3 hit-40 px-3 py-1.5 ${view === "week" ? "bg-surface-sunken text-text" : "text-text-muted"}`} data-testid="view-week">
               Semana
             </button>
           </div>
           <div className="flex items-center gap-1">
-            <button onClick={() => setAnchor((a) => (view === "month" ? addMonths(a, -1) : addDays(a, -7)))} className="grid size-8 place-items-center rounded-md border border-edge hover:border-edge" aria-label="Anterior">
+            <button onClick={() => setAnchor((a) => (view === "month" ? addMonths(a, -1) : addDays(a, -7)))} className="hit-40 grid size-8 place-items-center rounded-sm border border-edge hover:bg-surface-sunken" aria-label="Anterior">
               ‹
             </button>
-            <button onClick={() => setAnchor(todayKey())} className="rounded-md border border-edge px-2 py-1 t5 hover:border-edge">
+            <button onClick={() => setAnchor(todayKey())} className="t5 hit-40 rounded-sm border border-edge px-2 py-1 hover:bg-surface-sunken">
               Hoje
             </button>
-            <button onClick={() => setAnchor((a) => (view === "month" ? addMonths(a, 1) : addDays(a, 7)))} className="grid size-8 place-items-center rounded-md border border-edge hover:border-edge" aria-label="Próximo">
+            <button onClick={() => setAnchor((a) => (view === "month" ? addMonths(a, 1) : addDays(a, 7)))} className="hit-40 grid size-8 place-items-center rounded-sm border border-edge hover:bg-surface-sunken" aria-label="Próximo">
               ›
             </button>
           </div>

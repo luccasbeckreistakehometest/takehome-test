@@ -119,7 +119,7 @@ export default function ActivationChecklist({ expect, intro }: { expect: Activat
             <Link
               href={step.href as never}
               onClick={(e) => follow(e, step.href)}
-              className="flex items-baseline gap-3 py-2.5"
+              className="flex min-h-10 items-baseline gap-3 py-2.5"
             >
               <span
                 className={`mt-1 grid size-4 shrink-0 place-items-center rounded-full border ${

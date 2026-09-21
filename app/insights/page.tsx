@@ -154,7 +154,7 @@ export default function InsightsPage() {
           <div key={kpi.label} className="min-w-0">
             <dt className="t6 text-text-muted">{kpi.label}</dt>
             <dd className="mt-1">
-              <Link href={kpi.href} className="n2 block truncate underline-offset-4 hover:underline">
+              <Link href={kpi.href} className="n2 hit-40 block truncate underline-offset-4 hover:underline">
                 {kpi.value}
               </Link>
             </dd>

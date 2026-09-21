@@ -107,7 +107,7 @@ export default function AgencyPageCard({ origin }: { origin: string }) {
         <span className="font-mono" data-testid="page-url">{publicUrl}</span>
         <CopyButton text={publicUrl} label="Copiar link" />
         {config.published && data.config.slug && (
-          <a href={`/a/${data.config.slug}`} target="_blank" rel="noreferrer" className="text-text hover:underline" data-testid="page-open">
+          <a href={`/a/${data.config.slug}`} target="_blank" rel="noreferrer" className="inline-flex min-h-10 items-center text-text hover:underline" data-testid="page-open">
             Abrir página
           </a>
         )}
@@ -143,7 +143,7 @@ export default function AgencyPageCard({ origin }: { origin: string }) {
           <p className="t6 text-text-muted">Depoimentos</p>
           <button
             type="button"
-            className="t5 text-text hover:underline"
+            className="t5 inline-flex min-h-10 items-center text-text hover:underline"
             onClick={() => setConfig({ ...config, testimonials: [...config.testimonials, { author: "", role: "", text: "" }] })}
             data-testid="testimonial-add"
           >

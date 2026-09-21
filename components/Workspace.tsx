@@ -317,7 +317,7 @@ export default function Workspace({
               data-tour={`ws-tab-${key}`}
               aria-current={tab === key ? "page" : undefined}
               onClick={() => setTab(key)}
-              className={`t3 -mb-px shrink-0 snap-start whitespace-nowrap border-b-2 py-2 transition-colors duration-[var(--dur-1)] ${
+              className={`t3 -mb-px inline-flex min-h-10 shrink-0 snap-start items-center whitespace-nowrap border-b-2 py-2 transition-colors duration-[var(--dur-1)] ${
                 tab === key
                   ? "border-brand-edge font-medium text-text"
                   : "border-transparent text-text-muted hover:text-text"

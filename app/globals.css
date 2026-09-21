@@ -746,6 +746,28 @@ input[type="radio"]:disabled {
       bottom / 100% 12px no-repeat scroll;
 }
 
+/* Alvo de 40x40 SEM esticar a caixa visível (§4.4): a diferença entra como
+   área transparente, do mesmo jeito que o <Button> já fazia. É o que permite
+   um controle de 32px na densidade `compact` continuar tocável no celular. */
+.hit-40 {
+  position: relative;
+}
+.hit-40::after {
+  content: "";
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  width: max(100%, 40px);
+  height: max(100%, 40px);
+  transform: translate(-50%, -50%);
+}
+@media (max-width: 767px) {
+  .hit-40::after {
+    width: max(100%, 44px);
+    height: max(100%, 44px);
+  }
+}
+
 /* Régua decorativa — nunca o único recurso de hierarquia (§5.2). */
 .rule-t {
   box-shadow: inset 0 1px 0 var(--rule);

@@ -479,7 +479,7 @@ export default function LandingPage({
                 key={l}
                 onClick={() => switchLang(l)}
                 aria-pressed={lang === l}
-                className={`t6 underline-offset-4 ${
+                className={`t6 hit-40 inline-flex min-h-10 items-center px-1 underline-offset-4 ${
                   lang === l ? "text-text underline" : "text-text-muted hover:text-text"
                 }`}
               >
