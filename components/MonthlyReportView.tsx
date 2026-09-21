@@ -61,7 +61,7 @@ function Figures({ rows }: { rows: { label: string; value: React.ReactNode; hint
         <div key={row.label} className="flex items-baseline justify-between gap-4 border-b border-rule py-2">
           <dt className="t4 min-w-0 text-text-muted">
             {row.label}
-            {row.hint && <span className="t5 ml-2 text-text-faint">{row.hint}</span>}
+            {row.hint && <span className="t5 ml-2 text-text-muted">{row.hint}</span>}
           </dt>
           <dd className="n3 shrink-0">{row.value}</dd>
         </div>
@@ -77,7 +77,7 @@ function Figures({ rows }: { rows: { label: string; value: React.ReactNode; hint
  * uma tabela que rola de lado não existe no papel.)
  */
 function Source({ children }: { children: React.ReactNode }) {
-  return <p className="t5 measure-prose mt-2 text-text-faint">{children}</p>;
+  return <p className="t5 measure-prose mt-2 text-text-muted">{children}</p>;
 }
 
 export default function MonthlyReportView({
@@ -202,7 +202,7 @@ export default function MonthlyReportView({
                     <td className="t4 py-2 text-text-muted">
                       {APPROVAL_LABEL[item.approvalStatus]}
                       {item.annotations > 0 && (
-                        <span className="t5 block text-text-faint">{item.annotations} anotações</span>
+                        <span className="t5 block text-text-muted">{item.annotations} anotações</span>
                       )}
                     </td>
                     <td className="t4 tnum py-2 text-right text-text-muted">
@@ -309,7 +309,7 @@ export default function MonthlyReportView({
               </li>
             ))}
           </ol>
-          <p className="t5 measure-prose mt-2 text-text-faint" data-testid="report-ai-radar-disclaimer">
+          <p className="t5 measure-prose mt-2 text-text-muted" data-testid="report-ai-radar-disclaimer">
             {data.aiRadar.disclaimer}
           </p>
         </DocSection>

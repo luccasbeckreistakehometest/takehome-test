@@ -111,7 +111,7 @@ export default function ClientMonthlyReportPage({ params }: { params: Promise<{ 
               mês. A IA escreve o resumo executivo e as recomendações.
             </p>
             {payload?.report && (
-              <p className="t5 tnum mt-1 text-text-faint">
+              <p className="t5 tnum mt-1 text-text-muted">
                 Resumo gerado em{" "}
                 {new Date(payload.report.createdAt).toLocaleString(lang === "en" ? "en-US" : "pt-BR")}
               </p>

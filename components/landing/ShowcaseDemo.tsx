@@ -8,7 +8,7 @@ const tx = (lang: Lang, pt: string, en: string) => (lang === "pt" ? pt : en);
 function Frame({ children, lang }: { children: React.ReactNode; lang: Lang }) {
   return (
     <figure className="relative mt-0 rounded-md border border-rule bg-surface px-4 pb-4 pt-7" aria-hidden="true">
-      <figcaption className="t6 absolute right-3 top-2 text-text-faint">{tx(lang, "exemplo", "example")}</figcaption>
+      <figcaption className="t6 absolute right-3 top-2 text-text-muted">{tx(lang, "exemplo", "example")}</figcaption>
       {children}
     </figure>
   );

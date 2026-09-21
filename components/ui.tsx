@@ -233,9 +233,9 @@ export function Field({
       <div className="mb-1 flex items-baseline justify-between gap-2">
         <label htmlFor={id} className="t5 text-text">
           {label}
-          {required && <span className="ml-1 text-text-faint">obrigatório</span>}
+          {required && <span className="ml-1 text-text-muted">obrigatório</span>}
         </label>
-        {counter && <span className="t5 tnum text-text-faint">{counter}</span>}
+        {counter && <span className="t5 tnum text-text-muted">{counter}</span>}
       </div>
       {hint ? (
         <p id={hintId} className="t5 mb-1.5 text-text-muted">
@@ -623,7 +623,7 @@ export function Tabs<T extends string>({
           >
             {t.label}
             {typeof t.count === "number" && (
-              <span className="t5 tnum text-text-faint">{t.count}</span>
+              <span className="t5 tnum text-text-muted">{t.count}</span>
             )}
           </button>
         );
@@ -944,7 +944,7 @@ export function KPI({
         {value}
         {delta !== undefined && <Delta value={delta ?? null} />}
       </p>
-      {note && <p className="t5 text-text-faint">{note}</p>}
+      {note && <p className="t5 text-text-muted">{note}</p>}
     </div>
   );
 }

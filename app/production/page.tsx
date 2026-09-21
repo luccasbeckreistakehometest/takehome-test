@@ -150,7 +150,7 @@ export default function ProductionPage() {
             >
               <p className="mb-2 flex items-center justify-between px-1 t6 text-text-muted">
                 {PROJECT_STATUS_LABELS[status]}
-                <span className="tnum text-text-faint">{column.length}</span>
+                <span className="tnum text-text-muted">{column.length}</span>
               </p>
               <div className="min-h-24 space-y-2">
                 {column.map((project) => {

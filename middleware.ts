@@ -161,6 +161,17 @@ export function portalApiAllowed(session: Pick<SessionPayload, "role" | "refId">
 const deny = (status: 401 | 403) =>
   NextResponse.json({ error: status === 401 ? "Não autenticado" : "Acesso negado" }, { status });
 
+// O layout raiz precisa saber QUAL endereço está sendo servido para decidir a
+// marca da peça (lib/route-brand) e se a casca do produto entra
+// (lib/doc-routes). O App Router não entrega o pathname a um layout de
+// servidor; o porteiro carimba no cabeçalho do request.
+export const PATH_HEADER = "x-marqa-path";
+function pass(request: NextRequest): NextResponse {
+  const headers = new Headers(request.headers);
+  headers.set(PATH_HEADER, request.nextUrl.pathname);
+  return NextResponse.next({ request: { headers } });
+}
+
 export async function middleware(request: NextRequest) {
   const { pathname } = request.nextUrl;
   const method = request.method;
@@ -175,14 +186,14 @@ export async function middleware(request: NextRequest) {
   }
 
   if (isPublicPage(pathname)) {
-    const response = NextResponse.next();
+    const response = pass(request);
     // Páginas com token nunca vão para buscadores.
     if (/^\/(convite|proposta|print|aprovar|fatura)\//.test(pathname)) response.headers.set("X-Robots-Tag", "noindex, nofollow");
     return response;
   }
 
   const isPrivate = PRIVATE_PREFIXES.some((p) => matchesPrefix(pathname, p));
-  if (!isPrivate) return NextResponse.next(); // página desconhecida → 404 do app
+  if (!isPrivate) return pass(request); // página desconhecida → 404 do app
 
   // ---------- Páginas protegidas ----------
   const session = await verifySession(request.cookies.get(SESSION_COOKIE)?.value);
@@ -192,7 +203,7 @@ export async function middleware(request: NextRequest) {
     url.search = "";
     return NextResponse.redirect(url);
   }
-  const response = NextResponse.next();
+  const response = pass(request);
   response.headers.set("X-Robots-Tag", "noindex, nofollow");
   // /admin é exclusivo do admin da plataforma
   if (pathname.startsWith("/admin") && session.role !== "admin") {

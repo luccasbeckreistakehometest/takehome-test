@@ -238,7 +238,7 @@ export default function ClientDashboard({
                     className="flex w-full items-baseline justify-between gap-3 py-2 text-left"
                   >
                     <dt className="t4 text-text-muted">{stat.label}</dt>
-                    <dd className={`n3 ${stat.value === 0 ? "text-text-faint" : ""}`}>{stat.value}</dd>
+                    <dd className={`n3 ${stat.value === 0 ? "text-text-muted" : ""}`}>{stat.value}</dd>
                   </button>
                 </div>
               ))}

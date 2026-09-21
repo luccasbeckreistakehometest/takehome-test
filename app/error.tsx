@@ -20,7 +20,7 @@ export default function ErrorPage({ error, reset }: { error: Error & { digest?: 
             <p className="t1 measure-lede mt-4 text-text-muted">
               Tente de novo. Se continuar, fale com a gente e cite o código abaixo.
             </p>
-            <p className="t3 measure-lede mt-2 text-text-faint" lang="en">
+            <p className="t3 measure-lede mt-2 text-text-muted" lang="en">
               Something went wrong. Try again; if it keeps happening, contact us with the code
               below.
             </p>

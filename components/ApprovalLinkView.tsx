@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import type { LinkItemView } from "@/lib/approval-links-db";
+import { brandStyle } from "@/lib/brand-ramp";
 
 type Lang = "pt" | "en";
 type Agency = { name: string; tagline: string; accentColor: string; logoUrl: string };
@@ -137,11 +138,17 @@ export default function ApprovalLinkView({
   }
 
   return (
-    <div className="mx-auto max-w-xl space-y-5 pb-28" style={{ ["--accent" as string]: agency.accentColor }} data-no-translate data-testid="approval-link-page">
+    // Sem a casca do produto em volta (§10), a peça traz a própria margem.
+    <div
+      className="mx-auto max-w-xl space-y-5 px-4 pb-28 pt-8"
+      style={brandStyle(agency.accentColor) as React.CSSProperties}
+      data-no-translate
+      data-testid="approval-link-page"
+    >
       <div className="flex items-center gap-3">
         {agency.logoUrl ? (
           // eslint-disable-next-line @next/next/no-img-element
-          <img src={agency.logoUrl} alt={agency.name} className="size-11 rounded-lg object-contain" />
+          <img src={agency.logoUrl} alt={agency.name} className="size-11 rounded-sm object-contain" />
         ) : (
           <span className="d4 grid size-11 place-items-center rounded-sm bg-surface-sunken text-text">
             {agency.name.charAt(0).toUpperCase()}
@@ -300,7 +307,7 @@ function ItemCard({
                   onClick={async () => {
                     if (await onDecide("changes_requested", note)) setAsking(false);
                   }}
-                  className="flex-1 rounded-sm border border-transparent bg-brand-solid px-3 py-2.5 font-medium text-brand-ink disabled:cursor-not-allowed disabled:border-rule disabled:bg-surface-sunken disabled:text-text-muted"
+                  className="flex-1 rounded-sm border border-edge bg-surface px-3 py-2.5 font-medium text-text transition-colors hover:bg-surface-sunken disabled:cursor-not-allowed disabled:border-rule disabled:bg-surface-sunken disabled:text-text-muted"
                   data-testid="changes-send"
                 >
                   {t.send}
@@ -316,7 +323,7 @@ function ItemCard({
                 type="button"
                 disabled={busy}
                 onClick={() => onDecide("approved")}
-                className="flex-1 rounded-sm border border-transparent bg-brand-solid px-3 py-2.5 font-semibold text-brand-ink disabled:cursor-not-allowed disabled:border-rule disabled:bg-surface-sunken disabled:text-text-muted"
+                className="flex-1 rounded-sm border border-edge bg-surface px-3 py-2.5 font-medium text-text transition-colors hover:bg-surface-sunken disabled:cursor-not-allowed disabled:border-rule disabled:bg-surface-sunken disabled:text-text-muted"
                 data-testid="item-approve"
               >
                 {t.approve}

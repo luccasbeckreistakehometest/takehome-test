@@ -133,13 +133,13 @@ export default function InvoicesPanel({ clientId, clients = [] }: { clientId?: s
         </div>
         <div>
           <dt className="t6 text-text-muted">Atrasadas</dt>
-          <dd className={`n2 mt-1 ${summary?.overdue.length ? "text-negative" : "text-text-faint"}`}>
+          <dd className={`n2 mt-1 ${summary?.overdue.length ? "text-negative" : "text-text-muted"}`}>
             {summary?.overdue.length ?? 0}
           </dd>
         </div>
         <div>
           <dt className="t6 text-text-muted">Cliente avisou que pagou</dt>
-          <dd className={`n2 mt-1 ${summary?.claimed ? "" : "text-text-faint"}`}>{summary?.claimed ?? 0}</dd>
+          <dd className={`n2 mt-1 ${summary?.claimed ? "" : "text-text-muted"}`}>{summary?.claimed ?? 0}</dd>
         </div>
       </dl>
 

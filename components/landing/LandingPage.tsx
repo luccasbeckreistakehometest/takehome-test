@@ -145,7 +145,7 @@ export default function LandingPage({
                   </li>
                 ))}
               </ul>
-              <p className="t5 mt-3 text-text-faint">
+              <p className="t5 mt-3 text-text-muted">
                 {lang === "pt"
                   ? "Cada item vira um entregável revisável, não um rascunho."
                   : "Every item becomes a reviewable deliverable, not a draft."}
@@ -289,7 +289,7 @@ export default function LandingPage({
                       className="reveal grid grid-cols-[1fr] items-baseline gap-1 border-b border-rule py-4 sm:grid-cols-[7.5rem_1fr] sm:gap-4"
                       style={{ transitionDelay: `${i * 50}ms` }}
                     >
-                      <span className="t6 text-text-faint">{step.when}</span>
+                      <span className="t6 text-text-muted">{step.when}</span>
                       <span className="t2 measure-prose">{step.t}</span>
                     </li>
                   ))}
@@ -477,7 +477,7 @@ export default function LandingPage({
                 onClick={() => switchLang(l)}
                 aria-pressed={lang === l}
                 className={`t6 underline-offset-4 ${
-                  lang === l ? "text-text underline" : "text-text-faint hover:text-text-muted"
+                  lang === l ? "text-text underline" : "text-text-muted hover:text-text"
                 }`}
               >
                 {l.toUpperCase()}

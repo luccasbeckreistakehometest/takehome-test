@@ -1,7 +1,10 @@
 import type { Metadata } from "next";
+import { headers } from "next/headers";
 import Link from "next/link";
 import { Archivo, Fraunces } from "next/font/google";
 import { resolveBrand } from "@/lib/branding";
+import { brandForRoute } from "@/lib/route-brand";
+import { isChromelessRoute } from "@/lib/doc-routes";
 import { brandStyle } from "@/lib/brand-ramp";
 import { getSession } from "@/lib/session";
 import Translator, { LangToggle } from "@/components/Translator";
@@ -79,10 +82,19 @@ export default async function RootLayout({
   children: React.ReactNode;
 }>) {
   const session = await getSession();
-  // Marca exibida no chrome: a da agência da sessão (whitelabel) para a
-  // agência e os convidados dela; plataforma para anônimos e auto-cadastrados.
-  const brand = resolveBrand(session);
-  const isAgency = session?.role === "agency";
+  // O endereço vem carimbado pelo porteiro (middleware.ts): o App Router não
+  // entrega o pathname a um layout de servidor.
+  const pathname = (await headers()).get("x-marqa-path") ?? "";
+  // Marca exibida no chrome: numa PEÇA (proposta, fatura, aprovação,
+  // relatório, página pública) a marca é a da agência DONA daquele endereço —
+  // quem abre o link é o cliente dela, anônimo, e via a marca da plataforma.
+  // Fora das peças: a da agência da sessão (whitelabel) para a agência e os
+  // convidados dela; plataforma para anônimos e auto-cadastrados.
+  const brand = brandForRoute(pathname) ?? resolveBrand(session);
+  // A peça é servida sem a casca do produto (§10): nada de trilho, logo da
+  // plataforma, "Entrar" laranja, rodapé institucional ou FAB por cima.
+  const chromeless = isChromelessRoute(pathname);
+  const isAgency = session?.role === "agency" && !chromeless;
 
   return (
     <html
@@ -102,6 +114,33 @@ export default async function RootLayout({
       <body className="min-h-full">
         <Translator />
         <Track />
+        {chromeless ? (
+          <main className="min-h-dvh">{children}</main>
+        ) : (
+          <AppShell brand={brand} session={session} isAgency={isAgency}>
+            {children}
+          </AppShell>
+        )}
+      </body>
+    </html>
+  );
+}
+
+// A casca do produto. Fica fora do componente de rota para que a peça não
+// precise renderizá-la e depois escondê-la.
+function AppShell({
+  brand,
+  session,
+  isAgency,
+  children,
+}: {
+  brand: ReturnType<typeof resolveBrand>;
+  session: Awaited<ReturnType<typeof getSession>>;
+  isAgency: boolean;
+  children: React.ReactNode;
+}) {
+  return (
+    <>
         <JobsIndicator />
         <Tour kind={tourKind(session)} refId={session?.refId ?? null} />
         <GlobalSearch />
@@ -196,8 +235,7 @@ export default async function RootLayout({
             <SiteFooter brandName={brand.name} tagline={brand.tagline} />
           </div>
         </div>
-        {isAgency && <AssistantWidget />}
-      </body>
-    </html>
+      {isAgency && <AssistantWidget />}
+    </>
   );
 }

@@ -337,7 +337,7 @@ export default function Workspace({
               aria-current={g.key === activeGroup ? "true" : undefined}
               onClick={() => setTab(g.tabs[0].key)}
               className={`t6 py-1 transition-colors duration-[var(--dur-1)] ${
-                g.key === activeGroup ? "text-text" : "text-text-faint hover:text-text-muted"
+                g.key === activeGroup ? "text-text" : "text-text-muted hover:text-text"
               }`}
             >
               {g.label}

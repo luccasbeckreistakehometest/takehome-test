@@ -323,7 +323,7 @@ export default function AgencyHome() {
               {data.extras.pending > 0 && (
                 <p className="t5 mt-1 text-text-muted">{`${data.extras.pending} pedido(s) esperando o cliente aprovar o valor`}</p>
               )}
-              <p className="t5 mt-2 text-text-faint">
+              <p className="t5 mt-2 text-text-muted">
                 Os extras aprovados entram na fatura do mês de cada cliente.
               </p>
             </section>

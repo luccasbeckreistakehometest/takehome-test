@@ -29,7 +29,7 @@ export default function NotFound() {
             <p className="t1 measure-lede mt-4 text-text-muted">
               O link pode estar errado ou a página foi removida.
             </p>
-            <p className="t3 measure-lede mt-2 text-text-faint" lang="en">
+            <p className="t3 measure-lede mt-2 text-text-muted" lang="en">
               We couldn&apos;t find this page. The link may be wrong or the page was removed.
             </p>
             <div className="mt-8 flex flex-wrap gap-3">

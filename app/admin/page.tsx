@@ -307,7 +307,7 @@ export default function AdminPage() {
         {kpis.map((k) => (
           <div key={k.label} className="min-w-0">
             <dt className="t6 text-text-muted">{k.label}</dt>
-            <dd className={`n2 mt-1 truncate ${k.value === "0" ? "text-text-faint" : ""}`}>
+            <dd className={`n2 mt-1 truncate ${k.value === "0" ? "text-text-muted" : ""}`}>
               {k.value}
             </dd>
           </div>

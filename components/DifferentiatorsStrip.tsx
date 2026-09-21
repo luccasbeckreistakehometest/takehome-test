@@ -33,7 +33,7 @@ export default function DifferentiatorsStrip() {
             <span className="min-w-0 flex-1">
               <span className="t3 block font-medium">
                 {item.title}
-                {item.isNew && <span className="t6 ml-2 align-middle text-text-faint">novo</span>}
+                {item.isNew && <span className="t6 ml-2 align-middle text-text-muted">novo</span>}
               </span>
               <span className="t5 measure-prose mt-0.5 block text-text-muted">{item.body}</span>
               <span className="t5 mt-1 inline-flex items-center gap-1 font-medium underline-offset-4 group-hover:underline">

@@ -667,14 +667,16 @@ hr {
   }
 }
 
-/* Numeral de índice editorial: figura tabular grande, tinta fraca, alinhada
-   pela linha de base do título que acompanha. Nunca na cor da marca. */
+/* Numeral de índice editorial: figura tabular, alinhada pela linha de base do
+   título que acompanha. Nunca na cor da marca. Medido a 12px em `text-faint`
+   dava 3,9-4,4:1 — abaixo de AA para um numeral que é a própria navegação da
+   peça; vai para `text-muted`. */
 .idx {
   font-family: var(--font-archivo), "Helvetica Neue", Helvetica, Arial, sans-serif;
   font-variant-numeric: tabular-nums lining-nums;
   font-variation-settings: "wdth" 92;
   font-weight: 500;
-  color: var(--text-faint);
+  color: var(--text-muted);
   letter-spacing: 0.02em;
 }
 
