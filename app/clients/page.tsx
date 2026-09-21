@@ -62,10 +62,10 @@ export default function ClientsPage() {
         </colgroup>
         <thead>
           <tr className="border-b border-edge">
-            <th className="t6 pb-2 text-text-muted">Cliente</th>
-            <th className="t6 pb-2 text-text-muted">Segmento</th>
-            <th className="t6 pb-2 text-text-muted">Canais</th>
-            <th className="t6 pb-2 text-right text-text-muted">Desde</th>
+            <th className="t5 pb-2 text-text-muted">Cliente</th>
+            <th className="t5 pb-2 text-text-muted">Segmento</th>
+            <th className="t5 pb-2 text-text-muted">Canais</th>
+            <th className="t5 pb-2 text-right text-text-muted">Desde</th>
           </tr>
         </thead>
         <tbody>

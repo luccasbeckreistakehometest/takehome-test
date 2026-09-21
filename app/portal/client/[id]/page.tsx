@@ -327,7 +327,7 @@ export default function ClientPortalPage({
       <div className="ed-grid mt-10">
         <section id="conversa" className="c6 scroll-mt-20 space-y-3" data-tour="portal-chat">
           <SectionTitle>Fale com a agência</SectionTitle>
-          <div className="max-h-56 space-y-2 overflow-y-auto">
+          <div className="scroll-y max-h-56 space-y-2">
             {messages.length === 0 && (
               <p className="t3 text-text-muted">Nenhuma mensagem ainda — diga oi!</p>
             )}

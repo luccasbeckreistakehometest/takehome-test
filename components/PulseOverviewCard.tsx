@@ -77,7 +77,7 @@ function PulseRow({ row }: { row: PulseOverviewRow }) {
 
 function RiskBadge({ level }: { level: string }) {
   return (
-    <span className={`t6 rounded-xs border px-2 py-0.5 ${LEVEL_STYLE[level]}`}>{LEVEL_LABEL[level]}</span>
+    <span className={`t5 rounded-xs border px-2 py-0.5 ${LEVEL_STYLE[level]}`}>{LEVEL_LABEL[level]}</span>
   );
 }
 

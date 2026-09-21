@@ -279,53 +279,13 @@ export default function Workspace({
         </Card>
       )}
 
-      {/* Mobile: dois selects (seção e aba) */}
-      <div className="grid grid-cols-2 gap-2 sm:hidden">
-        <label htmlFor="workspace-group" className="sr-only">
-          Seção do workspace
-        </label>
-        <select
-          id="workspace-group"
-          data-testid="workspace-group-select"
-          value={activeGroup}
-          onChange={(e) => {
-            const group = groups.find((g) => g.key === e.target.value);
-            if (group) setTab(group.tabs[0].key);
-          }}
-          className="w-full rounded-md border border-edge bg-surface px-3 py-2 t3 font-medium"
-        >
-          {groups.map((g) => (
-            <option key={g.key} value={g.key} className="bg-surface text-text">
-              {g.label}
-            </option>
-          ))}
-        </select>
-        <label htmlFor="workspace-tab" className="sr-only">
-          Aba do workspace
-        </label>
-        <select
-          id="workspace-tab"
-          data-testid="workspace-tab-select"
-          value={tab}
-          onChange={(e) => setTab(e.target.value as TabKey)}
-          className="w-full rounded-md border border-edge bg-surface px-3 py-2 t3 font-medium text-text"
-        >
-          {(groups.find((g) => g.key === activeGroup)?.tabs ?? []).map(({ key, label }) => (
-            <option key={key} value={key} className="bg-surface text-text">
-              {label}
-            </option>
-          ))}
-        </select>
-      </div>
-
-      {/* Desktop: seções + abas da seção */}
-      {/* Dois níveis de navegação, dois desenhos diferentes (§11): a seção é
-          uma lista de rótulos separada por régua vertical; a aba é sublinhada.
-          Antes os dois eram pílulas, e a ativa era laranja nos dois níveis. */}
-      <div className="hidden sm:block">
+      {/* UMA metáfora de navegação em toda largura (§11.3). No celular eram
+          dois <select> nativos ao lado de controles desenhados; agora as duas
+          fileiras rolam na horizontal com sombra de afordância. */}
+      <div>
         <nav
           aria-label="Seções do cliente"
-          className="flex flex-wrap items-center gap-x-5 gap-y-1"
+          className="scroll-x flex items-center gap-x-5"
           data-testid="workspace-groups"
         >
           {groups.map((g) => (
@@ -336,7 +296,7 @@ export default function Workspace({
               data-tour={`ws-group-${g.key}`}
               aria-current={g.key === activeGroup ? "true" : undefined}
               onClick={() => setTab(g.tabs[0].key)}
-              className={`t6 py-1 transition-colors duration-[var(--dur-1)] ${
+              className={`t6 shrink-0 whitespace-nowrap py-1 transition-colors duration-[var(--dur-1)] ${
                 g.key === activeGroup ? "text-text" : "text-text-muted hover:text-text"
               }`}
             >
@@ -346,7 +306,7 @@ export default function Workspace({
         </nav>
         <nav
           aria-label="Abas da seção"
-          className="mt-2 flex snap-x gap-6 overflow-x-auto border-b border-edge"
+          className="scroll-x mt-2 flex snap-x gap-6 border-b border-edge"
           data-testid="workspace-tabs"
         >
           {(groups.find((g) => g.key === activeGroup)?.tabs ?? []).map(({ key, label }) => (
@@ -357,9 +317,9 @@ export default function Workspace({
               data-tour={`ws-tab-${key}`}
               aria-current={tab === key ? "page" : undefined}
               onClick={() => setTab(key)}
-              className={`t3 -mb-px snap-start whitespace-nowrap border-b-2 py-2 transition-colors duration-[var(--dur-1)] ${
+              className={`t3 -mb-px shrink-0 snap-start whitespace-nowrap border-b-2 py-2 transition-colors duration-[var(--dur-1)] ${
                 tab === key
-                  ? "border-text font-medium text-text"
+                  ? "border-brand-edge font-medium text-text"
                   : "border-transparent text-text-muted hover:text-text"
               }`}
             >

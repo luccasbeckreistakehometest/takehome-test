@@ -695,6 +695,57 @@ input[type="radio"]:disabled {
   cursor: not-allowed;
 }
 
+/* Fileira que rola na horizontal COM afordância (§11.3 / M3): a sombra só
+   aparece do lado em que ainda há conteúdo. Técnica só de CSS — os gradientes
+   `local` rolam junto e tapam as sombras `scroll` quando se chega à ponta —,
+   sem JS e sem medir nada. `--scroll-bg` é a cor do fundo por trás da fileira. */
+.scroll-x {
+  --scroll-bg: var(--canvas);
+  overflow-x: auto;
+  overflow-y: hidden;
+  background:
+    linear-gradient(to right, var(--scroll-bg) 30%, transparent) left center / 28px 100% no-repeat local,
+    linear-gradient(to left, var(--scroll-bg) 30%, transparent) right center / 28px 100% no-repeat local,
+    radial-gradient(farthest-side at 0 50%, color-mix(in oklab, var(--n-950) 18%, transparent), transparent) left center /
+      14px 100% no-repeat scroll,
+    radial-gradient(farthest-side at 100% 50%, color-mix(in oklab, var(--n-950) 18%, transparent), transparent) right center /
+      14px 100% no-repeat scroll;
+  scrollbar-width: thin;
+}
+:root[data-theme="dark"] .scroll-x {
+  background:
+    linear-gradient(to right, var(--scroll-bg) 30%, transparent) left center / 28px 100% no-repeat local,
+    linear-gradient(to left, var(--scroll-bg) 30%, transparent) right center / 28px 100% no-repeat local,
+    radial-gradient(farthest-side at 0 50%, color-mix(in oklab, var(--n-0) 22%, transparent), transparent) left center /
+      14px 100% no-repeat scroll,
+    radial-gradient(farthest-side at 100% 50%, color-mix(in oklab, var(--n-0) 22%, transparent), transparent) right center /
+      14px 100% no-repeat scroll;
+}
+
+/* Mesma afordância na vertical: lista alta que corta no meio de uma linha sem
+   dizer que continua (M3). A sombra de cima e a de baixo aparecem só quando há
+   conteúdo para aquele lado. */
+.scroll-y {
+  --scroll-bg: var(--surface);
+  overflow-y: auto;
+  background:
+    linear-gradient(to bottom, var(--scroll-bg) 30%, transparent) center top / 100% 24px no-repeat local,
+    linear-gradient(to top, var(--scroll-bg) 30%, transparent) center bottom / 100% 24px no-repeat local,
+    radial-gradient(farthest-side at 50% 0, color-mix(in oklab, var(--n-950) 16%, transparent), transparent) center top /
+      100% 12px no-repeat scroll,
+    radial-gradient(farthest-side at 50% 100%, color-mix(in oklab, var(--n-950) 16%, transparent), transparent) center
+      bottom / 100% 12px no-repeat scroll;
+}
+:root[data-theme="dark"] .scroll-y {
+  background:
+    linear-gradient(to bottom, var(--scroll-bg) 30%, transparent) center top / 100% 24px no-repeat local,
+    linear-gradient(to top, var(--scroll-bg) 30%, transparent) center bottom / 100% 24px no-repeat local,
+    radial-gradient(farthest-side at 50% 0, color-mix(in oklab, var(--n-0) 20%, transparent), transparent) center top /
+      100% 12px no-repeat scroll,
+    radial-gradient(farthest-side at 50% 100%, color-mix(in oklab, var(--n-0) 20%, transparent), transparent) center
+      bottom / 100% 12px no-repeat scroll;
+}
+
 /* Régua decorativa — nunca o único recurso de hierarquia (§5.2). */
 .rule-t {
   box-shadow: inset 0 1px 0 var(--rule);

@@ -201,9 +201,9 @@ export default function Pricing({
             <table className="mt-5 w-full table-fixed border-collapse text-left">
               <thead>
                 <tr className="border-b border-edge">
-                  <th className="t6 pb-2 text-text-muted">{t.coins}</th>
-                  <th className="t6 pb-2 text-right text-text-muted">R$</th>
-                  <th className="t6 pb-2 text-right text-text-muted" />
+                  <th className="t5 pb-2 text-text-muted">{t.coins}</th>
+                  <th className="t5 pb-2 text-right text-text-muted">R$</th>
+                  <th className="t5 pb-2 text-right text-text-muted" />
                 </tr>
               </thead>
               <tbody>

@@ -14,7 +14,7 @@ import OnboardingModal from "./OnboardingModal";
 import { ClientPulseCard } from "./PulseOverviewCard";
 import LearningsCard from "./LearningsCard";
 import ActivationChecklist from "./ActivationChecklist";
-import { Button, Dash, EmptyState, Spinner } from "./ui";
+import { Button, type Column, Dash, EmptyState, Skeleton, Table } from "./ui";
 import { buttonClass } from "@/lib/button-class";
 
 type DashboardData = {
@@ -57,13 +57,76 @@ export default function ClientDashboard({
     api<DashboardData>(`/api/clients/${client.id}/dashboard`).then(setData);
   }, [client.id]);
 
-  if (!data) return <Spinner label="Carregando dashboard..." />;
+  // Esqueleto com a MESMA caixa do conteúdo final (§11.4), não um spinner
+  // centrado que não diz nada sobre o que vem.
+  if (!data)
+    return (
+      <div className="space-y-8" aria-busy="true" aria-label="Carregando o painel do cliente">
+        <div className="grid gap-x-8 gap-y-5 sm:grid-cols-3 lg:grid-cols-4">
+          {Array.from({ length: 4 }).map((_, i) => (
+            <div key={i} className="space-y-2">
+              <Skeleton className="h-3 w-20" />
+              <Skeleton className="h-7 w-24" />
+            </div>
+          ))}
+        </div>
+        <div className="ed-grid">
+          <div className="c8 space-y-2">
+            {Array.from({ length: 8 }).map((_, i) => (
+              <Skeleton key={i} className="h-8 w-full" />
+            ))}
+          </div>
+          <div className="c4 space-y-2">
+            {Array.from({ length: 4 }).map((_, i) => (
+              <Skeleton key={i} className="h-16 w-full" />
+            ))}
+          </div>
+        </div>
+      </div>
+    );
 
   const isNew = data.stats.generations === 0;
 
   const deliverableTypes = (
     Object.keys(GENERATION_LABELS) as GenerationType[]
   ).filter((type) => landingEnabled || type !== "landing_page");
+
+
+  const deliverableColumns: Column<(typeof deliverableTypes)[number]>[] = [
+    {
+      key: "type",
+      header: "Entregáveis",
+      width: "auto",
+      cell: (type) => (
+        <button
+          type="button"
+          onClick={() => onNavigate(type)}
+          className="t3 block text-left font-medium underline-offset-4 hover:underline"
+        >
+          {GENERATION_LABELS[type]}
+        </button>
+      ),
+    },
+    {
+      key: "count",
+      header: "Vezes",
+      width: "96px",
+      align: "right",
+      cell: (type) => (data.byType[type]?.count ? data.byType[type].count : <Dash />),
+    },
+    {
+      key: "latest",
+      header: "Último",
+      width: "128px",
+      align: "right",
+      cell: (type) =>
+        data.byType[type]?.latestAt ? (
+          <span className="tnum">{new Date(data.byType[type].latestAt!).toLocaleDateString("pt-BR")}</span>
+        ) : (
+          <Dash />
+        ),
+    },
+  ];
 
   return (
     // Tela de ferramenta (§4.4, densidade compact): trabalho à esquerda em 8
@@ -112,44 +175,17 @@ export default function ClientDashboard({
 
       <div className="ed-grid mt-8">
         <div className="c8">
-          {/* Entregáveis: tabela, não vinte botões-caixa */}
+          {/* Entregáveis: a tabela do sistema (§9.1) — largura declarada,
+              contagem e data à direita em figura tabular, cabeçalho alinhado
+              igual à célula. */}
           <section>
-            <table className="w-full table-fixed border-collapse text-left">
-              <colgroup>
-                <col />
-                <col className="w-24" />
-                <col className="w-32" />
-              </colgroup>
-              <thead>
-                <tr className="border-b border-edge">
-                  <th className="t6 pb-2 text-text-muted">Entregáveis</th>
-                  <th className="t6 pb-2 text-right text-text-muted">Vezes</th>
-                  <th className="t6 pb-2 text-right text-text-muted">Último</th>
-                </tr>
-              </thead>
-              <tbody>
-                {deliverableTypes.map((type) => {
-                  const info = data.byType[type];
-                  return (
-                    <tr key={type} className="border-b border-rule">
-                      <td className="py-2">
-                        <button
-                          type="button"
-                          onClick={() => onNavigate(type)}
-                          className="t3 block text-left font-medium underline-offset-4 hover:underline"
-                        >
-                          {GENERATION_LABELS[type]}
-                        </button>
-                      </td>
-                      <td className="n3 py-2 text-right">{info?.count ? info.count : <Dash />}</td>
-                      <td className="t5 tnum py-2 text-right text-text-muted">
-                        {info?.latestAt ? new Date(info.latestAt).toLocaleDateString("pt-BR") : <Dash />}
-                      </td>
-                    </tr>
-                  );
-                })}
-              </tbody>
-            </table>
+            <Table
+              caption="Entregáveis gerados para este cliente, por tipo"
+              rows={deliverableTypes}
+              rowKey={(type) => type}
+              minWidth={420}
+              columns={deliverableColumns}
+            />
           </section>
 
           <section className="mt-10">

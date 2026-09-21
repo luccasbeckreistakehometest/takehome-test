@@ -198,13 +198,13 @@ export default function InvoicesPanel({ clientId, clients = [] }: { clientId?: s
                 </div>
                 <div className="flex items-center gap-2">
                   <span className="n3">{fmtMoney(invoice.total, lang)}</span>
-                  <span className={`t6 rounded-xs border px-2 py-0.5 ${STATE_STYLE[invoice.state]}`}>{STATE_LABEL[invoice.state]}</span>
+                  <span className={`t5 rounded-xs border px-2 py-0.5 ${STATE_STYLE[invoice.state]}`}>{STATE_LABEL[invoice.state]}</span>
                 </div>
               </div>
               <div className="mt-3 flex flex-wrap gap-2 t3">
                 {invoice.status === "draft" && (
                   <>
-                    <Button onClick={() => act(invoice, "send")} disabled={!ready} title={ready ? "" : "Cadastre sua chave Pix em Configurações"} data-testid="invoice-send">
+                    <Button variant="secondary" onClick={() => act(invoice, "send")} disabled={!ready} title={ready ? "" : "Cadastre sua chave Pix em Configurações"} data-testid="invoice-send">
                       Enviar
                     </Button>
                     <Button variant="ghost" onClick={() => setEditing(editing === invoice.id ? null : invoice.id)}>
@@ -214,7 +214,7 @@ export default function InvoicesPanel({ clientId, clients = [] }: { clientId?: s
                 )}
                 {(invoice.status === "sent" || invoice.status === "paid_claimed") && (
                   <>
-                    <Button onClick={() => act(invoice, "paid")} data-testid="invoice-confirm">
+                    <Button variant="secondary" onClick={() => act(invoice, "paid")} data-testid="invoice-confirm">
                       Confirmar pagamento
                     </Button>
                     <Button variant="ghost" onClick={() => remind(invoice)} data-testid="invoice-remind">

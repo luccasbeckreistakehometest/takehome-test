@@ -185,9 +185,9 @@ export default function MonthlyReportView({
               </colgroup>
               <thead>
                 <tr className="border-b border-edge">
-                  <th className="t6 pb-2 text-text-muted">Entrega</th>
-                  <th className="t6 pb-2 text-text-muted">Situação</th>
-                  <th className="t6 pb-2 text-right text-text-muted">Data</th>
+                  <th className="t5 pb-2 text-text-muted">Entrega</th>
+                  <th className="t5 pb-2 text-text-muted">Situação</th>
+                  <th className="t5 pb-2 text-right text-text-muted">Data</th>
                 </tr>
               </thead>
               <tbody>

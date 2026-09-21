@@ -172,7 +172,7 @@ export default function AgencyPageCard({ origin }: { origin: string }) {
           {data.portfolio.length === 0 ? (
             <p className="t5 text-text-muted">Nenhuma entrega em imagem ainda.</p>
           ) : (
-            <div className="max-h-56 space-y-1 overflow-y-auto">
+            <div className="scroll-y max-h-56 space-y-1">
               {data.portfolio.map((item) => (
                 <label key={item.id} className="flex items-center gap-2 rounded-md border border-edge bg-surface-sunken px-2.5 py-1.5 t3" data-testid="portfolio-option">
                   <input type="checkbox" checked={portfolioIds.includes(item.id)} onChange={() => setPortfolioIds((l) => toggle(l, item.id))} className="accent-[var(--brand-solid)]" />
@@ -193,7 +193,7 @@ export default function AgencyPageCard({ origin }: { origin: string }) {
             Mostrar a faixa “quem confia na gente”
           </label>
           <p className="mb-2 t5 text-text-muted">Marque apenas quem consentiu em aparecer. O logo vem dos arquivos de identidade visual do cliente; sem logo, mostra o nome.</p>
-          <div className="max-h-56 space-y-1 overflow-y-auto">
+          <div className="scroll-y max-h-56 space-y-1">
             {data.clients.map((client) => (
               <label key={client.id} className="flex items-center gap-2 rounded-md border border-edge bg-surface-sunken px-2.5 py-1.5 t3" data-testid="showcase-option">
                 <input type="checkbox" checked={clientIds.includes(client.id)} onChange={() => setClientIds((l) => toggle(l, client.id))} className="accent-[var(--brand-solid)]" />

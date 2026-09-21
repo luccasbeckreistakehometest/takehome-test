@@ -115,7 +115,7 @@ export default async function AnalyticsPage({ searchParams }: Props) {
           <h2 className="mb-3 d4">Origens e campanhas</h2>
           <div className="overflow-x-auto">
             <table className="w-full min-w-[320px] text-left t3" data-testid="analytics-sources">
-              <thead className="t6 text-text-muted">
+              <thead className="t5 text-text-muted">
                 <tr>
                   <th className="py-1.5 pr-2">Origem</th>
                   <th className="py-1.5 pr-2">Campanha</th>
@@ -144,7 +144,7 @@ export default async function AnalyticsPage({ searchParams }: Props) {
         <h2 className="mb-3 d4">Cadastros recentes (1º toque)</h2>
         <div className="overflow-x-auto">
           <table className="w-full min-w-[480px] text-left t3" data-testid="analytics-signups">
-            <thead className="t6 text-text-muted">
+            <thead className="t5 text-text-muted">
               <tr>
                 <th className="py-1.5 pr-2">Conta</th>
                 <th className="py-1.5 pr-2">Público</th>
@@ -176,7 +176,7 @@ export default async function AnalyticsPage({ searchParams }: Props) {
         ) : (
           <div className="overflow-x-auto">
             <table className="w-full min-w-[320px] text-left t3" data-testid="analytics-activation">
-              <thead className="t6 text-text-muted">
+              <thead className="t5 text-text-muted">
                 <tr>
                   <th className="py-1.5 pr-2">Passo</th>
                   <th className="py-1.5 text-right">Contas</th>

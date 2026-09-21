@@ -180,7 +180,7 @@ function RadarResult({ run, trend, sample = false }: { run: Run; trend: number |
         <SectionTitle>Pergunta por pergunta</SectionTitle>
         <div className="overflow-x-auto">
           <table className="w-full min-w-[560px] text-left t3">
-            <thead className="t6 text-text-muted">
+            <thead className="t5 text-text-muted">
               <tr>
                 <th className="py-1.5 pr-2">Pergunta</th>
                 <th className="py-1.5 pr-2">Marcas citadas</th>

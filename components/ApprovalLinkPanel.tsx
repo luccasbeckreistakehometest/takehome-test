@@ -129,7 +129,7 @@ export default function ApprovalLinkPanel({ clientId }: { clientId: string }) {
             Nada pendente: crie posts no calendário ou suba entregas nas demandas deste cliente.
           </p>
         ) : (
-          <ul className="max-h-72 space-y-1.5 overflow-y-auto">
+          <ul className="scroll-y max-h-72 space-y-1.5">
             {candidates.map((c) => {
               const key = `${c.kind}:${c.id}`;
               return (
@@ -214,7 +214,7 @@ export function ApprovalLinkDialog({
   return (
     <div className="fixed inset-0 z-[70] flex items-end justify-center scrim p-4 sm:items-center" onClick={onClose}>
       <div
-        className="max-h-[90vh] w-full max-w-lg overflow-y-auto rounded-md border border-edge bg-surface p-5 shadow-e2"
+        className="scroll-y max-h-[90vh] w-full max-w-lg rounded-md border border-edge bg-surface p-5 shadow-e2"
         onClick={(e) => e.stopPropagation()}
         data-testid="approval-link-dialog"
       >

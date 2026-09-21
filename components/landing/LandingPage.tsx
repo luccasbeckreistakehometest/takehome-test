@@ -331,7 +331,10 @@ export default function LandingPage({
           <div className="ed">
             <div className="reveal">
               <h2 className="d3">{t.compare.title}</h2>
-              <div className="mt-10 overflow-x-auto">
+              {/* M9: a 390 a coluna "Com a Marqa" ficava fora da tela sem
+                  nenhum sinal de que havia mais. `.scroll-x` põe a sombra do
+                  lado em que ainda há conteúdo. */}
+              <div className="scroll-x mt-10">
                 <table className="w-full min-w-[34rem] table-fixed border-collapse text-left">
                   <colgroup>
                     <col className="w-[22%]" />
@@ -341,7 +344,7 @@ export default function LandingPage({
                   <thead>
                     <tr className="border-b border-edge">
                       {t.compare.head.map((h) => (
-                        <th key={h} className="t6 pb-3 pr-4 text-text-muted">
+                        <th key={h} className="t5 pb-3 pr-4 text-text-muted">
                           {h}
                         </th>
                       ))}

@@ -26,7 +26,7 @@ export default async function RadarOverviewPage() {
       ) : (
         <div className="overflow-x-auto rounded-md border border-edge bg-surface">
           <table className="w-full min-w-[480px] text-left t3" data-testid="radar-overview">
-            <thead className="t6 text-text-muted">
+            <thead className="t5 text-text-muted">
               <tr>
                 <th className="px-4 py-2">Cliente</th>
                 <th className="px-4 py-2 text-right">Perguntas</th>

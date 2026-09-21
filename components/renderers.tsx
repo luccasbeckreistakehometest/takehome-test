@@ -352,7 +352,7 @@ export function StrategyAnalysisView({
         <SectionTitle>Metas</SectionTitle>
         <div className="overflow-x-auto">
           <table className="w-full text-left t3">
-            <thead className="t6 text-text-muted">
+            <thead className="t5 text-text-muted">
               <tr>
                 <th className="py-2 pr-4">Meta</th>
                 <th className="py-2 pr-4">Métrica</th>
@@ -645,7 +645,7 @@ export function RoiProjectionView({
         <SectionTitle>Métricas — antes → projetado → real</SectionTitle>
         <div className="overflow-x-auto">
           <table className="w-full text-left t3">
-            <thead className="t6 text-text-muted">
+            <thead className="t5 text-text-muted">
               <tr>
                 <th className="py-2 pr-4">Métrica</th>
                 <th className="py-2 pr-4">Antes</th>

@@ -317,7 +317,7 @@ export default function AdminPage() {
       <div className="grid gap-6 lg:grid-cols-2">
         <Card>
           <SectionTitle>Clientes ({data.clients.length})</SectionTitle>
-          <div className="max-h-80 space-y-1.5 overflow-y-auto">
+          <div className="scroll-y max-h-80 space-y-1.5">
             {data.clients.map((c) => (
               <Link
                 key={c.id}
@@ -334,7 +334,7 @@ export default function AdminPage() {
 
         <Card>
           <SectionTitle>Profissionais ({data.professionals.length})</SectionTitle>
-          <div className="max-h-80 space-y-1.5 overflow-y-auto">
+          <div className="scroll-y max-h-80 space-y-1.5">
             {data.professionals.map((p) => (
               <Link
                 key={p.id}
@@ -371,7 +371,7 @@ export default function AdminPage() {
 
         <Card>
           <SectionTitle>Contas de acesso ({data.users.length})</SectionTitle>
-          <div className="max-h-80 space-y-1.5 overflow-y-auto">
+          <div className="scroll-y max-h-80 space-y-1.5">
             {data.users.map((u) => (
               <div
                 key={u.username}
@@ -389,7 +389,7 @@ export default function AdminPage() {
 
         <Card>
           <SectionTitle>Convites ({data.invites.length})</SectionTitle>
-          <div className="max-h-80 space-y-1.5 overflow-y-auto">
+          <div className="scroll-y max-h-80 space-y-1.5">
             {data.invites.length === 0 ? (
               <p className="t3 text-text-muted">Nenhum convite gerado. Agências geram em Configurações.</p>
             ) : (
@@ -412,7 +412,7 @@ export default function AdminPage() {
       <div className="grid gap-6 lg:grid-cols-3">
         <Card>
           <SectionTitle>Leads da página pública ({data.leads.total})</SectionTitle>
-          <ul className="max-h-72 space-y-1.5 overflow-y-auto t3">
+          <ul className="scroll-y max-h-72 space-y-1.5 t3">
             {data.leads.recent.map((l) => (
               <li key={l.id} className="rounded-md border border-edge bg-surface-sunken px-3 py-2">
                 <span className="font-medium">{l.name}</span>
@@ -431,7 +431,7 @@ export default function AdminPage() {
               </Tag>
             ))}
           </div>
-          <ul className="max-h-60 space-y-1.5 overflow-y-auto t3">
+          <ul className="scroll-y max-h-60 space-y-1.5 t3">
             {data.proposals.recent.map((p) => (
               <li key={p.id} className="flex items-center justify-between gap-2 rounded-md border border-edge bg-surface-sunken px-3 py-2">
                 <span className="truncate">{p.prospectName}</span>
@@ -443,7 +443,7 @@ export default function AdminPage() {
         </Card>
         <Card>
           <SectionTitle>Pulso dos clientes ({data.pulse.responses})</SectionTitle>
-          <ul className="max-h-72 space-y-1.5 overflow-y-auto t3">
+          <ul className="scroll-y max-h-72 space-y-1.5 t3">
             {data.pulse.recent.map((p, i) => (
               <li key={`${p.clientId}-${i}`} className="flex items-center justify-between gap-2 rounded-md border border-edge bg-surface-sunken px-3 py-2">
                 <span className="truncate">{p.clientName ?? "(removido)"}</span>
@@ -470,7 +470,7 @@ function AiUsage({ ai }: { ai: Overview["ai"] }) {
         </p>
         <div className="overflow-x-auto">
           <table className="w-full min-w-[560px] text-left t3">
-            <thead className="t6 text-text-muted">
+            <thead className="t5 text-text-muted">
               <tr>
                 <th className="py-2 pr-3">Conta</th>
                 <th className="py-2 pr-3 text-right">Receita</th>
@@ -511,7 +511,7 @@ function AiUsage({ ai }: { ai: Overview["ai"] }) {
         <SectionTitle>Custo por ação e modelo (30 dias)</SectionTitle>
         <div className="overflow-x-auto">
           <table className="w-full min-w-[520px] text-left t3">
-            <thead className="t6 text-text-muted">
+            <thead className="t5 text-text-muted">
               <tr>
                 <th className="py-2 pr-3">Ação</th>
                 <th className="py-2 pr-3">Modelo</th>
@@ -545,7 +545,7 @@ function AiUsage({ ai }: { ai: Overview["ai"] }) {
         <SectionTitle>Gasto por dia (US$, estimado pelo uso de tokens)</SectionTitle>
         <div className="overflow-x-auto">
           <table className="w-full min-w-[360px] text-left t3">
-            <thead className="t6 text-text-muted">
+            <thead className="t5 text-text-muted">
               <tr>
                 <th className="py-2 pr-3">Dia</th>
                 <th className="py-2 pr-3 text-right">Chamadas</th>
@@ -575,7 +575,7 @@ function AiUsage({ ai }: { ai: Overview["ai"] }) {
         <SectionTitle>Uso por conta (30 dias)</SectionTitle>
         <div className="overflow-x-auto">
           <table className="w-full min-w-[480px] text-left t3" data-testid="admin-ai-accounts">
-            <thead className="t6 text-text-muted">
+            <thead className="t5 text-text-muted">
               <tr>
                 <th className="py-2 pr-3">Conta</th>
                 <th className="py-2 pr-3 text-right">Chamadas</th>
