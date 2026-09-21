@@ -16,6 +16,9 @@ import { EM_DASH } from "@/lib/type";
 import { fmtMoney } from "@/lib/i18n";
 import { openAfter } from "@/lib/open-later";
 
+// Quantos clientes a Hoje mostra antes de mandar para o catálogo.
+const HOME_CLIENTS = 8;
+
 type Overview = {
   pendingApplications: {
     id: string;
@@ -257,8 +260,11 @@ export default function AgencyHome() {
                 }
               />
             ) : (
+              /* A Hoje media 4.403px de setenta linhas iguais: mostra as oito
+                 primeiras e diz quantas faltam — a tela é de PRIORIDADE, não
+                 catálogo; o catálogo é /clients. */
               <ul>
-                {data.clients.map((client) => (
+                {data.clients.slice(0, HOME_CLIENTS).map((client) => (
                   <li key={client.id} className="border-b border-rule">
                     <Link
                       href={`/clients/${client.id}`}
@@ -272,6 +278,17 @@ export default function AgencyHome() {
                     </Link>
                   </li>
                 ))}
+                {data.clients.length > HOME_CLIENTS && (
+                  <li className="border-b border-rule">
+                    <Link
+                      href="/clients"
+                      className="t5 flex min-h-10 items-center text-text-muted transition-colors duration-[var(--dur-1)] hover:bg-surface-sunken hover:text-text"
+                      data-testid="home-clients-more"
+                    >
+                      Mais {data.clients.length - HOME_CLIENTS} clientes na carteira
+                    </Link>
+                  </li>
+                )}
               </ul>
             )}
           </div>

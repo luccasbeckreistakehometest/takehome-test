@@ -26,6 +26,7 @@ const LEVEL_STYLE: Record<string, string> = {
   ok: "border-positive/50 bg-positive-wash text-positive",
 };
 const LEVEL_LABEL: Record<string, string> = { risk: "Em risco", watch: "Atenção", ok: "Saudável" };
+const LEVEL_TEXT: Record<string, string> = { risk: "text-negative", watch: "text-caution", ok: "text-text" };
 
 export function flagText(flag: RiskFlag): string {
   const base = REASON_LABEL[flag.reason];
@@ -50,6 +51,30 @@ export function TrendBars({ trend }: { trend: TrendPoint[] }) {
   );
 }
 
+function PulseRow({ row }: { row: PulseOverviewRow }) {
+  return (
+    <Link
+      href={`/clients/${row.id}`}
+      className="flex flex-wrap items-baseline justify-between gap-2 border-b border-rule py-2 transition-colors duration-[var(--dur-1)] hover:bg-surface-sunken"
+      data-testid="pulse-row"
+      data-level={row.risk.level}
+    >
+      <span className="flex items-center gap-2">
+        <span className="t2">{row.latestScore ? PULSE_FACES[row.latestScore as 1 | 2 | 3] : EM_DASH}</span>
+        <span className="t3 font-medium">{row.name}</span>
+        {row.latestNps !== null && <span className="t5 tnum text-text-muted">NPS {row.latestNps}</span>}
+      </span>
+      <span className="t5 flex flex-wrap items-center gap-2 text-text-muted">
+        {row.risk.flags.map((f) => (
+          <span key={f.reason}>{flagText(f)}</span>
+        ))}
+        <TrendBars trend={row.trend} />
+        <RiskBadge level={row.risk.level} />
+      </span>
+    </Link>
+  );
+}
+
 function RiskBadge({ level }: { level: string }) {
   return (
     <span className={`t6 rounded-xs border px-2 py-0.5 ${LEVEL_STYLE[level]}`}>{LEVEL_LABEL[level]}</span>
@@ -64,7 +89,14 @@ export default function PulseOverviewCard({ mode }: { mode: "home" | "full" }) {
     api<Overview>("/api/pulse/overview").then((d) => setData((prev) => prev ?? d)).catch(() => {});
   }, []);
   if (!data) return null;
-  const rows = mode === "home" ? data.atRisk : data.clients;
+  // "Todos" não é uma lista de setenta linhas idênticas: em `full` a tela
+  // resume a distribuição e lista só quem pede ação. O selo positivo deixa de
+  // ser gasto setenta vezes (§5.3 — semântica é estado, não decoração).
+  const counts = { risk: 0, watch: 0, ok: 0 } as Record<string, number>;
+  for (const c of data.clients) counts[c.risk.level] = (counts[c.risk.level] ?? 0) + 1;
+  const needsAction = data.clients.filter((c) => c.risk.level !== "ok");
+  const healthy = data.clients.filter((c) => c.risk.level === "ok");
+  const rows = mode === "home" ? data.atRisk : needsAction;
   if (mode === "home" && rows.length === 0) {
     return (
       <section data-testid="pulse-overview" data-mode={mode}>
@@ -90,33 +122,47 @@ export default function PulseOverviewCard({ mode }: { mode: "home" | "full" }) {
           </Link>
         )}
       </div>
-      {rows.length === 0 ? (
-        <p className="t4 mt-2 text-text-muted">Nenhum cliente cadastrado.</p>
+      {mode === "full" && (
+        <dl className="mt-3 flex flex-wrap gap-x-10 gap-y-3" data-testid="pulse-summary">
+          {(["risk", "watch", "ok"] as const).map((level) => (
+            <div key={level}>
+              <dt className="t5 text-text-muted">{LEVEL_LABEL[level]}</dt>
+              <dd className={`n2 ${counts[level] ? LEVEL_TEXT[level] : "text-text-faint"}`}>{counts[level] ?? 0}</dd>
+            </div>
+          ))}
+          <div>
+            <dt className="t5 text-text-muted">Responderam</dt>
+            <dd className="n2">{data.answered}</dd>
+          </div>
+        </dl>
+      )}
+      {rows.length === 0 && mode === "full" && data.clients.length > 0 ? null : rows.length === 0 ? (
+        <p className="t4 mt-3 text-text-muted">Nenhum cliente cadastrado.</p>
       ) : (
-        <div>
+        <div className="mt-3">
+          {mode === "full" && (
+            <p className="t5 mb-2 text-text-muted">
+              {rows.length === 1 ? "1 cliente pede atenção" : `${rows.length} clientes pedem atenção`}
+            </p>
+          )}
           {rows.map((row) => (
-            <Link
-              key={row.id}
-              href={`/clients/${row.id}`}
-              className="flex flex-wrap items-baseline justify-between gap-2 border-b border-rule py-2 transition-colors duration-[var(--dur-1)] hover:bg-surface-sunken"
-              data-testid="pulse-row"
-              data-level={row.risk.level}
-            >
-              <span className="flex items-center gap-2">
-                <span className="t2">{row.latestScore ? PULSE_FACES[row.latestScore as 1 | 2 | 3] : EM_DASH}</span>
-                <span className="t3 font-medium">{row.name}</span>
-                {row.latestNps !== null && <span className="t5 tnum text-text-muted">NPS {row.latestNps}</span>}
-              </span>
-              <span className="t5 flex flex-wrap items-center gap-2 text-text-muted">
-                {row.risk.flags.map((f) => (
-                  <span key={f.reason}>{flagText(f)}</span>
-                ))}
-                <TrendBars trend={row.trend} />
-                <RiskBadge level={row.risk.level} />
-              </span>
-            </Link>
+            <PulseRow key={row.id} row={row} />
           ))}
         </div>
+      )}
+      {mode === "full" && healthy.length > 0 && (
+        // Os saudáveis continuam a um clique — só param de gastar o selo
+        // positivo setenta vezes e de somar oito mil pixels de rolagem.
+        <details className="mt-3 border-t border-rule pt-2" data-testid="pulse-healthy">
+          <summary className="t5 inline-flex min-h-10 cursor-pointer items-center text-text-muted hover:text-text">
+            {healthy.length === 1 ? "1 cliente saudável" : `${healthy.length} clientes saudáveis`}
+          </summary>
+          <div className="mt-1">
+            {healthy.map((row) => (
+              <PulseRow key={row.id} row={row} />
+            ))}
+          </div>
+        </details>
       )}
     </section>
   );

@@ -8,7 +8,7 @@ import { currentMonth, shiftMonth } from "@/lib/report-aggregate";
 import { formatHours } from "@/lib/finance-rules";
 import type { MarginReport } from "@/lib/finance-db";
 import { MARGIN_LABEL, MARGIN_STYLE } from "@/components/TimeTab";
-import { ActionBar, Button, Column, EmptyState, ErrorBox, Field, Input, InputAffix, SectionTitle, Table } from "@/components/ui";
+import { ActionBar, Button, Column, EmptyState, ErrorBox, Field, InputAffix, SectionTitle, Table } from "@/components/ui";
 import { Icon } from "@/components/icons";
 import { buttonClass } from "@/lib/button-class";
 

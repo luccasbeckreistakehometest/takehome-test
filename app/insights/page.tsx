@@ -3,7 +3,7 @@
 import { useEffect, useState } from "react";
 import Link from "next/link";
 import { api } from "@/lib/api";
-import { Card, SectionTitle, Skeleton, Tag } from "@/components/ui";
+import { Card, Column, EmptyState, Pagination, SectionTitle, Skeleton, Table, Tag } from "@/components/ui";
 import TierBadge, { TierProgress } from "@/components/TierBadge";
 import PulseOverviewCard from "@/components/PulseOverviewCard";
 import { Icon, type IconName } from "@/components/icons";
@@ -58,6 +58,9 @@ const TYPE_LABELS: Record<string, string> = {
 export default function InsightsPage() {
   const lang = useUiLang();
   const [data, setData] = useState<Insights | null>(null);
+  // A carteira paginada: a tela media 8.016px listando os mesmos ~70 clientes
+  // duas vezes (§9.1 pede fim de paginação como estado obrigatório).
+  const [page, setPage] = useState(1);
 
   useEffect(() => {
     const load = () => api<Insights>("/api/insights").then(setData).catch(() => {});
@@ -93,6 +96,27 @@ export default function InsightsPage() {
     { label: "Reuniões futuras", value: String(data.counts.meetingsUpcoming), icon: "calendar", href: "/agenda" },
     { label: "Posts agendados", value: String(data.counts.scheduledPosts), icon: "send", href: "/agenda" },
     { label: "Horas & margem", value: "Abrir", icon: "clock", href: "/finance" },
+  ];
+
+  const PER_PAGE = 10;
+  const clientPages = Math.max(1, Math.ceil(data.clients.length / PER_PAGE));
+  const currentPage = Math.min(page, clientPages);
+  const pageRows = data.clients.slice((currentPage - 1) * PER_PAGE, currentPage * PER_PAGE);
+  const clientColumns: Column<Insights["clients"][number]>[] = [
+    {
+      key: "name",
+      header: "Cliente",
+      width: "240px",
+      cell: (c) => (
+        <Link href={`/clients/${c.id}`} className="flex items-center gap-2 font-medium underline-offset-4 hover:underline">
+          <span className="size-2 shrink-0 rounded-full" style={{ backgroundColor: TIER_COLORS[c.tier.tier] }} />
+          <span className="truncate">{c.name}</span>
+        </Link>
+      ),
+    },
+    { key: "tier", header: "Elo", width: "110px", cell: (c) => c.tier.tier },
+    { key: "paid", header: "Pagas", width: "90px", align: "right", cell: (c) => c.paidProjects },
+    { key: "gen", header: "Entregáveis", width: "120px", align: "right", cell: (c) => c.generations },
   ];
 
   const funnelMax = Math.max(1, ...Object.values(data.funnel.byStatus));
@@ -248,30 +272,21 @@ export default function InsightsPage() {
         {/* Clientes por elo */}
         <Card>
           <SectionTitle>Carteira de clientes</SectionTitle>
-          {data.clients.length === 0 ? (
-            <p className="t3 text-text-muted">Nenhum cliente cadastrado.</p>
-          ) : (
-            <div className="space-y-2">
-              {data.clients.map((c) => (
-                <Link
-                  key={c.id}
-                  href={`/clients/${c.id}`}
-                  className="flex items-center justify-between gap-3 rounded-md border border-edge bg-surface-sunken px-3 py-2 t3 transition-colors hover:border-edge"
-                >
-                  <span className="flex items-center gap-2">
-                    <span
-                      className="size-2 rounded-full"
-                      style={{ backgroundColor: TIER_COLORS[c.tier.tier] }}
-                    />
-                    <span className="font-medium">{c.name}</span>
-                  </span>
-                  <span className="t5 text-text-muted">
-                    {c.paidProjects} pagas · {c.generations} entregáveis
-                  </span>
-                </Link>
-              ))}
-            </div>
-          )}
+          <Table
+            caption="Clientes da carteira por elo, demandas pagas e entregáveis gerados"
+            rows={pageRows}
+            rowKey={(c) => c.id}
+            minWidth={560}
+            columns={clientColumns}
+            empty={
+              <EmptyState
+                icon="briefcase"
+                title="Cada cliente da carteira aparece aqui com elo, demandas pagas e entregáveis."
+                condition="O primeiro entra assim que você cadastrar um cliente."
+              />
+            }
+          />
+          {clientPages > 1 && <Pagination page={currentPage} pages={clientPages} onChange={setPage} />}
         </Card>
 
         {/* Top profissionais */}
