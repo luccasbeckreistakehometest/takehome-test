@@ -161,10 +161,10 @@ export default function ClientDashboard({
                 <button
                   type="button"
                   onClick={step.run}
-                  className="flex w-full items-baseline gap-3 py-2 text-left"
+                  className="flex min-h-10 w-full items-baseline gap-3 py-2 text-left"
                 >
                   <span className="idx t5 w-6 shrink-0">{String(i + 1).padStart(2, "0")}</span>
-                  <span className="t3 hit-40 block text-left font-medium underline-offset-4 hover:underline">{step.label}</span>
+                  <span className="t3 block text-left font-medium underline-offset-4 hover:underline">{step.label}</span>
                   <span className="t5 text-text-muted">{step.hint}</span>
                 </button>
               </li>
@@ -203,7 +203,7 @@ export default function ClientDashboard({
                     <button
                       type="button"
                       onClick={() => onNavigate("projects")}
-                      className="flex w-full items-baseline justify-between gap-3 py-2 text-left"
+                      className="flex min-h-10 w-full items-baseline justify-between gap-3 py-2 text-left"
                     >
                       <span className="t3 min-w-0 truncate font-medium">{project.title}</span>
                       <span className="t5 shrink-0 text-text-muted">

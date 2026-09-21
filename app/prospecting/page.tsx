@@ -127,7 +127,7 @@ export default function ProspectingPage() {
           </Button>
           <button
             onClick={() => setManualOpen((v) => !v)}
-            className="t3 text-text-muted underline-offset-2 hover:text-text hover:underline"
+            className="t3 inline-flex min-h-10 items-center text-text-muted underline-offset-2 hover:text-text hover:underline"
             data-testid="manual-prospect-toggle"
           >
             + Adicionar um prospect à mão
@@ -225,21 +225,21 @@ export default function ProspectingPage() {
                   ) : (
                     <>
                       <button
-                        className="font-medium text-text hover:underline"
+                        className="inline-flex min-h-10 items-center font-medium text-text hover:underline"
                         onClick={() => setProposalFor((v) => (v === prospect.id ? null : prospect.id))}
                         data-testid="proposal-toggle"
                       >Proposta em 5 min
                       </button>
                       {prospect.status === "new" && (
                         <button
-                          className="text-text-muted hover:text-text"
+                          className="inline-flex min-h-10 items-center text-text-muted hover:text-text"
                           onClick={() => setStatus(prospect, "contacted")}
                         >
                           Marcar contatado
                         </button>
                       )}
                       <button
-                        className="font-medium text-text hover:underline"
+                        className="inline-flex min-h-10 items-center font-medium text-text hover:underline"
                         onClick={async () => {
                           const result = await setStatus(prospect, "converted");
                           if (result.clientId) {
@@ -249,7 +249,7 @@ export default function ProspectingPage() {
                       >
                         Converter em cliente </button>
                       <button
-                        className="text-text-muted hover:text-negative"
+                        className="inline-flex min-h-10 items-center text-text-muted hover:text-negative"
                         onClick={() => setStatus(prospect, "discarded")}
                       >
                         Descartar

@@ -139,14 +139,14 @@ export default function AdminPage() {
         <div className="flex flex-wrap gap-2">
           <Link
             href="/admin/analytics"
-            className="rounded-md border border-edge bg-surface-sunken px-4 py-2 t3 transition-colors hover:border-edge"
+            className="t3 inline-flex min-h-10 items-center rounded-sm border border-edge bg-surface px-4 transition-colors hover:bg-surface-sunken"
             data-testid="admin-analytics-link"
           >
             Funil e origens
           </Link>
           <Link
             href="/settings"
-            className="rounded-md border border-edge bg-surface-sunken px-4 py-2 t3 transition-colors hover:border-edge"
+            className="t3 inline-flex min-h-10 items-center rounded-sm border border-edge bg-surface px-4 transition-colors hover:bg-surface-sunken"
           >
             Configurações da plataforma
           </Link>
@@ -191,7 +191,7 @@ export default function AdminPage() {
             type="button"
             aria-selected={tab === t.key}
             onClick={() => setTab(t.key)}
-            className={`t3 -mb-px whitespace-nowrap border-b-2 py-2 transition-colors duration-[var(--dur-1)] ${
+            className={`t3 -mb-px inline-flex min-h-10 items-center whitespace-nowrap border-b-2 py-2 transition-colors duration-[var(--dur-1)] ${
               tab === t.key
                 ? "border-text font-medium text-text"
                 : "border-transparent text-text-muted hover:text-text"
@@ -322,7 +322,7 @@ export default function AdminPage() {
               <Link
                 key={c.id}
                 href={`/clients/${c.id}`}
-                className="flex items-center justify-between rounded-md border border-edge bg-surface-sunken px-3 py-2 t3 transition-colors hover:border-edge"
+                className="t3 flex min-h-10 items-center justify-between rounded-sm border border-edge bg-surface-sunken px-3 py-2 transition-colors hover:bg-surface"
               >
                 <span className="font-medium">{c.name}</span>
                 <span className="t5 text-text-muted">{[c.agencyName, c.industry, c.country].filter(Boolean).join(" · ")}</span>
@@ -339,7 +339,7 @@ export default function AdminPage() {
               <Link
                 key={p.id}
                 href={`/professionals/${p.id}`}
-                className="flex items-center justify-between rounded-md border border-edge bg-surface-sunken px-3 py-2 t3 transition-colors hover:border-edge"
+                className="t3 flex min-h-10 items-center justify-between rounded-sm border border-edge bg-surface-sunken px-3 py-2 transition-colors hover:bg-surface"
               >
                 <span className="font-medium">{p.name}</span>
                 <span className="flex items-center gap-1.5 t5 text-text-muted">
@@ -375,7 +375,7 @@ export default function AdminPage() {
             {data.users.map((u) => (
               <div
                 key={u.username}
-                className="flex items-center justify-between rounded-md border border-edge bg-surface-sunken px-3 py-2 t3"
+                className="t3 flex min-h-10 items-center justify-between rounded-sm border border-edge bg-surface-sunken px-3 py-2"
               >
                 <span>
                   <span className="font-mono text-text">{u.username}</span>{" "}
