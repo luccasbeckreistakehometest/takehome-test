@@ -6,7 +6,7 @@ import { api } from "@/lib/api";
 import { useUiLang } from "@/lib/i18n";
 import { PULSE_FACES, type RiskFlag, type TrendPoint } from "@/lib/pulse-rules";
 import type { ClientPulseView, PulseOverviewRow } from "@/lib/pulse-db";
-import { Card, SectionTitle, Tag } from "./ui";
+import { EM_DASH } from "@/lib/type";
 
 type Overview = { clients: PulseOverviewRow[]; atRisk: PulseOverviewRow[]; answered: number };
 
@@ -18,12 +18,15 @@ const REASON_LABEL: Record<RiskFlag["reason"], string> = {
   no_feedback: "nunca respondeu",
 };
 
+// Cor semântica de ESTADO (§5.3), medida nos dois temas — nada de vermelho e
+// âmbar do Tailwind, que não passam no escuro.
 const LEVEL_STYLE: Record<string, string> = {
-  risk: "border-red-500/40 bg-red-500/10 text-red-500",
-  watch: "border-amber-500/40 bg-amber-500/10 text-amber-500",
-  ok: "border-emerald-500/40 bg-emerald-500/10 text-emerald-500",
+  risk: "border-negative/50 bg-negative-wash text-negative",
+  watch: "border-caution/50 bg-caution-wash text-caution",
+  ok: "border-positive/50 bg-positive-wash text-positive",
 };
 const LEVEL_LABEL: Record<string, string> = { risk: "Em risco", watch: "Atenção", ok: "Saudável" };
+const LEVEL_TEXT: Record<string, string> = { risk: "text-negative", watch: "text-caution", ok: "text-text" };
 
 export function flagText(flag: RiskFlag): string {
   const base = REASON_LABEL[flag.reason];
@@ -40,7 +43,7 @@ export function TrendBars({ trend }: { trend: TrendPoint[] }) {
       {trend.map((t) => (
         <span
           key={t.month}
-          className={`w-2 rounded-sm ${t.avg === null ? "bg-edge" : t.avg >= 2.5 ? "bg-emerald-500" : t.avg >= 1.75 ? "bg-amber-500" : "bg-red-500"}`}
+          className={`w-2 rounded-xs ${t.avg === null ? "bg-rule" : t.avg >= 2.5 ? "bg-positive" : t.avg >= 1.75 ? "bg-caution" : "bg-negative"}`}
           style={{ height: `${t.avg === null ? 15 : (t.avg / 3) * 100}%` }}
         />
       ))}
@@ -48,8 +51,34 @@ export function TrendBars({ trend }: { trend: TrendPoint[] }) {
   );
 }
 
+function PulseRow({ row }: { row: PulseOverviewRow }) {
+  return (
+    <Link
+      href={`/clients/${row.id}`}
+      className="flex flex-wrap items-baseline justify-between gap-2 border-b border-rule py-2 transition-colors duration-[var(--dur-1)] hover:bg-surface-sunken"
+      data-testid="pulse-row"
+      data-level={row.risk.level}
+    >
+      <span className="flex items-center gap-2">
+        <span className="t2">{row.latestScore ? PULSE_FACES[row.latestScore as 1 | 2 | 3] : EM_DASH}</span>
+        <span className="t3 font-medium">{row.name}</span>
+        {row.latestNps !== null && <span className="t5 tnum text-text-muted">NPS {row.latestNps}</span>}
+      </span>
+      <span className="t5 flex flex-wrap items-center gap-2 text-text-muted">
+        {row.risk.flags.map((f) => (
+          <span key={f.reason}>{flagText(f)}</span>
+        ))}
+        <TrendBars trend={row.trend} />
+        <RiskBadge level={row.risk.level} />
+      </span>
+    </Link>
+  );
+}
+
 function RiskBadge({ level }: { level: string }) {
-  return <span className={`rounded-full border px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wide ${LEVEL_STYLE[level]}`}>{LEVEL_LABEL[level]}</span>;
+  return (
+    <span className={`t5 rounded-xs border px-2 py-0.5 ${LEVEL_STYLE[level]}`}>{LEVEL_LABEL[level]}</span>
+  );
 }
 
 // Visão da agência. mode="home" = só quem está em risco (Hoje); "full" = todos
@@ -60,59 +89,82 @@ export default function PulseOverviewCard({ mode }: { mode: "home" | "full" }) {
     api<Overview>("/api/pulse/overview").then((d) => setData((prev) => prev ?? d)).catch(() => {});
   }, []);
   if (!data) return null;
-  const rows = mode === "home" ? data.atRisk : data.clients;
+  // "Todos" não é uma lista de setenta linhas idênticas: em `full` a tela
+  // resume a distribuição e lista só quem pede ação. O selo positivo deixa de
+  // ser gasto setenta vezes (§5.3 — semântica é estado, não decoração).
+  const counts = { risk: 0, watch: 0, ok: 0 } as Record<string, number>;
+  for (const c of data.clients) counts[c.risk.level] = (counts[c.risk.level] ?? 0) + 1;
+  const needsAction = data.clients.filter((c) => c.risk.level !== "ok");
+  const healthy = data.clients.filter((c) => c.risk.level === "ok");
+  const rows = mode === "home" ? data.atRisk : needsAction;
   if (mode === "home" && rows.length === 0) {
     return (
-      <Card data-testid="pulse-overview" data-mode={mode}>
-        <SectionTitle>💓 Pulso dos clientes</SectionTitle>
-        <p className="text-sm text-muted">
-          {data.answered === 0 ? "Nenhuma resposta ainda — os clientes respondem no portal depois de cada aprovação e uma vez por mês." : "Nenhum cliente em risco. 🎉"}
+      <section data-testid="pulse-overview" data-mode={mode}>
+        <h2 className="t6 border-b border-edge pb-2 text-text-muted">Pulso dos clientes</h2>
+        <p className="t4 measure-prose mt-2 text-text-muted">
+          {data.answered === 0
+            ? "Nenhuma resposta ainda — os clientes respondem no portal depois de cada aprovação e uma vez por mês."
+            : "Nenhum cliente em risco."}
         </p>
-        <Link href="/insights#pulso" className="mt-2 inline-block text-xs text-accent hover:underline">
-          Ver tendência por cliente →
+        <Link href="/insights#pulso" className="t5 mt-2 inline-flex min-h-10 items-center font-medium underline-offset-4 hover:underline">
+          Ver tendência por cliente
         </Link>
-      </Card>
+      </section>
     );
   }
   return (
-    <Card data-testid="pulse-overview" data-mode={mode} id={mode === "full" ? "pulso" : undefined}>
-      <div className="flex items-center justify-between">
-        <SectionTitle>{mode === "home" ? "💓 Clientes em risco" : "💓 Pulso dos clientes"}</SectionTitle>
+    <section data-testid="pulse-overview" data-mode={mode} id={mode === "full" ? "pulso" : undefined}>
+      <div className="flex items-baseline justify-between border-b border-edge pb-2">
+        <h2 className="t6 text-text-muted">{mode === "home" ? "Clientes em risco" : "Pulso dos clientes"}</h2>
         {mode === "home" && (
-          <Link href="/insights#pulso" className="text-xs text-accent hover:underline">
-            Ver todos →
+          <Link href="/insights#pulso" className="t5 inline-flex min-h-10 items-center font-medium underline-offset-4 hover:underline">
+            Ver todos
           </Link>
         )}
       </div>
-      {rows.length === 0 ? (
-        <p className="text-sm text-muted">Nenhum cliente cadastrado.</p>
+      {mode === "full" && (
+        <dl className="mt-3 flex flex-wrap gap-x-10 gap-y-3" data-testid="pulse-summary">
+          {(["risk", "watch", "ok"] as const).map((level) => (
+            <div key={level}>
+              <dt className="t5 text-text-muted">{LEVEL_LABEL[level]}</dt>
+              <dd className={`n2 ${counts[level] ? LEVEL_TEXT[level] : "text-text-faint"}`}>{counts[level] ?? 0}</dd>
+            </div>
+          ))}
+          <div>
+            <dt className="t5 text-text-muted">Responderam</dt>
+            <dd className="n2">{data.answered}</dd>
+          </div>
+        </dl>
+      )}
+      {rows.length === 0 && mode === "full" && data.clients.length > 0 ? null : rows.length === 0 ? (
+        <p className="t4 mt-3 text-text-muted">Nenhum cliente cadastrado.</p>
       ) : (
-        <div className="space-y-1.5">
+        <div className="mt-3">
+          {mode === "full" && (
+            <p className="t5 mb-2 text-text-muted">
+              {rows.length === 1 ? "1 cliente pede atenção" : `${rows.length} clientes pedem atenção`}
+            </p>
+          )}
           {rows.map((row) => (
-            <Link
-              key={row.id}
-              href={`/clients/${row.id}`}
-              className="flex flex-wrap items-center justify-between gap-2 rounded-md border border-edge bg-surface-2 px-3 py-2 text-sm transition-colors hover:border-accent/60"
-              data-testid="pulse-row"
-              data-level={row.risk.level}
-            >
-              <span className="flex items-center gap-2">
-                <span className="text-lg">{row.latestScore ? PULSE_FACES[row.latestScore as 1 | 2 | 3] : "·"}</span>
-                <span className="font-medium">{row.name}</span>
-                {row.latestNps !== null && <Tag>NPS {row.latestNps}</Tag>}
-              </span>
-              <span className="flex flex-wrap items-center gap-2 text-xs text-muted">
-                {row.risk.flags.map((f) => (
-                  <span key={f.reason}>{flagText(f)}</span>
-                ))}
-                <TrendBars trend={row.trend} />
-                <RiskBadge level={row.risk.level} />
-              </span>
-            </Link>
+            <PulseRow key={row.id} row={row} />
           ))}
         </div>
       )}
-    </Card>
+      {mode === "full" && healthy.length > 0 && (
+        // Os saudáveis continuam a um clique — só param de gastar o selo
+        // positivo setenta vezes e de somar oito mil pixels de rolagem.
+        <details className="mt-3 border-t border-rule pt-2" data-testid="pulse-healthy">
+          <summary className="t5 inline-flex min-h-10 cursor-pointer items-center text-text-muted hover:text-text">
+            {healthy.length === 1 ? "1 cliente saudável" : `${healthy.length} clientes saudáveis`}
+          </summary>
+          <div className="mt-1">
+            {healthy.map((row) => (
+              <PulseRow key={row.id} row={row} />
+            ))}
+          </div>
+        </details>
+      )}
+    </section>
   );
 }
 
@@ -127,44 +179,53 @@ export function ClientPulseCard({ clientId }: { clientId: string }) {
   if (!view) return null;
   const comments = view.recent.filter((p) => p.comment.trim());
   return (
-    <Card data-testid="client-pulse">
-      <div className="flex flex-wrap items-center justify-between gap-2">
-        <SectionTitle>💓 Pulso do cliente</SectionTitle>
+    <section data-testid="client-pulse">
+      <div className="flex flex-wrap items-baseline justify-between gap-2 border-b border-edge pb-2">
+        <h2 className="t6 text-text-muted">Pulso do cliente</h2>
         <RiskBadge level={view.risk.level} />
       </div>
-      <div className="flex flex-wrap items-center gap-4 text-sm">
-        <span className="text-3xl" data-testid="client-pulse-latest">{view.risk.latestScore ? PULSE_FACES[view.risk.latestScore as 1 | 2 | 3] : "—"}</span>
+      <div className="mt-3 flex flex-wrap items-baseline gap-5">
+        <span className="n2" data-testid="client-pulse-latest">
+          {view.risk.latestScore ? PULSE_FACES[view.risk.latestScore as 1 | 2 | 3] : EM_DASH}
+        </span>
         <div>
-          <p className="text-xs text-muted">Última resposta</p>
-          <p>{view.risk.latestAt ? new Date(view.risk.latestAt).toLocaleDateString(lang === "en" ? "en-US" : "pt-BR") : "ainda sem resposta"}</p>
+          <p className="t5 text-text-muted">Última resposta</p>
+          <p className="t4 tnum">
+            {view.risk.latestAt
+              ? new Date(view.risk.latestAt).toLocaleDateString(lang === "en" ? "en-US" : "pt-BR")
+              : "ainda sem resposta"}
+          </p>
         </div>
         <div>
-          <p className="text-xs text-muted">NPS</p>
-          <p>{view.risk.latestNps ?? "—"}</p>
+          <p className="t5 text-text-muted">NPS</p>
+          <p className="t4 tnum">{view.risk.latestNps ?? EM_DASH}</p>
         </div>
         <div>
-          <p className="text-xs text-muted">Últimos 6 meses</p>
+          <p className="t5 text-text-muted">Últimos 6 meses</p>
           <TrendBars trend={view.trend} />
         </div>
       </div>
       {view.risk.flags.length > 0 && (
-        <ul className="mt-3 space-y-0.5 text-xs">
+        <ul className="t5 mt-3">
           {view.risk.flags.map((f) => (
-            <li key={f.reason} className={f.level === "risk" ? "text-red-500" : "text-amber-500"}>
-              • {flagText(f)}
+            <li
+              key={f.reason}
+              className={`border-b border-rule py-1 ${f.level === "risk" ? "text-negative" : "text-caution"}`}
+            >
+              {flagText(f)}
             </li>
           ))}
         </ul>
       )}
       {comments.length > 0 && (
-        <ul className="mt-3 space-y-1 text-xs text-muted">
+        <ul className="t5 mt-3 text-text-muted">
           {comments.slice(0, 3).map((p) => (
-            <li key={p.id}>
+            <li key={p.id} className="border-b border-rule py-1">
               {p.kind === "nps" ? `NPS ${p.score}` : PULSE_FACES[p.score as 1 | 2 | 3]} “{p.comment}”
             </li>
           ))}
         </ul>
       )}
-    </Card>
+    </section>
   );
 }

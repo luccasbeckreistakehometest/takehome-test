@@ -168,23 +168,21 @@ export default function DeliverableViewer({ deliverable }: { deliverable: Delive
           {approval && approval.approvalStatus !== "approved" && (
             <Button
               variant="ghost"
-              className="!px-2 !py-1 text-xs"
+              className="!px-2 !py-1 t5"
               disabled={deciding}
               onClick={approveHere}
               title="Aprova a peça em nome do cliente e dispara as automações"
-            >
-              ✅ Aprovar peça
+            >Aprovar peça
             </Button>
           )}
           <a
             href={`/api/files/${deliverable.id}?download=1`}
-            className="rounded border border-edge bg-surface-2 px-2 py-1 text-xs text-muted transition-colors hover:border-accent hover:text-accent"
+            className="rounded border border-edge bg-surface-sunken px-2 py-1 t5 text-text-muted transition-colors hover:border-edge hover:text-text"
           >
-            Baixar ⬇
-          </a>
+            Baixar </a>
           {latestReview && (
             <span
-              className="rounded-full border px-3 py-1 font-[family-name:var(--font-display)] text-sm font-bold"
+              className="t5 rounded-xs border px-3 py-1"
               style={{
                 borderColor: scoreColor(latestReview.score),
                 color: scoreColor(latestReview.score),
@@ -194,7 +192,7 @@ export default function DeliverableViewer({ deliverable }: { deliverable: Delive
             </span>
           )}
           <Button variant="ghost" onClick={runReview} disabled={reviewing}>
-            {reviewing ? "Analisando..." : latestReview ? "Reanalisar com IA" : "🔍 Analisar com IA"}
+            {reviewing ? "Analisando..." : latestReview ? "Reanalisar com IA" : "Analisar com IA"}
           </Button>
         </div>
       </div>
@@ -204,7 +202,7 @@ export default function DeliverableViewer({ deliverable }: { deliverable: Delive
       {error && <ErrorBox message={error} />}
       {approval && approval.events.length > 0 && <ApprovalTimeline events={approval.events} />}
 
-      <p className="text-xs text-muted">
+      <p className="t5 text-text-muted">
         Clique em qualquer ponto da imagem para adicionar um comentário de revisão.
       </p>
       <div
@@ -223,10 +221,10 @@ export default function DeliverableViewer({ deliverable }: { deliverable: Delive
           <span
             key={annotation.id}
             title={annotation.comment}
-            className={`absolute grid size-6 -translate-x-1/2 -translate-y-1/2 place-items-center rounded-full border-2 text-xs font-bold ${
+            className={`absolute grid size-6 -translate-x-1/2 -translate-y-1/2 place-items-center rounded-full border-2 t5 font-bold ${
               annotation.resolved
-                ? "border-emerald-400 bg-emerald-400/80 text-black"
-                : "border-white bg-red-500 text-white"
+                ? "border-positive/50 bg-positive-wash text-black"
+                : "border-white bg-negative text-white"
             }`}
             style={{ left: `${annotation.x}%`, top: `${annotation.y}%` }}
             onClick={(e) => e.stopPropagation()}
@@ -236,7 +234,7 @@ export default function DeliverableViewer({ deliverable }: { deliverable: Delive
         ))}
         {pending && (
           <span
-            className="absolute grid size-6 -translate-x-1/2 -translate-y-1/2 animate-pulse place-items-center rounded-full border-2 border-white bg-accent text-xs font-bold text-accent-ink"
+            className="absolute grid size-6 -translate-x-1/2 -translate-y-1/2 animate-pulse place-items-center rounded-full border-2 border-canvas bg-text t5 font-medium text-canvas"
             style={{ left: `${pending.x}%`, top: `${pending.y}%` }}
             onClick={(e) => e.stopPropagation()}
           >
@@ -250,7 +248,7 @@ export default function DeliverableViewer({ deliverable }: { deliverable: Delive
           <select
             value={author}
             onChange={(e) => setAuthor(e.target.value as ReviewRole)}
-            className="rounded-md border border-edge bg-surface-2 px-2 py-2 text-xs text-muted outline-none"
+            className="rounded-md border border-edge bg-surface-sunken px-2 py-2 t5 text-text-muted outline-none"
             title="Quem está comentando"
           >
             {Object.entries(REVIEW_ROLE_LABELS).map(([value, label]) => (
@@ -262,7 +260,7 @@ export default function DeliverableViewer({ deliverable }: { deliverable: Delive
           <select
             value={audience}
             onChange={(e) => setAudience(e.target.value as ReviewRole | "all")}
-            className="rounded-md border border-edge bg-surface-2 px-2 py-2 text-xs text-muted outline-none"
+            className="rounded-md border border-edge bg-surface-sunken px-2 py-2 t5 text-text-muted outline-none"
             title="Para quem é a revisão"
           >
             <option value="all">Para: Todos</option>
@@ -278,7 +276,7 @@ export default function DeliverableViewer({ deliverable }: { deliverable: Delive
             onChange={(e) => setComment(e.target.value)}
             onKeyDown={(e) => e.key === "Enter" && saveAnnotation()}
             placeholder="Descreva o ajuste neste ponto..."
-            className="min-w-48 flex-1 rounded-md border border-edge bg-surface-2 px-3 py-2 text-sm outline-none focus:border-accent"
+            className="min-w-48 flex-1 rounded-md border border-edge bg-surface-sunken px-3 py-2 t3 outline-none focus:border-edge"
           />
           <Button onClick={saveAnnotation}>Salvar</Button>
           <Button variant="ghost" onClick={() => setPending(null)}>
@@ -292,21 +290,21 @@ export default function DeliverableViewer({ deliverable }: { deliverable: Delive
           {annotations.map((annotation, index) => (
             <div
               key={annotation.id}
-              className="flex items-start justify-between gap-3 rounded-md border border-edge bg-surface-2 px-3 py-2 text-sm"
+              className="flex items-start justify-between gap-3 rounded-md border border-edge bg-surface-sunken px-3 py-2 t3"
             >
-              <p className={annotation.resolved ? "text-muted line-through" : ""}>
-                <span className="mr-2 font-bold text-accent">#{index + 1}</span>
+              <p className={annotation.resolved ? "text-text-muted line-through" : ""}>
+                <span className="mr-2 font-bold text-text">#{index + 1}</span>
                 {annotation.comment}
-                <span className="ml-2 text-[10px] uppercase tracking-wide text-muted">
+                <span className="ml-2 t6 text-text-muted">
                   {REVIEW_ROLE_LABELS[annotation.author] ?? annotation.author} →{" "}
                   {annotation.audience === "all"
                     ? "todos"
                     : (REVIEW_ROLE_LABELS[annotation.audience as ReviewRole] ?? annotation.audience)}
                 </span>
               </p>
-              <div className="flex shrink-0 gap-2 text-xs">
+              <div className="flex shrink-0 gap-2 t5">
                 <button
-                  className="text-muted hover:text-accent"
+                  className="text-text-muted hover:text-text"
                   onClick={async () => {
                     await api(`/api/annotations/${annotation.id}`, {
                       method: "PATCH",
@@ -318,7 +316,7 @@ export default function DeliverableViewer({ deliverable }: { deliverable: Delive
                   {annotation.resolved ? "Reabrir" : "Resolver ✓"}
                 </button>
                 <button
-                  className="text-muted hover:text-red-400"
+                  className="text-text-muted hover:text-negative"
                   onClick={async () => {
                     await api(`/api/annotations/${annotation.id}`, { method: "DELETE" });
                     load();
@@ -333,13 +331,13 @@ export default function DeliverableViewer({ deliverable }: { deliverable: Delive
       )}
 
       {reviewContent && (
-        <div className="space-y-3 rounded-lg border border-edge bg-surface-2 p-4">
+        <div className="space-y-3 rounded-lg border border-edge bg-surface-sunken p-4">
           <SectionTitle>Análise da IA — no contexto da campanha</SectionTitle>
-          <p className="text-sm font-medium">{reviewContent.verdict}</p>
+          <p className="t3 font-medium">{reviewContent.verdict}</p>
           <div className="space-y-1.5">
             {reviewContent.criteria.map((criterion, i) => (
-              <div key={i} className="text-sm">
-                <div className="flex items-center justify-between text-xs">
+              <div key={i} className="t3">
+                <div className="flex items-center justify-between t5">
                   <span>{criterion.criterion}</span>
                   <span style={{ color: scoreColor(criterion.score) }}>
                     {criterion.score}
@@ -354,19 +352,19 @@ export default function DeliverableViewer({ deliverable }: { deliverable: Delive
                     }}
                   />
                 </div>
-                <p className="mt-0.5 text-xs text-muted">{criterion.comment}</p>
+                <p className="mt-0.5 t5 text-text-muted">{criterion.comment}</p>
               </div>
             ))}
           </div>
-          <p className="text-sm text-muted">
-            <span className="font-semibold text-foreground/80">
+          <p className="t3 text-text-muted">
+            <span className="font-semibold text-text/80">
               Fit na campanha ({reviewContent.campaignFit.score}/100):{" "}
             </span>
             {reviewContent.campaignFit.comment}
           </p>
-          <div className="grid gap-3 text-sm text-muted sm:grid-cols-2">
+          <div className="grid gap-3 t3 text-text-muted sm:grid-cols-2">
             <div>
-              <p className="mb-1 text-xs font-semibold uppercase text-emerald-400">
+              <p className="mb-1 t6 text-positive">
                 Pontos fortes
               </p>
               <ul className="list-disc space-y-0.5 pl-4">
@@ -376,7 +374,7 @@ export default function DeliverableViewer({ deliverable }: { deliverable: Delive
               </ul>
             </div>
             <div>
-              <p className="mb-1 text-xs font-semibold uppercase text-amber-400">
+              <p className="mb-1 t6 text-caution">
                 Melhorias
               </p>
               <ul className="list-disc space-y-0.5 pl-4">
@@ -387,8 +385,8 @@ export default function DeliverableViewer({ deliverable }: { deliverable: Delive
             </div>
           </div>
           {reviewContent.revisionNotes.length > 0 && (
-            <div className="rounded-md border border-amber-900/50 bg-amber-950/30 p-3 text-sm text-muted">
-              <p className="mb-1 text-xs font-semibold uppercase text-amber-400">
+            <div className="rounded-md border border-caution/50 bg-caution-wash p-3 t3 text-text-muted">
+              <p className="mb-1 t6 text-caution">
                 Notas de revisão para o profissional
               </p>
               <ul className="list-disc space-y-0.5 pl-4">
@@ -403,16 +401,16 @@ export default function DeliverableViewer({ deliverable }: { deliverable: Delive
 
       {/* Comentários — thread genérica para qualquer entregável (texto ou imagem) */}
       <div className="space-y-3 border-t border-edge pt-4">
-        <h3 className="flex items-center gap-1.5 font-[family-name:var(--font-display)] text-sm font-semibold uppercase tracking-wider text-accent">
+        <h3 className="t6 flex items-center gap-1.5 text-text-muted">
           <Icon name="message" size={15} />
           Comentários
           {comments.length > 0 && (
-            <span className="normal-case text-muted">({comments.length})</span>
+            <span className="normal-case text-text-muted">({comments.length})</span>
           )}
         </h3>
 
         {comments.length === 0 ? (
-          <p className="text-xs text-muted">
+          <p className="t5 text-text-muted">
             Nenhum comentário ainda. Inicie a conversa sobre esta entrega.
           </p>
         ) : (
@@ -420,28 +418,28 @@ export default function DeliverableViewer({ deliverable }: { deliverable: Delive
             {comments.map((c) => (
               <div
                 key={c.id}
-                className="rounded-md border border-edge bg-surface-2 px-3 py-2"
+                className="rounded-md border border-edge bg-surface-sunken px-3 py-2"
               >
                 <div className="flex items-center justify-between gap-3">
-                  <span className="inline-flex items-center gap-1.5 text-xs font-semibold text-foreground">
-                    <Icon name="user" size={13} className="text-muted" />
+                  <span className="inline-flex items-center gap-1.5 t5 font-semibold text-text">
+                    <Icon name="user" size={13} className="text-text-muted" />
                     {c.authorName || REVIEW_ROLE_LABELS[c.author] || c.author}
                   </span>
                   <div className="flex items-center gap-2">
-                    <span className="text-[10px] uppercase tracking-wide text-muted">
+                    <span className="t6 text-text-muted">
                       {formatDate(c.createdAt)}
                     </span>
                     <button
                       type="button"
                       title="Excluir comentário"
-                      className="text-muted transition-colors hover:text-red-400"
+                      className="text-text-muted transition-colors hover:text-negative"
                       onClick={() => removeComment(c.id)}
                     >
                       <Icon name="trash" size={14} />
                     </button>
                   </div>
                 </div>
-                <p className="mt-1 whitespace-pre-wrap text-sm text-foreground/90">
+                <p className="mt-1 whitespace-pre-wrap t3 text-text/90">
                   {c.body}
                 </p>
               </div>
@@ -453,7 +451,7 @@ export default function DeliverableViewer({ deliverable }: { deliverable: Delive
           <select
             value={commentAuthor}
             onChange={(e) => setCommentAuthor(e.target.value as ReviewRole)}
-            className="rounded-md border border-edge bg-surface-2 px-2 py-2 text-xs text-muted outline-none"
+            className="rounded-md border border-edge bg-surface-sunken px-2 py-2 t5 text-text-muted outline-none"
             title="Quem está comentando"
           >
             {Object.entries(REVIEW_ROLE_LABELS).map(([value, label]) => (

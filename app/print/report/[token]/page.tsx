@@ -13,16 +13,9 @@ type Payload = {
   agency: { name: string; accentColor: string; tagline: string };
 };
 
-// Tema claro para impressão/PDF — mesmo padrão de /print/[id]
-const PRINT_THEME: Record<string, string> = {
-  "--background": "#ffffff",
-  "--surface": "#ffffff",
-  "--surface-2": "#f4f5f7",
-  "--edge": "#d9dce2",
-  "--foreground": "#16181d",
-  "--muted": "#4b5058",
-  "--accent-ink": "#ffffff",
-};
+// O tema claro forçado saiu daqui: `.doc` (globals.css §10) já redeclara os
+// papéis do tema claro, então a peça é papel nos dois temas e na impressão sem
+// cada tela repetir um mapa de hex.
 
 // Versão imprimível/compartilhável do relatório mensal (link por token, sem
 // login). Cabeçalho com a marca da agência, tema claro e botão de PDF.
@@ -36,7 +29,7 @@ export default function PrintMonthlyReportPage({ params }: { params: Promise<{ t
     api<Payload>(`/api/reports/${token}`).then(setPayload).catch(() => setNotFound(true));
   }, [token]);
 
-  if (notFound) return <p className="py-24 text-center text-muted">Relatório não encontrado.</p>;
+  if (notFound) return <p className="t3 py-24 text-center text-text-muted">Relatório não encontrado.</p>;
   if (!payload) {
     return (
       <div className="grid place-items-center py-24">
@@ -44,22 +37,31 @@ export default function PrintMonthlyReportPage({ params }: { params: Promise<{ t
       </div>
     );
   }
-  const theme = { ...PRINT_THEME, "--accent": payload.agency.accentColor || "#3f6212" };
   return (
-    <div style={theme as React.CSSProperties} className="rounded-xl bg-background p-6 text-foreground">
-      <button
-        onClick={() => window.print()}
-        className="fixed bottom-6 right-6 z-50 rounded-full bg-accent px-5 py-3 font-medium text-accent-ink shadow-lg transition-opacity hover:opacity-90 print:hidden"
-      >
-        📄 Salvar como PDF
-      </button>
-      <div className="mb-6 border-b-2 border-foreground pb-4">
-        <p className="text-xs font-bold uppercase tracking-widest text-accent">{payload.agency.name}</p>
-        <h1 className="mt-1 font-[family-name:var(--font-display)] text-2xl font-bold" data-testid="print-title">
-          <span>Relatório mensal</span> — {monthTitle(payload.report.month, lang)}
+    // A versão pública do relatório é A PEÇA: capa com régua da marca, mancha
+    // de 160mm igual à do papel e folha de impressão de verdade (§10). O botão
+    // de PDF é a única coisa que não imprime.
+    <article className="doc my-8 px-8 py-10 sm:px-12">
+      <div className="no-print mb-6 flex justify-end">
+        <button
+          onClick={() => window.print()}
+          className="t3 inline-flex h-10 items-center rounded-sm border border-transparent bg-brand-solid px-4 font-medium text-brand-ink transition-[filter] hover:brightness-95"
+        >
+          Salvar como PDF
+        </button>
+      </div>
+
+      <div className="doc-cover">
+        <div className="doc-rule" />
+        <p className="t6 mt-4 text-n-500">{payload.agency.name}</p>
+        <h1 className="d2 mt-3" style={{ ["--soft" as string]: 20 }} data-testid="print-title">
+          Relatório mensal
         </h1>
-        <p className="mt-1 text-sm text-muted">
-          {payload.client.name} ·{" "}
+        <p className="t1 mt-2 text-n-700">
+          {payload.client.name} · {monthTitle(payload.report.month, lang)}
+        </p>
+        <p className="t5 tnum mt-6 text-n-500">
+          Emitido em{" "}
           {new Date(payload.report.createdAt).toLocaleDateString(lang === "en" ? "en-US" : "pt-BR", {
             day: "2-digit",
             month: "long",
@@ -67,7 +69,17 @@ export default function PrintMonthlyReportPage({ params }: { params: Promise<{ t
           })}
         </p>
       </div>
-      <MonthlyReportView data={payload.report.data} summary={payload.report.summary} lang={lang} />
-    </div>
+
+      <div className="mt-10">
+        <MonthlyReportView data={payload.report.data} summary={payload.report.summary} lang={lang} />
+      </div>
+
+      <footer className="mt-12 border-t border-edge pt-3">
+        <p className="t5 text-n-500">
+          {payload.agency.name}
+          {payload.agency.tagline ? ` — ${payload.agency.tagline}` : ""}
+        </p>
+      </footer>
+    </article>
   );
 }

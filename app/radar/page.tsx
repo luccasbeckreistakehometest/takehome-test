@@ -3,7 +3,6 @@ import { redirect } from "next/navigation";
 import { getSession } from "@/lib/session";
 import { scopeForSession } from "@/lib/tenancy-rules";
 import { agencyRadarOverview } from "@/lib/ai-visibility-db";
-import { Icon } from "@/components/icons";
 
 export const dynamic = "force-dynamic";
 export const metadata = { title: "Radar de IA" };
@@ -17,19 +16,17 @@ export default async function RadarOverviewPage() {
   return (
     <div className="space-y-6">
       <div>
-        <h1 className="flex items-center gap-2 font-[family-name:var(--font-display)] text-2xl font-bold tracking-tight">
-          <Icon name="radar" size={24} className="text-accent" /> Radar de IA
-        </h1>
-        <p className="mt-1 text-sm text-muted">
+        <h1 className="d3">Radar de IA</h1>
+        <p className="t3 measure-lede mt-2 text-text-muted">
           Quando alguém pergunta para uma IA, seus clientes aparecem? Simulação com busca na web, uma vez por semana por cliente — um entregável para vender todo mês.
         </p>
       </div>
       {rows.length === 0 ? (
-        <p className="rounded-md border border-dashed border-edge p-4 text-sm text-muted">Cadastre um cliente para montar o primeiro radar.</p>
+        <p className="rounded-md border border-dashed border-edge p-4 t3 text-text-muted">Cadastre um cliente para montar o primeiro radar.</p>
       ) : (
-        <div className="overflow-x-auto rounded-xl border border-edge bg-surface">
-          <table className="w-full min-w-[480px] text-left text-sm" data-testid="radar-overview">
-            <thead className="text-xs uppercase text-muted">
+        <div className="overflow-x-auto rounded-md border border-edge bg-surface">
+          <table className="w-full min-w-[480px] text-left t3" data-testid="radar-overview">
+            <thead className="t5 text-text-muted">
               <tr>
                 <th className="px-4 py-2">Cliente</th>
                 <th className="px-4 py-2 text-right">Perguntas</th>
@@ -37,17 +34,17 @@ export default async function RadarOverviewPage() {
                 <th className="px-4 py-2">Última rodada</th>
               </tr>
             </thead>
-            <tbody className="divide-y divide-edge">
+            <tbody className="divide-y divide-rule">
               {rows.map((row) => (
                 <tr key={row.clientId}>
                   <td className="px-4 py-2">
-                    <Link href={`/clients/${row.clientId}?tab=ai_radar`} className="font-medium hover:text-accent">
+                    <Link href={`/clients/${row.clientId}?tab=ai_radar`} className="font-medium hover:text-text">
                       {row.clientName}
                     </Link>
                   </td>
                   <td className="px-4 py-2 text-right tabular-nums">{row.questions}</td>
                   <td className="px-4 py-2 text-right tabular-nums">{row.shareOfVoice === null ? "—" : `${row.shareOfVoice}%`}</td>
-                  <td className="px-4 py-2 text-xs text-muted">{row.ranAt ? row.ranAt.slice(0, 10).split("-").reverse().join("/") : "nunca"}</td>
+                  <td className="px-4 py-2 t5 text-text-muted">{row.ranAt ? row.ranAt.slice(0, 10).split("-").reverse().join("/") : "nunca"}</td>
                 </tr>
               ))}
             </tbody>

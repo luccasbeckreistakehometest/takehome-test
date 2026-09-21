@@ -87,7 +87,7 @@ export default function LinksTab({ client }: { client: Client }) {
       <Card className="space-y-4">
         <div>
           <SectionTitle>Links rastreáveis</SectionTitle>
-          <p className="text-sm text-muted">Cole o endereço: a Marqa cria um link curto com UTM e conta os cliques (sem cookie). Nos posts do calendário, use o campo Link.</p>
+          <p className="t3 text-text-muted">Cole o endereço: a Marqa cria um link curto com UTM e conta os cliques (sem cookie). Nos posts do calendário, use o campo Link.</p>
         </div>
         {error && <ErrorBox message={error} />}
         <div className="grid gap-2 sm:grid-cols-[1fr_160px_auto] sm:items-end">
@@ -104,25 +104,25 @@ export default function LinksTab({ client }: { client: Client }) {
           </Button>
         </div>
         {data.links.length === 0 ? (
-          <p className="text-sm text-muted" data-testid="links-empty">Nenhum link ainda.</p>
+          <p className="t3 text-text-muted" data-testid="links-empty">Nenhum link ainda.</p>
         ) : (
           <ul className="space-y-2" data-testid="links-list">
             {data.links.map((link) => (
-              <li key={link.code} className="rounded-md border border-edge bg-surface-2 px-3 py-2 text-sm" data-testid="link-row" data-code={link.code}>
+              <li key={link.code} className="rounded-md border border-edge bg-surface-sunken px-3 py-2 t3" data-testid="link-row" data-code={link.code}>
                 <div className="flex flex-wrap items-center justify-between gap-2">
                   <span className="min-w-0 flex-1 truncate font-medium">{link.label || link.destUrl}</span>
-                  <span className="text-xs text-muted" data-testid="link-clicks">{`${link.clicks30} cliques · ${link.uniques30} pessoas (30 dias)`}</span>
+                  <span className="t5 text-text-muted" data-testid="link-clicks">{`${link.clicks30} cliques · ${link.uniques30} pessoas (30 dias)`}</span>
                 </div>
-                <div className="mt-1 flex flex-wrap items-center gap-2 text-xs">
-                  <span className="font-mono text-accent">{link.shortUrl.replace(/^https?:\/\//, "")}</span>
+                <div className="mt-1 flex flex-wrap items-center gap-2 t5">
+                  <span className="font-mono text-text">{link.shortUrl.replace(/^https?:\/\//, "")}</span>
                   <CopyButton text={link.shortUrl} label="Copiar" />
-                  {link.postId && <span className="text-muted">de um post do calendário</span>}
+                  {link.postId && <span className="text-text-muted">de um post do calendário</span>}
                   {!inBio.has(link.code) && bio.buttons.length < 8 && (
-                    <button type="button" className="text-accent hover:underline" onClick={() => setBio({ ...bio, buttons: [...bio.buttons, { code: link.code, label: link.label }] })}>
+                    <button type="button" className="text-text hover:underline" onClick={() => setBio({ ...bio, buttons: [...bio.buttons, { code: link.code, label: link.label }] })}>
                       + na bio
                     </button>
                   )}
-                  <button type="button" className="ml-auto text-red-500 hover:underline" onClick={() => archive(link.code)}>
+                  <button type="button" className="ml-auto text-negative hover:underline" onClick={() => archive(link.code)}>
                     Arquivar
                   </button>
                 </div>
@@ -135,13 +135,13 @@ export default function LinksTab({ client }: { client: Client }) {
       <Card className="space-y-4">
         <div>
           <SectionTitle>Link na bio</SectionTitle>
-          <p className="text-sm text-muted">Uma página com as cores e o logo da marca, os botões e os últimos posts publicados. Cada toque conta como clique.</p>
+          <p className="t3 text-text-muted">Uma página com as cores e o logo da marca, os botões e os últimos posts publicados. Cada toque conta como clique.</p>
         </div>
         <div className="grid gap-3">
           <div>
             <Label htmlFor="bio-slug">Endereço</Label>
-            <div className="flex items-center gap-1 text-sm">
-              <span className="shrink-0 text-muted">{`${data.base.replace(/^https?:\/\//, "")}/b/`}</span>
+            <div className="flex items-center gap-1 t3">
+              <span className="shrink-0 text-text-muted">{`${data.base.replace(/^https?:\/\//, "")}/b/`}</span>
               <Input id="bio-slug" value={bio.slug} onChange={(e) => setBio({ ...bio, slug: e.target.value })} data-testid="bio-slug" />
             </div>
           </div>
@@ -154,9 +154,9 @@ export default function LinksTab({ client }: { client: Client }) {
             <Textarea id="bio-text" value={bio.bio} maxLength={280} onChange={(e) => setBio({ ...bio, bio: e.target.value })} placeholder="O que a marca faz, em uma frase." />
           </div>
           <div>
-            <p className="mb-1 text-xs font-medium uppercase tracking-wide text-muted">Botões (até 8)</p>
+            <p className="mb-1 t6 text-text-muted">Botões (até 8)</p>
             {bio.buttons.length === 0 ? (
-              <p className="text-sm text-muted">Crie um link ao lado para virar botão.</p>
+              <p className="t3 text-text-muted">Crie um link ao lado para virar botão.</p>
             ) : (
               <ul className="space-y-1.5" data-testid="bio-buttons">
                 {bio.buttons.map((button, index) => (
@@ -167,29 +167,29 @@ export default function LinksTab({ client }: { client: Client }) {
                       placeholder={byCode.get(button.code)?.destUrl ?? ""}
                       onChange={(e) => setBio({ ...bio, buttons: bio.buttons.map((b) => (b.code === button.code ? { ...b, label: e.target.value } : b)) })}
                     />
-                    <button type="button" aria-label="Subir" onClick={() => move(index, -1)} className="px-1 text-muted hover:text-foreground">↑</button>
-                    <button type="button" aria-label="Descer" onClick={() => move(index, 1)} className="px-1 text-muted hover:text-foreground">↓</button>
-                    <button type="button" aria-label="Tirar da bio" onClick={() => setBio({ ...bio, buttons: bio.buttons.filter((b) => b.code !== button.code) })} className="px-1 text-muted hover:text-red-500">×</button>
+                    <button type="button" aria-label="Subir" onClick={() => move(index, -1)} className="px-1 text-text-muted hover:text-text">↑</button>
+                    <button type="button" aria-label="Descer" onClick={() => move(index, 1)} className="px-1 text-text-muted hover:text-text">↓</button>
+                    <button type="button" aria-label="Tirar da bio" onClick={() => setBio({ ...bio, buttons: bio.buttons.filter((b) => b.code !== button.code) })} className="px-1 text-text-muted hover:text-negative">×</button>
                   </li>
                 ))}
               </ul>
             )}
           </div>
-          <label className="flex items-center gap-2 text-sm">
+          <label className="flex items-center gap-2 t3">
             <input type="checkbox" checked={bio.published} onChange={(e) => setBio({ ...bio, published: e.target.checked })} data-testid="bio-published" />
             Página no ar
           </label>
-          <label className="flex items-center gap-2 text-sm">
+          <label className="flex items-center gap-2 t3">
             <input type="checkbox" checked={bio.indexable} onChange={(e) => setBio({ ...bio, indexable: e.target.checked })} />
             Aparecer no Google
           </label>
         </div>
         <div className="flex flex-wrap items-center gap-2">
           <Button onClick={saveBio} data-testid="bio-save">Salvar página</Button>
-          {saved && <span className="text-sm text-accent">Salvo ✓</span>}
+          {saved && <span className="t3 text-text">Salvo ✓</span>}
           {bio.published && (
-            <a href={pageUrl} target="_blank" rel="noreferrer" className="text-sm text-accent hover:underline" data-testid="bio-open">
-              Abrir a página ↗
+            <a href={pageUrl} target="_blank" rel="noreferrer" className="t3 text-text hover:underline" data-testid="bio-open">
+              Abrir a página
             </a>
           )}
           {bio.published && <CopyButton text={pageUrl} label="Copiar endereço" />}

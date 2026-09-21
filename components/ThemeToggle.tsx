@@ -29,7 +29,7 @@ export default function ThemeToggle() {
   return (
     <button
       onClick={toggle}
-      className="grid size-8 place-items-center rounded-md text-muted transition-colors hover:bg-surface-2 hover:text-foreground"
+      className="grid size-10 place-items-center rounded-sm text-text-muted transition-colors hover:bg-surface-sunken hover:text-text"
       title={theme === "dark" ? "Tema claro" : "Tema escuro"}
       aria-label="Alternar tema"
     >

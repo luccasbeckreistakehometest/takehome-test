@@ -81,7 +81,7 @@ export default function CarouselTab({ client }: { client: Client }) {
       <Card className="space-y-4">
         <div>
           <SectionTitle>Carrossel pronto para postar</SectionTitle>
-          <p className="text-sm text-muted">
+          <p className="t3 text-text-muted">
             A IA escreve de 5 a 8 slides no tom da marca e a Marqa monta as imagens (1080×1350) com as cores e o logo do cliente. Baixe o ZIP ou mande para o calendário.
           </p>
         </div>
@@ -116,35 +116,35 @@ export default function CarouselTab({ client }: { client: Client }) {
           </div>
         </div>
         {error && <ErrorBox message={error} />}
-        {note && <p className="text-sm text-accent">{note}</p>}
+        {note && <p className="t3 text-text">{note}</p>}
         <div className="flex flex-wrap items-center gap-2">
           <Button onClick={() => create("ai")} disabled={busy !== "" || form.topic.trim().length < 2 || !data.aiAvailable} data-testid="carousel-generate">
-            <Icon name="sparkle" size={14} /> {busy === "ai" ? "Escrevendo os slides..." : "Gerar com IA · 3 coins"}
+            {busy === "ai" ? "Escrevendo os slides..." : "Gerar com IA · 3 coins"}
           </Button>
           <Button variant="ghost" onClick={() => create("manual")} disabled={busy !== "" || form.topic.trim().length < 2} data-testid="carousel-manual">
             <Icon name="edit" size={14} /> Escrever eu mesmo
           </Button>
-          {!data.aiAvailable && <span className="text-xs text-muted">A IA não está disponível agora: escreva os slides e as imagens saem igual.</span>}
-          {!data.hasLogo && <span className="text-xs text-muted">Dica: suba o logo em Briefing → Arquivos da marca (com &quot;logo&quot; no nome).</span>}
+          {!data.aiAvailable && <span className="t5 text-text-muted">A IA não está disponível agora: escreva os slides e as imagens saem igual.</span>}
+          {!data.hasLogo && <span className="t5 text-text-muted">Dica: suba o logo em Briefing → Arquivos da marca (com &quot;logo&quot; no nome).</span>}
         </div>
       </Card>
 
       {data.carousels.length === 0 ? (
-        <p className="rounded-md border border-dashed border-edge p-4 text-sm text-muted" data-testid="carousel-empty">
+        <p className="rounded-md border border-dashed border-edge p-4 t3 text-text-muted" data-testid="carousel-empty">
           Nenhum carrossel ainda. Escolha um tema acima — carrosséis foram o formato com mais engajamento no Instagram em 2026.
         </p>
       ) : (
         <div className="grid gap-6 lg:grid-cols-[220px_1fr]">
-          <ul className="space-y-1.5 text-sm" data-testid="carousel-list">
+          <ul className="space-y-1.5 t3" data-testid="carousel-list">
             {data.carousels.map((c) => (
               <li key={c.id}>
                 <button
                   type="button"
                   onClick={() => setSelectedId(c.id)}
-                  className={`w-full rounded-md border px-3 py-2 text-left ${c.id === selectedId ? "border-accent bg-accent/5" : "border-edge hover:border-accent/60"}`}
+                  className={`w-full rounded-md border px-3 py-2 text-left ${c.id === selectedId ? "border-edge bg-surface-sunken" : "border-edge hover:border-edge"}`}
                 >
                   <span className="block truncate font-medium">{c.content.hook || c.topic}</span>
-                  <span className="text-xs text-muted">{`${c.content.slides.length} slides · ${TEMPLATE_LABEL[c.template]}`}</span>
+                  <span className="t5 text-text-muted">{`${c.content.slides.length} slides · ${TEMPLATE_LABEL[c.template]}`}</span>
                 </button>
               </li>
             ))}
@@ -223,10 +223,10 @@ function CarouselEditor({ clientId, carousel, onChanged }: { clientId: string; c
             </option>
           ))}
         </Select>
-        <a href={`/api/carousels/${carousel.id}/zip`} className="inline-flex items-center gap-1.5 rounded-md bg-accent px-3.5 py-2 text-sm font-medium text-accent-ink" data-testid="carousel-zip">
+        <a href={`/api/carousels/${carousel.id}/zip`} className="inline-flex items-center gap-1.5 rounded-md bg-brand-solid px-3.5 py-2 t3 font-medium text-brand-ink" data-testid="carousel-zip">
           <Icon name="download" size={14} /> Baixar tudo (ZIP)
         </a>
-        <button type="button" onClick={remove} className="ml-auto text-xs text-red-500 hover:underline">
+        <button type="button" onClick={remove} className="ml-auto t5 text-negative hover:underline">
           Excluir
         </button>
       </div>
@@ -234,7 +234,7 @@ function CarouselEditor({ clientId, carousel, onChanged }: { clientId: string; c
 
       <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-3">
         {content.slides.map((slide, index) => (
-          <div key={index} className="space-y-2 rounded-xl border border-edge bg-surface p-3" data-testid="carousel-slide" data-hash={hashes[index] ?? ""}>
+          <div key={index} className="space-y-2 rounded-md border border-edge bg-surface p-3" data-testid="carousel-slide" data-hash={hashes[index] ?? ""}>
             {/* eslint-disable-next-line @next/next/no-img-element */}
             <img
               src={`/api/carousels/${carousel.id}/slide/${index}?v=${hashes[index] ?? ""}`}
@@ -242,13 +242,13 @@ function CarouselEditor({ clientId, carousel, onChanged }: { clientId: string; c
               width={1080}
               height={1350}
               loading="lazy"
-              className="aspect-[4/5] w-full rounded-lg border border-edge bg-surface-2 object-cover"
+              className="aspect-[4/5] w-full rounded-lg border border-edge bg-surface-sunken object-cover"
             />
             <Input aria-label={`Título do slide ${index + 1}`} value={slide.title} maxLength={TITLE_MAX} onChange={(e) => setSlide(index, { title: e.target.value })} data-testid="slide-title" />
             <Textarea aria-label={`Texto do slide ${index + 1}`} value={slide.body} maxLength={BODY_MAX} onChange={(e) => setSlide(index, { body: e.target.value })} />
-            <div className="flex items-center justify-between text-xs text-muted">
+            <div className="flex items-center justify-between t5 text-text-muted">
               <span>{slide.visualHint}</span>
-              <a href={`/api/carousels/${carousel.id}/slide/${index}?download=1&v=${hashes[index] ?? ""}`} className="shrink-0 text-accent hover:underline">
+              <a href={`/api/carousels/${carousel.id}/slide/${index}?download=1&v=${hashes[index] ?? ""}`} className="shrink-0 text-text hover:underline">
                 Baixar
               </a>
             </div>
@@ -259,7 +259,7 @@ function CarouselEditor({ clientId, carousel, onChanged }: { clientId: string; c
       <Card className="space-y-2">
         <Label htmlFor="carousel-caption">Legenda</Label>
         <Textarea id="carousel-caption" value={content.caption} onChange={(e) => setContent({ ...content, caption: e.target.value })} data-testid="carousel-caption" />
-        <p className="text-xs text-muted">{[content.cta, content.hashtags.map((h) => `#${h}`).join(" ")].filter(Boolean).join(" · ")}</p>
+        <p className="t5 text-text-muted">{[content.cta, content.hashtags.map((h) => `#${h}`).join(" ")].filter(Boolean).join(" · ")}</p>
         <BrandVoiceCheck clientId={clientId} text={content.caption} kind="post" onRewrite={(text) => setContent({ ...content, caption: text })} />
         {content.slides[0] && (
           <PanelTester clientId={clientId} initial={content.slides[0].title} label="Testar o gancho (slide 1) com o público" onApply={(text) => setSlide(0, { title: text.slice(0, 60) })} />
@@ -277,7 +277,7 @@ function CarouselEditor({ clientId, carousel, onChanged }: { clientId: string; c
         <Button variant="ghost" onClick={schedule} disabled={dirty} data-testid="carousel-schedule">
           <Icon name="calendar" size={14} /> {carousel.postId ? "Atualizar no calendário" : "Levar para o calendário"}
         </Button>
-        {scheduled && <span className="text-sm text-accent" data-testid="carousel-scheduled">No calendário como rascunho ✓</span>}
+        {scheduled && <span className="t3 text-text" data-testid="carousel-scheduled">No calendário como rascunho ✓</span>}
       </div>
     </div>
   );

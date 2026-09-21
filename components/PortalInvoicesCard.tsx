@@ -3,7 +3,7 @@
 import { useEffect, useState } from "react";
 import { fmtMoney, useUiLang } from "@/lib/i18n";
 import type { InvoiceState } from "@/lib/invoice-rules";
-import { Card, SectionTitle } from "./ui";
+import { SectionTitle } from "./ui";
 
 type Row = { id: string; month: string; total: number; dueDate: string; state: InvoiceState; token: string; paidAt: string | null };
 
@@ -29,32 +29,32 @@ export default function PortalInvoicesCard({ clientId }: { clientId: string }) {
   if (!rows) return null;
   if (rows.length === 0) {
     return (
-      <Card data-testid="portal-invoices-empty">
+      <section data-testid="portal-invoices-empty" className="border-t border-edge pt-3">
         <SectionTitle>Financeiro</SectionTitle>
-        <p className="text-sm text-muted">Nenhuma fatura por aqui ainda. Quando a agência enviar, ela aparece aqui com Pix copia e cola.</p>
-      </Card>
+        <p className="t3 text-text-muted">Nenhuma fatura por aqui ainda. Quando a agência enviar, ela aparece aqui com Pix copia e cola.</p>
+      </section>
     );
   }
   return (
-    <Card data-testid="portal-invoices">
+    <section data-testid="portal-invoices" className="border-t border-edge pt-3">
       <SectionTitle>Financeiro</SectionTitle>
-      <ul className="space-y-1.5 text-sm">
+      <ul className="space-y-1.5 t3">
         {rows.map((row) => (
           <li key={row.id}>
             <a
               href={`/fatura/${row.token}`}
-              className="flex items-center justify-between gap-2 rounded-md border border-edge bg-surface-2 px-3 py-2 hover:border-accent/60"
+              className="flex items-center justify-between gap-2 rounded-md border border-edge bg-surface-sunken px-3 py-2 hover:border-edge"
               data-state={row.state}
             >
               <span>
                 <span className="font-medium">{row.month}</span>{" "}
-                <span className={`text-xs ${row.state === "overdue" ? "text-red-500" : "text-muted"}`}>· {LABEL[row.state]}</span>
+                <span className={`t5 ${row.state === "overdue" ? "text-negative" : "text-text-muted"}`}>· {LABEL[row.state]}</span>
               </span>
               <span className="tabular-nums">{fmtMoney(row.total, lang)}</span>
             </a>
           </li>
         ))}
       </ul>
-    </Card>
+    </section>
   );
 }

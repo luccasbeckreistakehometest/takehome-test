@@ -10,10 +10,10 @@ export default function NewProfessionalPage() {
   const router = useRouter();
   const [created, setCreated] = useState<{ professional: Professional; login: OneTimeLoginData } | null>(null);
   return (
-    <div className="mx-auto max-w-3xl space-y-6">
+    <div className="max-w-[46rem] space-y-6">
       <div>
-        <h1 className="font-[family-name:var(--font-display)] text-2xl font-bold tracking-tight">Cadastro de profissional</h1>
-        <p className="mt-1 text-sm text-muted">
+        <h1 className="d3">Cadastro de profissional</h1>
+        <p className="t3 measure-lede mt-2 text-text-muted">
           Fotógrafo(a) ou designer: preencha o perfil para receber demandas com fit real — o match considera skills,
           localização, especialidade e o histórico de entregas na plataforma.
         </p>

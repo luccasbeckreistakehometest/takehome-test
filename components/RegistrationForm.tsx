@@ -91,20 +91,28 @@ export default function RegistrationForm({
   if (!role) {
     return (
       <div className="space-y-3">
-        <p className="text-sm text-muted">Que tipo de conta você quer criar?</p>
-        <div className="grid gap-3 sm:grid-cols-3">
-          {(Object.keys(ROLE_INFO) as Role[]).map((r) => (
+        <p className="t6 text-text-muted">Que tipo de conta você quer criar?</p>
+        {/* Escolha é uma LISTA: três cartões iguais lado a lado não dizem qual é
+            a diferença, só que existem três. Numeral pendurado, régua entre as
+            opções e a descrição na medida de leitura. */}
+        <div className="mt-2 border-t border-edge">
+          {(Object.keys(ROLE_INFO) as Role[]).map((r, i) => (
             <button
               key={r}
               type="button"
               onClick={() => setRole(r)}
-              className="group flex flex-col items-start gap-2 rounded-xl border border-edge bg-surface-2 p-4 text-left transition-all hover:-translate-y-0.5 hover:border-accent"
+              className="group flex w-full items-baseline gap-4 border-b border-rule py-4 text-left transition-colors duration-[var(--dur-1)] hover:bg-surface-sunken"
             >
-              <span className="grid size-10 place-items-center rounded-lg bg-accent/10 text-accent transition-colors group-hover:bg-accent group-hover:text-accent-ink">
-                <Icon name={ROLE_INFO[r].icon} size={20} />
+              <span className="idx t5 w-6 shrink-0">{String(i + 1).padStart(2, "0")}</span>
+              <span className="min-w-0 flex-1">
+                <span className="t2 block font-medium underline-offset-4 group-hover:underline">
+                  {ROLE_INFO[r].label}
+                </span>
+                <span className="t4 measure-prose mt-0.5 block text-text-muted">
+                  {ROLE_INFO[r].blurb}
+                </span>
               </span>
-              <span className="font-semibold">{ROLE_INFO[r].label}</span>
-              <span className="text-xs text-muted">{ROLE_INFO[r].blurb}</span>
+              <Icon name="arrow-right" size={16} className="shrink-0 text-text-muted" />
             </button>
           ))}
         </div>
@@ -115,14 +123,13 @@ export default function RegistrationForm({
   const header = (
     <>
       {!fixedRole && (
-        <button type="button" onClick={() => setRole(null)} className="text-xs text-muted transition-colors hover:text-foreground">
-          ← trocar tipo de conta
+        <button type="button" onClick={() => setRole(null)} className="t5 text-text-muted underline-offset-4 transition-colors hover:text-text hover:underline">
+          Trocar tipo de conta
         </button>
       )}
-      <div className="flex items-center gap-2 rounded-md border border-edge bg-surface-2 px-3 py-2 text-sm">
-        <Icon name={ROLE_INFO[role].icon} size={16} className="text-accent" />
-        <span className="font-medium">{ROLE_INFO[role].label}</span>
-      </div>
+      <p className="t6 border-b border-edge pb-2 text-text-muted">
+        Conta de <span className="text-text">{ROLE_INFO[role].label}</span>
+      </p>
     </>
   );
 
@@ -166,7 +173,7 @@ export default function RegistrationForm({
             <Input id="reg-country" autoComplete="country-name" value={form.country} onChange={(e) => setForm({ ...form, country: e.target.value })} />
           </div>
           {!token && (
-            <p className="text-xs text-muted sm:col-span-2" data-testid="reg-brand-house-note">
+            <p className="t5 text-text-muted sm:col-span-2" data-testid="reg-brand-house-note">
               Sua marca fica com o time da Marqa: a gente pode ver os dados para dar suporte e, se você escolher ter uma
               agência cuidando, para fazer as entregas. Outras agências não veem nada.
             </p>
@@ -206,7 +213,7 @@ export default function RegistrationForm({
           required
           data-testid="reg-email"
         />
-        <p className="mt-1 text-xs text-muted">Você entra com ele (ou com o usuário que vamos mostrar).</p>
+        <p className="mt-1 t5 text-text-muted">Você entra com ele (ou com o usuário que vamos mostrar).</p>
       </div>
 
       <div>
@@ -231,11 +238,11 @@ export default function RegistrationForm({
         <input id="reg-website" tabIndex={-1} autoComplete="off" value={form.website} onChange={(e) => setForm({ ...form, website: e.target.value })} />
       </div>
 
-      <label className="flex items-start gap-2 text-sm text-muted" htmlFor="reg-terms">
+      <label className="flex items-start gap-2 t3 text-text-muted" htmlFor="reg-terms">
         <input
           id="reg-terms"
           type="checkbox"
-          className="mt-1 size-4 accent-[var(--accent)]"
+          className="mt-1 size-4 accent-[var(--brand-solid)]"
           checked={acceptTerms}
           onChange={(e) => setAcceptTerms(e.target.checked)}
           required
@@ -243,11 +250,11 @@ export default function RegistrationForm({
         />
         <span>
           Li e aceito os{" "}
-          <Link href="/termos" target="_blank" className="text-accent hover:underline">
+          <Link href="/termos" target="_blank" className="text-text hover:underline">
             Termos de Uso
           </Link>{" "}
           e a{" "}
-          <Link href="/privacidade" target="_blank" className="text-accent hover:underline">
+          <Link href="/privacidade" target="_blank" className="text-text hover:underline">
             Política de Privacidade
           </Link>
           .

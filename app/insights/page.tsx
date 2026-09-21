@@ -3,7 +3,7 @@
 import { useEffect, useState } from "react";
 import Link from "next/link";
 import { api } from "@/lib/api";
-import { Card, SectionTitle, Skeleton, Tag } from "@/components/ui";
+import { Card, Column, EmptyState, Pagination, SectionTitle, Skeleton, Table, Tag } from "@/components/ui";
 import TierBadge, { TierProgress } from "@/components/TierBadge";
 import PulseOverviewCard from "@/components/PulseOverviewCard";
 import { Icon, type IconName } from "@/components/icons";
@@ -58,6 +58,9 @@ const TYPE_LABELS: Record<string, string> = {
 export default function InsightsPage() {
   const lang = useUiLang();
   const [data, setData] = useState<Insights | null>(null);
+  // A carteira paginada: a tela media 8.016px listando os mesmos ~70 clientes
+  // duas vezes (§9.1 pede fim de paginação como estado obrigatório).
+  const [page, setPage] = useState(1);
 
   useEffect(() => {
     const load = () => api<Insights>("/api/insights").then(setData).catch(() => {});
@@ -70,7 +73,7 @@ export default function InsightsPage() {
     return (
       <div className="space-y-6">
         <Skeleton className="h-9 w-48" />
-        <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-5">
+        <div className="grid gap-x-8 gap-y-5 border-y border-edge py-4 sm:grid-cols-3 lg:grid-cols-5">
           {Array.from({ length: 5 }).map((_, i) => (
             <Skeleton key={i} className="h-24" />
           ))}
@@ -92,7 +95,28 @@ export default function InsightsPage() {
     { label: "Aguardando aprovação", value: String(data.counts.awaitingApproval), icon: "check", href: "/production" },
     { label: "Reuniões futuras", value: String(data.counts.meetingsUpcoming), icon: "calendar", href: "/agenda" },
     { label: "Posts agendados", value: String(data.counts.scheduledPosts), icon: "send", href: "/agenda" },
-    { label: "Horas & margem", value: "→", icon: "clock", href: "/finance" },
+    { label: "Horas & margem", value: "Abrir", icon: "clock", href: "/finance" },
+  ];
+
+  const PER_PAGE = 10;
+  const clientPages = Math.max(1, Math.ceil(data.clients.length / PER_PAGE));
+  const currentPage = Math.min(page, clientPages);
+  const pageRows = data.clients.slice((currentPage - 1) * PER_PAGE, currentPage * PER_PAGE);
+  const clientColumns: Column<Insights["clients"][number]>[] = [
+    {
+      key: "name",
+      header: "Cliente",
+      width: "200px",
+      cell: (c) => (
+        <Link href={`/clients/${c.id}`} className="hit-40 flex items-center gap-2 font-medium underline-offset-4 hover:underline">
+          <span className="size-2 shrink-0 rounded-full" style={{ backgroundColor: TIER_COLORS[c.tier.tier] }} />
+          <span className="truncate">{c.name}</span>
+        </Link>
+      ),
+    },
+    { key: "tier", header: "Elo", width: "90px", cell: (c) => c.tier.tier },
+    { key: "paid", header: "Pagas", width: "80px", align: "right", cell: (c) => c.paidProjects },
+    { key: "gen", header: "Entregáveis", width: "110px", align: "right", cell: (c) => c.generations },
   ];
 
   const funnelMax = Math.max(1, ...Object.values(data.funnel.byStatus));
@@ -102,11 +126,8 @@ export default function InsightsPage() {
     <div className="space-y-6">
       <div className="flex flex-wrap items-center justify-between gap-3">
         <div>
-          <h1 className="flex items-center gap-2 font-[family-name:var(--font-display)] text-2xl font-bold tracking-tight">
-            <Icon name="chart" size={24} className="text-accent" />
-            Insights
-          </h1>
-          <p className="mt-1 text-sm text-muted">
+          <h1 className="d3">Insights</h1>
+          <p className="t3 measure-lede mt-2 text-text-muted">
             O andamento de tudo — demandas, clientes, campanhas e produção — em um só lugar.
           </p>
         </div>
@@ -118,7 +139,7 @@ export default function InsightsPage() {
           <div>
             <SectionTitle>Elo da agência</SectionTitle>
             <TierBadge info={data.agency.tier} />
-            <p className="mt-1.5 text-xs text-muted">{data.agency.tier.reason}</p>
+            <p className="mt-1.5 t5 text-text-muted">{data.agency.tier.reason}</p>
           </div>
           <div className="w-full max-w-xl flex-1">
             <TierProgress info={data.agency.tier} />
@@ -126,43 +147,50 @@ export default function InsightsPage() {
         </div>
       </Card>
 
-      {/* KPIs */}
-      <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4 xl:grid-cols-7">
-        {kpis.map((kpi, i) => (
-          <Link key={kpi.label} href={kpi.href} style={{ animationDelay: `${i * 40}ms` }} className="animate-fade-in">
-            <Card hover className="h-full">
-              <Icon name={kpi.icon} size={20} className="text-accent" />
-              <p className="mt-2 font-[family-name:var(--font-display)] text-2xl font-bold">
+      {/* Figuras: sete ladrilhos com ícone e número em display viram uma faixa
+          com régua. Número que se compara é Archivo tabular (§3.1). */}
+      <dl className="grid gap-x-8 gap-y-5 border-y border-edge py-4 sm:grid-cols-2 lg:grid-cols-4 xl:grid-cols-7">
+        {kpis.map((kpi) => (
+          <div key={kpi.label} className="min-w-0">
+            <dt className="t6 text-text-muted">{kpi.label}</dt>
+            <dd className="mt-1">
+              <Link href={kpi.href} className="n2 hit-40 block truncate underline-offset-4 hover:underline">
                 {kpi.value}
-              </p>
-              <p className="text-xs text-muted">{kpi.label}</p>
-            </Card>
-          </Link>
+              </Link>
+            </dd>
+          </div>
         ))}
-      </div>
+      </dl>
 
       <div className="grid gap-6 lg:grid-cols-2">
         {/* Funil de demandas */}
         <Card>
           <SectionTitle>Funil de demandas</SectionTitle>
           {data.funnel.totalProjects === 0 ? (
-            <p className="text-sm text-muted">Nenhuma demanda ainda.</p>
+            <p className="t3 text-text-muted">Nenhuma demanda ainda.</p>
           ) : (
             <div className="space-y-2">
               {(Object.keys(data.funnel.byStatus) as ProjectStatus[]).map((status) => {
                 const value = data.funnel.byStatus[status];
                 return (
-                  <div key={status} className="flex items-center gap-3 text-sm">
-                    <span className="w-44 shrink-0 truncate text-muted">
+                  <div key={status} className="flex items-center gap-3 t3">
+                    <span className="w-44 shrink-0 truncate text-text-muted">
                       {PROJECT_STATUS_LABELS[status]}
                     </span>
-                    <div className="h-5 flex-1 overflow-hidden rounded bg-surface-2">
-                      <div
-                        className="flex h-full items-center justify-end rounded bg-accent px-2 text-[11px] font-semibold text-accent-ink transition-all duration-700"
-                        style={{ width: `${Math.max((value / funnelMax) * 100, value ? 8 : 0)}%` }}
-                      >
-                        {value > 0 && value}
-                      </div>
+                    {/* §9.3: eixo de valor começando em zero, sem moldura e
+                        sem barra desenhada onde o valor é zero — o quadradinho
+                        preto de um zero mentia sobre o dado. */}
+                    <div className="h-5 flex-1 rounded-xs bg-surface-sunken">
+                      {value > 0 ? (
+                        <div
+                          className="flex h-full items-center justify-end rounded-xs bg-text px-2 text-[11px] font-medium text-canvas transition-all duration-700"
+                          style={{ width: `${Math.max((value / funnelMax) * 100, 8)}%` }}
+                        >
+                          {value}
+                        </div>
+                      ) : (
+                        <span className="sr-only">0</span>
+                      )}
                     </div>
                   </div>
                 );
@@ -174,20 +202,24 @@ export default function InsightsPage() {
         {/* Ritmo da semana */}
         <Card>
           <SectionTitle>Ritmo dos últimos 7 dias</SectionTitle>
-          {data.activityByDay.length === 0 ? (
-            <p className="text-sm text-muted">Sem atividade registrada na semana.</p>
+          {data.activityByDay.length === 0 || activityMax <= 0 || data.activityByDay.every((d) => d.c === 0) ? (
+            <EmptyState
+              icon="chart"
+              title="As ações da agência dos últimos sete dias aparecem aqui, uma barra por dia."
+              condition="Conta geração de entregável, aprovação, post agendado e mensagem."
+            />
           ) : (
             <div className="flex h-40 items-end justify-between gap-2">
               {data.activityByDay.map((day) => (
                 <div key={day.day} className="flex flex-1 flex-col items-center gap-1.5">
                   <div className="flex w-full flex-1 items-end">
                     <div
-                      className="w-full rounded-t bg-accent/80 transition-all duration-700 hover:bg-accent"
+                      className="w-full rounded-t bg-surface-sunken transition-all duration-700 hover:bg-surface-sunken"
                       style={{ height: `${(day.c / activityMax) * 100}%` }}
                       title={`${day.c} ações`}
                     />
                   </div>
-                  <span className="text-[10px] text-muted">
+                  <span className="text-[10px] text-text-muted">
                     {new Date(day.day + "T12:00").toLocaleDateString("pt-BR", { weekday: "short" }).slice(0, 3)}
                   </span>
                 </div>
@@ -200,16 +232,16 @@ export default function InsightsPage() {
         <Card>
           <SectionTitle>Entregáveis gerados por tipo</SectionTitle>
           {data.deliverables.total === 0 ? (
-            <p className="text-sm text-muted">Nenhum entregável gerado ainda.</p>
+            <p className="t3 text-text-muted">Nenhum entregável gerado ainda.</p>
           ) : (
             <div className="flex flex-wrap gap-2">
               {data.deliverables.byType.map((t) => (
                 <span
                   key={t.type}
-                  className="rounded-lg border border-edge bg-surface-2 px-3 py-2 text-sm"
+                  className="rounded-lg border border-edge bg-surface-sunken px-3 py-2 t3"
                 >
                   {TYPE_LABELS[t.type] ?? t.type}{" "}
-                  <span className="font-semibold text-accent">{t.c}</span>
+                  <span className="font-semibold text-text">{t.c}</span>
                 </span>
               ))}
             </div>
@@ -224,18 +256,18 @@ export default function InsightsPage() {
             </span>
           </SectionTitle>
           {data.overdue.length === 0 ? (
-            <p className="text-sm text-muted">Nenhuma demanda atrasada. 🎯</p>
+            <p className="t3 text-text-muted">Nenhuma demanda atrasada. </p>
           ) : (
             <div className="space-y-1.5">
               {data.overdue.map((o) => (
                 <Link
                   key={o.id}
                   href={`/production?project=${o.id}`}
-                  className="flex items-center justify-between rounded-md border border-red-500/30 bg-red-500/5 px-3 py-2 text-sm transition-colors hover:border-red-500/60"
+                  className="flex items-center justify-between rounded-md border border-negative/30 bg-negative-wash px-3 py-2 t3 transition-colors hover:border-negative/60"
                 >
                   <span className="truncate">
                     <span className="font-medium">{o.title}</span>
-                    <span className="text-muted"> · {o.clientName}</span>
+                    <span className="text-text-muted"> · {o.clientName}</span>
                   </span>
                   <Tag>{new Date(o.deadline + "T12:00").toLocaleDateString("pt-BR")}</Tag>
                 </Link>
@@ -251,50 +283,41 @@ export default function InsightsPage() {
         {/* Clientes por elo */}
         <Card>
           <SectionTitle>Carteira de clientes</SectionTitle>
-          {data.clients.length === 0 ? (
-            <p className="text-sm text-muted">Nenhum cliente cadastrado.</p>
-          ) : (
-            <div className="space-y-2">
-              {data.clients.map((c) => (
-                <Link
-                  key={c.id}
-                  href={`/clients/${c.id}`}
-                  className="flex items-center justify-between gap-3 rounded-md border border-edge bg-surface-2 px-3 py-2 text-sm transition-colors hover:border-accent/60"
-                >
-                  <span className="flex items-center gap-2">
-                    <span
-                      className="size-2 rounded-full"
-                      style={{ backgroundColor: TIER_COLORS[c.tier.tier] }}
-                    />
-                    <span className="font-medium">{c.name}</span>
-                  </span>
-                  <span className="text-xs text-muted">
-                    {c.paidProjects} pagas · {c.generations} entregáveis
-                  </span>
-                </Link>
-              ))}
-            </div>
-          )}
+          <Table
+            caption="Clientes da carteira por elo, demandas pagas e entregáveis gerados"
+            rows={pageRows}
+            rowKey={(c) => c.id}
+            minWidth={480}
+            columns={clientColumns}
+            empty={
+              <EmptyState
+                icon="briefcase"
+                title="Cada cliente da carteira aparece aqui com elo, demandas pagas e entregáveis."
+                condition="O primeiro entra assim que você cadastrar um cliente."
+              />
+            }
+          />
+          {clientPages > 1 && <Pagination page={currentPage} pages={clientPages} onChange={setPage} />}
         </Card>
 
         {/* Top profissionais */}
         <Card>
           <SectionTitle>Profissionais em destaque</SectionTitle>
           {data.topProfessionals.length === 0 ? (
-            <p className="text-sm text-muted">Nenhum profissional cadastrado.</p>
+            <p className="t3 text-text-muted">Nenhum profissional cadastrado.</p>
           ) : (
             <div className="space-y-2">
               {data.topProfessionals.map((p) => (
                 <Link
                   key={p.id}
                   href={`/professionals/${p.id}`}
-                  className="flex items-center justify-between gap-3 rounded-md border border-edge bg-surface-2 px-3 py-2 text-sm transition-colors hover:border-accent/60"
+                  className="flex items-center justify-between gap-3 rounded-md border border-edge bg-surface-sunken px-3 py-2 t3 transition-colors hover:border-edge"
                 >
                   <span className="flex items-center gap-2">
-                    <Icon name="user" size={15} className="text-muted" />
+                    <Icon name="user" size={15} className="text-text-muted" />
                     <span className="font-medium">{p.name}</span>
                   </span>
-                  <span className="text-xs text-muted">
+                  <span className="t5 text-text-muted">
                     {p.completed} entregas
                     {p.avgScore != null && ` · nota ${p.avgScore}`}
                   </span>

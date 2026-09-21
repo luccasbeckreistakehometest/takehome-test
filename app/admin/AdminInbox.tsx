@@ -71,11 +71,11 @@ export default function AdminInbox() {
       {error && <ErrorBox message={error} />}
       <ul className="space-y-3" data-testid="admin-inbox">
         {messages.map((m) => (
-          <li key={m.id} className="rounded-lg border border-edge bg-surface-2 p-3 text-sm">
+          <li key={m.id} className="rounded-lg border border-edge bg-surface-sunken p-3 t3">
             <div className="flex flex-wrap items-center justify-between gap-2">
               <p>
                 <span className="font-medium">{m.name}</span>{" "}
-                <a href={`mailto:${m.email}`} className="text-accent hover:underline">
+                <a href={`mailto:${m.email}`} className="text-text hover:underline">
                   {m.email}
                 </a>
               </p>
@@ -95,15 +95,15 @@ export default function AdminInbox() {
               </div>
             </div>
             {(m.meta.company || m.meta.website) && (
-              <p className="mt-1 text-xs text-muted">
+              <p className="mt-1 t5 text-text-muted">
                 {[m.meta.company, m.meta.website].filter(Boolean).join(" · ")}
               </p>
             )}
             <p className="mt-2 whitespace-pre-wrap break-words">{m.message}</p>
-            <p className="mt-2 text-xs text-muted">{new Date(m.createdAt).toLocaleString("pt-BR")}</p>
+            <p className="mt-2 t5 text-text-muted">{new Date(m.createdAt).toLocaleString("pt-BR")}</p>
           </li>
         ))}
-        {messages.length === 0 && <li className="text-sm text-muted">Nenhuma mensagem.</li>}
+        {messages.length === 0 && <li className="t3 text-text-muted">Nenhuma mensagem.</li>}
       </ul>
     </Card>
   );

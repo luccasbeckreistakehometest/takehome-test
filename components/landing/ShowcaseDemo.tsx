@@ -7,22 +7,22 @@ const tx = (lang: Lang, pt: string, en: string) => (lang === "pt" ? pt : en);
 
 function Frame({ children, lang }: { children: React.ReactNode; lang: Lang }) {
   return (
-    <div className="relative mt-5 rounded-xl border border-edge bg-background/60 px-4 pb-4 pt-7" aria-hidden="true">
-      <span className="absolute right-3 top-2 text-[10px] uppercase tracking-widest text-muted">{tx(lang, "exemplo", "example")}</span>
+    <figure className="relative mt-0 rounded-md border border-rule bg-surface px-4 pb-4 pt-7" aria-hidden="true">
+      <figcaption className="t6 absolute right-3 top-2 text-text-muted">{tx(lang, "exemplo", "example")}</figcaption>
       {children}
-    </div>
+    </figure>
   );
 }
 
 function Bar({ label, value, max, accent = true }: { label: string; value: number; max: number; accent?: boolean }) {
   return (
     <div>
-      <div className="flex justify-between text-[11px] text-muted">
+      <div className="t5 flex justify-between text-text-muted">
         <span>{label}</span>
-        <span className="tabular-nums">{`${value}/${max}`}</span>
+        <span className="tnum">{`${value}/${max}`}</span>
       </div>
-      <div className="mt-1 h-1.5 overflow-hidden rounded-full bg-surface-2">
-        <div className={`h-full rounded-full ${accent ? "bg-accent" : "bg-red-500"}`} style={{ width: `${Math.min(100, (value / max) * 100)}%` }} />
+      <div className="mt-1 h-1.5 overflow-hidden rounded-xs bg-surface-sunken">
+        <div className={`h-full rounded-xs ${accent ? "bg-text" : "bg-text-faint"}`} style={{ width: `${Math.min(100, (value / max) * 100)}%` }} />
       </div>
     </div>
   );
@@ -35,15 +35,15 @@ export default function ShowcaseDemo({ demo, lang }: { demo: Demo; lang: Lang })
   if (demo === "approval") {
     return (
       <Frame lang={lang}>
-        <p className="text-xs text-muted">{tx(lang, "Café Aurora · 3 posts para aprovar", "Café Aurora · 3 posts to approve")}</p>
-        <div className="mt-2 rounded-lg border border-edge bg-surface p-3">
-          <p className="text-sm font-semibold">{tx(lang, "Terça · Reels do bolo de cenoura", "Tuesday · Carrot cake Reel")}</p>
+        <p className="t5 text-text-muted">{tx(lang, "Café Aurora · 3 posts para aprovar", "Café Aurora · 3 posts to approve")}</p>
+        <div className="mt-2 rounded-sm border border-edge bg-surface p-3">
+          <p className="t3 font-semibold">{tx(lang, "Terça · Reels do bolo de cenoura", "Tuesday · Carrot cake Reel")}</p>
           <div className="mt-3 flex flex-wrap gap-2">
-            <span className="rounded-md bg-accent px-3 py-1 text-xs font-semibold text-accent-ink">{tx(lang, "Aprovar", "Approve")}</span>
-            <span className="rounded-md border border-edge px-3 py-1 text-xs">{tx(lang, "Pedir ajuste", "Ask for changes")}</span>
+            <span className="t5 rounded-xs bg-text px-3 py-1 font-medium text-canvas">{tx(lang, "Aprovar", "Approve")}</span>
+            <span className="t5 rounded-xs border border-edge px-3 py-1">{tx(lang, "Pedir ajuste", "Ask for changes")}</span>
           </div>
         </div>
-        <p className="mt-2 flex items-center gap-1.5 text-[11px] text-emerald-500">
+        <p className="t5 mt-2 flex items-center gap-1.5 text-positive">
           <Icon name="check" size={12} /> {tx(lang, "Aprovado por Ana · agendado", "Approved by Ana · scheduled")}
         </p>
       </Frame>
@@ -56,17 +56,17 @@ export default function ShowcaseDemo({ demo, lang }: { demo: Demo; lang: Lang })
           {[2, 1, 0].map((i) => (
             <div
               key={i}
-              className="absolute top-0 h-28 w-[5.5rem] rounded-lg border border-edge p-2 shadow-lg"
-              style={{ left: `${i * 2.4}rem`, background: i === 0 ? "var(--accent)" : "var(--surface)", transform: `rotate(${(i - 1) * 4}deg)` }}
+              className="absolute top-0 h-28 w-[5.5rem] rounded-sm border border-edge p-2 "
+              style={{ left: `${i * 2.4}rem`, background: i === 0 ? "var(--surface-sunken)" : "var(--surface)", transform: `rotate(${(i - 1) * 4}deg)` }}
             >
-              <div className={`h-1.5 w-10 rounded-full ${i === 0 ? "bg-accent-ink/80" : "bg-edge"}`} />
-              <div className={`mt-2 h-1.5 w-14 rounded-full ${i === 0 ? "bg-accent-ink/60" : "bg-edge"}`} />
-              <div className={`mt-1 h-1.5 w-12 rounded-full ${i === 0 ? "bg-accent-ink/60" : "bg-edge"}`} />
-              <p className={`absolute bottom-1.5 right-2 text-[10px] font-bold ${i === 0 ? "text-accent-ink" : "text-muted"}`}>{`${i + 1}/6`}</p>
+              <div className={`h-1.5 w-10 rounded-xs ${i === 0 ? "bg-text" : "bg-rule"}`} />
+              <div className={`mt-2 h-1.5 w-14 rounded-xs ${i === 0 ? "bg-text-text-muted" : "bg-rule"}`} />
+              <div className={`mt-1 h-1.5 w-12 rounded-xs ${i === 0 ? "bg-text-text-muted" : "bg-rule"}`} />
+              <p className="t5 tnum absolute bottom-1.5 right-2 text-text-muted">{`${i + 1}/6`}</p>
             </div>
           ))}
         </div>
-        <p className="mt-2 flex items-center gap-1.5 text-[11px] text-muted">
+        <p className="mt-2 flex items-center gap-1.5 t5 text-text-muted">
           <Icon name="download" size={12} /> {tx(lang, "6 imagens 1080×1350 · ZIP", "6 images 1080×1350 · ZIP")}
         </p>
       </Frame>
@@ -76,25 +76,25 @@ export default function ShowcaseDemo({ demo, lang }: { demo: Demo; lang: Lang })
     return (
       <Frame lang={lang}>
         <div className="flex items-center gap-3">
-          <span className="grid size-10 shrink-0 place-items-center rounded-full bg-accent text-accent-ink">
+          <span className="grid size-10 shrink-0 place-items-center rounded-full bg-text text-canvas">
             <Icon name="mic" size={18} />
           </span>
           <div className="flex h-8 items-center gap-1">
             {[10, 22, 16, 28, 12, 24, 18, 8, 20, 14].map((h, i) => (
-              <span key={i} className="w-1 animate-pulse rounded-full bg-accent/70" style={{ height: h, animationDelay: `${i * 90}ms` }} />
+              <span key={i} className="w-1 rounded-xs bg-text-faint" style={{ height: h }} />
             ))}
           </div>
         </div>
-        <p className="mt-3 rounded-lg bg-surface-2 px-3 py-2 text-xs">{tx(lang, "“Quem mais compra com vocês hoje?”", "“Who buys from you the most today?”")}</p>
-        <p className="mt-1.5 text-[11px] text-muted">{tx(lang, "Público, tom e canais anotados ✓", "Audience, tone and channels noted ✓")}</p>
+        <p className="mt-3 rounded-sm bg-surface-sunken px-3 py-2 t5">{tx(lang, "“Quem mais compra com vocês hoje?”", "“Who buys from you the most today?”")}</p>
+        <p className="mt-1.5 t5 text-text-muted">{tx(lang, "Público, tom e canais anotados ✓", "Audience, tone and channels noted ✓")}</p>
       </Frame>
     );
   }
   if (demo === "radar") {
     return (
       <Frame lang={lang}>
-        <p className="font-[family-name:var(--font-display)] text-4xl font-extrabold text-accent">{tx(lang, "15,8%", "15.8%")}</p>
-        <p className="text-[11px] text-muted">{tx(lang, "das menções nas respostas da IA", "of mentions in AI answers")}</p>
+        <p className="n2">{tx(lang, "15,8%", "15.8%")}</p>
+        <p className="t5 text-text-muted">{tx(lang, "das menções nas respostas da IA", "of mentions in AI answers")}</p>
         <div className="mt-3 space-y-2">
           <Bar label={tx(lang, "Concorrente A", "Competitor A")} value={7} max={19} accent={false} />
           <Bar label={tx(lang, "Sua marca", "Your brand")} value={3} max={19} />
@@ -109,7 +109,7 @@ export default function ShowcaseDemo({ demo, lang }: { demo: Demo; lang: Lang })
           <Bar label={tx(lang, "Posts no feed", "Feed posts")} value={10} max={12} />
           <Bar label="Stories" value={8} max={8} />
         </div>
-        <p className="mt-3 rounded-lg border border-accent/40 bg-accent/10 px-3 py-2 text-xs">
+        <p className="t5 mt-3 rounded-xs border border-rule bg-surface-sunken px-3 py-2">
           {tx(lang, "Extra: +2 Stories · R$ 120 — aprovado pelo cliente", "Extra: +2 Stories · R$ 120 — approved by the client")}
         </p>
       </Frame>
@@ -125,9 +125,9 @@ export default function ShowcaseDemo({ demo, lang }: { demo: Demo; lang: Lang })
             ))}
           </div>
           <div>
-            <p className="font-[family-name:var(--font-display)] text-2xl font-bold">R$ 2.400</p>
-            <p className="text-[11px] text-muted">{tx(lang, "fee de outubro · vence dia 10", "October fee · due on the 10th")}</p>
-            <p className="mt-1.5 text-[11px] font-medium text-accent">{tx(lang, "Pix copia e cola", "Pix copy and paste")}</p>
+            <p className="n2">R$ 2.400</p>
+            <p className="t5 text-text-muted">{tx(lang, "fee de outubro · vence dia 10", "October fee · due on the 10th")}</p>
+            <p className="mt-1.5 t5 font-medium text-text-muted">{tx(lang, "Pix copia e cola", "Pix copy and paste")}</p>
           </div>
         </div>
       </Frame>
@@ -143,9 +143,9 @@ export default function ShowcaseDemo({ demo, lang }: { demo: Demo; lang: Lang })
       <Frame lang={lang}>
         <ul className="space-y-1.5">
           {rows.map(([pt, en, n]) => (
-            <li key={pt} className="flex items-center justify-between gap-2 rounded-full border border-edge bg-surface px-3 py-1.5 text-xs">
+            <li key={pt} className="t5 flex items-center justify-between gap-2 border-b border-rule py-1.5">
               <span className="truncate">{tx(lang, pt, en)}</span>
-              <span className="shrink-0 tabular-nums text-muted">{tx(lang, `${n} cliques`, `${n} clicks`)}</span>
+              <span className="tnum shrink-0 text-text-muted">{tx(lang, `${n} cliques`, `${n} clicks`)}</span>
             </li>
           ))}
         </ul>
@@ -160,16 +160,16 @@ export default function ShowcaseDemo({ demo, lang }: { demo: Demo; lang: Lang })
             ["A", 5.4, false],
             ["B", 8.3, true],
           ].map(([letter, score, win]) => (
-            <div key={String(letter)} className="flex items-center gap-2 text-xs">
-              <span className={`grid size-6 place-items-center rounded-full font-bold ${win ? "bg-accent text-accent-ink" : "bg-surface-2"}`}>{String(letter)}</span>
-              <div className="h-2 flex-1 overflow-hidden rounded-full bg-surface-2">
-                <div className={`h-full rounded-full ${win ? "bg-accent" : "bg-edge"}`} style={{ width: `${Number(score) * 10}%` }} />
+            <div key={String(letter)} className="flex items-center gap-2 t5">
+              <span className={`t5 grid size-6 place-items-center rounded-full font-medium ${win ? "bg-text text-canvas" : "bg-surface-sunken"}`}>{String(letter)}</span>
+              <div className="h-2 flex-1 overflow-hidden rounded-xs bg-surface-sunken">
+                <div className={`h-full rounded-xs ${win ? "bg-text" : "bg-text-faint"}`} style={{ width: `${Number(score) * 10}%` }} />
               </div>
-              <span className="w-8 text-right tabular-nums">{lang === "pt" ? String(score).replace(".", ",") : String(score)}</span>
+              <span className="tnum w-8 text-right">{lang === "pt" ? String(score).replace(".", ",") : String(score)}</span>
             </div>
           ))}
         </div>
-        <p className="mt-2 text-[11px] text-muted">{tx(lang, "Simulação com 4 personas da estratégia", "Simulation with 4 strategy personas")}</p>
+        <p className="mt-2 t5 text-text-muted">{tx(lang, "Simulação com 4 personas da estratégia", "Simulation with 4 strategy personas")}</p>
       </Frame>
     );
   }
@@ -177,12 +177,12 @@ export default function ShowcaseDemo({ demo, lang }: { demo: Demo; lang: Lang })
     return (
       <Frame lang={lang}>
         <div className="grid grid-cols-3 gap-2">
-          {["from-accent/60 to-accent/10", "from-sky-400/50 to-surface-2", "from-emerald-400/50 to-surface-2"].map((g) => (
-            <div key={g} className={`aspect-square rounded-lg bg-gradient-to-br ${g}`} />
+          {["var(--n-300)", "var(--n-200)", "var(--n-150)"].map((tone) => (
+            <div key={tone} className="aspect-square rounded-xs" style={{ background: tone }} />
           ))}
         </div>
-        <p className="mt-2 flex items-center gap-1.5 text-[11px] text-muted">
-          <Icon name="sparkle" size={12} className="text-accent" /> {tx(lang, "3 trabalhos · lidos pelo match da IA", "3 pieces · read by the AI match")}
+        <p className="mt-2 flex items-center gap-1.5 t5 text-text-muted">
+          <Icon name="layers" size={16} /> {tx(lang, "3 trabalhos · lidos pelo match da IA", "3 pieces · read by the AI match")}
         </p>
       </Frame>
     );
@@ -190,17 +190,17 @@ export default function ShowcaseDemo({ demo, lang }: { demo: Demo; lang: Lang })
   if (demo === "markup") {
     return (
       <Frame lang={lang}>
-        <div className="relative h-28 overflow-hidden rounded-lg bg-gradient-to-br from-accent/40 via-surface-2 to-surface">
+        <div className="relative h-28 overflow-hidden rounded-xs border border-rule bg-surface-sunken">
           {[
             [22, 30, 1],
             [64, 58, 2],
           ].map(([x, y, n]) => (
-            <span key={n} className="absolute grid size-6 place-items-center rounded-full bg-accent text-[11px] font-bold text-accent-ink shadow" style={{ left: `${x}%`, top: `${y}%` }}>
+            <span key={n} className="t5 tnum absolute grid size-6 place-items-center rounded-full bg-text font-medium text-canvas" style={{ left: `${x}%`, top: `${y}%` }}>
               {n}
             </span>
           ))}
         </div>
-        <p className="mt-2 text-[11px] text-muted">{tx(lang, "1 · Clarear o fundo   2 · Logo maior", "1 · Lighter background   2 · Bigger logo")}</p>
+        <p className="mt-2 t5 text-text-muted">{tx(lang, "1 · Clarear o fundo   2 · Logo maior", "1 · Lighter background   2 · Bigger logo")}</p>
       </Frame>
     );
   }
@@ -208,13 +208,13 @@ export default function ShowcaseDemo({ demo, lang }: { demo: Demo; lang: Lang })
   return (
     <Frame lang={lang}>
       <div className="flex items-center justify-between gap-3">
-        <span className="rounded-full bg-amber-400/20 px-3 py-1 text-xs font-bold text-amber-500">{tx(lang, "Ouro", "Gold")}</span>
-        <span className="text-xs text-muted">{tx(lang, "R$ 1.200 a receber", "R$ 1,200 to receive")}</span>
+        <span className="t6 rounded-xs bg-caution-wash px-2 py-1 text-caution">{tx(lang, "Ouro", "Gold")}</span>
+        <span className="t5 text-text-muted">{tx(lang, "R$ 1.200 a receber", "R$ 1,200 to receive")}</span>
       </div>
-      <div className="mt-3 h-2 overflow-hidden rounded-full bg-surface-2">
-        <div className="h-full w-3/4 rounded-full bg-accent" />
+      <div className="mt-3 h-2 overflow-hidden rounded-xs bg-surface-sunken">
+        <div className="h-full w-3/4 rounded-xs bg-text" />
       </div>
-      <p className="mt-2 text-[11px] text-muted">{tx(lang, "Faltam 2 entregas bem avaliadas para Platina", "2 well-rated deliveries to Platinum")}</p>
+      <p className="mt-2 t5 text-text-muted">{tx(lang, "Faltam 2 entregas bem avaliadas para Platina", "2 well-rated deliveries to Platinum")}</p>
     </Frame>
   );
 }

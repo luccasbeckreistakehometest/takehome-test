@@ -8,6 +8,7 @@ import { currentMonth, shiftMonth, type MonthlyReportData } from "@/lib/report-a
 import type { MonthlyReport } from "@/lib/reports-db";
 import MonthlyReportView, { monthTitle } from "@/components/MonthlyReportView";
 import { Button, Card, ErrorBox, Spinner } from "@/components/ui";
+import { buttonClass } from "@/lib/button-class";
 
 type Payload = {
   client: { id: string; name: string; language: "pt-BR" | "en" };
@@ -64,27 +65,27 @@ export default function PortalMonthlyReportPage({ params }: { params: Promise<{ 
     <div className="space-y-6">
       <div className="flex flex-wrap items-start justify-between gap-4">
         <div>
-          <Link href={`/portal/client/${id}`} className="text-sm text-accent hover:underline">
+          <Link href={`/portal/client/${id}`} className="t3 text-text hover:underline">
             ← Voltar ao portal
           </Link>
-          <p className="mt-2 text-xs uppercase tracking-widest text-accent">Portal do cliente</p>
-          <h1 className="font-[family-name:var(--font-display)] text-3xl font-bold tracking-tight">
+          <p className="mt-2 t6 text-text-muted">Portal do cliente</p>
+          <h1 className="d3">
             Relatório mensal
           </h1>
         </div>
         <div className="flex items-center gap-2">
-          <button onClick={() => setMonth((m) => shiftMonth(m, -1))} className="grid size-9 place-items-center rounded-md border border-edge bg-surface-2 hover:border-accent" aria-label="Mês anterior">
+          <button onClick={() => setMonth((m) => shiftMonth(m, -1))} className="grid size-9 place-items-center rounded-sm border border-edge text-text-muted hover:bg-surface-sunken" aria-label="Mês anterior">
             ‹
           </button>
           <span className="min-w-40 text-center font-medium" data-testid="report-month">{monthTitle(month, lang)}</span>
-          <button onClick={() => setMonth((m) => shiftMonth(m, 1))} className="grid size-9 place-items-center rounded-md border border-edge bg-surface-2 hover:border-accent" aria-label="Próximo mês">
+          <button onClick={() => setMonth((m) => shiftMonth(m, 1))} className="grid size-9 place-items-center rounded-sm border border-edge text-text-muted hover:bg-surface-sunken" aria-label="Próximo mês">
             ›
           </button>
         </div>
       </div>
 
       <Card className="flex flex-wrap items-center justify-between gap-3">
-        <p className="text-sm text-muted">
+        <p className="t3 text-text-muted">
           {payload?.report
             ? "Aqui está o que aconteceu na sua conta neste mês, com o resumo e as recomendações da equipe."
             : selfServe
@@ -102,9 +103,9 @@ export default function PortalMonthlyReportPage({ params }: { params: Promise<{ 
               href={`/print/report/${payload.report.token}`}
               target="_blank"
               rel="noreferrer"
-              className="rounded-md border border-edge bg-surface-2 px-3 py-2 text-sm hover:border-accent"
+              className={buttonClass("secondary")}
             >
-              📄 Salvar em PDF
+              Salvar em PDF
             </a>
           )}
         </div>
@@ -116,7 +117,18 @@ export default function PortalMonthlyReportPage({ params }: { params: Promise<{ 
           <Spinner label="Carregando o mês..." />
         </div>
       ) : (
-        <MonthlyReportView data={payload.data} summary={payload.report?.summary ?? null} lang={lang} />
+        <article className="doc mt-8 px-8 py-10 sm:px-12">
+          <div className="doc-cover">
+            <div className="doc-rule" />
+            <p className="t6 mt-4 text-n-500">Relatório mensal</p>
+            <h2 className="d2 mt-3" style={{ ["--soft" as string]: 20 }}>
+              {monthTitle(month, lang)}
+            </h2>
+          </div>
+          <div className="mt-10">
+            <MonthlyReportView data={payload.data} summary={payload.report?.summary ?? null} lang={lang} />
+          </div>
+        </article>
       )}
     </div>
   );

@@ -62,9 +62,9 @@ export default function InviteGenerator({ origin }: { origin: string }) {
   return (
     <Card className="space-y-3">
       <SectionTitle>Convites com a sua marca</SectionTitle>
-      <p className="text-sm text-muted">
+      <p className="t3 text-text-muted">
         Gere um link de convite. Quem entrar por ele vê a plataforma com a{" "}
-        <strong className="text-foreground">sua identidade (whitelabel)</strong> — logo e cores da agência.
+        <strong className="text-text">sua identidade (whitelabel)</strong> — logo e cores da agência.
         Auto-cadastros pela porta pública veem a marca da plataforma.
       </p>
 
@@ -83,7 +83,7 @@ export default function InviteGenerator({ origin }: { origin: string }) {
             value={note}
             onChange={(e) => setNote(e.target.value)}
             placeholder="Ex.: Fotógrafo indicado pela Ana"
-            className="w-full rounded-md border border-edge bg-surface-2 px-3 py-2 text-sm outline-none focus:border-accent"
+            className="w-full rounded-md border border-edge bg-surface-sunken px-3 py-2 t3 outline-none focus:border-edge"
           />
         </div>
         <div>
@@ -92,10 +92,10 @@ export default function InviteGenerator({ origin }: { origin: string }) {
             type="number"
             value={expires}
             onChange={(e) => setExpires(e.target.value)}
-            className="w-20 rounded-md border border-edge bg-surface-2 px-3 py-2 text-sm outline-none focus:border-accent"
+            className="w-20 rounded-md border border-edge bg-surface-sunken px-3 py-2 t3 outline-none focus:border-edge"
           />
         </div>
-        <Button onClick={create} disabled={creating}>
+        <Button variant="secondary" onClick={create} disabled={creating}>
           {creating ? "Gerando..." : "Gerar link"}
         </Button>
       </div>
@@ -107,20 +107,20 @@ export default function InviteGenerator({ origin }: { origin: string }) {
             return (
               <div
                 key={invite.id}
-                className="flex flex-wrap items-center justify-between gap-2 rounded-md border border-edge bg-surface-2 px-3 py-2 text-sm"
+                className="flex flex-wrap items-center justify-between gap-2 rounded-md border border-edge bg-surface-sunken px-3 py-2 t3"
               >
                 <div className="min-w-0">
                   <div className="flex items-center gap-2">
                     <Tag>{ROLE_LABEL[invite.role] ?? invite.role}</Tag>
-                    {invite.note && <span className="text-xs text-muted">{invite.note}</span>}
+                    {invite.note && <span className="t5 text-text-muted">{invite.note}</span>}
                   </div>
-                  <p className="mt-0.5 truncate font-mono text-xs text-muted">{link}</p>
+                  <p className="mt-0.5 truncate font-mono t5 text-text-muted">{link}</p>
                 </div>
                 <div className="flex items-center gap-2">
                   <CopyButton text={link} label="Copiar" />
                   <button
                     onClick={() => revoke(invite.id)}
-                    className="text-xs text-muted transition-colors hover:text-red-500"
+                    className="t5 text-text-muted transition-colors hover:text-negative"
                   >
                     Revogar
                   </button>

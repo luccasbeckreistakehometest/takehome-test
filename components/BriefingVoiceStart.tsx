@@ -45,23 +45,23 @@ export default function BriefingVoiceStart({
     return (
       <div className="space-y-2" data-testid="briefing-voice-start">
         <VoiceBriefing confirmLabel="Salvar no briefing" onConfirm={(b) => void apply(b)} onTypeInstead={() => { setTalking(false); onWrite(); }} />
-        {error && <p className="text-sm text-red-500" role="alert">{error}</p>}
+        {error && <p className="t3 text-negative" role="alert">{error}</p>}
       </div>
     );
   }
   return (
-    <div className="rounded-xl border border-accent/40 bg-accent/5 p-5" data-testid="briefing-voice-start">
+    <div className="rounded-md border border-edge bg-surface-sunken p-5" data-testid="briefing-voice-start">
       {saved ? (
-        <p className="text-sm font-medium" data-testid="briefing-voice-saved">Briefing salvo. Confira os campos na aba Briefing quando quiser.</p>
+        <p className="t3 font-medium" data-testid="briefing-voice-saved">Briefing salvo. Confira os campos na aba Briefing quando quiser.</p>
       ) : (
         <>
-          <p className="font-[family-name:var(--font-display)] text-lg font-semibold">Como prefere contar sobre sua marca?</p>
-          <p className="mt-1 text-sm text-muted">Fale como numa conversa: quando você para, a IA entende que é a vez dela e pergunta o que faltar.</p>
+          <p className="d4">Como prefere contar sobre sua marca?</p>
+          <p className="t3 measure-lede mt-2 text-text-muted">Fale como numa conversa: quando você para, a IA entende que é a vez dela e pergunta o que faltar.</p>
           <div className="mt-4 flex flex-wrap gap-2">
-            <button type="button" onClick={() => setTalking(true)} className="inline-flex items-center gap-2 rounded-md bg-accent px-4 py-2 text-sm font-medium text-accent-ink" data-testid="briefing-talk" data-tour="briefing-talk">
+            <button type="button" onClick={() => setTalking(true)} className="t3 inline-flex min-h-10 items-center gap-2 rounded-sm border border-edge bg-surface px-4 py-2 font-medium transition-colors duration-[var(--dur-1)] hover:bg-surface-sunken" data-testid="briefing-talk" data-tour="briefing-talk">
               <Icon name="mic" size={16} /> Falando
             </button>
-            <button type="button" onClick={onWrite} className="inline-flex items-center gap-2 rounded-md border border-edge bg-surface px-4 py-2 text-sm" data-testid="briefing-write">
+            <button type="button" onClick={onWrite} className="t3 inline-flex min-h-10 items-center gap-2 rounded-sm border border-edge bg-surface px-4 py-2 transition-colors duration-[var(--dur-1)] hover:bg-surface-sunken" data-testid="briefing-write">
               <Icon name="edit" size={16} /> Escrevendo
             </button>
           </div>

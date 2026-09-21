@@ -4,11 +4,11 @@ export const metadata = { title: "Treinamento" };
 
 const TRACKS = [
   {
-    role: "🏢 Agência",
+    role: "Agência",
     steps: [
       "Cadastre o cliente com o briefing mais completo possível (aba Briefing) — ele alimenta toda a IA.",
       "Rode a Estratégia & Deep Dive: a IA pesquisa o mercado real e define personas, concorrentes, apostas e metas.",
-      "Use o ✦ Kit completo para gerar estratégia → campanha → ROI → identidade → social → landing page em um clique.",
+      "Use o Kit completo para gerar estratégia → campanha → ROI → identidade → social → landing page em um clique.",
       "Rode o Radar de mercado com frequência (ideal: diário) — as próximas gerações se adaptam ao que mudou.",
       "Crie Demandas para produções (foto/design), rode o Match por IA e vincule o profissional com melhor fit.",
       "Combine o pagamento com o profissional antes da produção e marque na demanda — a plataforma registra o status, o dinheiro passa direto entre vocês.",
@@ -18,7 +18,7 @@ const TRACKS = [
     ],
   },
   {
-    role: "👤 Cliente",
+    role: "Cliente",
     steps: [
       "Receba o link de cadastro da agência e preencha o briefing da sua empresa (5 minutos).",
       "Acesse seu portal para acompanhar produções, baixar arquivos e ler os relatórios executivos.",
@@ -26,7 +26,7 @@ const TRACKS = [
     ],
   },
   {
-    role: "📸 Profissional (fotógrafo/designer)",
+    role: "Profissional (fotógrafo/designer)",
     steps: [
       "Cadastre seu perfil com localização, skills, especialidades e portfolio — é isso que o match da IA usa.",
       "Acompanhe as Oportunidades abertas no seu portal e o chat de cada demanda vinculada.",
@@ -41,10 +41,10 @@ export default function TrainingPage() {
   return (
     <div className="mx-auto max-w-3xl space-y-6">
       <div>
-        <h1 className="font-[family-name:var(--font-display)] text-2xl font-bold tracking-tight">
+        <h1 className="d3">
           Treinamento
         </h1>
-        <p className="mt-1 text-sm text-muted">
+        <p className="t3 measure-lede mt-2 text-text-muted">
           O caminho feliz de cada papel dentro da plataforma — do briefing ao
           pagamento.
         </p>
@@ -52,7 +52,7 @@ export default function TrainingPage() {
       {TRACKS.map((track) => (
         <Card key={track.role}>
           <SectionTitle>{track.role}</SectionTitle>
-          <ol className="list-decimal space-y-2 pl-5 text-sm text-muted">
+          <ol className="list-decimal space-y-2 pl-5 t3 text-text-muted">
             {track.steps.map((step, i) => (
               <li key={i}>{step}</li>
             ))}

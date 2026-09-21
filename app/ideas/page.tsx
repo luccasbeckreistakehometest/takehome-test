@@ -74,10 +74,10 @@ function IdeasContent() {
   return (
     <div className="space-y-6">
       <div>
-        <h1 className="font-[family-name:var(--font-display)] text-2xl font-bold tracking-tight">
+        <h1 className="d3">
           Motor de ideias
         </h1>
-        <p className="mt-1 text-sm text-muted">
+        <p className="t3 measure-lede mt-2 text-text-muted">
           Propostas proativas para todas as pontas — agência, clientes e
           profissionais — fundamentadas nas tendências mais recentes do mercado
           (pesquisa real na web) e conectadas a quem já está na plataforma.
@@ -121,7 +121,7 @@ function IdeasContent() {
             onClick={generate}
             disabled={generating || (audience !== "agency" && !targetId)}
           >
-            {generating ? "Gerando..." : "💡 Gerar ideias com base nas trends de hoje"}
+            {generating ? "Gerando..." : "Gerar ideias com base nas trends de hoje"}
           </Button>
           {generating && (
             <Spinner label="Pesquisando tendências recentes e cruzando com a plataforma (2-4 min)..." />
@@ -136,7 +136,7 @@ function IdeasContent() {
             <SectionTitle>
               Rodada de {new Date(latest.createdAt).toLocaleString("pt-BR")}
             </SectionTitle>
-            <p className="text-sm text-muted">{ideas.summary}</p>
+            <p className="t3 text-text-muted">{ideas.summary}</p>
           </Card>
           {ideas.ideas.map((idea, i) => {
             // Resolve o cliente-alvo da ideia para dar ação (ideia → campanha/demanda)
@@ -154,31 +154,30 @@ function IdeasContent() {
                     <Tag>{idea.priority}</Tag>
                   </div>
                 </div>
-                <p className="text-sm text-muted">{idea.description}</p>
-                <p className="text-sm text-muted">
-                  <span className="font-semibold text-foreground/80">Tendência que sustenta: </span>
+                <p className="t3 text-text-muted">{idea.description}</p>
+                <p className="t3 text-text-muted">
+                  <span className="font-semibold text-text/80">Tendência que sustenta: </span>
                   {idea.trendBasis}
                 </p>
-                <p className="text-sm">
-                  <span className="font-semibold text-accent">Próximo passo: </span>
-                  <span className="text-muted">{idea.action}</span>
+                <p className="t3">
+                  <span className="font-semibold text-text">Próximo passo: </span>
+                  <span className="text-text-muted">{idea.action}</span>
                 </p>
                 {targetClient && (
                   <div className="flex flex-wrap gap-2 border-t border-edge pt-2">
                     <Button
                       variant="ghost"
-                      className="!px-2.5 !py-1 text-xs"
+                      className="!px-2.5 !py-1 t5"
                       onClick={() =>
                         router.push(
                           `/clients/${targetClient.id}?tab=campaign_plan&focus=${encodeURIComponent(focusText)}`
                         )
                       }
-                    >
-                      🎯 Gerar campanha com esta ideia
+                    >Gerar campanha com esta ideia
                     </Button>
                     <Button
                       variant="ghost"
-                      className="!px-2.5 !py-1 text-xs"
+                      className="!px-2.5 !py-1 t5"
                       disabled={creatingDemand === i}
                       onClick={async () => {
                         setCreatingDemand(i);
@@ -212,18 +211,17 @@ function IdeasContent() {
                     >
                       {creatingDemand === i
                         ? "IA escrevendo o brief..."
-                        : "📋 Criar demanda desta ideia (IA escreve o brief)"}
+                        : "Criar demanda desta ideia (IA escreve o brief)"}
                     </Button>
                     <Button
                       variant="ghost"
-                      className="!px-2.5 !py-1 text-xs"
+                      className="!px-2.5 !py-1 t5"
                       onClick={() =>
                         router.push(
                           `/clients/${targetClient.id}?tab=strategy_analysis`
                         )
                       }
-                    >
-                      🔬 Estudo de mercado da conta
+                    >Estudo de mercado da conta
                     </Button>
                   </div>
                 )}

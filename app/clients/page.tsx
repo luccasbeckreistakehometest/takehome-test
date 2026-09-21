@@ -4,7 +4,8 @@ import { useEffect, useState } from "react";
 import Link from "next/link";
 import { api } from "@/lib/api";
 import type { Client } from "@/lib/types";
-import { Card, Spinner, Tag } from "@/components/ui";
+import { Dash, EmptyState, PageHeader, Spinner } from "@/components/ui";
+import { buttonClass } from "@/lib/button-class";
 
 export default function ClientsPage() {
   const [clients, setClients] = useState<Client[] | null>(null);
@@ -23,69 +24,79 @@ export default function ClientsPage() {
 
   if (clients.length === 0) {
     return (
-      <div className="mx-auto max-w-xl py-16 text-center">
-        <h1 className="font-[family-name:var(--font-display)] text-4xl font-bold tracking-tight">
-          Sua agência, <span className="text-accent">centralizada</span>.
-        </h1>
-        <p className="mt-4 text-muted">
-          Cadastre o briefing de um cliente uma única vez e gere estratégia com
-          pesquisa real de mercado, plano de campanha, ROI com roadmap, calendário
-          social, identidade visual e landing pages — tudo com IA, pronto para
-          apresentar.
-        </p>
-        <Link
-          href="/clients/new"
-          className="mt-8 inline-block rounded-md bg-accent px-6 py-3 font-medium text-accent-ink transition-opacity hover:opacity-90"
-        >
-          Cadastrar primeiro cliente
-        </Link>
+      <div className="max-w-[46rem]">
+        <PageHeader eyebrow="Agência" title="Clientes" />
+        <EmptyState
+          icon="briefcase"
+          title="Sua agência, centralizada"
+          condition="Cadastre o briefing de um cliente uma única vez e gere estratégia com pesquisa real de mercado, plano de campanha, ROI com roadmap, calendário social, identidade visual e landing pages — tudo com IA, pronto para apresentar."
+          action={
+            <Link href="/clients/new" className={buttonClass("primary")}>
+              Cadastrar primeiro cliente
+            </Link>
+          }
+        />
       </div>
     );
   }
 
   return (
-    <div className="space-y-6">
-      <div className="flex items-center justify-between">
-        <h1 className="font-[family-name:var(--font-display)] text-2xl font-bold tracking-tight">
-          Clientes
-        </h1>
-        <Link
-          href="/clients/new"
-          className="rounded-md bg-accent px-4 py-2 text-sm font-medium text-accent-ink transition-opacity hover:opacity-90"
-        >
-          + Novo cliente
-        </Link>
-      </div>
-      <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-        {clients.map((client) => (
-          <Link key={client.id} href={`/clients/${client.id}`}>
-            <Card className="h-full transition-colors hover:border-accent/60">
-              <p className="font-[family-name:var(--font-display)] text-lg font-semibold">
-                {client.name}
-              </p>
-              {client.industry && (
-                <p className="mt-0.5 text-sm text-muted">{client.industry}</p>
-              )}
-              <div className="mt-3 flex flex-wrap gap-1.5">
-                {client.channels.slice(0, 4).map((channel) => (
-                  <Tag key={channel}>{channel}</Tag>
-                ))}
-                {client.channels.length > 4 && (
-                  <Tag>+{client.channels.length - 4}</Tag>
-                )}
-              </div>
-              <p className="mt-3 text-xs text-muted">
-                Desde{" "}
+    // Carteira é DADO: tabela com régua fina, não uma grade de cartões com o
+    // nome do cliente em manchete. O nome alinha na coluna e a data é tabular.
+    <div>
+      <PageHeader
+        eyebrow="Agência"
+        title="Clientes"
+        actions={
+          <Link href="/clients/new" className={buttonClass("primary")}>
+            Novo cliente
+          </Link>
+        }
+      />
+      <table className="w-full table-fixed border-collapse text-left">
+        <colgroup>
+          <col className="w-[34%]" />
+          <col className="w-[20%]" />
+          <col className="w-[30%]" />
+          <col className="w-[16%]" />
+        </colgroup>
+        <thead>
+          <tr className="border-b border-edge">
+            <th className="t5 pb-2 text-text-muted">Cliente</th>
+            <th className="t5 pb-2 text-text-muted">Segmento</th>
+            <th className="t5 pb-2 text-text-muted">Canais</th>
+            <th className="t5 pb-2 text-right text-text-muted">Desde</th>
+          </tr>
+        </thead>
+        <tbody>
+          {clients.map((client) => (
+            <tr
+              key={client.id}
+              className="border-b border-rule align-baseline transition-colors duration-[var(--dur-1)] hover:bg-surface-sunken"
+            >
+              <td>
+                <Link
+                  href={`/clients/${client.id}`}
+                  className="t3 flex min-h-10 items-center truncate py-2.5 font-medium"
+                >
+                  {client.name}
+                </Link>
+              </td>
+              <td className="t4 truncate py-2.5 text-text-muted">{client.industry || <Dash />}</td>
+              <td className="t4 truncate py-2.5 text-text-muted">
+                {client.channels.length ? client.channels.join(" · ") : <Dash />}
+              </td>
+              <td className="t5 tnum py-2.5 text-right text-text-muted">
                 {new Date(client.createdAt).toLocaleDateString("pt-BR", {
                   day: "2-digit",
-                  month: "short",
+                  month: "2-digit",
                   year: "numeric",
                 })}
-              </p>
-            </Card>
-          </Link>
-        ))}
-      </div>
+              </td>
+            </tr>
+          ))}
+        </tbody>
+      </table>
     </div>
   );
 }

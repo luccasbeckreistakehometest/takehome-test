@@ -17,7 +17,8 @@ import type { ClientReport } from "@/lib/marketplace-schemas";
 import type { TierInfo } from "@/lib/ranking";
 import { ClientReportView } from "@/components/renderers";
 import TierBadge, { TierProgress } from "@/components/TierBadge";
-import { Button, Card, Input, SectionTitle, Spinner, Tag } from "@/components/ui";
+import { Button, EmptyState, Input, SectionTitle, Spinner, Tag } from "@/components/ui";
+import { buttonClass } from "@/lib/button-class";
 import MarcaModeChoice from "@/components/MarcaModeChoice";
 import PulsePrompt from "@/components/PulsePrompt";
 import ScopeRequestCard from "@/components/ScopeRequestCard";
@@ -139,16 +140,19 @@ export default function ClientPortalPage({
   }
 
   return (
-    <div className="space-y-6">
-      <div>
-        <p className="text-xs uppercase tracking-widest text-accent">Portal do cliente</p>
+    // Portal: é a tela que o CLIENTE da agência abre. Régua estrutural no
+    // cabeçalho, seções separadas por régua em vez de cartão e nenhum botão de
+    // marca repetido — a marca aparece uma vez, no relatório do mês.
+    <div>
+      <div className="border-b border-edge pb-5">
+        <p className="t6 text-text-muted">Portal do cliente</p>
         <div className="flex flex-wrap items-center gap-3">
-          <h1 className="font-[family-name:var(--font-display)] text-3xl font-bold tracking-tight">
+          <h1 className="d3">
             {client.name}
           </h1>
           {tier && <TierBadge info={tier} />}
         </div>
-        <p className="mt-1 text-sm text-muted">
+        <p className="t3 measure-lede mt-2 text-text-muted">
           {client.selfServe
             ? "Sua conta em modo autônomo — você no controle, com a IA de copiloto."
             : "Acompanhe aqui o que a agência está construindo para a sua marca."}
@@ -163,14 +167,14 @@ export default function ClientPortalPage({
             <>
               <a
                 href={`/clients/${client.id}`}
-                className="inline-flex items-center gap-1.5 rounded-md bg-accent px-4 py-2 text-sm font-medium text-accent-ink transition-opacity hover:opacity-90"
+                className={buttonClass("primary")}
               >
-                ⚙ Abrir meu workspace →
+                Abrir meu workspace
               </a>
               {client.canChooseMode !== false && (
                 <button
                   onClick={() => setChooserOpen(true)}
-                  className="text-sm text-muted underline-offset-2 transition-colors hover:text-foreground hover:underline"
+                  className="t3 text-text-muted underline-offset-2 transition-colors hover:text-text hover:underline"
                 >
                   Prefiro ter uma agência cuidando
                 </button>
@@ -179,9 +183,9 @@ export default function ClientPortalPage({
           ) : client.canChooseMode !== false ? (
             <button
               onClick={() => setChooserOpen(true)}
-              className="text-sm text-muted underline-offset-2 transition-colors hover:text-foreground hover:underline"
+              className="t3 text-text-muted underline-offset-2 transition-colors hover:text-text hover:underline"
             >
-              Quero fazer eu mesmo (modo autônomo) →
+              Quero fazer eu mesmo (modo autônomo)
             </button>
           ) : null}
         </div>
@@ -199,30 +203,31 @@ export default function ClientPortalPage({
         </>
       )}
 
-      <Card className="flex flex-wrap items-center justify-between gap-3">
-        <div>
+      <section className="mt-8 flex flex-wrap items-end justify-between gap-4 border-b border-edge pb-5">
+        <div className="min-w-0">
           <SectionTitle>Relatório mensal</SectionTitle>
-          <p className="text-sm text-muted">
-            O que foi entregue, aprovado e publicado no mês, com resumo e recomendações — pronto para salvar em PDF.
+          <p className="t3 measure-prose text-text-muted">
+            O que foi entregue, aprovado e publicado no mês, com resumo e recomendações — pronto
+            para salvar em PDF.
           </p>
         </div>
         <a
           href={`/portal/client/${client.id}/report`}
           data-testid="portal-monthly-report"
-          className="inline-flex items-center gap-1.5 rounded-md bg-accent px-4 py-2 text-sm font-medium text-accent-ink transition-opacity hover:opacity-90"
+          className={buttonClass("primary")}
         >
-          📊 Ver relatório do mês →
+          Ver relatório do mês
         </a>
-      </Card>
+      </section>
 
-      <Card id="producoes" className="scroll-mt-20" data-tour="portal-deliverables">
+      <section id="producoes" className="mt-8 scroll-mt-20" data-tour="portal-deliverables">
         <SectionTitle>Produções em andamento</SectionTitle>
         {projects.length === 0 ? (
-          <p className="text-sm text-muted">Nenhuma produção com profissionais no momento.</p>
+          <p className="t3 text-text-muted">Nenhuma produção com profissionais no momento.</p>
         ) : (
           <div className="space-y-2">
             {projects.map((project) => (
-              <div key={project.id} className="rounded-lg border border-edge bg-surface-2 p-3 text-sm">
+              <div key={project.id} className="t3 border-b border-rule py-3">
                 <div className="flex flex-wrap items-center justify-between gap-2">
                   <p className="font-medium">{project.title}</p>
                   <div className="flex gap-1.5">
@@ -231,7 +236,7 @@ export default function ClientPortalPage({
                   </div>
                 </div>
                 {project.professional && (
-                  <p className="mt-1 text-xs text-muted">
+                  <p className="mt-1 t5 text-text-muted">
                     Profissional: {project.professional.name}
                   </p>
                 )}
@@ -252,25 +257,23 @@ export default function ClientPortalPage({
                             <div className="flex flex-wrap items-center justify-between gap-2">
                               <a
                                 href={`/api/files/${deliverable.id}?download=1`}
-                                className="text-xs text-muted transition-colors hover:text-accent"
-                              >
-                                ⬇ {deliverable.title}
+                                className="t5 text-text-muted transition-colors hover:text-text"
+                              >{deliverable.title}
                               </a>
                               <div className="flex flex-wrap items-center gap-1.5">
                                 <Tag>{APPROVAL_STATUS_LABELS[deliverable.approvalStatus]}</Tag>
                                 {canDecide && (
                                   <>
                                     <Button
-                                      className="!px-2.5 !py-1 text-xs"
+                                      className="!px-2.5 !py-1 t5"
                                       disabled={busyDeliverable === deliverable.id}
                                       onClick={() => decideDeliverable(deliverable.id, "approved")}
                                       data-testid="approve-deliverable"
-                                    >
-                                      ✅ Aprovar
+                                    >Aprovar
                                     </Button>
                                     <Button
                                       variant="ghost"
-                                      className="!px-2.5 !py-1 text-xs"
+                                      className="!px-2.5 !py-1 t5"
                                       disabled={busyDeliverable === deliverable.id}
                                       onClick={() => decideDeliverable(deliverable.id, "changes_requested")}
                                     >
@@ -291,23 +294,22 @@ export default function ClientPortalPage({
                   </div>
                 )}
                 {project.status === "client_approval" && (
-                  <div className="mt-3 rounded-md border border-accent/40 bg-accent/5 p-3">
-                    <p className="text-sm font-medium">
+                  <div className="mt-3 rounded-md border border-edge bg-surface-sunken p-3">
+                    <p className="t3 font-medium">
                       Esta entrega aguarda a SUA aprovação:
                     </p>
-                    <p className="mt-1 text-xs text-muted">
+                    <p className="mt-1 t5 text-text-muted">
                       Ao aprovar, a agência é avisada na hora e as peças de redes sociais já entram no calendário como rascunho.
                     </p>
                     <div className="mt-2 flex gap-2">
                       <Button
-                        className="!px-3 !py-1.5 text-xs"
+                        className="!px-3 !py-1.5 t5"
                         onClick={() => approveProject(project.id, true)}
-                      >
-                        ✅ Aprovar tudo
+                      >Aprovar tudo
                       </Button>
                       <Button
                         variant="ghost"
-                        className="!px-3 !py-1.5 text-xs"
+                        className="!px-3 !py-1.5 t5"
                         onClick={() => approveProject(project.id, false)}
                       >
                         ↩ Pedir ajustes
@@ -319,26 +321,26 @@ export default function ClientPortalPage({
             ))}
           </div>
         )}
-      </Card>
+      </section>
 
       {!client.selfServe && (
-      <div className="grid gap-6 lg:grid-cols-2">
-        <Card id="conversa" className="scroll-mt-20 space-y-3" data-tour="portal-chat">
+      <div className="ed-grid mt-10">
+        <section id="conversa" className="c6 scroll-mt-20 space-y-3" data-tour="portal-chat">
           <SectionTitle>Fale com a agência</SectionTitle>
-          <div className="max-h-56 space-y-2 overflow-y-auto">
+          <div className="scroll-y max-h-56 space-y-2">
             {messages.length === 0 && (
-              <p className="text-sm text-muted">Nenhuma mensagem ainda — diga oi!</p>
+              <p className="t3 text-text-muted">Nenhuma mensagem ainda — diga oi!</p>
             )}
             {messages.map((message) => (
               <div
                 key={message.id}
-                className={`max-w-[85%] rounded-lg px-3 py-2 text-sm ${
+                className={`max-w-[85%] rounded-lg px-3 py-2 t3 ${
                   message.sender === "client"
-                    ? "ml-auto bg-accent/15"
-                    : "bg-surface-2"
+                    ? "ml-auto bg-surface-sunken"
+                    : "bg-surface-sunken"
                 }`}
               >
-                <p className="text-[10px] uppercase tracking-wide text-muted">
+                <p className="t6 text-text-muted">
                   {message.sender === "client" ? "Você" : "Agência"}
                 </p>
                 {message.text}
@@ -352,21 +354,23 @@ export default function ClientPortalPage({
               onKeyDown={(e) => e.key === "Enter" && sendChat()}
               placeholder="Escreva para a agência..."
             />
-            <Button onClick={sendChat}>Enviar</Button>
+            <Button variant="secondary" onClick={sendChat}>Enviar</Button>
           </div>
-        </Card>
+        </section>
 
-        <div id="pacote" className="scroll-mt-20" data-tour="portal-scope">
-          <ScopeRequestCard clientId={id} />
-        </div>
-        <div id="faturas" className="scroll-mt-20" data-tour="portal-invoices">
-          <PortalInvoicesCard clientId={id} />
+        <div className="c5 c-start8">
+          <div id="pacote" className="scroll-mt-20" data-tour="portal-scope">
+            <ScopeRequestCard clientId={id} />
+          </div>
+          <div id="faturas" className="mt-8 scroll-mt-20" data-tour="portal-invoices">
+            <PortalInvoicesCard clientId={id} />
+          </div>
         </div>
       </div>
       )}
 
       {landings.length > 0 && (
-        <Card>
+        <section className="mt-10 border-t border-edge pt-4">
           <SectionTitle>Suas landing pages</SectionTitle>
           <div className="flex flex-wrap gap-2">
             {landings.map((landing) => (
@@ -375,48 +379,50 @@ export default function ClientPortalPage({
                   href={`/api/generations/${landing.id}/html`}
                   target="_blank"
                   rel="noreferrer"
-                  className="rounded-md border border-edge bg-surface-2 px-3 py-1.5 text-sm text-muted transition-colors hover:border-accent hover:text-accent"
+                  className="rounded-md border border-edge bg-surface-sunken px-3 py-1.5 t3 text-text-muted transition-colors hover:border-edge hover:text-text"
                 >
-                  {landing.title} ↗
+                  {landing.title}
                 </a>
                 <a
                   href={`/api/generations/${landing.id}/html?download=1`}
-                  className="rounded-md border border-edge bg-surface-2 px-2 py-1.5 text-sm text-muted transition-colors hover:border-accent hover:text-accent"
+                  className="rounded-md border border-edge bg-surface-sunken px-2 py-1.5 t3 text-text-muted transition-colors hover:border-edge hover:text-text"
                   title="Baixar HTML"
-                >
-                  ⬇
-                </a>
+                ></a>
               </span>
             ))}
           </div>
-        </Card>
+        </section>
       )}
 
       {report ? (
-        <div>
+        <div className="mt-10 border-t border-edge pt-4">
           <div className="mb-3 flex flex-wrap items-center justify-between gap-2">
-            <h2 className="font-[family-name:var(--font-display)] text-xl font-semibold">
+            <h2 className="d4">
               {report.title}
             </h2>
             <a
               href={`/print/${report.id}`}
               target="_blank"
               rel="noreferrer"
-              className="rounded-md border border-edge bg-surface-2 px-3 py-1.5 text-sm text-muted transition-colors hover:border-accent hover:text-accent"
+              className={buttonClass("secondary")}
             >
-              📄 Salvar em PDF
+              Salvar em PDF
             </a>
           </div>
           <ClientReportView data={JSON.parse(report.content) as ClientReport} />
         </div>
       ) : (
-        <Card>
-          <p className="text-sm text-muted">
-            {client.selfServe
-              ? "Gere o relatório executivo da sua marca no workspace — ele aparece aqui quando pronto."
-              : "O primeiro relatório executivo da sua conta aparecerá aqui assim que a agência gerá-lo."}
-          </p>
-        </Card>
+        <div className="mt-10">
+          <EmptyState
+            icon="doc"
+            title="Relatório executivo ainda não gerado"
+            condition={
+              client.selfServe
+                ? "Gere o relatório executivo da sua marca no workspace — ele aparece aqui quando pronto."
+                : "O primeiro relatório executivo da sua conta aparecerá aqui assim que a agência gerá-lo."
+            }
+          />
+        </div>
       )}
     </div>
   );

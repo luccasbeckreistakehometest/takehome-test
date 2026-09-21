@@ -22,11 +22,11 @@ export default function WelcomeLogin() {
 
   if (!login) return null;
   return (
-    <div className="mb-4 rounded-lg border border-accent/40 bg-accent/5 px-3 py-2 text-sm" data-testid="welcome-username">
+    <div className="mb-4 rounded-lg border border-edge bg-surface-sunken px-3 py-2 t3" data-testid="welcome-username">
       <p>
-        Seu usuário de acesso: <strong className="font-mono text-accent">{login.username}</strong>
+        Seu usuário de acesso: <strong className="font-mono text-text">{login.username}</strong>
       </p>
-      <p className="text-xs text-muted">
+      <p className="t5 text-text-muted">
         {login.email ? `Você também pode entrar com o e-mail ${login.email}.` : "Guarde este usuário para entrar de novo."}
       </p>
     </div>

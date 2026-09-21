@@ -48,48 +48,48 @@ export default function AdminPublicPages() {
       {error && <ErrorBox message={error} />}
       <Card>
         <SectionTitle>Páginas de links (/b)</SectionTitle>
-        <p className="mb-3 text-sm text-muted">
+        <p className="mb-3 t3 text-text-muted">
           Só conta paga (ou liberada aqui) entra no Google. Tirar do ar remove a página pública na hora.
         </p>
-        <ul className="space-y-2 text-sm">
+        <ul className="space-y-2 t3">
           {bios.map((b) => (
             <li key={b.clientId} className="flex flex-wrap items-center justify-between gap-2 rounded-md border border-edge px-3 py-2" data-testid="admin-bio-row" data-slug={b.slug}>
               <span className="min-w-0">
-                <a href={`/b/${b.slug}`} target="_blank" rel="noreferrer" className="text-accent hover:underline">{`/b/${b.slug}`}</a>
-                <span className="ml-2 text-muted">{b.clientName}</span>
-                <span className="ml-2 text-xs text-muted">{when(b.updatedAt)}</span>
+                <a href={`/b/${b.slug}`} target="_blank" rel="noreferrer" className="text-text hover:underline">{`/b/${b.slug}`}</a>
+                <span className="ml-2 text-text-muted">{b.clientName}</span>
+                <span className="ml-2 t5 text-text-muted">{when(b.updatedAt)}</span>
               </span>
               <span className="flex flex-wrap items-center gap-2">
                 <Tag>{b.published ? "no ar" : "fora do ar"}</Tag>
                 {b.indexable && <Tag>{b.indexed ? "no Google" : "pediu Google"}</Tag>}
-                <Button variant="ghost" className="!px-2.5 !py-1 text-xs" disabled={busy} onClick={() => act({ action: b.published ? "unpublish_bio" : "publish_bio", clientId: b.clientId })} data-testid="admin-bio-toggle">
+                <Button variant="ghost" className="!px-2.5 !py-1 t5" disabled={busy} onClick={() => act({ action: b.published ? "unpublish_bio" : "publish_bio", clientId: b.clientId })} data-testid="admin-bio-toggle">
                   {b.published ? "Tirar do ar" : "Publicar"}
                 </Button>
-                <Button variant="ghost" className="!px-2.5 !py-1 text-xs" disabled={busy} onClick={() => act({ action: "allow_index", clientId: b.clientId, on: !b.approved })} data-testid="admin-bio-index">
+                <Button variant="ghost" className="!px-2.5 !py-1 t5" disabled={busy} onClick={() => act({ action: "allow_index", clientId: b.clientId, on: !b.approved })} data-testid="admin-bio-index">
                   {b.approved ? "Negar Google" : "Liberar Google"}
                 </Button>
               </span>
             </li>
           ))}
-          {bios.length === 0 && <li className="text-muted">Nenhuma página de links ainda.</li>}
+          {bios.length === 0 && <li className="text-text-muted">Nenhuma página de links ainda.</li>}
         </ul>
       </Card>
       <Card>
         <SectionTitle>Links curtos (/l)</SectionTitle>
-        <ul className="space-y-2 text-sm">
+        <ul className="space-y-2 t3">
           {links.map((l) => (
             <li key={l.code} className="flex flex-wrap items-center justify-between gap-2 rounded-md border border-edge px-3 py-2" data-testid="admin-link-row" data-code={l.code}>
               <span className="min-w-0 flex-1">
                 <span className="font-medium">{`/l/${l.code}`}</span>
-                <span className="ml-2 break-all text-muted">{l.destUrl}</span>
-                <span className="ml-2 text-xs text-muted">{`${l.clientName} · ${l.clicks} cliques · ${when(l.createdAt)}`}</span>
+                <span className="ml-2 break-all text-text-muted">{l.destUrl}</span>
+                <span className="ml-2 t5 text-text-muted">{`${l.clientName} · ${l.clicks} cliques · ${when(l.createdAt)}`}</span>
               </span>
-              <Button variant="ghost" className="!px-2.5 !py-1 text-xs" disabled={busy} onClick={() => act({ action: l.archivedAt ? "restore_link" : "archive_link", code: l.code })} data-testid="admin-link-toggle">
+              <Button variant="ghost" className="!px-2.5 !py-1 t5" disabled={busy} onClick={() => act({ action: l.archivedAt ? "restore_link" : "archive_link", code: l.code })} data-testid="admin-link-toggle">
                 {l.archivedAt ? "Reativar" : "Arquivar"}
               </Button>
             </li>
           ))}
-          {links.length === 0 && <li className="text-muted">Nenhum link curto ainda.</li>}
+          {links.length === 0 && <li className="text-text-muted">Nenhum link curto ainda.</li>}
         </ul>
       </Card>
     </div>

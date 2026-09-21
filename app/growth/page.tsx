@@ -5,7 +5,6 @@ import { scopeForSession } from "@/lib/tenancy-rules";
 import { listProspects } from "@/lib/marketplace-db";
 import { listRecentProposals } from "@/lib/proposals-db";
 import { countLeads, getAgencyPage } from "@/lib/agency-page-db";
-import { Icon } from "@/components/icons";
 import { GROWTH_CARDS, type GrowthStats } from "@/lib/growth-cards";
 import { agencyLinksOverview } from "@/lib/links-db";
 import { agencyRadarOverview } from "@/lib/ai-visibility-db";
@@ -36,27 +35,28 @@ export default async function GrowthPage() {
   return (
     <div className="space-y-6">
       <div>
-        <h1 className="flex items-center gap-2 font-[family-name:var(--font-display)] text-2xl font-bold tracking-tight">
-          <Icon name="trend" size={24} className="text-accent" /> Crescimento
-        </h1>
-        <p className="mt-1 text-sm text-muted">Onde a agência encontra cliente novo e vende mais para quem já está com você.</p>
+        <h1 className="d3">Crescimento</h1>
+        <p className="t3 measure-lede mt-2 text-text-muted">Onde a agência encontra cliente novo e vende mais para quem já está com você.</p>
       </div>
-      <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3" data-testid="growth-hub">
-        {GROWTH_CARDS.map((card) => (
+      {/* Hub de destinos: lista numerada com o número do estado à direita, não
+          cinco cartões iguais. O que diferencia os cinco é o texto, e o texto
+          fica na medida de leitura. */}
+      <div className="border-t border-edge" data-testid="growth-hub">
+        {GROWTH_CARDS.map((card, i) => (
           <Link
             key={card.key}
             href={card.href}
             data-testid={`growth-${card.key}`}
-            className="card-hover flex flex-col rounded-xl border border-edge bg-surface p-5 shadow-sm"
+            className="group flex items-baseline gap-4 border-b border-rule py-4 transition-colors duration-[var(--dur-1)] hover:bg-surface-sunken"
           >
-            <span className="flex items-center gap-2 font-medium">
-              <Icon name={card.icon} size={18} className="text-accent" /> {card.title}
+            <span className="idx t5 w-6 shrink-0">{String(i + 1).padStart(2, "0")}</span>
+            <span className="min-w-0 flex-1">
+              <span className="t2 block font-medium underline-offset-4 group-hover:underline">
+                {card.title}
+              </span>
+              <span className="t4 measure-prose mt-0.5 block text-text-muted">{card.body}</span>
             </span>
-            <span className="mt-2 flex-1 text-sm text-muted">{card.body}</span>
-            <span className="mt-4 flex items-center justify-between text-xs">
-              <span className="text-muted">{card.stat(stats)}</span>
-              <span className="font-medium text-accent">{card.cta} →</span>
-            </span>
+            <span className="t5 hidden shrink-0 text-text-muted sm:block">{card.stat(stats)}</span>
           </Link>
         ))}
       </div>

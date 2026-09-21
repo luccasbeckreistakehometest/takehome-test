@@ -2,7 +2,6 @@
 
 import { use, useEffect, useState } from "react";
 import Link from "next/link";
-import { api } from "@/lib/api";
 import type { Client } from "@/lib/types";
 import Workspace from "@/components/Workspace";
 import { Spinner } from "@/components/ui";
@@ -32,18 +31,18 @@ export default function ClientPage({
   if (failed) {
     return (
       <div className="py-24 text-center">
-        <p className="text-muted">
+        <p className="text-text-muted">
           Não consegui carregar este cliente (conexão lenta, navegador limitado ou
           cliente inexistente).
         </p>
         <div className="mt-4 flex items-center justify-center gap-4">
           <button
             onClick={() => setAttempt((a) => a + 1)}
-            className="rounded-md bg-accent px-4 py-2 text-sm font-medium text-accent-ink"
+            className="rounded-md bg-brand-solid px-4 py-2 t3 font-medium text-brand-ink"
           >
             Tentar de novo
           </button>
-          <Link href="/" className="text-accent hover:underline">
+          <Link href="/" className="text-text hover:underline">
             ← Voltar para clientes
           </Link>
         </div>

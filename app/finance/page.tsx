@@ -8,8 +8,9 @@ import { currentMonth, shiftMonth } from "@/lib/report-aggregate";
 import { formatHours } from "@/lib/finance-rules";
 import type { MarginReport } from "@/lib/finance-db";
 import { MARGIN_LABEL, MARGIN_STYLE } from "@/components/TimeTab";
-import { Button, Card, ErrorBox, Input, Label, SectionTitle, Spinner } from "@/components/ui";
+import { ActionBar, Button, Column, EmptyState, ErrorBox, Field, InputAffix, SectionTitle, Table } from "@/components/ui";
 import { Icon } from "@/components/icons";
+import { buttonClass } from "@/lib/button-class";
 
 function monthLabel(month: string, lang: "pt" | "en"): string {
   const d = new Date(Date.UTC(Number(month.slice(0, 4)), Number(month.slice(5, 7)) - 1, 1));
@@ -75,20 +76,92 @@ export default function FinancePage() {
 
   const money = (v: number) => fmtCurrency(v, report?.settings.currency ?? "BRL", lang);
 
+  // §9.1 — cada coluna com largura própria: texto à esquerda, número à
+  // direita, situação à esquerda. A coluna numérica nunca trunca.
+  const columns: Column<MarginReport["rows"][number]>[] = [
+    {
+      key: "name",
+      header: "Cliente",
+      width: "220px",
+      cell: (row) => (
+        <Link href={`/clients/${row.clientId}?tab=time`} className="font-medium underline-offset-4 hover:underline">
+          {row.name}
+        </Link>
+      ),
+    },
+    {
+      key: "fee",
+      header: "Fee mensal",
+      width: "150px",
+      align: "right",
+      cell: (row) => (
+        <InputAffix
+          prefix="R$"
+          type="number"
+          min={0}
+          value={fees[row.clientId] ?? ""}
+          onChange={(e) => setFees({ ...fees, [row.clientId]: e.target.value })}
+          aria-label={`Fee de ${row.name}`}
+          className="ml-auto max-w-[130px]"
+        />
+      ),
+    },
+    {
+      key: "received",
+      header: "Recebido",
+      width: "120px",
+      align: "right",
+      cell: (row) => (
+        <span data-testid="margin-received" className={report?.received?.[row.clientId] ? "" : "text-text-faint"}>
+          {report?.received?.[row.clientId] ? money(report.received[row.clientId]) : "—"}
+        </span>
+      ),
+    },
+    { key: "hours", header: "Horas", width: "96px", align: "right", cell: (row) => formatHours(row.minutes) },
+    { key: "cost", header: "Custo", width: "130px", align: "right", cell: (row) => money(row.cost) },
+    {
+      key: "margin",
+      header: "Margem",
+      width: "170px",
+      align: "right",
+      cell: (row) => (
+        <span data-testid="margin-cell" className={row.margin < 0 ? "font-medium text-negative" : "font-medium"}>
+          {money(row.margin)}
+          {row.marginPct !== null && <span className="t5 ml-1 text-text-muted">({row.marginPct}%)</span>}
+        </span>
+      ),
+    },
+    {
+      key: "rate",
+      header: "Custo/h efetivo",
+      width: "140px",
+      align: "right",
+      cell: (row) => (row.effectiveHourlyRate !== null ? `${money(row.effectiveHourlyRate)}/h` : <span className="text-text-faint">—</span>),
+    },
+    {
+      key: "status",
+      header: "Situação",
+      width: "124px",
+      cell: (row) => (
+        <span className={`t5 rounded-xs border px-2 py-0.5 ${MARGIN_STYLE[row.status]}`}>
+          {MARGIN_LABEL[row.status]}
+        </span>
+      ),
+    },
+  ];
+
   return (
     <div className="space-y-6" data-testid="finance-page">
-      <div className="flex flex-wrap items-end justify-between gap-4">
+      <div className="flex flex-wrap items-end justify-between gap-4 border-b border-edge pb-5">
         <div>
-          <h1 className="flex items-center gap-2 font-[family-name:var(--font-display)] text-2xl font-bold tracking-tight">
-            <Icon name="money" size={24} className="text-accent" /> Horas & margem
-          </h1>
-          <p className="mt-1 text-sm text-muted">Quanto cada cliente paga por mês contra quanto ele custa em horas da equipe. Quem dá prejuízo aparece em vermelho.</p>
+          <h1 className="d3">Horas & margem</h1>
+          <p className="t3 measure-lede mt-2 text-text-muted">Quanto cada cliente paga por mês contra quanto ele custa em horas da equipe. Quem dá prejuízo aparece em vermelho.</p>
         </div>
         <div className="flex flex-wrap items-center gap-2">
-          <button onClick={() => setMonth((m) => shiftMonth(m, -1))} className="grid size-9 place-items-center rounded-md border border-edge bg-surface-2 hover:border-accent" aria-label="Mês anterior">‹</button>
+          <button onClick={() => setMonth((m) => shiftMonth(m, -1))} className="grid size-9 place-items-center rounded-sm border border-edge text-text-muted hover:bg-surface-sunken" aria-label="Mês anterior">‹</button>
           <span className="min-w-40 text-center font-medium" data-testid="finance-month">{monthLabel(month, lang)}</span>
-          <button onClick={() => setMonth((m) => shiftMonth(m, 1))} className="grid size-9 place-items-center rounded-md border border-edge bg-surface-2 hover:border-accent" aria-label="Próximo mês">›</button>
-          <a href={`/api/finance/margin?month=${month}&format=csv&lang=${lang}`} className="inline-flex items-center gap-1.5 rounded-md border border-edge bg-surface-2 px-3 py-2 text-sm hover:border-accent" data-testid="finance-csv">
+          <button onClick={() => setMonth((m) => shiftMonth(m, 1))} className="grid size-9 place-items-center rounded-sm border border-edge text-text-muted hover:bg-surface-sunken" aria-label="Próximo mês">›</button>
+          <a href={`/api/finance/margin?month=${month}&format=csv&lang=${lang}`} className={`${buttonClass("secondary")} gap-1.5`} data-testid="finance-csv">
             <Icon name="doc" size={15} /> Exportar CSV
           </a>
         </div>
@@ -97,12 +170,18 @@ export default function FinancePage() {
       {error && <ErrorBox message={error} />}
 
       {!report ? (
-        <div className="grid place-items-center py-16">
-          <Spinner label="Calculando a margem..." />
-        </div>
+        // Esqueleto com AS MESMAS larguras de coluna (§9.1), não um spinner.
+        <Table
+          caption="Carregando a margem por cliente"
+          rows={[]}
+          rowKey={() => ""}
+          loading
+          minWidth={1120}
+          columns={columns}
+        />
       ) : (
         <>
-          <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-5">
+          <div className="grid gap-x-8 gap-y-5 border-y border-edge py-4 sm:grid-cols-3 lg:grid-cols-5">
             {[
               { label: "Fees do mês", value: money(report.totals.fee) },
               { label: "Horas apontadas", value: formatHours(report.totals.hours * 60) },
@@ -110,96 +189,101 @@ export default function FinancePage() {
               { label: "Margem", value: money(report.totals.margin), hint: report.totals.marginPct !== null ? `${report.totals.marginPct}%` : undefined, negative: report.totals.margin < 0 },
               { label: "Clientes sinalizados", value: String(report.totals.flagged) },
             ].map((kpi) => (
-              <Card key={kpi.label}>
-                <p className="text-[11px] font-semibold uppercase tracking-wider text-muted">{kpi.label}</p>
-                <p className={`mt-1 font-[family-name:var(--font-display)] text-2xl font-bold ${kpi.negative ? "text-red-500" : ""}`}>{kpi.value}</p>
-                {kpi.hint && <p className="text-xs text-muted">{kpi.hint}</p>}
-              </Card>
+              <div key={kpi.label} className="min-w-0">
+                <p className="t6 text-text-muted">{kpi.label}</p>
+                <p className={`n2 mt-1 ${kpi.negative ? "text-negative" : ""}`}>{kpi.value}</p>
+                {kpi.hint && <p className="t5 text-text-muted">{kpi.hint}</p>}
+              </div>
             ))}
           </div>
 
-          <Card className="!p-0">
-            <div className="overflow-x-auto">
-              <table className="w-full min-w-[720px] text-sm" data-testid="margin-table">
-                <thead>
-                  <tr className="border-b border-edge text-left text-[11px] uppercase tracking-wider text-muted">
-                    <th className="px-4 py-2">Cliente</th>
-                    <th className="px-4 py-2">Fee mensal</th>
-                    <th className="px-4 py-2">Recebido</th>
-                    <th className="px-4 py-2">Horas</th>
-                    <th className="px-4 py-2">Custo</th>
-                    <th className="px-4 py-2">Margem</th>
-                    <th className="px-4 py-2">Custo/h efetivo</th>
-                    <th className="px-4 py-2">Situação</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {report.rows.length === 0 && (
-                    <tr>
-                      <td colSpan={8} className="px-4 py-6 text-center text-muted">Nenhuma hora apontada e nenhum fee cadastrado neste mês. Aponte horas na aba Horas de cada cliente.</td>
-                    </tr>
-                  )}
-                  {report.rows.map((row) => (
-                    <tr key={row.clientId} className={`border-b border-edge ${row.status === "loss" ? "bg-red-500/5" : ""}`} data-testid="margin-row" data-status={row.status} data-client={row.name}>
-                      <td className="px-4 py-2">
-                        <Link href={`/clients/${row.clientId}?tab=time`} className="font-medium hover:text-accent">{row.name}</Link>
-                      </td>
-                      <td className="px-4 py-2">
-                        <input
-                          type="number"
-                          min={0}
-                          value={fees[row.clientId] ?? ""}
-                          onChange={(e) => setFees({ ...fees, [row.clientId]: e.target.value })}
-                          className="w-28 rounded-md border border-edge bg-surface-2 px-2 py-1 text-sm outline-none focus:border-accent"
-                          aria-label={`Fee de ${row.name}`}
-                        />
-                      </td>
-                      <td className="px-4 py-2 text-muted" data-testid="margin-received">{report.received?.[row.clientId] ? money(report.received[row.clientId]) : "—"}</td>
-                      <td className="px-4 py-2">{formatHours(row.minutes)}</td>
-                      <td className="px-4 py-2">{money(row.cost)}</td>
-                      <td className={`px-4 py-2 font-medium ${row.margin < 0 ? "text-red-500" : ""}`} data-testid="margin-cell">
-                        {money(row.margin)}
-                        {row.marginPct !== null && <span className="ml-1 text-xs text-muted">({row.marginPct}%)</span>}
-                      </td>
-                      <td className="px-4 py-2 text-muted">{row.effectiveHourlyRate !== null ? `${money(row.effectiveHourlyRate)}/h` : "—"}</td>
-                      <td className="px-4 py-2">
-                        <span className={`rounded-full border px-2 py-0.5 text-xs font-medium ${MARGIN_STYLE[row.status]}`}>{MARGIN_LABEL[row.status]}</span>
-                      </td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
-            </div>
-          </Card>
+          {/* §9.1: largura DECLARADA por coluna, table-layout fixo, número à
+              direita em figura tabular e o cabeçalho alinhado igual à célula.
+              Eram oito colunas — seis numéricas — todas à esquerda, em largura
+              automática, dentro de um contêiner com rolagem e nada mais. */}
+          <Table
+            caption={`Margem por cliente em ${monthLabel(month, lang)}`}
+            rows={report.rows}
+            rowKey={(row) => row.clientId}
+            rowAttrs={(row) => ({
+              "data-testid": "margin-row",
+              "data-status": row.status,
+              "data-client": row.name,
+              // Estado, não decoração (§5.3): prejuízo é campo semântico.
+              className: row.status === "loss" ? "bg-negative-wash" : undefined,
+            })}
+            minWidth={1120}
+            columns={columns}
+            total={[
+              "Total",
+              money(report.totals.fee),
+              "",
+              formatHours(report.totals.hours * 60),
+              money(report.totals.cost),
+              money(report.totals.margin),
+              "",
+              "",
+            ]}
+            empty={
+              <EmptyState
+                icon="clock"
+                title="Cada cliente com fee ou horas apontadas no mês aparece aqui, com custo e margem."
+                condition="Aponte horas na aba Horas do cliente, ou defina o fee mensal abaixo."
+              />
+            }
+          />
 
-          <Card className="space-y-4">
+          <section className="mt-10 space-y-4 border-t border-edge pt-5">
             <div>
               <SectionTitle>Custos e meta</SectionTitle>
-              <p className="text-sm text-muted">O custo/hora da equipe interna vale para todo apontamento sem profissional. Profissionais com custo próprio entram pelo valor deles.</p>
+              <p className="t3 text-text-muted">O custo/hora da equipe interna vale para todo apontamento sem profissional. Profissionais com custo próprio entram pelo valor deles.</p>
             </div>
-            <div className="grid gap-3 sm:grid-cols-3">
-              <div>
-                <Label>Custo/hora da equipe interna</Label>
-                <Input type="number" min={0} value={rates.defaultHourlyCost} onChange={(e) => setRates({ ...rates, defaultHourlyCost: e.target.value })} placeholder="Ex.: 80" data-testid="rate-default" />
-              </div>
-              <div>
-                <Label>Margem-alvo (%)</Label>
-                <Input type="number" min={0} max={95} value={rates.targetMarginPct} onChange={(e) => setRates({ ...rates, targetMarginPct: e.target.value })} data-testid="rate-target" />
-              </div>
+            {/* §11.2: a largura comunica o conteúdo esperado. "Margem-alvo (%)"
+                tinha 350px para dois dígitos; a instrução sai do placeholder,
+                que some justamente no foco. */}
+            <div className="flex flex-wrap gap-x-8 gap-y-5 border-y border-edge py-4">
+              <Field label="Custo/hora da equipe interna" hint="Vale para todo apontamento sem profissional." width="money">
+                {(field) => (
+                  <InputAffix
+                    {...field}
+                    prefix="R$"
+                    type="number"
+                    min={0}
+                    value={rates.defaultHourlyCost}
+                    onChange={(e) => setRates({ ...rates, defaultHourlyCost: e.target.value })}
+                    data-testid="rate-default"
+                  />
+                )}
+              </Field>
+              <Field label="Margem-alvo" hint="Abaixo dela o cliente é sinalizado." width="pct">
+                {(field) => (
+                  <InputAffix
+                    {...field}
+                    suffix="%"
+                    type="number"
+                    min={0}
+                    max={95}
+                    value={rates.targetMarginPct}
+                    onChange={(e) => setRates({ ...rates, targetMarginPct: e.target.value })}
+                    data-testid="rate-target"
+                  />
+                )}
+              </Field>
             </div>
             {report.rates.length > 0 && (
               <div>
-                <p className="mb-1 text-xs font-semibold uppercase tracking-wider text-muted">Custo/hora por profissional</p>
+                <p className="mb-1 t6 text-text-muted">Custo/hora por profissional</p>
                 <div className="grid gap-2 sm:grid-cols-3">
                   {report.rates.map((p) => (
-                    <div key={p.id} className="flex items-center gap-2 rounded-md border border-edge bg-surface-2 px-3 py-2 text-sm">
+                    <div key={p.id} className="flex items-center gap-2 rounded-md border border-edge bg-surface-sunken px-3 py-2 t3">
                       <span className="min-w-0 flex-1 truncate">{p.name}</span>
-                      <input
+                      <InputAffix
+                        prefix="R$"
                         type="number"
                         min={0}
                         value={rates.professionals[p.id] ?? ""}
                         onChange={(e) => setRates({ ...rates, professionals: { ...rates.professionals, [p.id]: e.target.value } })}
-                        className="w-24 rounded-md border border-edge bg-surface px-2 py-1 text-sm outline-none focus:border-accent"
+                        className="w-28 shrink-0"
                         aria-label={`Custo/hora de ${p.name}`}
                         data-testid="rate-professional"
                       />
@@ -208,13 +292,15 @@ export default function FinancePage() {
                 </div>
               </div>
             )}
-            <div className="flex items-center gap-3">
-              <Button onClick={save} disabled={saving} data-testid="finance-save">
-                {saving ? "Salvando..." : "Salvar custos e fees"}
-              </Button>
-              {saved && <span className="text-sm text-accent">Aplicado ✓</span>}
-            </div>
-          </Card>
+          </section>
+
+          {/* §11.2: formulário longo ganha barra de ação fixa. O Salvar estava
+              a 1.400px de rolagem do campo que ele salva. */}
+          <ActionBar note={saved ? "Aplicado ✓" : "Fees e custos valem para todos os meses."}>
+            <Button onClick={save} loading={saving} data-testid="finance-save">
+              Salvar custos e fees
+            </Button>
+          </ActionBar>
         </>
       )}
     </div>

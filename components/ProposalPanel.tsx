@@ -52,7 +52,7 @@ export default function ProposalPanel({ prospectId, onAccepted }: { prospectId: 
   const fmt = (iso: string) => new Date(iso).toLocaleDateString(lang === "en" ? "en-US" : "pt-BR", { day: "2-digit", month: "short" });
 
   return (
-    <div className="space-y-3 rounded-lg border border-accent/30 bg-accent/5 p-3" data-testid="proposal-panel">
+    <div className="space-y-3 rounded-lg border border-edge bg-surface-sunken p-3" data-testid="proposal-panel">
       <div>
         <Label>Sua oferta e preços (opcional — a IA usa exatamente o que você escrever)</Label>
         <Textarea
@@ -79,20 +79,20 @@ export default function ProposalPanel({ prospectId, onAccepted }: { prospectId: 
           </Select>
         </div>
         <Button onClick={generate} disabled={generating} data-testid="proposal-generate">
-          {generating ? "Escrevendo a proposta..." : "✦ Gerar proposta pública"}
+          {generating ? "Escrevendo a proposta..." : "Gerar proposta pública"}
         </Button>
       </div>
       {generating && <Spinner label="A IA está montando a página: pitch, escopo, pacotes e cronograma (~1 min)..." />}
       {error && <ErrorBox message={error} />}
       {proposals === null ? null : proposals.length === 0 ? (
-        <p className="text-xs text-muted">Nenhuma proposta enviada ainda.</p>
+        <p className="t5 text-text-muted">Nenhuma proposta enviada ainda.</p>
       ) : (
         <div className="space-y-1.5">
           {proposals.map((p) => (
-            <div key={p.id} className="flex flex-wrap items-center justify-between gap-2 rounded-md border border-edge bg-surface px-3 py-2 text-sm" data-testid="proposal-row" data-state={p.state}>
+            <div key={p.id} className="flex flex-wrap items-center justify-between gap-2 rounded-md border border-edge bg-surface px-3 py-2 t3" data-testid="proposal-row" data-state={p.state}>
               <div className="min-w-0">
                 <p className="truncate font-medium">{p.content.headline}</p>
-                <p className="text-xs text-muted">
+                <p className="t5 text-text-muted">
                   <span>{fmt(p.createdAt)}</span> · <span>{STATUS_LABEL[p.status] ?? p.status}</span>
                   {p.acceptedPackage && (
                     <>
@@ -104,13 +104,13 @@ export default function ProposalPanel({ prospectId, onAccepted }: { prospectId: 
               </div>
               <div className="flex items-center gap-1.5">
                 <Tag>{STATE_LABEL[p.state]}</Tag>
-                <a href={`/proposta/${p.token}`} target="_blank" rel="noreferrer" className="rounded border border-edge bg-surface-2 px-2 py-0.5 text-xs text-muted hover:border-accent hover:text-accent" data-testid="proposal-open">
-                  Abrir ↗
+                <a href={`/proposta/${p.token}`} target="_blank" rel="noreferrer" className="rounded border border-edge bg-surface-sunken px-2 py-0.5 t5 text-text-muted hover:border-edge hover:text-text" data-testid="proposal-open">
+                  Abrir
                 </a>
                 <CopyButton text={`${origin}/proposta/${p.token}`} label="Copiar link" />
                 {p.state === "accepted" && p.clientId && (
-                  <a href={`/clients/${p.clientId}`} className="text-xs text-accent hover:underline" onClick={onAccepted}>
-                    Abrir cliente →
+                  <a href={`/clients/${p.clientId}`} className="t5 text-text hover:underline" onClick={onAccepted}>
+                    Abrir cliente
                   </a>
                 )}
               </div>

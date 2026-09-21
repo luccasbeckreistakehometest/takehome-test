@@ -6,7 +6,7 @@ import type { Client } from "@/lib/types";
 import type { MeetingWithNames, ScheduledPostWithClient } from "@/lib/marketplace-db";
 import type { MeetingRecs } from "@/lib/marketplace-schemas";
 import { googleCalendarUrl } from "@/lib/gcal";
-import { Button, Card, ErrorBox, Input, Label, SectionTitle, Select, Spinner, Tag } from "@/components/ui";
+import { Button, Card, ErrorBox, Input, SectionTitle, Select, Spinner, Tag } from "@/components/ui";
 
 export default function AgendaPage() {
   const [meetings, setMeetings] = useState<MeetingWithNames[] | null>(null);
@@ -68,16 +68,16 @@ export default function AgendaPage() {
     <div className="space-y-6">
       <div className="flex flex-wrap items-center justify-between gap-3">
         <div>
-          <h1 className="font-[family-name:var(--font-display)] text-2xl font-bold tracking-tight">
+          <h1 className="d3">
             Agenda
           </h1>
-          <p className="mt-1 text-sm text-muted">
+          <p className="t3 measure-lede mt-2 text-text-muted">
             Todas as reuniões da agência, com um clique para o Google Calendar — e
             recomendações da IA sobre quais reuniões valem ser feitas, com o porquê.
           </p>
         </div>
         <Button onClick={recommend} disabled={recommending}>
-          {recommending ? "Analisando as contas..." : "✦ Recomendar reuniões (IA)"}
+          {recommending ? "Analisando as contas..." : "Recomendar reuniões (IA)"}
         </Button>
       </div>
       {recommending && (
@@ -88,28 +88,28 @@ export default function AgendaPage() {
       {recs && (
         <Card className="space-y-3">
           <SectionTitle>Reuniões recomendadas</SectionTitle>
-          <p className="text-sm text-muted">{recs.summary}</p>
+          <p className="t3 text-text-muted">{recs.summary}</p>
           {recs.meetings.map((rec, index) => (
-            <div key={index} className="rounded-lg border border-edge bg-surface-2 p-3 text-sm">
+            <div key={index} className="rounded-lg border border-edge bg-surface-sunken p-3 t3">
               <div className="flex flex-wrap items-center justify-between gap-2">
                 <p className="font-semibold">{rec.title}</p>
                 <div className="flex items-center gap-2">
                   <Tag>{new Date(rec.suggestedAt).toLocaleString("pt-BR")}</Tag>
                   {scheduled.has(index) ? (
-                    <span className="text-xs text-accent">✓ Agendada</span>
+                    <span className="t5 text-text">✓ Agendada</span>
                   ) : (
-                    <Button className="!px-2.5 !py-1 text-xs" onClick={() => schedule(index)}>
+                    <Button className="!px-2.5 !py-1 t5" onClick={() => schedule(index)}>
                       Agendar
                     </Button>
                   )}
                 </div>
               </div>
-              <p className="mt-1 text-xs text-muted">
-                <span className="font-semibold text-foreground/80">Participantes: </span>
+              <p className="mt-1 t5 text-text-muted">
+                <span className="font-semibold text-text/80">Participantes: </span>
                 {rec.participants}
               </p>
-              <p className="mt-1 text-xs text-muted">
-                <span className="font-semibold text-accent">Por quê: </span>
+              <p className="mt-1 t5 text-text-muted">
+                <span className="font-semibold text-text">Por quê: </span>
                 {rec.reasoning}
               </p>
             </div>
@@ -120,17 +120,17 @@ export default function AgendaPage() {
       <Card className="space-y-3">
         <div className="flex items-center justify-between">
           <SectionTitle>Fila de publicações</SectionTitle>
-          <a href="/calendar" className="text-xs text-accent hover:underline">
-            Ver no calendário →
+          <a href="/calendar" className="t5 text-text hover:underline">
+            Ver no calendário
           </a>
         </div>
-        <p className="text-sm text-muted">
+        <p className="t3 text-text-muted">
           Posts agendados a partir do calendário/posts dos clientes. A publicação
           automática nas redes é ativada quando a integração (Meta/TikTok) estiver
           conectada — até lá, publique manualmente e confirme aqui.
         </p>
         {posts.filter((p) => p.status !== "canceled").length === 0 ? (
-          <p className="text-sm text-muted">
+          <p className="t3 text-text-muted">
             Nada na fila — agende pelo botão 🕐 nos posts de cada cliente.
           </p>
         ) : (
@@ -143,33 +143,33 @@ export default function AgendaPage() {
                 return (
                   <div
                     key={post.id}
-                    className={`rounded-md border px-3 py-2 text-sm ${
-                      due ? "border-amber-700/60 bg-amber-950/30" : "border-edge bg-surface-2"
+                    className={`rounded-md border px-3 py-2 t3 ${
+                      due ? "border-caution/60 bg-caution-wash" : "border-edge bg-surface-sunken"
                     }`}
                   >
                     <div className="flex flex-wrap items-center justify-between gap-2">
                       <p>
                         <span className="font-medium">{post.title}</span>{" "}
-                        <span className="text-xs text-muted">
+                        <span className="t5 text-text-muted">
                           · {post.channel} · {post.clientName} ·{" "}
                           {new Date(post.scheduledFor).toLocaleString("pt-BR")}
                         </span>
                         {post.status === "published" && (
-                          <span className="ml-2 text-xs text-accent">✓ Publicado</span>
+                          <span className="ml-2 t5 text-text">✓ Publicado</span>
                         )}
                         {post.status === "draft" && (
-                          <span className="ml-2 text-xs text-amber-400">rascunho — confirme a data no Calendário</span>
+                          <span className="ml-2 t5 text-caution">rascunho — confirme a data no Calendário</span>
                         )}
                         {due && (
-                          <span className="ml-2 text-xs font-semibold text-amber-400">
+                          <span className="ml-2 t5 font-semibold text-caution">
                             ⏰ Na hora — publicar agora
                           </span>
                         )}
                       </p>
-                      <span className="flex items-center gap-2 text-xs">
+                      <span className="flex items-center gap-2 t5">
                         {post.status === "scheduled" && (
                           <button
-                            className="rounded bg-accent px-2 py-0.5 font-medium text-accent-ink"
+                            className="rounded bg-brand-solid px-2 py-0.5 font-medium text-brand-ink"
                             onClick={async () => {
                               await api(`/api/scheduled-posts/${post.id}`, {
                                 method: "PATCH",
@@ -182,7 +182,7 @@ export default function AgendaPage() {
                           </button>
                         )}
                         <button
-                          className="text-muted hover:text-red-400"
+                          className="text-text-muted hover:text-negative"
                           onClick={async () => {
                             await api(`/api/scheduled-posts/${post.id}`, { method: "DELETE" });
                             load();
@@ -192,7 +192,7 @@ export default function AgendaPage() {
                         </button>
                       </span>
                     </div>
-                    <p className="mt-1 line-clamp-2 text-xs text-muted">{post.caption}</p>
+                    <p className="mt-1 line-clamp-2 t5 text-text-muted">{post.caption}</p>
                   </div>
                 );
               })}
@@ -261,7 +261,7 @@ export default function AgendaPage() {
           <Card>
             <SectionTitle>Próximas reuniões</SectionTitle>
             {upcoming.length === 0 ? (
-              <p className="text-sm text-muted">Nada agendado.</p>
+              <p className="t3 text-text-muted">Nada agendado.</p>
             ) : (
               <div className="space-y-1.5">
                 {upcoming.map((meeting) => (
@@ -302,7 +302,7 @@ function MeetingRow({
 
   if (editing) {
     return (
-      <div className="rounded-md border border-accent/40 bg-surface-2 px-3 py-2">
+      <div className="rounded-md border border-edge bg-surface-sunken px-3 py-2">
         <div className="grid gap-2 sm:grid-cols-4">
           <Input
             value={form.title}
@@ -320,7 +320,7 @@ function MeetingRow({
           />
           <div className="flex gap-2">
             <Button
-              className="!px-2.5 !py-1.5 text-xs"
+              className="!px-2.5 !py-1.5 t5"
               onClick={async () => {
                 await api(`/api/meetings/${meeting.id}`, {
                   method: "PATCH",
@@ -334,7 +334,7 @@ function MeetingRow({
             </Button>
             <Button
               variant="ghost"
-              className="!px-2.5 !py-1.5 text-xs"
+              className="!px-2.5 !py-1.5 t5"
               onClick={() => setEditing(false)}
             >
               Cancelar
@@ -346,36 +346,35 @@ function MeetingRow({
   }
 
   return (
-    <div className="rounded-md border border-edge bg-surface-2 px-3 py-2 text-sm">
+    <div className="rounded-md border border-edge bg-surface-sunken px-3 py-2 t3">
       <div className="flex flex-wrap items-center justify-between gap-2">
         <p>
           <span className="font-medium">{meeting.title}</span>{" "}
-          <span className="text-xs text-muted">
+          <span className="t5 text-text-muted">
             · {new Date(meeting.scheduledAt).toLocaleString("pt-BR")}
             {meeting.clientName && ` · ${meeting.clientName}`}
             {meeting.projectTitle && ` · ${meeting.projectTitle}`}
           </span>
         </p>
-        <span className="flex items-center gap-2 text-xs">
+        <span className="flex items-center gap-2 t5">
           {meeting.link && (
-            <a href={meeting.link} target="_blank" rel="noreferrer" className="text-accent hover:underline">
-              entrar ↗
+            <a href={meeting.link} target="_blank" rel="noreferrer" className="text-text hover:underline">
+              entrar
             </a>
           )}
           <a
             href={googleCalendarUrl(meeting)}
             target="_blank"
             rel="noreferrer"
-            className="text-muted hover:text-accent"
+            className="text-text-muted hover:text-text"
             title="Adicionar ao Google Calendar"
-          >
-            📅 Calendar
+          >Calendar
           </a>
-          <button className="text-muted hover:text-accent" onClick={() => setEditing(true)}>
+          <button className="text-text-muted hover:text-text" onClick={() => setEditing(true)}>
             Editar
           </button>
           <button
-            className="text-muted hover:text-red-400"
+            className="text-text-muted hover:text-negative"
             onClick={async () => {
               await api(`/api/meetings/${meeting.id}`, { method: "DELETE" });
               onChanged();
@@ -386,8 +385,8 @@ function MeetingRow({
         </span>
       </div>
       {meeting.reasoning && (
-        <p className="mt-1 text-xs text-muted">
-          <span className="text-accent">Por quê: </span>
+        <p className="mt-1 t5 text-text-muted">
+          <span className="text-text">Por quê: </span>
           {meeting.reasoning}
         </p>
       )}

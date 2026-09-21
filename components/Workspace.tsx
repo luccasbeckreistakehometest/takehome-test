@@ -25,6 +25,7 @@ import type { ClientReport, DemandSuggestions } from "@/lib/marketplace-schemas"
 import type { StrategyActions } from "./renderers";
 import type { Project } from "@/lib/marketplace-types";
 import type { AgencySettings } from "@/lib/settings";
+import { buttonClass } from "@/lib/button-class";
 import BrandAssets from "./BrandAssets";
 import ClientDashboard from "./ClientDashboard";
 import SalesIntegrations from "./SalesIntegrations";
@@ -57,7 +58,7 @@ import {
   StrategyAnalysisView,
   VisualIdentityView,
 } from "./renderers";
-import { Button, Card, ErrorBox, Spinner, Tag } from "./ui";
+import { Button, Card, ErrorBox, Spinner } from "./ui";
 import { groupOfTab, isTabKey, resolveTab, visibleGroups, type TabKey } from "@/lib/workspace-tabs";
 
 function nextMonthLabel(): string {
@@ -203,37 +204,41 @@ export default function Workspace({
   const monthDefault = nextMonthLabel();
 
   return (
-    <div className="space-y-6">
-      <div className="flex flex-wrap items-start justify-between gap-4">
-        <div>
-          <h1 className="font-[family-name:var(--font-display)] text-3xl font-bold tracking-tight">
-            {client.name}
-          </h1>
-          <div className="mt-2 flex flex-wrap items-center gap-2">
-            {client.industry && <Tag>{client.industry}</Tag>}
-            <Tag>{client.language === "en" ? "English" : "Português"}</Tag>
-            {client.channels.map((channel) => (
-              <Tag key={channel}>{channel}</Tag>
-            ))}
-          </div>
+    <div>
+      {/* Cabeçalho do cliente: os atributos eram cinco pílulas com a mesma
+          forma de um botão. Viram uma linha de metadados separada por ponto —
+          informação, não alvo. */}
+      <div className="flex flex-wrap items-end justify-between gap-4 border-b border-edge pb-5">
+        <div className="min-w-0">
+          <p className="t6 text-text-muted">Cliente</p>
+          <h1 className="d3 mt-2">{client.name}</h1>
+          <p className="t5 mt-1 text-text-muted">
+            {[
+              client.industry,
+              client.language === "en" ? "English" : "Português",
+              ...client.channels,
+            ]
+              .filter(Boolean)
+              .join(" · ")}
+          </p>
         </div>
         <div className="flex flex-wrap items-center gap-2">
           <Link
             href={`/clients/${client.id}/report`}
             data-testid="open-monthly-report"
-            className="inline-flex items-center gap-1.5 rounded-md border border-edge bg-surface-2 px-3.5 py-2 text-sm transition-colors hover:border-accent hover:text-accent"
+            className={buttonClass("secondary")}
           >
-            📊 Relatório mensal
+            Relatório mensal
           </Link>
           <Button onClick={runFullKit} disabled={kitRunning}>
-            {kitRunning ? "Gerando kit..." : "✦ Gerar kit completo"}
+            {kitRunning ? "Gerando kit..." : "Gerar kit completo"}
           </Button>
         </div>
       </div>
 
       {kitSteps && (
         <Card>
-          <p className="mb-3 text-sm text-muted">
+          <p className="mb-3 t3 text-text-muted">
             Kit completo: a partir do briefing, a plataforma gera estratégia, campanha,
             ROI, identidade, social e landing page em sequência — cada etapa aproveita a
             anterior.
@@ -242,19 +247,19 @@ export default function Workspace({
             {kitSteps.map((step) => (
               <span
                 key={step.type}
-                className={`flex items-center gap-1.5 rounded-md border px-2.5 py-1 text-xs ${
+                className={`t5 flex items-center gap-1.5 rounded-xs border px-2.5 py-1 ${
                   step.status === "done"
-                    ? "border-accent/50 bg-accent/10 text-accent"
+                    ? "border-positive/50 bg-positive-wash text-positive"
                     : step.status === "running"
-                      ? "border-edge bg-surface-2 text-foreground"
+                      ? "border-edge bg-surface text-text"
                       : step.status === "error"
-                        ? "border-red-900/60 bg-red-950/40 text-red-300"
-                        : "border-edge bg-surface-2 text-muted"
+                        ? "border-negative/50 bg-negative-wash text-negative"
+                        : "border-rule bg-surface-sunken text-text-muted"
                 }`}
               >
                 {step.status === "done" && "✓"}
                 {step.status === "running" && (
-                  <span className="size-3 animate-spin rounded-full border-2 border-edge border-t-accent" />
+                  <span className="size-3 animate-spin rounded-full border-2 border-rule border-t-text" />
                 )}
                 {step.status === "error" && "✕"}
                 {GENERATION_LABELS[step.type]}
@@ -274,48 +279,15 @@ export default function Workspace({
         </Card>
       )}
 
-      {/* Mobile: dois selects (seção e aba) */}
-      <div className="grid grid-cols-2 gap-2 sm:hidden">
-        <label htmlFor="workspace-group" className="sr-only">
-          Seção do workspace
-        </label>
-        <select
-          id="workspace-group"
-          data-testid="workspace-group-select"
-          value={activeGroup}
-          onChange={(e) => {
-            const group = groups.find((g) => g.key === e.target.value);
-            if (group) setTab(group.tabs[0].key);
-          }}
-          className="w-full rounded-md border border-edge bg-surface px-3 py-2 text-sm font-medium"
+      {/* UMA metáfora de navegação em toda largura (§11.3). No celular eram
+          dois <select> nativos ao lado de controles desenhados; agora as duas
+          fileiras rolam na horizontal com sombra de afordância. */}
+      <div>
+        <nav
+          aria-label="Seções do cliente"
+          className="scroll-x flex items-center gap-x-5"
+          data-testid="workspace-groups"
         >
-          {groups.map((g) => (
-            <option key={g.key} value={g.key} className="bg-surface text-foreground">
-              {g.label}
-            </option>
-          ))}
-        </select>
-        <label htmlFor="workspace-tab" className="sr-only">
-          Aba do workspace
-        </label>
-        <select
-          id="workspace-tab"
-          data-testid="workspace-tab-select"
-          value={tab}
-          onChange={(e) => setTab(e.target.value as TabKey)}
-          className="w-full rounded-md border border-edge bg-surface px-3 py-2 text-sm font-medium text-accent"
-        >
-          {(groups.find((g) => g.key === activeGroup)?.tabs ?? []).map(({ key, label }) => (
-            <option key={key} value={key} className="bg-surface text-foreground">
-              {label}
-            </option>
-          ))}
-        </select>
-      </div>
-
-      {/* Desktop: seções + abas da seção */}
-      <div className="hidden space-y-2 sm:block">
-        <nav aria-label="Seções do cliente" className="flex flex-wrap gap-1" data-testid="workspace-groups">
           {groups.map((g) => (
             <button
               key={g.key}
@@ -324,17 +296,19 @@ export default function Workspace({
               data-tour={`ws-group-${g.key}`}
               aria-current={g.key === activeGroup ? "true" : undefined}
               onClick={() => setTab(g.tabs[0].key)}
-              className={`rounded-full px-3.5 py-1.5 text-sm transition-colors ${
-                g.key === activeGroup
-                  ? "bg-accent font-medium text-accent-ink"
-                  : "border border-edge bg-surface-2 text-muted hover:text-foreground"
+              className={`t6 inline-flex min-h-10 shrink-0 items-center whitespace-nowrap transition-colors duration-[var(--dur-1)] ${
+                g.key === activeGroup ? "text-text" : "text-text-muted hover:text-text"
               }`}
             >
               {g.label}
             </button>
           ))}
         </nav>
-        <nav aria-label="Abas da seção" className="flex snap-x gap-1 overflow-x-auto border-b border-edge pb-px" data-testid="workspace-tabs">
+        <nav
+          aria-label="Abas da seção"
+          className="scroll-x mt-2 flex snap-x gap-6 border-b border-edge"
+          data-testid="workspace-tabs"
+        >
           {(groups.find((g) => g.key === activeGroup)?.tabs ?? []).map(({ key, label }) => (
             <button
               key={key}
@@ -343,10 +317,10 @@ export default function Workspace({
               data-tour={`ws-tab-${key}`}
               aria-current={tab === key ? "page" : undefined}
               onClick={() => setTab(key)}
-              className={`snap-start whitespace-nowrap rounded-t-md px-3.5 py-2 text-sm transition-colors ${
+              className={`t3 -mb-px inline-flex min-h-10 shrink-0 snap-start items-center whitespace-nowrap border-b-2 py-2 transition-colors duration-[var(--dur-1)] ${
                 tab === key
-                  ? "border border-b-0 border-edge bg-surface font-medium text-accent"
-                  : "text-muted hover:text-foreground"
+                  ? "border-brand-edge font-medium text-text"
+                  : "border-transparent text-text-muted hover:text-text"
               }`}
             >
               {label}
@@ -386,13 +360,13 @@ export default function Workspace({
           <BrandAssets clientId={client.id} />
           {viewerRole === "client" ? (
             <Card>
-              <p className="text-sm text-muted">
-                Para apagar a sua marca e todos os dados dela, use <Link href="/conta" className="text-accent hover:underline">Minha conta → Excluir minha conta</Link>.
+              <p className="t3 text-text-muted">
+                Para apagar a sua marca e todos os dados dela, use <Link href="/conta" className="text-text hover:underline">Minha conta → Excluir minha conta</Link>.
               </p>
             </Card>
           ) : (
             <Card className="flex flex-wrap items-center justify-between gap-3">
-              <p className="text-sm text-muted">
+              <p className="t3 text-text-muted">
                 Excluir este cliente remove também todo o histórico de gerações.
               </p>
               <Button variant="danger" onClick={deleteClient}>

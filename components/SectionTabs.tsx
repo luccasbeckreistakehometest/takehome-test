@@ -9,7 +9,9 @@ import type { SectionTab } from "@/lib/nav";
 export default function SectionTabs({ tabs, label }: { tabs: SectionTab[]; label: string }) {
   const pathname = usePathname();
   return (
-    <nav aria-label={label} className="mb-6 inline-flex max-w-full flex-wrap gap-1 rounded-full border border-edge bg-surface-2 p-1">
+    // Aba sublinhada (§11), não pílula: a pílula colorida era o mesmo desenho
+    // do botão primário e competia com ele em toda tela de seção.
+    <nav aria-label={label} className="mb-6 flex max-w-full flex-wrap gap-6 border-b border-edge">
       {tabs.map((tab) => {
         const active = pathname === tab.href || pathname?.startsWith(`${tab.href}/`);
         return (
@@ -18,8 +20,8 @@ export default function SectionTabs({ tabs, label }: { tabs: SectionTab[]; label
             href={tab.href}
             data-testid={tab.testId}
             aria-current={active ? "page" : undefined}
-            className={`rounded-full px-4 py-1.5 text-sm transition-colors ${
-              active ? "bg-accent font-medium text-accent-ink" : "text-muted hover:text-foreground"
+            className={`t3 -mb-px inline-flex min-h-10 items-center border-b-2 py-2 transition-colors duration-[var(--dur-1)] ${
+              active ? "border-text font-medium text-text" : "border-transparent text-text-muted hover:text-text"
             }`}
           >
             {tab.label}

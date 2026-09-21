@@ -88,14 +88,14 @@ export default function PackageTab({ clientId }: { clientId: string }) {
       <Card className="space-y-4">
         <div>
           <SectionTitle>O que o fee cobre por mês</SectionTitle>
-          <p className="text-sm text-muted">
+          <p className="t3 text-text-muted">
             O cliente vê quanto já usou. Pedido que passa do pacote só vira demanda depois que ele aprova o valor do extra — e o extra entra na fatura do mês.
           </p>
         </div>
         {error && <ErrorBox message={error} />}
         {draft.length === 0 && (
           <div className="space-y-2" data-testid="package-presets">
-            <p className="text-sm">Comece por um modelo e ajuste:</p>
+            <p className="t3">Comece por um modelo e ajuste:</p>
             <div className="flex flex-wrap gap-2">
               {(data.presets ?? []).map((preset) => (
                 <Button key={preset.key} variant="ghost" onClick={() => setDraft(toDraft(preset.items))} data-testid={`preset-${preset.key}`}>
@@ -107,7 +107,7 @@ export default function PackageTab({ clientId }: { clientId: string }) {
         )}
         {draft.length > 0 && (
           <div className="space-y-2">
-            <div className="hidden grid-cols-[1.4fr_1fr_70px_100px_32px] gap-2 text-[11px] uppercase tracking-wide text-muted sm:grid">
+            <div className="hidden grid-cols-[1.4fr_1fr_70px_100px_32px] gap-2 t6 text-text-muted sm:grid">
               <span>Item</span>
               <span>Unidade</span>
               <span>Por mês</span>
@@ -132,7 +132,7 @@ export default function PackageTab({ clientId }: { clientId: string }) {
                   type="button"
                   aria-label="Remover item"
                   onClick={() => setDraft((rows) => (rows ?? []).filter((_, i) => i !== index))}
-                  className="text-muted hover:text-red-500"
+                  className="text-text-muted hover:text-negative"
                 >
                   ×
                 </button>
@@ -140,12 +140,12 @@ export default function PackageTab({ clientId }: { clientId: string }) {
             ))}
             <button
               type="button"
-              className="text-sm text-accent hover:underline"
+              className="t3 text-text hover:underline"
               onClick={() => setDraft((rows) => [...(rows ?? []), { key: `item_${(rows ?? []).length + 1}`, label: "Novo item", unit: "demanda", qty: "1", extraPrice: "0" }])}
             >
               + Adicionar item
             </button>
-            <label className="flex items-center gap-2 text-sm">
+            <label className="flex items-center gap-2 t3">
               <input type="checkbox" checked={rollover} onChange={(e) => setRollover(e.target.checked)} />
               Acumular o que sobrar para o mês seguinte (um mês)
             </label>
@@ -163,7 +163,7 @@ export default function PackageTab({ clientId }: { clientId: string }) {
               >
                 Sem pacote
               </Button>
-              {saved && <span className="text-sm text-accent">Salvo ✓</span>}
+              {saved && <span className="t3 text-text">Salvo ✓</span>}
             </div>
           </div>
         )}
@@ -172,12 +172,12 @@ export default function PackageTab({ clientId }: { clientId: string }) {
       <div className="space-y-6">
         <Card>
           <SectionTitle>{`Uso em ${monthLabel(data.month, lang)}`}</SectionTitle>
-          {data.usage.length > 0 ? <UsageBars usage={data.usage} /> : <p className="text-sm text-muted">Defina o pacote para acompanhar o uso.</p>}
+          {data.usage.length > 0 ? <UsageBars usage={data.usage} /> : <p className="t3 text-text-muted">Defina o pacote para acompanhar o uso.</p>}
         </Card>
         <Card>
           <SectionTitle>Pedidos do cliente</SectionTitle>
           {data.requests.length === 0 ? (
-            <p className="text-sm text-muted">Os pedidos feitos no portal aparecem aqui, com o que cabe no pacote e o que é extra.</p>
+            <p className="t3 text-text-muted">Os pedidos feitos no portal aparecem aqui, com o que cabe no pacote e o que é extra.</p>
           ) : (
             <RequestList requests={data.requests} actor="agency" onDecide={decide} />
           )}

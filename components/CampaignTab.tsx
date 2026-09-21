@@ -95,8 +95,8 @@ export default function CampaignTab({ client }: { client: Client }) {
   return (
     <div className="space-y-6" data-testid="campaign-tab">
       <div>
-        <h2 className="font-[family-name:var(--font-display)] text-xl font-semibold">Campanha de 30 dias</h2>
-        <p className="mt-1 text-sm text-muted">
+        <h2 className="d4">Campanha de 30 dias</h2>
+        <p className="t3 measure-lede mt-2 text-text-muted">
           Do briefing + objetivo + canais para um mês inteiro: temas por semana, formato por canal, dias de postagem e cada post já escrito (gancho, legenda, CTA e brief da imagem) — tudo entra no calendário como rascunho para você aceitar ou pular.
         </p>
       </div>
@@ -117,7 +117,7 @@ export default function CampaignTab({ client }: { client: Client }) {
                     key={c}
                     type="button"
                     onClick={() => toggleChannel(c)}
-                    className={`rounded-full border px-3 py-1 text-xs ${form.channels.includes(c) ? "border-accent bg-accent/15 text-accent" : "border-edge text-muted hover:border-muted"}`}
+                    className={`rounded-xs border px-3 py-1 t5 ${form.channels.includes(c) ? "border-edge bg-surface-sunken text-text" : "border-edge text-text-muted hover:border-edge"}`}
                     data-testid="campaign-channel"
                     data-channel={c}
                     aria-pressed={form.channels.includes(c)}
@@ -143,7 +143,7 @@ export default function CampaignTab({ client }: { client: Client }) {
           {error && <ErrorBox message={error} />}
           <div className="flex flex-wrap items-center gap-3">
             <Button onClick={generate} disabled={generating || form.channels.length === 0} data-testid="campaign-generate">
-              <Icon name="sparkle" size={15} /> {generating ? "Escrevendo o mês..." : "✦ Gerar campanha de 30 dias"}
+              {generating ? "Escrevendo o mês..." : "Gerar campanha de 30 dias"}
             </Button>
             {generating && <Spinner label="A IA está planejando as semanas e escrevendo cada post (2-4 min)..." />}
           </div>
@@ -154,9 +154,9 @@ export default function CampaignTab({ client }: { client: Client }) {
         <Card className="space-y-4" data-testid="campaign-review" data-status={review.campaign.status}>
           <div className="flex flex-wrap items-start justify-between gap-3">
             <div>
-              <p className="text-xs uppercase tracking-widest text-accent">Revisão da campanha</p>
-              <h3 className="font-[family-name:var(--font-display)] text-lg font-semibold" data-testid="campaign-theme">{review.campaign.theme}</h3>
-              <p className="mt-1 text-sm text-muted">{review.campaign.summary}</p>
+              <p className="t6 text-text-muted">Revisão da campanha</p>
+              <h3 className="d4" data-testid="campaign-theme">{review.campaign.theme}</h3>
+              <p className="t3 measure-lede mt-2 text-text-muted">{review.campaign.summary}</p>
               <div className="mt-2 flex flex-wrap gap-1.5">
                 {review.campaign.weeks.map((w) => (
                   <Tag key={w.week}>
@@ -165,7 +165,7 @@ export default function CampaignTab({ client }: { client: Client }) {
                 ))}
               </div>
             </div>
-            <div className="text-right text-xs text-muted">
+            <div className="text-right t5 text-text-muted">
               <p>
                 <span data-testid="campaign-drafts">{review.campaign.drafts}</span> <span>rascunhos</span> · <span data-testid="campaign-scheduled">{review.campaign.scheduled}</span> <span>agendados</span>
               </p>
@@ -176,17 +176,17 @@ export default function CampaignTab({ client }: { client: Client }) {
             <Button onClick={acceptAll} disabled={busyPost !== null || review.campaign.drafts === 0} data-testid="campaign-accept-all">
               <Icon name="check" size={14} /> Aceitar todos os rascunhos
             </Button>
-            <Link href="/calendar" className="text-sm text-accent hover:underline">
-              Ver no calendário →
+            <Link href="/calendar" className="t3 text-text hover:underline">
+              Ver no calendário
             </Link>
-            <button onClick={() => setReview(null)} className="ml-auto text-sm text-muted hover:text-foreground" data-testid="campaign-back">
+            <button onClick={() => setReview(null)} className="ml-auto t3 text-text-muted hover:text-text" data-testid="campaign-back">
               ← Voltar
             </button>
           </div>
           {error && <ErrorBox message={error} />}
           <div className="space-y-2">
             {review.posts.map((post) => (
-              <div key={post.id} className="rounded-md border border-edge bg-surface-2 p-3 text-sm" data-testid="campaign-post" data-status={post.status}>
+              <div key={post.id} className="rounded-md border border-edge bg-surface-sunken p-3 t3" data-testid="campaign-post" data-status={post.status}>
                 <div className="flex flex-wrap items-center justify-between gap-2">
                   <div className="flex flex-wrap items-center gap-1.5">
                     <span className="font-medium capitalize">{fmtDay(post.scheduledFor)}</span>
@@ -197,10 +197,9 @@ export default function CampaignTab({ client }: { client: Client }) {
                   </div>
                   {post.status === "draft" && (
                     <div className="flex gap-1.5">
-                      <Button className="!px-2.5 !py-1 text-xs" disabled={busyPost !== null} onClick={() => decide(post.id, "accept")} data-testid="campaign-accept">
-                        ✅ Aceitar
+                      <Button className="!px-2.5 !py-1 t5" disabled={busyPost !== null} onClick={() => decide(post.id, "accept")} data-testid="campaign-accept">Aceitar
                       </Button>
-                      <Button variant="ghost" className="!px-2.5 !py-1 text-xs" disabled={busyPost !== null} onClick={() => decide(post.id, "skip")} data-testid="campaign-skip">
+                      <Button variant="ghost" className="!px-2.5 !py-1 t5" disabled={busyPost !== null} onClick={() => decide(post.id, "skip")} data-testid="campaign-skip">
                         Pular
                       </Button>
                     </div>
@@ -208,11 +207,11 @@ export default function CampaignTab({ client }: { client: Client }) {
                 </div>
                 <p className="mt-1 font-semibold">{post.title}</p>
                 <details className="mt-1">
-                  <summary className="cursor-pointer text-xs text-accent">Ver legenda, CTA e brief da imagem</summary>
-                  <p className="mt-2 whitespace-pre-wrap text-foreground/90">{post.caption}</p>
-                  {post.hashtags.length > 0 && <p className="mt-1 text-xs text-accent">{post.hashtags.join(" ")}</p>}
+                  <summary className="cursor-pointer t5 text-text">Ver legenda, CTA e brief da imagem</summary>
+                  <p className="mt-2 whitespace-pre-wrap text-text/90">{post.caption}</p>
+                  {post.hashtags.length > 0 && <p className="mt-1 t5 text-text">{post.hashtags.join(" ")}</p>}
                   {post.imageBrief && (
-                    <p className="mt-2 whitespace-pre-wrap text-xs text-muted">
+                    <p className="mt-2 whitespace-pre-wrap t5 text-text-muted">
                       <span className="font-semibold">Brief da imagem:</span> {post.imageBrief}
                     </p>
                   )}
@@ -228,22 +227,22 @@ export default function CampaignTab({ client }: { client: Client }) {
         {!campaigns ? (
           <Spinner label="Carregando..." />
         ) : campaigns.length === 0 ? (
-          <p className="text-sm text-muted">Nenhuma campanha ainda — gere a primeira acima.</p>
+          <p className="t3 text-text-muted">Nenhuma campanha ainda — gere a primeira acima.</p>
         ) : (
           <div className="space-y-1.5">
             {campaigns.map((c) => (
               <button
                 key={c.id}
                 onClick={() => open(c.id)}
-                className="flex w-full flex-wrap items-center justify-between gap-2 rounded-md border border-edge bg-surface-2 px-3 py-2 text-left text-sm transition-colors hover:border-accent/60"
+                className="flex w-full flex-wrap items-center justify-between gap-2 rounded-md border border-edge bg-surface-sunken px-3 py-2 text-left t3 transition-colors hover:border-edge"
                 data-testid="campaign-row"
                 data-status={c.status}
               >
                 <span>
                   <span className="font-medium">{c.theme}</span>{" "}
-                  <span className="text-xs text-muted">· {c.startDate} · {c.channels.join(", ")}</span>
+                  <span className="t5 text-text-muted">· {c.startDate} · {c.channels.join(", ")}</span>
                 </span>
-                <span className="text-xs text-muted">
+                <span className="t5 text-text-muted">
                   {c.total} posts · {c.drafts} rascunhos · {c.scheduled} agendados {c.status === "done" ? "· revisada ✓" : ""}
                 </span>
               </button>

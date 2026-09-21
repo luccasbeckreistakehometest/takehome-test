@@ -30,9 +30,9 @@ export default function LeadForm({ slug, agencyName }: { slug: string; agencyNam
 
   if (sent) {
     return (
-      <div className="rounded-xl border border-emerald-500/40 bg-emerald-500/10 p-5 text-sm" data-testid="lead-sent">
-        <p className="font-[family-name:var(--font-display)] text-lg font-semibold">Recebemos! 🎉</p>
-        <p className="mt-1 text-muted">A equipe da {agencyName} vai te chamar no WhatsApp em breve.</p>
+      <div className="rounded-md border border-positive/40 bg-positive-wash p-5 t3" data-testid="lead-sent">
+        <p className="d4">Recebemos! </p>
+        <p className="mt-1 text-text-muted">A equipe da {agencyName} vai te chamar no WhatsApp em breve.</p>
       </div>
     );
   }
@@ -80,9 +80,9 @@ export default function LeadForm({ slug, agencyName }: { slug: string; agencyNam
       </div>
       {error && <ErrorBox message={error} />}
       <Button type="submit" disabled={sending || !form.name.trim() || !form.whatsapp.trim() || !form.need.trim() || !form.budgetBand} data-testid="lead-submit">
-        {sending ? "Enviando..." : "Quero conversar →"}
+        {sending ? "Enviando..." : "Quero conversar"}
       </Button>
-      <p className="text-xs text-muted">Sem spam: só a equipe da agência recebe.</p>
+      <p className="t5 text-text-muted">Sem spam: só a equipe da agência recebe.</p>
     </form>
   );
 }

@@ -362,7 +362,7 @@ export default function VoiceBriefing({
   if (!supported) {
     return (
       <Card>
-        <p className="text-sm text-muted" data-testid="voice-unsupported">Seu navegador não suporta voz — use Chrome, Edge ou Safari. Você pode digitar o briefing.</p>
+        <p className="t3 text-text-muted" data-testid="voice-unsupported">Seu navegador não suporta voz — use Chrome, Edge ou Safari. Você pode digitar o briefing.</p>
         <Button type="button" className="mt-3" onClick={onTypeInstead}>Digitar o briefing</Button>
       </Card>
     );
@@ -371,16 +371,16 @@ export default function VoiceBriefing({
   return (
     <Card>
       <div data-testid="voice" data-state={phase}>
-        <p className="text-xs font-semibold uppercase tracking-widest text-accent">Briefing falado</p>
-        <h2 className="mt-1 font-[family-name:var(--font-display)] text-xl font-semibold">Conte sobre a marca</h2>
-        <div className="mt-4 rounded-xl border border-edge bg-surface-2 p-4 text-sm leading-relaxed" data-testid="voice-prompt">“{prompt}”</div>
-        <div className="mt-2 flex items-center gap-3 text-xs">
+        <p className="t6 text-text-muted">Briefing falado</p>
+        <h2 className="d4 mt-1">Conte sobre a marca</h2>
+        <div className="mt-4 rounded-md border border-edge bg-surface-sunken p-4 t3 leading-relaxed" data-testid="voice-prompt">“{prompt}”</div>
+        <div className="mt-2 flex items-center gap-3 t5">
           {voiceOn ? (
-            <button type="button" onClick={() => void replay()} className="font-semibold text-accent hover:underline" data-testid="voice-replay">▶ Ouvir</button>
+            <button type="button" onClick={() => void replay()} className="font-semibold text-text hover:underline" data-testid="voice-replay">▶ Ouvir</button>
           ) : (
-            <span className="text-muted">Só texto neste servidor (voz da IA não configurada).</span>
+            <span className="text-text-muted">Só texto neste servidor (voz da IA não configurada).</span>
           )}
-          <span className="text-muted">{`${turns.length}/${MAX_VOICE_TURNS} falas`}</span>
+          <span className="text-text-muted">{`${turns.length}/${MAX_VOICE_TURNS} falas`}</span>
         </div>
 
         <div className="mt-5 flex flex-col items-center gap-3">
@@ -389,55 +389,55 @@ export default function VoiceBriefing({
               <button
                 type="button"
                 onClick={() => (phase === "speaking" ? (hush(), resumeListening()) : void finishTurn())}
-                className="relative grid size-16 place-items-center rounded-full bg-accent text-accent-ink shadow-lg"
+                className="relative grid size-16 place-items-center rounded-full bg-text text-canvas shadow-e1"
                 aria-label={phase === "speaking" ? "Interromper e falar" : "Terminei de falar"}
                 data-testid="voice-stop"
               >
-                <span className={`absolute inset-0 rounded-full bg-accent/40 ${phase === "listening" ? "animate-ping" : ""}`} />
+                <span className={`absolute inset-0 rounded-full bg-surface-sunken ${phase === "listening" ? "animate-ping" : ""}`} />
                 <Icon name="mic" size={24} />
               </button>
-              <p className="text-sm font-medium text-accent" data-testid="voice-status">{status}</p>
-              <p className="min-h-5 max-w-lg text-center text-sm text-muted" aria-live="polite">{(heard + " " + interim).trim()}</p>
+              <p className="t3 font-medium text-text" data-testid="voice-status">{status}</p>
+              <p className="min-h-5 max-w-lg text-center t3 text-text-muted" aria-live="polite">{(heard + " " + interim).trim()}</p>
               {phase === "listening" && (
                 <>
-                  <p className="text-xs text-muted">Quando você parar de falar, a IA entende que é a vez dela.</p>
+                  <p className="t5 text-text-muted">Quando você parar de falar, a IA entende que é a vez dela.</p>
                   <Button type="button" variant="ghost" onClick={() => void finishTurn()}>Terminei de falar</Button>
                 </>
               )}
             </>
           ) : phase === "thinking" ? (
-            <p className="text-sm text-muted" data-testid="voice-thinking">Pensando…</p>
+            <p className="t3 text-text-muted" data-testid="voice-thinking">Pensando…</p>
           ) : (
             <Button type="button" onClick={() => void start()} data-testid="voice-start">
               {phase === "review" ? "Falar mais" : "Começar a falar"}
             </Button>
           )}
-          {error && <p className="text-sm text-red-400" role="alert">{error}</p>}
+          {error && <p className="t3 text-negative" role="alert">{error}</p>}
         </div>
 
         {briefing && (
           <div className="mt-6 grid gap-4 sm:grid-cols-2" data-testid="voice-review">
             <div>
-              <p className="text-xs font-semibold uppercase tracking-widest text-muted">O que eu ouvi</p>
-              <ul className="mt-2 space-y-2 text-sm text-muted">{turns.map((t, i) => <li key={i} className="rounded-lg bg-surface-2 px-3 py-2">“{t}”</li>)}</ul>
+              <p className="t6 text-text-muted">O que eu ouvi</p>
+              <ul className="mt-2 space-y-2 t3 text-text-muted">{turns.map((t, i) => <li key={i} className="rounded-lg bg-surface-sunken px-3 py-2">“{t}”</li>)}</ul>
             </div>
             <div>
-              <p className="text-xs font-semibold uppercase tracking-widest text-muted">O que eu entendi</p>
-              <p className="mt-2 text-sm">{briefing.summary}</p>
-              <dl className="mt-3 space-y-1 text-sm">
+              <p className="t6 text-text-muted">O que eu entendi</p>
+              <p className="mt-2 t3">{briefing.summary}</p>
+              <dl className="mt-3 space-y-1 t3">
                 {(Object.keys(LABELS) as (keyof typeof LABELS)[]).map((k) => briefing.fields[k as keyof typeof briefing.fields] ? (
-                  <div key={k} className="flex gap-3"><dt className="w-32 shrink-0 text-muted">{LABELS[k]}</dt><dd>{String(briefing.fields[k as keyof typeof briefing.fields])}</dd></div>
+                  <div key={k} className="flex gap-3"><dt className="w-32 shrink-0 text-text-muted">{LABELS[k]}</dt><dd>{String(briefing.fields[k as keyof typeof briefing.fields])}</dd></div>
                 ) : null)}
-                {briefing.fields.channels.length > 0 && <div className="flex gap-3"><dt className="w-32 shrink-0 text-muted">Canais</dt><dd>{briefing.fields.channels.join(", ")}</dd></div>}
+                {briefing.fields.channels.length > 0 && <div className="flex gap-3"><dt className="w-32 shrink-0 text-text-muted">Canais</dt><dd>{briefing.fields.channels.join(", ")}</dd></div>}
               </dl>
-              {briefing.missing.length > 0 && <p className="mt-3 text-sm text-amber-400">Ainda falta: {briefing.missing.map((m) => LABELS[m] ?? m).join(", ")}</p>}
-              {complete && <p className="mt-3 text-sm text-emerald-400">Tenho o que preciso.</p>}
+              {briefing.missing.length > 0 && <p className="mt-3 t3 text-caution">Ainda falta: {briefing.missing.map((m) => LABELS[m] ?? m).join(", ")}</p>}
+              {complete && <p className="mt-3 t3 text-positive">Tenho o que preciso.</p>}
             </div>
           </div>
         )}
 
         <div className="mt-6 flex flex-wrap items-center justify-between gap-3 border-t border-edge pt-4">
-          <button type="button" onClick={() => { stopMic(); hush(); onTypeInstead(); }} className="text-sm text-muted hover:text-foreground" data-testid="voice-type-instead">Prefiro digitar</button>
+          <button type="button" onClick={() => { stopMic(); hush(); onTypeInstead(); }} className="t3 text-text-muted hover:text-text" data-testid="voice-type-instead">Prefiro digitar</button>
           {briefing && (
             <Button type="button" disabled={!complete || !briefingId} onClick={() => { stopMic(); hush(); onConfirm(briefing, briefingId!); }} data-testid="voice-confirm">
               {confirmLabel}

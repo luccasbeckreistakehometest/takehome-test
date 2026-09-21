@@ -2,6 +2,8 @@
 
 import { useState } from "react";
 import type { InvoiceItem, InvoiceState } from "@/lib/invoice-rules";
+import { buttonClass } from "@/lib/button-class";
+import { brandStyle } from "@/lib/brand-ramp";
 
 type Lang = "pt" | "en";
 
@@ -97,82 +99,116 @@ export default function InvoicePayView({
   }
 
   return (
-    <div className="mx-auto max-w-md space-y-5" style={{ ["--accent" as string]: agency.accentColor }} data-no-translate data-testid="invoice-page" data-state={current}>
-      <header className="flex items-center gap-3">
+    // A fatura é uma peça de documento (§10) e não um cartão de aplicativo:
+    // cabeçalho da agência, régua da marca, linhas com régua fina, total em
+    // figura tabular grande e o bloco de pagamento separado por uma régua
+    // estrutural. Cabe num celular e imprime como recibo.
+    <article
+      className="doc my-8 px-6 py-8 sm:px-10"
+      style={{ ...brandStyle(agency.accentColor), ["--doc-measure" as string]: "120mm" } as React.CSSProperties}
+      data-no-translate
+      data-testid="invoice-page"
+      data-state={current}
+    >
+      <div className="doc-rule" />
+      <div className="mt-4 flex items-center gap-3">
         {agency.logoUrl ? (
           // eslint-disable-next-line @next/next/no-img-element
-          <img src={agency.logoUrl} alt={agency.name} className="size-11 rounded-lg object-contain" />
-        ) : (
-          <span className="grid size-11 place-items-center rounded-lg bg-accent font-[family-name:var(--font-display)] text-lg font-bold text-accent-ink">
-            {agency.name.charAt(0).toUpperCase()}
-          </span>
-        )}
+          <img src={agency.logoUrl} alt={agency.name} className="size-9 rounded-xs object-contain" />
+        ) : null}
         <div className="min-w-0">
-          <p className="truncate font-[family-name:var(--font-display)] text-lg font-semibold">{agency.name}</p>
-          {agency.tagline && <p className="truncate text-xs text-muted">{agency.tagline}</p>}
+          <p className="t6 truncate text-n-500">{agency.name}</p>
+          {agency.tagline && <p className="t5 truncate text-n-500">{agency.tagline}</p>}
         </div>
-      </header>
+      </div>
 
       {current === "void" ? (
-        <section className="rounded-2xl border border-edge bg-surface p-6 text-center">
-          <h1 className="font-[family-name:var(--font-display)] text-2xl font-bold">{t.voidTitle}</h1>
-        </section>
+        <h1 className="d3 mt-10">{t.voidTitle}</h1>
       ) : (
         <>
-          <section className="rounded-2xl border border-edge bg-surface p-5">
-            <p className="text-xs font-semibold uppercase tracking-widest text-accent">
+          <section className="mt-8">
+            <p className="t5 text-n-500">
               {t.invoice} {invoice.month} · {t.for} {clientName}
             </p>
-            <ul className="mt-3 divide-y divide-edge text-sm">
+            <ul className="mt-4 border-t border-edge">
               {invoice.items.map((item, index) => (
-                <li key={index} className="flex justify-between gap-3 py-2">
-                  <span>{item.label}</span>
-                  <span className="shrink-0 tabular-nums">{brl(item.amount, lang)}</span>
+                <li key={index} className="flex justify-between gap-3 border-b border-rule py-2">
+                  <span className="t3">{item.label}</span>
+                  <span className="n3 shrink-0">{brl(item.amount, lang)}</span>
                 </li>
               ))}
             </ul>
-            <div className="mt-3 flex items-end justify-between border-t border-edge pt-3">
-              <span className="text-sm text-muted">{t.total}</span>
-              <span className="font-[family-name:var(--font-display)] text-3xl font-bold" data-testid="invoice-total">
+            <div className="mt-4 flex items-baseline justify-between gap-3">
+              <span className="t6 text-n-500">{t.total}</span>
+              <span className="n1" data-testid="invoice-total">
                 {brl(invoice.total, lang)}
               </span>
             </div>
-            <p className={`mt-1 text-right text-sm ${current === "overdue" ? "font-medium text-red-500" : "text-muted"}`}>
+            <p
+              className={`t5 tnum mt-1 text-right ${
+                current === "overdue" ? "font-medium text-negative" : "text-n-500"
+              }`}
+            >
               {t.due} {due}
             </p>
             {current === "overdue" && (
-              <p className="mt-2 rounded-lg border border-red-500/40 bg-red-500/10 px-3 py-2 text-sm" data-testid="invoice-overdue">
+              <p
+                className="t4 mt-3 border-l-2 border-negative bg-negative-wash px-3 py-2"
+                data-testid="invoice-overdue"
+              >
                 {t.overdue} {lateNote}
               </p>
             )}
           </section>
 
           {current === "paid" ? (
-            <p className="rounded-2xl border border-emerald-500/40 bg-emerald-500/10 p-4 text-center font-medium" data-testid="invoice-paid">
+            <p
+              className="t3 mt-6 border-l-2 border-positive bg-positive-wash px-3 py-2 font-medium"
+              data-testid="invoice-paid"
+            >
               {t.paid}
             </p>
           ) : current === "paid_claimed" ? (
-            <p className="rounded-2xl border border-accent/40 bg-accent/10 p-4 text-center text-sm" data-testid="invoice-claimed">
+            <p className="t4 mt-6 border-l-2 border-edge bg-surface-sunken px-3 py-2" data-testid="invoice-claimed">
               {t.claimed}
             </p>
           ) : null}
 
           {open && invoice.pixPayload && (
-            <section className="space-y-3 rounded-2xl border border-edge bg-surface p-5 text-center">
-              <h2 className="font-semibold">{t.pay}</h2>
-              <p className="text-sm text-muted">{t.scan}</p>
-              <div className="mx-auto w-fit rounded-xl bg-white p-3" data-testid="invoice-qr" dangerouslySetInnerHTML={{ __html: qrSvg }} />
-              <p className="break-all rounded-lg border border-edge bg-surface-2 p-2 text-left font-mono text-[11px]" data-testid="invoice-payload">
+            <section className="mt-8 border-t border-edge pt-5">
+              <h2 className="t6 text-n-500">{t.pay}</h2>
+              <p className="t4 measure-prose mt-1 text-n-500">{t.scan}</p>
+              <div
+                className="mt-4 w-fit border border-rule bg-white p-3"
+                data-testid="invoice-qr"
+                dangerouslySetInnerHTML={{ __html: qrSvg }}
+              />
+              <p
+                className="mt-4 break-all border border-rule bg-surface-sunken p-2 font-mono text-[11px] leading-4"
+                data-testid="invoice-payload"
+              >
                 {invoice.pixPayload}
               </p>
-              <button type="button" onClick={copy} className="w-full rounded-xl bg-accent px-4 py-3 font-semibold text-accent-ink" data-testid="invoice-copy">
-                {copied ? t.copied : t.copy}
-              </button>
-              <button type="button" onClick={claim} className="w-full rounded-xl border border-edge px-4 py-3 font-medium" data-testid="invoice-claim">
-                {t.claim}
-              </button>
-              {error && <p className="text-sm text-red-500">{error}</p>}
-              <p className="text-xs text-muted">
+              <div className="mt-4 flex flex-col gap-2">
+                <button
+                  type="button"
+                  onClick={copy}
+                  className={`${buttonClass("primary")} w-full`}
+                  data-testid="invoice-copy"
+                >
+                  {copied ? t.copied : t.copy}
+                </button>
+                <button
+                  type="button"
+                  onClick={claim}
+                  className={`${buttonClass("secondary")} w-full`}
+                  data-testid="invoice-claim"
+                >
+                  {t.claim}
+                </button>
+              </div>
+              {error && <p className="t4 mt-2 text-negative">{error}</p>}
+              <p className="t5 measure-prose mt-4 text-n-500">
                 {beneficiary ? `${t.receiver}: ${beneficiary}. ` : ""}
                 {t.direct}
               </p>
@@ -180,6 +216,6 @@ export default function InvoicePayView({
           )}
         </>
       )}
-    </div>
+    </article>
   );
 }

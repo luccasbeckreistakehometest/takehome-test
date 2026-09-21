@@ -157,25 +157,25 @@ export default function SalesIntegrations({ clientId }: { clientId: string }) {
       <SalesWebhookCard clientId={clientId} />
       {/* Totais */}
       {totals && (
-        <div className="grid gap-3 sm:grid-cols-3">
+        <div className="grid gap-x-8 gap-y-5 border-y border-edge py-4 sm:grid-cols-3">
           <Card>
-            <p className="text-xs uppercase tracking-wide text-muted">Receita total</p>
-            <p className="mt-1 font-[family-name:var(--font-display)] text-3xl font-bold text-accent">
+            <p className="t6 text-text-muted">Receita total</p>
+            <p className="d3 mt-1 text-text">
               {brl(totals.revenue, totals.currency)}
             </p>
           </Card>
           <Card>
-            <p className="text-xs uppercase tracking-wide text-muted">Unidades / negócios</p>
-            <p className="mt-1 font-[family-name:var(--font-display)] text-3xl font-bold">
+            <p className="t6 text-text-muted">Unidades / negócios</p>
+            <p className="d3 mt-1">
               {fmtNum(totals.units, lang)}
             </p>
           </Card>
           <Card>
-            <p className="text-xs uppercase tracking-wide text-muted">Produto vs serviço</p>
-            <p className="mt-1 text-sm">
-              <span className="text-accent">{brl(totals.byKind.product, totals.currency)}</span> produto
+            <p className="t6 text-text-muted">Produto vs serviço</p>
+            <p className="mt-1 t3">
+              <span className="text-text">{brl(totals.byKind.product, totals.currency)}</span> produto
               <br />
-              <span className="text-accent">{brl(totals.byKind.service, totals.currency)}</span> serviço
+              <span className="text-text">{brl(totals.byKind.service, totals.currency)}</span> serviço
             </p>
           </Card>
         </div>
@@ -223,7 +223,7 @@ export default function SalesIntegrations({ clientId }: { clientId: string }) {
               <Button onClick={addSale} disabled={!form.revenue}>
                 <Icon name="plus" size={15} /> Adicionar
               </Button>
-              <label className="cursor-pointer rounded-md border border-edge bg-surface-2 px-3 py-2 text-sm transition-colors hover:border-accent">
+              <label className="cursor-pointer rounded-md border border-edge bg-surface-sunken px-3 py-2 t3 transition-colors hover:border-edge">
                 Importar CSV
                 <input
                   type="file"
@@ -233,7 +233,7 @@ export default function SalesIntegrations({ clientId }: { clientId: string }) {
                 />
               </label>
             </div>
-            <p className="text-xs text-muted">
+            <p className="t5 text-text-muted">
               CSV: <code>origem,tipo,inicio,fim,receita,unidades</code> (tipo = product|service)
             </p>
           </div>
@@ -264,11 +264,11 @@ export default function SalesIntegrations({ clientId }: { clientId: string }) {
           </div>
           {snapshots.length > 0 && (
             <div className="mt-4 space-y-1.5 border-t border-edge pt-3">
-              <p className="text-xs uppercase tracking-wide text-muted">Últimas métricas (30 dias)</p>
+              <p className="t6 text-text-muted">Últimas métricas (30 dias)</p>
               {snapshots.map((s) => (
-                <div key={s.platform} className="flex items-center justify-between rounded-md bg-surface-2 px-3 py-1.5 text-xs">
+                <div key={s.platform} className="flex items-center justify-between rounded-md bg-surface-sunken px-3 py-1.5 t5">
                   <span className="font-medium">{s.platform}</span>
-                  <span className="text-muted">
+                  <span className="text-text-muted">
                     {s.spend > 0 && `${brl(s.spend)} invest · `}
                     {s.clicks > 0 && `${fmtNum(s.clicks, lang)} cliques · `}
                     {s.revenue > 0 && `${brl(s.revenue)} receita`}
@@ -286,23 +286,23 @@ export default function SalesIntegrations({ clientId }: { clientId: string }) {
           <SectionTitle>Histórico de vendas</SectionTitle>
           <div className="space-y-1.5">
             {sales.map((s) => (
-              <div key={s.id} className="flex items-center justify-between rounded-md border border-edge bg-surface-2 px-3 py-2 text-sm">
+              <div key={s.id} className="flex items-center justify-between rounded-md border border-edge bg-surface-sunken px-3 py-2 t3">
                 <span className="flex items-center gap-2">
                   <Tag>{s.kind === "product" ? "Produto" : "Serviço"}</Tag>
                   <span className="font-medium">{s.source || "—"}</span>
-                  <span className="text-xs text-muted">
+                  <span className="t5 text-text-muted">
                     {s.periodStart && `${s.periodStart}${s.periodEnd ? ` → ${s.periodEnd}` : ""}`}
                   </span>
                 </span>
                 <span className="flex items-center gap-3">
-                  <span className="font-semibold text-accent">{brl(s.revenue, s.currency)}</span>
-                  <span className="text-xs text-muted">{s.units} un.</span>
+                  <span className="font-semibold text-text">{brl(s.revenue, s.currency)}</span>
+                  <span className="t5 text-text-muted">{s.units} un.</span>
                   <button
                     onClick={async () => {
                       await api(`/api/clients/${clientId}/sales?saleId=${s.id}`, { method: "DELETE" });
                       load();
                     }}
-                    className="text-muted transition-colors hover:text-red-500"
+                    className="text-text-muted transition-colors hover:text-negative"
                   >
                     <Icon name="trash" size={15} />
                   </button>
@@ -336,30 +336,30 @@ function ConnectionRow({
   const supportsOAuth = platform.key === "ga4"; // GA4/Google usa refresh token
 
   return (
-    <div className="rounded-md border border-edge bg-surface-2 px-3 py-2 text-sm">
+    <div className="rounded-md border border-edge bg-surface-sunken px-3 py-2 t3">
       <div className="flex items-center justify-between">
         <span className="font-medium">{platform.label}</span>
         <span className="flex items-center gap-2">
           {conn?.status === "connected" ? (
-            <span className="text-xs text-emerald-500">conectado ✓</span>
+            <span className="t5 text-positive">conectado ✓</span>
           ) : conn?.status === "error" ? (
-            <span className="text-xs text-red-500">erro</span>
+            <span className="t5 text-negative">erro</span>
           ) : (
-            <span className="text-xs text-muted">não conectado</span>
+            <span className="t5 text-text-muted">não conectado</span>
           )}
-          <button onClick={() => setOpen(!open)} className="text-xs text-accent hover:underline">
+          <button onClick={() => setOpen(!open)} className="t5 text-text hover:underline">
             {open ? "fechar" : "configurar"}
           </button>
         </span>
       </div>
-      {conn?.lastError && <p className="mt-1 text-xs text-red-500">{conn.lastError}</p>}
+      {conn?.lastError && <p className="mt-1 t5 text-negative">{conn.lastError}</p>}
       {open && (
         <div className="mt-2 space-y-2">
           <Input value={accountId} onChange={(e) => setAccountId(e.target.value)} placeholder={platform.account} />
           <Input type="password" value={token} onChange={(e) => setToken(e.target.value)} placeholder="Token de acesso" />
           {supportsOAuth && (
             <div className="space-y-2 rounded border border-edge bg-surface p-2">
-              <p className="text-[11px] text-muted">
+              <p className="text-[11px] text-text-muted">
                 Opcional — OAuth para renovar o token automaticamente (o token do GA4 expira em ~1h):
               </p>
               <Input type="password" value={refreshToken} onChange={(e) => setRefreshToken(e.target.value)} placeholder="Refresh token" />

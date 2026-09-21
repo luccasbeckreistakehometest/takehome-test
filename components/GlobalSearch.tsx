@@ -40,11 +40,11 @@ export default function GlobalSearch() {
 
   return (
     <div
-      className="fixed inset-0 z-[60] flex items-start justify-center bg-black/60 pt-24"
+      className="fixed inset-0 z-[60] flex items-start justify-center scrim pt-24"
       onClick={() => setOpen(false)}
     >
       <div
-        className="w-full max-w-lg rounded-xl border border-edge bg-surface shadow-2xl"
+        className="w-full max-w-lg rounded-md border border-edge bg-surface shadow-e2"
         onClick={(e) => e.stopPropagation()}
       >
         <input
@@ -55,11 +55,11 @@ export default function GlobalSearch() {
             search(e.target.value);
           }}
           placeholder="Buscar cliente, demanda, profissional, entregável..."
-          className="w-full rounded-t-xl border-b border-edge bg-transparent px-4 py-3 text-sm outline-none"
+          className="w-full rounded-t-xl border-b border-edge bg-transparent px-4 py-3 t3 outline-none"
         />
         <div className="max-h-80 overflow-y-auto p-2">
           {results.length === 0 ? (
-            <p className="p-3 text-sm text-muted">
+            <p className="p-3 t3 text-text-muted">
               {query.length < 2 ? "Digite para buscar (⌘K abre/fecha)" : "Nada encontrado."}
             </p>
           ) : (
@@ -70,13 +70,13 @@ export default function GlobalSearch() {
                   setOpen(false);
                   router.push(result.href);
                 }}
-                className="flex w-full items-center justify-between rounded-md p-2.5 text-left text-sm transition-colors hover:bg-surface-2"
+                className="flex w-full items-center justify-between rounded-md p-2.5 text-left t3 transition-colors hover:bg-surface-sunken"
               >
                 <span>
                   <span className="font-medium">{result.label}</span>{" "}
-                  <span className="text-xs text-muted">{result.sublabel}</span>
+                  <span className="t5 text-text-muted">{result.sublabel}</span>
                 </span>
-                <span className="text-[10px] uppercase tracking-wide text-accent">
+                <span className="t6 text-text">
                   {result.type}
                 </span>
               </button>

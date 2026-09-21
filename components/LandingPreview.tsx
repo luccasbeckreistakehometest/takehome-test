@@ -9,13 +9,13 @@ export default function LandingPreview({ generation }: { generation: Generation 
     <div className="space-y-3">
       <div className="flex flex-wrap gap-2">
         <a href={htmlUrl} target="_blank" rel="noreferrer">
-          <Button variant="ghost">Abrir em nova aba ↗</Button>
+          <Button variant="ghost">Abrir em nova aba</Button>
         </a>
         <a href={`${htmlUrl}?download=1`}>
-          <Button variant="ghost">Baixar HTML ⬇</Button>
+          <Button variant="ghost">Baixar HTML </Button>
         </a>
       </div>
-      <div className="overflow-hidden rounded-xl border border-edge bg-white">
+      <div className="overflow-hidden rounded-md border border-edge bg-white">
         <iframe
           src={htmlUrl}
           sandbox="allow-scripts"

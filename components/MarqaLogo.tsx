@@ -37,7 +37,7 @@ export function MarqaWordmark({ size = 28 }: { size?: number }) {
   return (
     <span className="flex items-center gap-2">
       <MarqaMark size={size} />
-      <span className="font-[family-name:var(--font-display)] text-lg font-bold tracking-tight">
+      <span className="d4">
         Marqa<span style={{ color: "var(--accent)" }}>.</span>
       </span>
     </span>

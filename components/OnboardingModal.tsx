@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { Icon, type IconName } from "./icons";
+import { Button, Dialog } from "./ui";
 import WelcomeLogin from "./WelcomeLogin";
 
 type Role = "agency" | "client" | "managed" | "professional";
@@ -26,7 +27,7 @@ const FLOWS: Record<Role, { title: string; steps: Step[] }> = {
     title: "Vamos configurar sua marca",
     steps: [
       { icon: "clipboard", title: "Complete o briefing", body: "Conte sobre o seu negócio: é isso que alimenta toda a IA — estratégia, campanhas e materiais sob medida." },
-      { icon: "sparkle", title: "Gere seu primeiro kit", body: "Com um clique a IA cria estratégia, plano de campanha, ROI, identidade e calendário social." },
+      { icon: "layers", title: "Gere seu primeiro kit", body: "Com um clique a IA cria estratégia, plano de campanha, ROI, identidade e calendário social." },
       { icon: "message", title: "Fale com a agência", body: "Aprove entregas, peça produções e acompanhe reuniões pelo seu portal." },
     ],
   },
@@ -98,67 +99,63 @@ export default function OnboardingModal({
     }
   }
 
-  if (!open) return null;
   const flow = FLOWS[role];
+  if (!open) return null;
   const current = flow.steps[step];
   const isLast = step === flow.steps.length - 1;
 
+  // Diálogo do sistema (§11.3): foco preso, Esc fecha, rótulo de papel.
+  // Era um scrim de mão, sem role, sem aria-modal e sem saída pelo teclado —
+  // e é a primeira tela que uma agência nova vê.
   return (
-    <div className="fixed inset-0 z-[80] grid place-items-center bg-black/50 p-4 backdrop-blur-sm" data-testid="welcome">
-      <div className="w-full max-w-lg animate-pop-in rounded-2xl border border-edge bg-surface p-6 shadow-2xl [transform-origin:center]">
-        <div className="mb-4 flex items-center justify-between">
-          <p className="text-xs font-semibold uppercase tracking-widest text-accent">{flow.title}</p>
-          <button onClick={() => close("skip")} aria-label="Fechar" className="text-muted transition-colors hover:text-foreground">
-            <Icon name="x" size={18} />
-          </button>
-        </div>
-
-        {showLogin && <WelcomeLogin />}
-
-        <div className="flex gap-4">
-          <span className="grid size-12 shrink-0 place-items-center rounded-xl bg-accent/10 text-accent">
-            <Icon name={current.icon} size={24} />
-          </span>
-          <div>
-            <h3 className="text-lg font-semibold">{current.title}</h3>
-            <p className="mt-1 text-sm text-muted">{current.body}</p>
-            {current.href && (
-              <a
-                href={current.href}
-                className="mt-3 inline-block text-sm font-medium text-accent hover:underline"
-              >
-                {current.cta} →
-              </a>
-            )}
-          </div>
-        </div>
-
-        {/* Progresso + navegação */}
-        <div className="mt-6 flex items-center justify-between">
-          <div className="flex gap-1.5">
+    <Dialog
+      open={open}
+      onClose={() => close("skip")}
+      title={flow.title}
+      eyebrow="Primeiros passos"
+      size={640}
+      testId="welcome"
+      footer={
+        <div className="flex w-full items-center justify-between gap-4">
+          <div className="flex gap-1.5" aria-hidden="true">
             {flow.steps.map((_, i) => (
               <span
                 key={i}
-                className={`h-1.5 rounded-full transition-all ${
-                  i === step ? "w-6 bg-accent" : "w-1.5 bg-edge"
+                className={`h-1.5 rounded-full transition-all duration-[var(--dur-1)] ${
+                  i === step ? "w-6 bg-text" : "w-1.5 bg-edge"
                 }`}
               />
             ))}
           </div>
-          <div className="flex gap-2">
-            <button onClick={() => close("skip")} className="rounded-md px-3 py-1.5 text-sm text-muted hover:text-foreground" data-testid="welcome-skip">
+          <div className="flex items-center gap-2">
+            <Button variant="quiet" onClick={() => close("skip")} data-testid="welcome-skip">
               Pular
-            </button>
-            <button
-              data-testid="welcome-next"
-              onClick={() => (isLast ? close("done") : setStep((s) => s + 1))}
-              className="rounded-md bg-accent px-4 py-1.5 text-sm font-medium text-accent-ink transition-opacity hover:opacity-90"
-            >
+            </Button>
+            <Button data-testid="welcome-next" onClick={() => (isLast ? close("done") : setStep((s) => s + 1))}>
               {isLast ? "Começar" : "Próximo"}
-            </button>
+            </Button>
           </div>
         </div>
+      }
+    >
+      {showLogin && <WelcomeLogin />}
+      <p className="t5 text-text-muted">
+        Passo {step + 1} de {flow.steps.length}
+      </p>
+      <div className="mt-3 flex gap-4">
+        <span className="grid size-12 shrink-0 place-items-center rounded-sm bg-surface-sunken text-text">
+          <Icon name={current.icon} size={24} />
+        </span>
+        <div className="min-w-0">
+          <h3 className="t1 font-medium">{current.title}</h3>
+          <p className="t3 measure-lede mt-2 text-text-muted">{current.body}</p>
+          {current.href && (
+            <a href={current.href} className="t3 mt-3 inline-block font-medium text-brand-text underline underline-offset-4">
+              {current.cta}
+            </a>
+          )}
+        </div>
       </div>
-    </div>
+    </Dialog>
   );
 }

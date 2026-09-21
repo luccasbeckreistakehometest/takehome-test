@@ -5,8 +5,8 @@ import Link from "next/link";
 import { api } from "@/lib/api";
 import { fmtMoney, useUiLang } from "@/lib/i18n";
 import type { InvoiceItem, InvoiceState } from "@/lib/invoice-rules";
-import { Button, Card, ErrorBox, Input, SectionTitle, Select, Spinner, Tag } from "./ui";
-import { Icon } from "./icons";
+import { Button, EmptyState, ErrorBox, Input, SectionTitle, Select, Spinner, Tag } from "./ui";
+import { buttonClass } from "@/lib/button-class";
 import { openAfter } from "@/lib/open-later";
 
 type Invoice = {
@@ -33,12 +33,12 @@ const STATE_LABEL: Record<InvoiceState, string> = {
   overdue: "Atrasada",
 };
 const STATE_STYLE: Record<InvoiceState, string> = {
-  draft: "border-edge text-muted",
-  sent: "border-accent/50 text-accent",
-  paid_claimed: "border-amber-500/60 text-amber-600 dark:text-amber-300",
-  paid: "border-emerald-500/60 text-emerald-600 dark:text-emerald-300",
-  void: "border-edge text-muted line-through",
-  overdue: "border-red-500/60 text-red-500",
+  draft: "border-edge text-text-muted",
+  sent: "border-edge text-text",
+  paid_claimed: "border-caution/60 text-caution",
+  paid: "border-positive/60 text-positive",
+  void: "border-edge text-text-muted line-through",
+  overdue: "border-negative/60 text-negative",
 };
 
 const thisMonth = () => new Date(Date.now() - 3 * 3_600_000).toISOString().slice(0, 7);
@@ -114,9 +114,9 @@ export default function InvoicesPanel({ clientId, clients = [] }: { clientId?: s
   return (
     <div className="space-y-5" data-testid="invoices-panel">
       {!ready && (
-        <p className="rounded-lg border border-amber-500/50 bg-amber-500/10 px-3 py-2 text-sm" data-testid="invoices-no-pix">
+        <p className="rounded-lg border border-caution/50 bg-caution-wash px-3 py-2 t3" data-testid="invoices-no-pix">
           Cadastre sua chave Pix em{" "}
-          <Link href="/settings#recebimentos" className="font-medium text-accent hover:underline">
+          <Link href="/settings#recebimentos" className="font-medium text-text hover:underline">
             Configurações → Recebimentos
           </Link>{" "}
           para enviar faturas.
@@ -124,26 +124,28 @@ export default function InvoicesPanel({ clientId, clients = [] }: { clientId?: s
       )}
       {error && <ErrorBox message={error} />}
 
-      <div className="grid gap-3 sm:grid-cols-3">
-        <Card>
-          <p className="text-xs uppercase tracking-wide text-muted">A receber</p>
-          <p className="mt-1 font-[family-name:var(--font-display)] text-2xl font-bold" data-testid="invoices-receivable">
+      <dl className="grid gap-x-8 gap-y-5 border-y border-edge py-4 sm:grid-cols-3">
+        <div>
+          <dt className="t6 text-text-muted">A receber</dt>
+          <dd className="n2 mt-1" data-testid="invoices-receivable">
             {fmtMoney(receivable, lang)}
-          </p>
-        </Card>
-        <Card>
-          <p className="text-xs uppercase tracking-wide text-muted">Atrasadas</p>
-          <p className={`mt-1 font-[family-name:var(--font-display)] text-2xl font-bold ${summary?.overdue.length ? "text-red-500" : ""}`}>{summary?.overdue.length ?? 0}</p>
-        </Card>
-        <Card>
-          <p className="text-xs uppercase tracking-wide text-muted">Cliente avisou que pagou</p>
-          <p className="mt-1 font-[family-name:var(--font-display)] text-2xl font-bold">{summary?.claimed ?? 0}</p>
-        </Card>
-      </div>
+          </dd>
+        </div>
+        <div>
+          <dt className="t6 text-text-muted">Atrasadas</dt>
+          <dd className={`n2 mt-1 ${summary?.overdue.length ? "text-negative" : "text-text-muted"}`}>
+            {summary?.overdue.length ?? 0}
+          </dd>
+        </div>
+        <div>
+          <dt className="t6 text-text-muted">Cliente avisou que pagou</dt>
+          <dd className={`n2 mt-1 ${summary?.claimed ? "" : "text-text-muted"}`}>{summary?.claimed ?? 0}</dd>
+        </div>
+      </dl>
 
-      <Card className="space-y-3">
+      <section>
         <SectionTitle>Nova fatura</SectionTitle>
-        <p className="text-sm text-muted">
+        <p className="t5 measure-prose text-text-muted">
           No dia 1 a Marqa cria o rascunho de cada cliente com fee (mais os extras aprovados). Você confere e envia. O Pix cai direto na sua conta; a confirmação é sua.
         </p>
         <div className="flex flex-wrap items-end gap-2">
@@ -161,42 +163,49 @@ export default function InvoicesPanel({ clientId, clients = [] }: { clientId?: s
             <Input aria-label="Mês" type="month" value={month} onChange={(e) => setMonth(e.target.value)} data-testid="invoice-new-month" />
           </div>
           <Button onClick={createDraft} disabled={busy || !newClient || !month} data-testid="invoice-create">
-            <Icon name="plus" size={14} /> Criar rascunho
+            Criar rascunho
           </Button>
           {invoices.length > 0 && (
-            <a href={`/api/invoices?format=csv${clientId ? `&clientId=${clientId}` : ""}`} className="ml-auto text-sm text-accent hover:underline">
+            <a
+              href={`/api/invoices?format=csv${clientId ? `&clientId=${clientId}` : ""}`}
+              className="t5 ml-auto pb-2 font-medium underline-offset-4 hover:underline"
+            >
               Baixar CSV
             </a>
           )}
         </div>
-      </Card>
+      </section>
 
       {invoices.length === 0 ? (
-        <p className="rounded-md border border-dashed border-edge p-4 text-sm text-muted" data-testid="invoices-empty">
-          Nenhuma fatura ainda. Defina o fee mensal do cliente em Horas & margem e crie o primeiro rascunho.
-        </p>
+        <div data-testid="invoices-empty">
+          <EmptyState
+            icon="money"
+            title="Nenhuma fatura ainda"
+            condition="Defina o fee mensal do cliente em Horas & margem e crie o primeiro rascunho."
+          />
+        </div>
       ) : (
-        <ul className="space-y-2">
+        <ul className="border-t border-edge">
           {invoices.map((invoice) => (
-            <li key={invoice.id} className="rounded-xl border border-edge bg-surface p-4" data-testid="invoice-row" data-state={invoice.state}>
+            <li key={invoice.id} className="border-b border-rule py-3" data-testid="invoice-row" data-state={invoice.state}>
               <div className="flex flex-wrap items-center justify-between gap-2">
                 <div className="min-w-0">
-                  <p className="font-medium">
+                  <p className="t3 font-medium">
                     {!clientId && <span>{invoice.clientName} · </span>}
                     {invoice.month}
                   </p>
-                  <p className="text-xs text-muted">{`Vence ${invoice.dueDate.slice(8, 10)}/${invoice.dueDate.slice(5, 7)} · ${invoice.items.length} linha(s)`}</p>
+                  <p className="t5 tnum text-text-muted">{`Vence ${invoice.dueDate.slice(8, 10)}/${invoice.dueDate.slice(5, 7)} · ${invoice.items.length} linha(s)`}</p>
                 </div>
                 <div className="flex items-center gap-2">
-                  <span className="font-semibold tabular-nums">{fmtMoney(invoice.total, lang)}</span>
-                  <span className={`rounded-full border px-2 py-0.5 text-xs ${STATE_STYLE[invoice.state]}`}>{STATE_LABEL[invoice.state]}</span>
+                  <span className="n3">{fmtMoney(invoice.total, lang)}</span>
+                  <span className={`t5 rounded-xs border px-2 py-0.5 ${STATE_STYLE[invoice.state]}`}>{STATE_LABEL[invoice.state]}</span>
                 </div>
               </div>
-              <div className="mt-3 flex flex-wrap gap-2 text-sm">
+              <div className="mt-3 flex flex-wrap gap-2 t3">
                 {invoice.status === "draft" && (
                   <>
-                    <Button onClick={() => act(invoice, "send")} disabled={!ready} title={ready ? "" : "Cadastre sua chave Pix em Configurações"} data-testid="invoice-send">
-                      <Icon name="whatsapp" size={14} /> Enviar
+                    <Button variant="secondary" onClick={() => act(invoice, "send")} disabled={!ready} title={ready ? "" : "Cadastre sua chave Pix em Configurações"} data-testid="invoice-send">
+                      Enviar
                     </Button>
                     <Button variant="ghost" onClick={() => setEditing(editing === invoice.id ? null : invoice.id)}>
                       Editar
@@ -205,8 +214,8 @@ export default function InvoicesPanel({ clientId, clients = [] }: { clientId?: s
                 )}
                 {(invoice.status === "sent" || invoice.status === "paid_claimed") && (
                   <>
-                    <Button onClick={() => act(invoice, "paid")} data-testid="invoice-confirm">
-                      <Icon name="check" size={14} /> Confirmar pagamento
+                    <Button variant="secondary" onClick={() => act(invoice, "paid")} data-testid="invoice-confirm">
+                      Confirmar pagamento
                     </Button>
                     <Button variant="ghost" onClick={() => remind(invoice)} data-testid="invoice-remind">
                       Lembrar no WhatsApp
@@ -219,12 +228,12 @@ export default function InvoicesPanel({ clientId, clients = [] }: { clientId?: s
                   </Button>
                 )}
                 {invoice.status !== "draft" && invoice.status !== "void" && (
-                  <a href={`/fatura/${invoice.token}`} target="_blank" rel="noreferrer" className="rounded-md border border-edge px-3 py-2 text-sm hover:border-accent" data-testid="invoice-open">
-                    Ver página do cliente ↗
+                  <a href={`/fatura/${invoice.token}`} target="_blank" rel="noreferrer" className={`${buttonClass("secondary")}`} data-testid="invoice-open">
+                    Ver página do cliente
                   </a>
                 )}
                 {invoice.status !== "paid" && invoice.status !== "void" && (
-                  <button type="button" onClick={() => act(invoice, "void")} className="ml-auto text-xs text-red-500 hover:underline">
+                  <button type="button" onClick={() => act(invoice, "void")} className="t5 ml-auto text-negative underline-offset-4 hover:underline">
                     Cancelar fatura
                   </button>
                 )}
@@ -242,7 +251,7 @@ export default function InvoicesPanel({ clientId, clients = [] }: { clientId?: s
           ))}
         </ul>
       )}
-      <p className="text-xs text-muted">O pagamento cai direto na sua conta; a confirmação é manual. A Marqa não cobra taxa sobre as faturas.</p>
+      <p className="t5 text-text-muted">O pagamento cai direto na sua conta; a confirmação é manual. A Marqa não cobra taxa sobre as faturas.</p>
     </div>
   );
 }
@@ -277,7 +286,7 @@ function DraftEditor({ invoice, onSaved }: { invoice: Invoice; onSaved: () => vo
         </div>
       ))}
       <div className="flex flex-wrap items-center gap-2">
-        <button type="button" className="text-sm text-accent hover:underline" onClick={() => setItems((rows) => [...rows, { label: "", amount: "", kind: "manual" }])}>
+        <button type="button" className="t3 text-text hover:underline" onClick={() => setItems((rows) => [...rows, { label: "", amount: "", kind: "manual" }])}>
           + Linha
         </button>
         <div className="w-40">

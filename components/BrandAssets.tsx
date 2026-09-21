@@ -21,7 +21,7 @@ export default function BrandAssets({ clientId }: { clientId: string }) {
   return (
     <Card className="space-y-3">
       <SectionTitle>Arquivos da marca</SectionTitle>
-      <p className="text-sm text-muted">
+      <p className="t3 text-text-muted">
         Importe a identidade visual existente do cliente e arquivos de projeto —
         PSD (Photoshop), AI (Illustrator), PDF, ZIP, fontes, logos... Ficam
         disponíveis para a equipe e para os profissionais das demandas.
@@ -30,7 +30,7 @@ export default function BrandAssets({ clientId }: { clientId: string }) {
         <select
           value={kind}
           onChange={(e) => setKind(e.target.value as ClientAsset["kind"])}
-          className="rounded-md border border-edge bg-surface-2 px-2 py-2 text-sm text-foreground outline-none"
+          className="rounded-md border border-edge bg-surface-sunken px-2 py-2 t3 text-text outline-none"
         >
           {Object.entries(ASSET_KIND_LABELS).map(([value, label]) => (
             <option key={value} value={value}>
@@ -38,8 +38,8 @@ export default function BrandAssets({ clientId }: { clientId: string }) {
             </option>
           ))}
         </select>
-        <label className="cursor-pointer rounded-md border border-edge bg-surface-2 px-3.5 py-2 text-sm transition-colors hover:border-accent">
-          {uploading ? "Enviando..." : "⬆ Enviar arquivo"}
+        <label className="cursor-pointer rounded-md border border-edge bg-surface-sunken px-3.5 py-2 t3 transition-colors hover:border-edge">
+          {uploading ? "Enviando..." : "Enviar arquivo"}
           <input
             type="file"
             className="hidden"
@@ -67,21 +67,20 @@ export default function BrandAssets({ clientId }: { clientId: string }) {
           {assets.map((asset) => (
             <div
               key={asset.id}
-              className="flex flex-wrap items-center justify-between gap-2 rounded-md border border-edge bg-surface-2 px-3 py-2 text-sm"
+              className="flex flex-wrap items-center justify-between gap-2 rounded-md border border-edge bg-surface-sunken px-3 py-2 t3"
             >
               <span className="flex items-center gap-2">
-                <span className="font-mono text-xs uppercase text-accent">
+                <span className="font-mono t5 text-text">
                   .{asset.ext}
                 </span>
                 <span className="font-medium">{asset.title}</span>
                 <Tag>{ASSET_KIND_LABELS[asset.kind]}</Tag>
               </span>
-              <span className="flex gap-2 text-xs">
-                <a href={`/api/assets/${asset.id}`} className="text-accent hover:underline">
-                  ⬇ Baixar
+              <span className="flex gap-2 t5">
+                <a href={`/api/assets/${asset.id}`} className="text-text hover:underline">Baixar
                 </a>
                 <button
-                  className="text-muted hover:text-red-400"
+                  className="text-text-muted hover:text-negative"
                   onClick={async () => {
                     await api(`/api/assets/${asset.id}`, { method: "DELETE" });
                     load();

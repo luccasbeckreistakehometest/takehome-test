@@ -41,12 +41,12 @@ export default function JobsIndicator() {
       {running.map((job) => (
         <div
           key={job.id}
-          className="flex items-center gap-2 rounded-xl border border-edge bg-surface/95 p-3 text-sm shadow-2xl backdrop-blur"
+          className="t3 flex items-center gap-2 rounded-md border border-edge bg-surface p-3 shadow-e2"
         >
           <span className="size-4 shrink-0 animate-spin rounded-full border-2 border-edge border-t-accent" />
           <span className="min-w-0">
             <span className="block truncate font-medium">{job.label}</span>
-            <span className="text-xs text-muted">
+            <span className="t5 text-text-muted">
               gerando há{" "}
               {Math.max(1, Math.round((Date.now() - new Date(job.createdAt).getTime()) / 60000))}{" "}
               min...

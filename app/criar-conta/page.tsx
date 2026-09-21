@@ -1,7 +1,6 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import RegistrationForm from "@/components/RegistrationForm";
-import { Card } from "@/components/ui";
 import { agencySelfSignupEnabled } from "@/lib/legal";
 import { getPlan, isBillingPeriod } from "@/lib/plans";
 
@@ -26,29 +25,34 @@ export default async function CriarContaPage({
     ? (type as Role)
     : (chosen?.accountType as Role | undefined);
   return (
-    <div className="mx-auto max-w-2xl space-y-6 py-12">
-      <div className="text-center">
-        <h1 className="font-[family-name:var(--font-display)] text-3xl font-bold tracking-tight">Criar conta</h1>
-        <p className="mt-2 text-sm text-muted">
-          {chosen && chosen.monthlyPrice > 0
-            ? `Plano escolhido: ${chosen.name}. Depois do cadastro você vai direto para o pagamento (pré-pago, sem renovação automática).`
-            : "Comece grátis. Você pode evoluir para um plano depois."}
-        </p>
+    <div className="full-bleed">
+      <div className="ed sec">
+        <div className="ed-grid">
+          <div className="c5">
+            <p className="t6 text-text-muted">Marqa</p>
+            <h1 className="d2 mt-4">Criar conta</h1>
+            <p className="t1 measure-lede mt-4 text-text-muted">
+              {chosen && chosen.monthlyPrice > 0
+                ? `Plano escolhido: ${chosen.name}. Depois do cadastro você vai direto para o pagamento (pré-pago, sem renovação automática).`
+                : "Comece grátis. Você pode evoluir para um plano depois."}
+            </p>
+            <p className="t3 mt-8 border-t border-rule pt-4 text-text-muted">
+              Já tem conta?{" "}
+              <Link href="/login" className="font-medium text-text underline underline-offset-4">
+                Entrar
+              </Link>
+            </p>
+          </div>
+          <div className="c6 c-start7">
+            <RegistrationForm
+              initialRole={initialRole}
+              agencySignupOpen={agencySelfSignupEnabled()}
+              plan={chosen && chosen.monthlyPrice > 0 ? chosen.id : undefined}
+              period={isBillingPeriod(period) ? period : undefined}
+            />
+          </div>
+        </div>
       </div>
-      <Card>
-        <RegistrationForm
-          initialRole={initialRole}
-          agencySignupOpen={agencySelfSignupEnabled()}
-          plan={chosen && chosen.monthlyPrice > 0 ? chosen.id : undefined}
-          period={isBillingPeriod(period) ? period : undefined}
-        />
-      </Card>
-      <p className="text-center text-sm text-muted">
-        Já tem conta?{" "}
-        <Link href="/login" className="text-accent hover:underline">
-          Entrar
-        </Link>
-      </p>
     </div>
   );
 }

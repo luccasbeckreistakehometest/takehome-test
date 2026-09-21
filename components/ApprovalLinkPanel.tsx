@@ -95,9 +95,9 @@ export default function ApprovalLinkPanel({ clientId }: { clientId: string }) {
     <div className="space-y-4" data-testid="approval-link-panel">
       {error && <ErrorBox message={error} />}
       {created && (
-        <div className="space-y-3 rounded-xl border border-accent/40 bg-accent/5 p-4" data-testid="approval-link-created">
-          <p className="text-sm font-medium">Link pronto. O cliente abre no celular e aprova sem senha.</p>
-          <p className="break-all rounded-md border border-edge bg-surface px-2 py-1.5 font-mono text-xs" data-testid="approval-link-url">
+        <div className="space-y-3 rounded-md border border-edge bg-surface-sunken p-4" data-testid="approval-link-created">
+          <p className="t3 font-medium">Link pronto. O cliente abre no celular e aprova sem senha.</p>
+          <p className="break-all rounded-md border border-edge bg-surface px-2 py-1.5 font-mono t5" data-testid="approval-link-url">
             {created.url}
           </p>
           <div className="flex flex-wrap items-center gap-2">
@@ -105,7 +105,7 @@ export default function ApprovalLinkPanel({ clientId }: { clientId: string }) {
               href={created.whatsappUrl}
               target="_blank"
               rel="noreferrer"
-              className="inline-flex items-center gap-1.5 rounded-md bg-accent px-3.5 py-2 text-sm font-medium text-accent-ink"
+              className="inline-flex items-center gap-1.5 rounded-md bg-brand-solid px-3.5 py-2 t3 font-medium text-brand-ink"
               data-testid="approval-link-whatsapp"
             >
               <Icon name="whatsapp" size={15} /> Enviar no WhatsApp
@@ -116,29 +116,29 @@ export default function ApprovalLinkPanel({ clientId }: { clientId: string }) {
           {qr && (
             <div className="flex items-center gap-3">
               <div className="rounded-lg bg-white p-2" aria-label="QR code do link" dangerouslySetInnerHTML={{ __html: qr }} />
-              <p className="text-xs text-muted">Em reunião? O cliente aponta a câmera e abre direto.</p>
+              <p className="t5 text-text-muted">Em reunião? O cliente aponta a câmera e abre direto.</p>
             </div>
           )}
         </div>
       )}
 
       <div>
-        <p className="mb-2 text-sm font-medium">O que vai para aprovação</p>
+        <p className="mb-2 t3 font-medium">O que vai para aprovação</p>
         {candidates.length === 0 ? (
-          <p className="rounded-md border border-dashed border-edge p-3 text-sm text-muted" data-testid="approval-link-empty">
+          <p className="rounded-md border border-dashed border-edge p-3 t3 text-text-muted" data-testid="approval-link-empty">
             Nada pendente: crie posts no calendário ou suba entregas nas demandas deste cliente.
           </p>
         ) : (
-          <ul className="max-h-72 space-y-1.5 overflow-y-auto">
+          <ul className="scroll-y max-h-72 space-y-1.5">
             {candidates.map((c) => {
               const key = `${c.kind}:${c.id}`;
               return (
                 <li key={key}>
-                  <label className="flex cursor-pointer items-center gap-2 rounded-md border border-edge bg-surface-2 px-3 py-2 text-sm hover:border-accent/60">
+                  <label className="flex cursor-pointer items-center gap-2 rounded-md border border-edge bg-surface-sunken px-3 py-2 t3 hover:border-edge">
                     <input type="checkbox" checked={picked.has(key)} onChange={() => toggle(key)} data-testid="approval-candidate" data-kind={c.kind} />
                     <span className="min-w-0 flex-1">
                       <span className="block truncate font-medium">{c.title}</span>
-                      <span className="block truncate text-xs text-muted">{c.detail}</span>
+                      <span className="block truncate t5 text-text-muted">{c.detail}</span>
                     </span>
                     <Tag>{c.kind === "post" ? "Post" : "Entrega"}</Tag>
                   </label>
@@ -172,21 +172,21 @@ export default function ApprovalLinkPanel({ clientId }: { clientId: string }) {
 
       {data.links.length > 0 && (
         <div>
-          <p className="mb-2 text-sm font-medium">Links enviados</p>
-          <ul className="space-y-1.5 text-sm" data-testid="approval-links">
+          <p className="mb-2 t3 font-medium">Links enviados</p>
+          <ul className="space-y-1.5 t3" data-testid="approval-links">
             {data.links.map((link) => (
               <li key={link.id} className="flex flex-wrap items-center justify-between gap-2 rounded-md border border-edge px-3 py-2">
                 <span>
                   <Tag>{STATE_LABEL[link.state]}</Tag>{" "}
-                  <span className="text-muted">{`${link.items.length} itens · ${link.pending} sem resposta · aberto ${link.viewCount}x`}</span>
+                  <span className="text-text-muted">{`${link.items.length} itens · ${link.pending} sem resposta · aberto ${link.viewCount}x`}</span>
                 </span>
                 {link.state === "open" && (
                   <span className="flex gap-2">
-                    <button type="button" className="text-accent hover:underline" onClick={() => resend(link)}>
+                    <button type="button" className="text-text hover:underline" onClick={() => resend(link)}>
                       Reenviar
                     </button>
                     <CopyButton text={link.url} label="Copiar" />
-                    <button type="button" className="text-red-500 hover:underline" onClick={() => close(link)}>
+                    <button type="button" className="text-negative hover:underline" onClick={() => close(link)}>
                       Encerrar
                     </button>
                   </span>
@@ -212,18 +212,18 @@ export function ApprovalLinkDialog({
 }) {
   const [clientId, setClientId] = useState(defaultClientId || clients[0]?.id || "");
   return (
-    <div className="fixed inset-0 z-[70] flex items-end justify-center bg-black/40 p-4 sm:items-center" onClick={onClose}>
+    <div className="fixed inset-0 z-[70] flex items-end justify-center scrim p-4 sm:items-center" onClick={onClose}>
       <div
-        className="max-h-[90vh] w-full max-w-lg overflow-y-auto rounded-2xl border border-edge bg-surface p-5 shadow-2xl"
+        className="scroll-y max-h-[90vh] w-full max-w-lg rounded-md border border-edge bg-surface p-5 shadow-e2"
         onClick={(e) => e.stopPropagation()}
         data-testid="approval-link-dialog"
       >
         <div className="mb-3 flex items-start justify-between gap-3">
           <div>
-            <h3 className="font-[family-name:var(--font-display)] text-lg font-semibold">Enviar para aprovação</h3>
-            <p className="text-xs text-muted">O cliente aprova pelo celular, sem login. O post aprovado já entra na agenda.</p>
+            <h3 className="d4">Enviar para aprovação</h3>
+            <p className="t5 text-text-muted">O cliente aprova pelo celular, sem login. O post aprovado já entra na agenda.</p>
           </div>
-          <button onClick={onClose} className="text-muted hover:text-foreground" aria-label="Fechar">
+          <button onClick={onClose} className="text-text-muted hover:text-text" aria-label="Fechar">
             <Icon name="x" size={18} />
           </button>
         </div>
@@ -239,7 +239,7 @@ export function ApprovalLinkDialog({
             </Select>
           </div>
         )}
-        {clientId ? <ApprovalLinkPanel key={clientId} clientId={clientId} /> : <p className="text-sm text-muted">Cadastre um cliente primeiro.</p>}
+        {clientId ? <ApprovalLinkPanel key={clientId} clientId={clientId} /> : <p className="t3 text-text-muted">Cadastre um cliente primeiro.</p>}
       </div>
     </div>
   );
@@ -249,14 +249,14 @@ export function ApprovalLinkDialog({
 export function ApprovalLinkCard({ clientId, clientName }: { clientId: string; clientName: string }) {
   const [open, setOpen] = useState(false);
   return (
-    <div className="flex flex-wrap items-center justify-between gap-3 rounded-xl border border-edge bg-surface p-5 shadow-sm" data-testid="approval-link-card">
+    <div className="flex flex-wrap items-center justify-between gap-3 rounded-md border border-rule bg-surface p-5" data-testid="approval-link-card">
       <div>
         <p className="flex items-center gap-2 font-medium">
-          <Icon name="check" size={16} className="text-accent" /> Aprovação por link
+          <Icon name="check" size={16} className="text-text" /> Aprovação por link
         </p>
-        <p className="mt-1 text-sm text-muted">Mande posts e entregas pelo WhatsApp. O cliente aprova sem senha e o post já entra na agenda.</p>
+        <p className="t3 measure-lede mt-2 text-text-muted">Mande posts e entregas pelo WhatsApp. O cliente aprova sem senha e o post já entra na agenda.</p>
       </div>
-      <Button onClick={() => setOpen(true)} data-testid="approval-link-open">
+      <Button variant="secondary" onClick={() => setOpen(true)} data-testid="approval-link-open">
         <Icon name="send" size={14} /> Enviar para aprovação
       </Button>
       {open && <ApprovalLinkDialog clients={[{ id: clientId, name: clientName }]} defaultClientId={clientId} onClose={() => setOpen(false)} />}

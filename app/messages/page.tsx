@@ -45,11 +45,11 @@ const TABS: { key: string; label: string; icon: IconName }[] = [
 ];
 
 const STATUS_STYLE: Record<string, string> = {
-  queued: "text-amber-500",
-  scheduled: "text-sky-500",
-  sending: "text-sky-500",
-  sent: "text-emerald-500",
-  failed: "text-red-500",
+  queued: "text-caution",
+  scheduled: "text-text-muted",
+  sending: "text-text-muted",
+  sent: "text-positive",
+  failed: "text-negative",
 };
 
 export default function MessagesPage() {
@@ -86,11 +86,8 @@ export default function MessagesPage() {
   return (
     <div className="space-y-6">
       <div>
-        <h1 className="flex items-center gap-2 font-[family-name:var(--font-display)] text-2xl font-bold tracking-tight">
-          <Icon name="message" size={24} className="text-accent" />
-          Mensagens
-        </h1>
-        <p className="mt-1 text-sm text-muted">
+        <h1 className="d3">Mensagens</h1>
+        <p className="t3 measure-lede mt-2 text-text-muted">
           WhatsApp e Instagram: mensagens individuais, listas de transmissão e agendamento — com rascunho por IA.
         </p>
       </div>
@@ -100,10 +97,10 @@ export default function MessagesPage() {
           <button
             key={t.key}
             onClick={() => setTab(t.key)}
-            className={`flex items-center gap-1.5 whitespace-nowrap border-b-2 px-3 py-2 text-sm transition-colors ${
+            className={`t3 flex min-h-10 items-center gap-1.5 whitespace-nowrap border-b-2 px-3 py-2 transition-colors ${
               tab === t.key
-                ? "border-accent text-foreground"
-                : "border-transparent text-muted hover:text-foreground"
+                ? "border-edge text-text"
+                : "border-transparent text-text-muted hover:text-text"
             }`}
           >
             <Icon name={t.icon} size={15} />
@@ -163,30 +160,30 @@ function Inbox() {
     <Card>
       <SectionTitle>Recebidas ({items.length})</SectionTitle>
       {items.length === 0 ? (
-        <p className="text-sm text-muted">
+        <p className="t3 text-text-muted">
           Nenhuma mensagem recebida ainda. Respostas chegam aqui quando o webhook da Meta estiver
-          configurado (Conexões → API oficial): Callback URL <code className="text-accent">/api/webhooks/meta</code>,
-          verify token <code className="text-accent">agencyhub-verify</code>.
+          configurado (Conexões → API oficial): Callback URL <code className="text-text">/api/webhooks/meta</code>,
+          verify token <code className="text-text">agencyhub-verify</code>.
         </p>
       ) : (
         <div className="space-y-1.5">
           {items.map((m) => (
-            <div key={m.id} className="rounded-md border border-edge bg-surface-2 px-3 py-2 text-sm">
+            <div key={m.id} className="rounded-md border border-edge bg-surface-sunken px-3 py-2 t3">
               <div className="flex items-center justify-between gap-2">
                 <span className="flex items-center gap-1.5 font-medium">
                   <Icon name={m.channel === "whatsapp" ? "whatsapp" : "instagram"} size={14} />
                   {m.fromName || m.fromAddress}
                   {m.clientName && (
-                    <a href={`/clients/${m.clientId}?tab=attendant`} className="rounded-full border border-edge px-2 py-0.5 text-[10px] font-normal text-muted hover:border-accent hover:text-accent">
+                    <a href={`/clients/${m.clientId}?tab=attendant`} className="rounded-full border border-edge px-2 py-0.5 text-[10px] font-normal text-text-muted hover:border-edge hover:text-text">
                       {m.clientName}
                     </a>
                   )}
                 </span>
-                <span className="text-xs text-muted">
+                <span className="t5 text-text-muted">
                   {new Date(m.receivedAt).toLocaleString("pt-BR")}
                 </span>
               </div>
-              <p className="mt-1 text-foreground/80">{m.body}</p>
+              <p className="mt-1 text-text/80">{m.body}</p>
             </div>
           ))}
         </div>
@@ -317,14 +314,14 @@ function Compose({
           ) : (
             <div>
               <Label>Destinatários ({selected.length})</Label>
-              <div className="max-h-40 space-y-1 overflow-y-auto rounded-md border border-edge bg-surface-2 p-2">
+              <div className="max-h-40 space-y-1 overflow-y-auto rounded-md border border-edge bg-surface-sunken p-2">
                 {eligible.length === 0 && (
-                  <p className="p-2 text-xs text-muted">
+                  <p className="p-2 t5 text-text-muted">
                     Nenhum contato com {channel === "whatsapp" ? "telefone" : "@ do Instagram"}.
                   </p>
                 )}
                 {eligible.map((c) => (
-                  <label key={c.id} className="flex items-center gap-2 rounded px-2 py-1 text-sm hover:bg-surface">
+                  <label key={c.id} className="flex items-center gap-2 rounded px-2 py-1 t3 hover:bg-surface">
                     <input
                       type="checkbox"
                       checked={selected.includes(c.id)}
@@ -335,7 +332,7 @@ function Compose({
                       }
                     />
                     {c.name}
-                    <span className="text-xs text-muted">
+                    <span className="t5 text-text-muted">
                       {channel === "whatsapp" ? c.phone : c.instagram}
                     </span>
                   </label>
@@ -365,7 +362,7 @@ function Compose({
 
           {error && <ErrorBox message={error} />}
           {status && (
-            <div className="rounded-md border border-emerald-500/40 bg-emerald-500/10 px-3 py-2 text-sm text-emerald-500">
+            <div className="rounded-md border border-positive/40 bg-positive-wash px-3 py-2 t3 text-positive">
               {status}
             </div>
           )}
@@ -378,7 +375,7 @@ function Compose({
 
       <Card>
         <SectionTitle>
-          <span className="flex items-center gap-1.5"><Icon name="sparkle" size={15} /> Rascunho por IA</span>
+          <span className="flex items-center gap-1.5">Rascunho por IA</span>
         </SectionTitle>
         <div className="space-y-3">
           <div>
@@ -391,16 +388,16 @@ function Compose({
             />
           </div>
           <Button variant="ghost" onClick={draft} disabled={drafting || !goal.trim()}>
-            {drafting ? <Spinner label="Redigindo..." /> : <><Icon name="sparkle" size={15} /> Gerar rascunho</>}
+            {drafting ? <Spinner label="Redigindo..." /> : <>Gerar rascunho</>}
           </Button>
           {variants.length > 0 && (
             <div className="space-y-2">
-              <p className="text-xs uppercase tracking-wide text-muted">Variações — clique para usar</p>
+              <p className="t6 text-text-muted">Variações — clique para usar</p>
               {variants.map((v, i) => (
                 <button
                   key={i}
                   onClick={() => setBody(v)}
-                  className="block w-full rounded-md border border-edge bg-surface-2 px-3 py-2 text-left text-sm transition-colors hover:border-accent"
+                  className="block w-full rounded-md border border-edge bg-surface-sunken px-3 py-2 text-left t3 transition-colors hover:border-edge"
                 >
                   {v}
                 </button>
@@ -471,19 +468,19 @@ function Contacts({ contacts, onChange }: { contacts: Contact[]; onChange: () =>
       <Card className="lg:col-span-2">
         <SectionTitle>Contatos ({contacts.length})</SectionTitle>
         {contacts.length === 0 ? (
-          <p className="text-sm text-muted">Nenhum contato ainda.</p>
+          <p className="t3 text-text-muted">Nenhum contato ainda.</p>
         ) : (
           <div className="space-y-1.5">
             {contacts.map((c) => (
-              <div key={c.id} className="flex items-center justify-between rounded-md border border-edge bg-surface-2 px-3 py-2 text-sm">
+              <div key={c.id} className="flex items-center justify-between rounded-md border border-edge bg-surface-sunken px-3 py-2 t3">
                 <div>
                   <span className="font-medium">{c.name}</span>
-                  <span className="ml-2 text-xs text-muted">
+                  <span className="ml-2 t5 text-text-muted">
                     {[c.phone && `📱 ${c.phone}`, c.instagram && `IG ${c.instagram}`].filter(Boolean).join(" · ")}
                   </span>
                   {c.tags && <span className="ml-2"><Tag>{c.tags}</Tag></span>}
                 </div>
-                <button onClick={() => remove(c.id)} className="text-muted transition-colors hover:text-red-500" title="Remover">
+                <button onClick={() => remove(c.id)} className="text-text-muted transition-colors hover:text-negative" title="Remover">
                   <Icon name="trash" size={16} />
                 </button>
               </div>
@@ -551,9 +548,9 @@ function Lists({
           </div>
           <div>
             <Label>Contatos ({selected.length})</Label>
-            <div className="max-h-52 space-y-1 overflow-y-auto rounded-md border border-edge bg-surface-2 p-2">
+            <div className="max-h-52 space-y-1 overflow-y-auto rounded-md border border-edge bg-surface-sunken p-2">
               {eligible.map((c) => (
-                <label key={c.id} className="flex items-center gap-2 rounded px-2 py-1 text-sm hover:bg-surface">
+                <label key={c.id} className="flex items-center gap-2 rounded px-2 py-1 t3 hover:bg-surface">
                   <input
                     type="checkbox"
                     checked={selected.includes(c.id)}
@@ -578,18 +575,18 @@ function Lists({
       <Card>
         <SectionTitle>Listas ({lists.length})</SectionTitle>
         {lists.length === 0 ? (
-          <p className="text-sm text-muted">Nenhuma lista criada.</p>
+          <p className="t3 text-text-muted">Nenhuma lista criada.</p>
         ) : (
           <div className="space-y-1.5">
             {lists.map((l) => (
-              <div key={l.id} className="flex items-center justify-between rounded-md border border-edge bg-surface-2 px-3 py-2 text-sm">
+              <div key={l.id} className="flex items-center justify-between rounded-md border border-edge bg-surface-sunken px-3 py-2 t3">
                 <span>
                   <span className="font-medium">{l.name}</span>
-                  <span className="ml-2 text-xs text-muted">
+                  <span className="ml-2 t5 text-text-muted">
                     {l.channel === "whatsapp" ? "WhatsApp" : "Instagram"} · {l.contactIds.length} contatos
                   </span>
                 </span>
-                <button onClick={() => remove(l.id)} className="text-muted transition-colors hover:text-red-500">
+                <button onClick={() => remove(l.id)} className="text-text-muted transition-colors hover:text-negative">
                   <Icon name="trash" size={16} />
                 </button>
               </div>
@@ -626,24 +623,24 @@ function Outbox({ outbox, onRefresh }: { outbox: OutboxMessage[]; onRefresh: () 
         </div>
       </div>
       {outbox.length === 0 ? (
-        <p className="text-sm text-muted">Nada na fila.</p>
+        <p className="t3 text-text-muted">Nada na fila.</p>
       ) : (
         <div className="space-y-1.5">
           {outbox.map((m) => (
-            <div key={m.id} className="rounded-md border border-edge bg-surface-2 px-3 py-2 text-sm">
+            <div key={m.id} className="rounded-md border border-edge bg-surface-sunken px-3 py-2 t3">
               <div className="flex items-center justify-between gap-3">
                 <span className="flex items-center gap-1.5">
                   <Icon name={m.channel === "whatsapp" ? "whatsapp" : "instagram"} size={15} />
-                  <span className="text-xs text-muted">{m.toAddress}</span>
-                  <span className="text-[10px] uppercase text-muted">· {m.mode}</span>
+                  <span className="t5 text-text-muted">{m.toAddress}</span>
+                  <span className="t6 text-text-muted">· {m.mode}</span>
                 </span>
-                <span className={`text-xs font-semibold ${STATUS_STYLE[m.status] ?? "text-muted"}`}>
+                <span className={`t5 font-semibold ${STATUS_STYLE[m.status] ?? "text-text-muted"}`}>
                   {m.status}
                   {m.scheduledFor && m.status === "scheduled" && ` · ${new Date(m.scheduledFor).toLocaleString("pt-BR")}`}
                 </span>
               </div>
-              <p className="mt-1 line-clamp-2 text-foreground/80">{m.body}</p>
-              {m.error && <p className="mt-0.5 text-xs text-red-500">{m.error}</p>}
+              <p className="mt-1 line-clamp-2 text-text/80">{m.body}</p>
+              {m.error && <p className="mt-0.5 t5 text-negative">{m.error}</p>}
             </div>
           ))}
         </div>
@@ -743,24 +740,24 @@ function ConnectionCard({
                 placeholder={conn?.hasToken ? "•••• (deixe em branco para manter)" : "EAAG..."}
               />
             </div>
-            <p className="text-xs text-muted">
+            <p className="t5 text-text-muted">
               Requer conta comercial verificada na Meta. Estável e sem risco de bloqueio.
             </p>
           </>
         ) : isWa ? (
-          <p className="rounded-md border border-edge bg-surface-2 p-3 text-xs text-muted">
-            Sem conta comercial? Clique em <strong className="text-foreground">Conectar</strong> abaixo:
-            abrimos o WhatsApp Web com a <strong className="text-foreground">sua sessão logada</strong>,
+          <p className="rounded-md border border-edge bg-surface-sunken p-3 t5 text-text-muted">
+            Sem conta comercial? Clique em <strong className="text-text">Conectar</strong> abaixo:
+            abrimos o WhatsApp Web com a <strong className="text-text">sua sessão logada</strong>,
             você escaneia o QR uma vez e as mensagens da fila são enviadas automaticamente
             (com pausas para não tomar rate-limit). Sem terminal.
           </p>
         ) : (
-          <p className="rounded-md border border-edge bg-surface-2 p-3 text-xs text-muted">
-            Instagram por sessão não é suportado — use a <strong className="text-foreground">API oficial</strong>.
+          <p className="rounded-md border border-edge bg-surface-sunken p-3 t5 text-text-muted">
+            Instagram por sessão não é suportado — use a <strong className="text-text">API oficial</strong>.
           </p>
         )}
         {conn?.mode === "session" && !sessionAvailable && (
-          <p role="alert" className="rounded-md border border-amber-500/50 bg-amber-500/10 p-3 text-xs">
+          <p role="alert" className="rounded-md border border-caution/50 bg-caution-wash p-3 t5">
             Esta conexão estava no modo sessão, que não funciona neste servidor. Configure a API oficial e salve para as
             mensagens da fila saírem.
           </p>
@@ -802,14 +799,14 @@ function SessionWorker({ onSavedConnection }: { onSavedConnection: () => void })
   }, [poll]);
 
   const STATE_LABEL: Record<string, { text: string; cls: string }> = {
-    idle: { text: "Desconectado", cls: "text-muted" },
-    starting: { text: "Iniciando…", cls: "text-sky-500" },
-    installing: { text: "Instalando motor (1ª vez)…", cls: "text-sky-500" },
-    awaiting_login: { text: "Aguardando login (escaneie o QR)", cls: "text-amber-500" },
-    connected: { text: "Conectado ✓", cls: "text-emerald-500" },
-    draining: { text: "Enviando…", cls: "text-emerald-500" },
-    stopped: { text: "Parado", cls: "text-muted" },
-    error: { text: "Erro", cls: "text-red-500" },
+    idle: { text: "Desconectado", cls: "text-text-muted" },
+    starting: { text: "Iniciando…", cls: "text-text-muted" },
+    installing: { text: "Instalando motor (1ª vez)…", cls: "text-text-muted" },
+    awaiting_login: { text: "Aguardando login (escaneie o QR)", cls: "text-caution" },
+    connected: { text: "Conectado ✓", cls: "text-positive" },
+    draining: { text: "Enviando…", cls: "text-positive" },
+    stopped: { text: "Parado", cls: "text-text-muted" },
+    error: { text: "Erro", cls: "text-negative" },
   };
   const label = STATE_LABEL[status.state] ?? STATE_LABEL.idle;
 
@@ -848,12 +845,12 @@ function SessionWorker({ onSavedConnection }: { onSavedConnection: () => void })
   }
 
   return (
-    <div className="mt-1 space-y-2 rounded-md border border-edge bg-surface-2 p-3">
+    <div className="mt-1 space-y-2 rounded-md border border-edge bg-surface-sunken p-3">
       <div className="flex items-center justify-between">
-        <span className="text-xs uppercase tracking-wide text-muted">Assistente de envio</span>
-        <span className={`text-xs font-semibold ${label.cls}`}>{label.text}</span>
+        <span className="t6 text-text-muted">Assistente de envio</span>
+        <span className={`t5 font-semibold ${label.cls}`}>{label.text}</span>
       </div>
-      {status.message && <p className="text-xs text-muted">{status.message}</p>}
+      {status.message && <p className="t5 text-text-muted">{status.message}</p>}
 
       {/* QR code capturado do WhatsApp Web (headless no servidor) para escanear */}
       {status.state === "awaiting_login" && (
@@ -865,8 +862,8 @@ function SessionWorker({ onSavedConnection }: { onSavedConnection: () => void })
             className="size-48 rounded bg-white p-1"
             onError={(e) => ((e.currentTarget.style.opacity = "0.3"))}
           />
-          <p className="text-center text-xs text-muted">
-            Abra o WhatsApp no celular → <strong>Aparelhos conectados</strong> → <strong>Conectar aparelho</strong> e escaneie.
+          <p className="text-center t5 text-text-muted">
+            Abra o WhatsApp no celular<strong>Aparelhos conectados</strong><strong>Conectar aparelho</strong> e escaneie.
           </p>
         </div>
       )}
@@ -895,7 +892,7 @@ function SessionWorker({ onSavedConnection }: { onSavedConnection: () => void })
           <Icon name="send" size={15} /> Testar
         </Button>
       </div>
-      {note && <p className="text-xs text-accent">{note}</p>}
+      {note && <p className="t5 text-text">{note}</p>}
     </div>
   );
 }

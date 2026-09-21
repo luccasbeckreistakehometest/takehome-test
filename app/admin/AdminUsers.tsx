@@ -91,8 +91,8 @@ export default function AdminUsers({ agency = "" }: { agency?: string }) {
           />
         </div>
         <div className="overflow-x-auto">
-          <table className="w-full min-w-[640px] text-left text-sm" data-testid="admin-users">
-            <thead className="text-xs uppercase text-muted">
+          <table className="w-full min-w-[640px] text-left t3" data-testid="admin-users">
+            <thead className="t5 text-text-muted">
               <tr>
                 <th className="py-2 pr-3">Conta</th>
                 <th className="py-2 pr-3">Papel</th>
@@ -102,12 +102,12 @@ export default function AdminUsers({ agency = "" }: { agency?: string }) {
                 <th className="py-2" />
               </tr>
             </thead>
-            <tbody className="divide-y divide-edge">
+            <tbody className="divide-y divide-rule">
               {visible.map((u) => (
                 <tr key={u.id} className={u.disabledAt ? "opacity-60" : ""}>
                   <td className="py-2 pr-3">
-                    <p className="font-mono text-accent">{u.username}</p>
-                    <p className="text-xs text-muted">
+                    <p className="font-mono text-text">{u.username}</p>
+                    <p className="t5 text-text-muted">
                       {u.name}
                       {u.email ? ` · ${u.email}` : ""}
                       {u.agencyName ? ` · ${u.agencyName}` : ""}
@@ -115,7 +115,7 @@ export default function AdminUsers({ agency = "" }: { agency?: string }) {
                   </td>
                   <td className="py-2 pr-3">
                     <Tag>{ROLE_LABEL[u.role] ?? u.role}</Tag>
-                    {u.disabledAt && <span className="ml-1 text-xs text-red-500">desativada</span>}
+                    {u.disabledAt && <span className="ml-1 t5 text-negative">desativada</span>}
                   </td>
                   <td className="py-2 pr-3">{u.billing ? `${u.billing.planName} · até ${fmt(u.billing.renewsAt)}` : "—"}</td>
                   <td className="py-2 pr-3">{u.billing ? Math.floor(u.billing.coins) : "—"}</td>
@@ -168,13 +168,13 @@ function UserPanel({ user, onChanged, onClose }: { user: AdminUser; onChanged: (
   }
 
   return (
-    <Card className="space-y-4 border-accent" data-testid="admin-user-panel">
+    <Card className="space-y-4 border-edge" data-testid="admin-user-panel">
       <div className="flex flex-wrap items-start justify-between gap-2">
         <div>
           <p className="font-semibold">
-            {user.name} <span className="font-mono text-sm text-accent">({user.username})</span>
+            {user.name} <span className="font-mono t3 text-text">({user.username})</span>
           </p>
-          <p className="text-xs text-muted">
+          <p className="t5 text-text-muted">
             criada em {fmt(user.createdAt)} · {user.mustChangePassword ? "senha provisória pendente" : "senha própria"}
             {user.billing ? ` · uso no mês: ${Math.round(user.billing.usageThisMonth)} coins` : ""}
           </p>
@@ -185,12 +185,12 @@ function UserPanel({ user, onChanged, onClose }: { user: AdminUser; onChanged: (
       </div>
       {error && <ErrorBox message={error} />}
       {msg && (
-        <p role="status" className="text-sm text-accent">
+        <p role="status" className="t3 text-text">
           {msg}
         </p>
       )}
       {otp && (
-        <p className="rounded-md border border-accent/40 bg-accent/5 px-3 py-2 text-sm" data-testid="admin-otp">
+        <p className="rounded-md border border-edge bg-surface-sunken px-3 py-2 t3" data-testid="admin-otp">
           Senha provisória (mostrada só agora): <strong className="font-mono">{otp}</strong>
         </p>
       )}
@@ -221,7 +221,7 @@ function UserPanel({ user, onChanged, onClose }: { user: AdminUser; onChanged: (
           act({ action: "set_email", email }, "E-mail salvo.");
         }}
       >
-        <label className="flex-1 text-xs text-muted" htmlFor="admin-email">
+        <label className="flex-1 t5 text-text-muted" htmlFor="admin-email">
           E-mail
           <Input id="admin-email" type="email" value={email} onChange={(e) => setEmail(e.target.value)} />
         </label>
@@ -239,7 +239,7 @@ function UserPanel({ user, onChanged, onClose }: { user: AdminUser; onChanged: (
               act({ action: "set_plan", planId, months: Number(months) || 1 }, "Plano atualizado.");
             }}
           >
-            <label className="flex-1 text-xs text-muted" htmlFor="admin-plan">
+            <label className="flex-1 t5 text-text-muted" htmlFor="admin-plan">
               Plano (sem cobrança)
               <Select id="admin-plan" value={planId} onChange={(e) => setPlanId(e.target.value)}>
                 {plans.map((p) => (
@@ -249,7 +249,7 @@ function UserPanel({ user, onChanged, onClose }: { user: AdminUser; onChanged: (
                 ))}
               </Select>
             </label>
-            <label className="w-28 text-xs text-muted" htmlFor="admin-months">
+            <label className="w-28 t5 text-text-muted" htmlFor="admin-months">
               Meses
               <Input id="admin-months" type="number" min={1} max={36} value={months} onChange={(e) => setMonths(e.target.value)} />
             </label>
@@ -267,11 +267,11 @@ function UserPanel({ user, onChanged, onClose }: { user: AdminUser; onChanged: (
               }
             }}
           >
-            <label className="w-32 text-xs text-muted" htmlFor="admin-coins">
+            <label className="w-32 t5 text-text-muted" htmlFor="admin-coins">
               Coins (+/−)
               <Input id="admin-coins" type="number" value={coins} onChange={(e) => setCoins(e.target.value)} required />
             </label>
-            <label className="flex-1 text-xs text-muted" htmlFor="admin-coins-note">
+            <label className="flex-1 t5 text-text-muted" htmlFor="admin-coins-note">
               Motivo
               <Input id="admin-coins-note" value={note} onChange={(e) => setNote(e.target.value)} placeholder="cortesia, ajuste..." required minLength={3} />
             </label>
@@ -279,7 +279,7 @@ function UserPanel({ user, onChanged, onClose }: { user: AdminUser; onChanged: (
               Lançar coins
             </Button>
           </form>
-          <p className="text-xs text-muted">
+          <p className="t5 text-text-muted">
             Plano e coins de uma conta de agência são da agência dela: todo o time usa a mesma carteira.
           </p>
           <form
@@ -289,7 +289,7 @@ function UserPanel({ user, onChanged, onClose }: { user: AdminUser; onChanged: (
               act({ action: "set_cap", usd: cap.trim() === "" ? null : Number(cap) }, "Teto de IA salvo.");
             }}
           >
-            <label className="flex-1 text-xs text-muted" htmlFor="admin-cap">
+            <label className="flex-1 t5 text-text-muted" htmlFor="admin-cap">
               {`Teto diário de IA (US$) · hoje US$ ${user.billing.spendTodayUsd.toFixed(3)} de ${
                 user.billing.capUsd === null ? "sem teto próprio" : `US$ ${user.billing.capUsd.toFixed(2)}`
               }`}
@@ -303,16 +303,16 @@ function UserPanel({ user, onChanged, onClose }: { user: AdminUser; onChanged: (
       )}
 
       <div className="space-y-2 border-t border-edge pt-4" data-testid="admin-lgpd">
-        <p className="text-sm font-medium">Dados pessoais (LGPD)</p>
+        <p className="t3 font-medium">Dados pessoais (LGPD)</p>
         <div className="flex flex-wrap items-end gap-2">
           <a
             href={`/api/admin/users/${user.id}/export`}
-            className="rounded-md border border-edge bg-surface-2 px-3.5 py-2 text-sm hover:border-accent"
+            className="rounded-md border border-edge bg-surface-sunken px-3.5 py-2 t3 hover:border-edge"
             data-testid="admin-export"
           >
             Exportar dados da conta
           </a>
-          <label className="text-xs text-muted" htmlFor="admin-delete-confirm">
+          <label className="t5 text-text-muted" htmlFor="admin-delete-confirm">
             Para excluir, digite <span className="font-mono">{user.username}</span>
             <Input id="admin-delete-confirm" value={confirmDelete} onChange={(e) => setConfirmDelete(e.target.value)} data-testid="admin-delete-confirm" />
           </label>
@@ -327,7 +327,7 @@ function UserPanel({ user, onChanged, onClose }: { user: AdminUser; onChanged: (
             Excluir conta
           </Button>
         </div>
-        <p className="text-xs text-muted">A exclusão apaga a conta e o que é só dela; pagamentos e custos ficam para a contabilidade, sem vínculo com a pessoa.</p>
+        <p className="t5 text-text-muted">A exclusão apaga a conta e o que é só dela; pagamentos e custos ficam para a contabilidade, sem vínculo com a pessoa.</p>
       </div>
     </Card>
   );

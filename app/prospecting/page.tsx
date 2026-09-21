@@ -84,10 +84,10 @@ export default function ProspectingPage() {
   return (
     <div className="space-y-6">
       <div>
-        <h1 className="font-[family-name:var(--font-display)] text-2xl font-bold tracking-tight">
+        <h1 className="d3">
           Prospecção de clientes
         </h1>
-        <p className="mt-1 text-sm text-muted">
+        <p className="t3 measure-lede mt-2 text-text-muted">
           A IA pesquisa na web negócios reais do nicho/região e qualifica cada
           lead — mesmo quem ainda não está na plataforma. Converta em cliente com
           um clique.
@@ -123,11 +123,11 @@ export default function ProspectingPage() {
         </div>
         <div className="flex flex-wrap items-center gap-3">
           <Button onClick={discover} disabled={searching || !form.niche || !form.region}>
-            {searching ? "Pesquisando..." : "🔎 Descobrir potenciais clientes"}
+            {searching ? "Pesquisando..." : "Descobrir potenciais clientes"}
           </Button>
           <button
             onClick={() => setManualOpen((v) => !v)}
-            className="text-sm text-muted underline-offset-2 hover:text-foreground hover:underline"
+            className="t3 inline-flex min-h-10 items-center text-text-muted underline-offset-2 hover:text-text hover:underline"
             data-testid="manual-prospect-toggle"
           >
             + Adicionar um prospect à mão
@@ -137,7 +137,7 @@ export default function ProspectingPage() {
           )}
         </div>
         {manualOpen && (
-          <div className="grid gap-2 rounded-lg border border-edge bg-surface-2 p-3 sm:grid-cols-3" data-testid="manual-prospect-form">
+          <div className="grid gap-2 rounded-lg border border-edge bg-surface-sunken p-3 sm:grid-cols-3" data-testid="manual-prospect-form">
             <Input value={manual.name} onChange={(e) => setManual((m) => ({ ...m, name: e.target.value }))} placeholder="Nome do negócio *" data-testid="manual-name" />
             <Input value={manual.segment} onChange={(e) => setManual((m) => ({ ...m, segment: e.target.value }))} placeholder="Segmento" data-testid="manual-segment" />
             <Input value={manual.location} onChange={(e) => setManual((m) => ({ ...m, location: e.target.value }))} placeholder="Cidade" />
@@ -152,21 +152,21 @@ export default function ProspectingPage() {
           </div>
         )}
         {error && <ErrorBox message={error} />}
-        {summary && <p className="text-sm text-muted">{summary}</p>}
+        {summary && <p className="t3 text-text-muted">{summary}</p>}
         {!summary && lastSearch && (
           <div
-            className={`rounded-md border p-3 text-sm ${
+            className={`rounded-md border p-3 t3 ${
               lastSearch.resultCount === 0
-                ? "border-amber-700/60 bg-amber-950/30"
-                : "border-edge bg-surface-2"
+                ? "border-caution/60 bg-caution-wash"
+                : "border-edge bg-surface-sunken"
             }`}
           >
-            <p className="text-xs font-semibold uppercase tracking-wide text-muted">
+            <p className="t6 text-text-muted">
               Última busca: {lastSearch.query} ·{" "}
               {new Date(lastSearch.createdAt).toLocaleString("pt-BR")} ·{" "}
               {lastSearch.resultCount} resultado(s)
             </p>
-            <p className="mt-1 text-muted">{lastSearch.summary}</p>
+            <p className="mt-1 text-text-muted">{lastSearch.summary}</p>
           </div>
         )}
       </Card>
@@ -174,7 +174,7 @@ export default function ProspectingPage() {
       {!prospects ? (
         <Spinner label="Carregando prospects..." />
       ) : prospects.length === 0 ? (
-        <p className="py-8 text-center text-sm text-muted">
+        <p className="py-8 text-center t3 text-text-muted">
           Nenhum prospect ainda — rode uma busca acima.
         </p>
       ) : (
@@ -184,7 +184,7 @@ export default function ProspectingPage() {
               <div className="flex items-start justify-between gap-2">
                 <div>
                   <p className="font-semibold">{prospect.name}</p>
-                  <p className="text-xs text-muted">
+                  <p className="t5 text-text-muted">
                     {prospect.segment} · {prospect.location}
                   </p>
                 </div>
@@ -193,54 +193,53 @@ export default function ProspectingPage() {
                   <Tag>{PROSPECT_STATUS_LABELS[prospect.status]}</Tag>
                 </span>
               </div>
-              <p className="text-sm text-muted">
-                <span className="font-semibold text-foreground/80">Por que é fit: </span>
+              <p className="t3 text-text-muted">
+                <span className="font-semibold text-text/80">Por que é fit: </span>
                 {prospect.whyFit}
               </p>
-              <p className="text-sm text-muted">
-                <span className="font-semibold text-foreground/80">Maturidade: </span>
+              <p className="t3 text-text-muted">
+                <span className="font-semibold text-text/80">Maturidade: </span>
                 {prospect.marketingMaturity}
               </p>
-              <p className="text-sm text-muted">
-                <span className="font-semibold text-accent">Abordagem: </span>
+              <p className="t3 text-text-muted">
+                <span className="font-semibold text-text">Abordagem: </span>
                 {prospect.suggestedApproach}
               </p>
-              <div className="flex flex-wrap items-center gap-2 pt-1 text-xs">
+              <div className="flex flex-wrap items-center gap-2 pt-1 t5">
                 {prospect.website && (
                   <a
                     href={prospect.website.startsWith("http") ? prospect.website : `https://${prospect.website}`}
                     target="_blank"
                     rel="noreferrer"
-                    className="text-accent hover:underline"
+                    className="text-text hover:underline"
                   >
-                    site ↗
+                    site
                   </a>
                 )}
-                {prospect.instagram && <span className="text-muted">{prospect.instagram}</span>}
+                {prospect.instagram && <span className="text-text-muted">{prospect.instagram}</span>}
                 <span className="ml-auto flex gap-2">
                   {prospect.status === "converted" && prospect.clientId ? (
-                    <Link href={`/clients/${prospect.clientId}`} className="text-accent hover:underline">
-                      Abrir cliente →
+                    <Link href={`/clients/${prospect.clientId}`} className="text-text hover:underline">
+                      Abrir cliente
                     </Link>
                   ) : (
                     <>
                       <button
-                        className="font-medium text-accent hover:underline"
+                        className="inline-flex min-h-10 items-center font-medium text-text hover:underline"
                         onClick={() => setProposalFor((v) => (v === prospect.id ? null : prospect.id))}
                         data-testid="proposal-toggle"
-                      >
-                        ✦ Proposta em 5 min
+                      >Proposta em 5 min
                       </button>
                       {prospect.status === "new" && (
                         <button
-                          className="text-muted hover:text-foreground"
+                          className="inline-flex min-h-10 items-center text-text-muted hover:text-text"
                           onClick={() => setStatus(prospect, "contacted")}
                         >
                           Marcar contatado
                         </button>
                       )}
                       <button
-                        className="font-medium text-accent hover:underline"
+                        className="inline-flex min-h-10 items-center font-medium text-text hover:underline"
                         onClick={async () => {
                           const result = await setStatus(prospect, "converted");
                           if (result.clientId) {
@@ -248,10 +247,9 @@ export default function ProspectingPage() {
                           }
                         }}
                       >
-                        Converter em cliente ✦
-                      </button>
+                        Converter em cliente </button>
                       <button
-                        className="text-muted hover:text-red-400"
+                        className="inline-flex min-h-10 items-center text-text-muted hover:text-negative"
                         onClick={() => setStatus(prospect, "discarded")}
                       >
                         Descartar

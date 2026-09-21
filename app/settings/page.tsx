@@ -11,7 +11,7 @@ type SettingsView = AgencySettings & {
   hasTogetherKey?: boolean;
   hasHfKey?: boolean;
 };
-import { Button, Card, CopyButton, ErrorBox, Input, Label, SectionTitle } from "@/components/ui";
+import { ActionBar, Button, Checkbox, ErrorBox, Field, FormGrid, Input, Label, PageHeader, SectionTitle, Select, Textarea } from "@/components/ui";
 import InviteGenerator from "@/components/InviteGenerator";
 import ApprovalRulesCard from "@/components/ApprovalRulesCard";
 import AgencyPageCard from "@/components/AgencyPageCard";
@@ -39,9 +39,9 @@ const INTEGRATIONS: {
 ];
 
 const STATUS_BADGE: Record<IntegrationStatus, { label: string; cls: string }> = {
-  live: { label: "Ativo", cls: "border-emerald-500/40 bg-emerald-500/10 text-emerald-500" },
-  beta: { label: "Beta", cls: "border-amber-500/40 bg-amber-500/10 text-amber-500" },
-  soon: { label: "Em breve", cls: "border-edge text-muted" },
+  live: { label: "Ativo", cls: "border-positive/40 bg-positive-wash text-positive" },
+  beta: { label: "Beta", cls: "border-caution/40 bg-caution-wash text-caution" },
+  soon: { label: "Em breve", cls: "border-edge text-text-muted" },
 };
 
 export default function SettingsPage() {
@@ -77,62 +77,63 @@ export default function SettingsPage() {
   }
 
   return (
-    <div className="mx-auto max-w-3xl space-y-6">
-      <h1 className="font-[family-name:var(--font-display)] text-2xl font-bold tracking-tight">
-        Configurações
-      </h1>
+    // Ajustes é formulário longo: coluna de trabalho estreita (o campo não
+    // precisa de 1000px) e seções separadas por régua em vez de dois cartões
+    // gigantes empilhados.
+    <div className="max-w-[46rem]">
+      <PageHeader eyebrow="Agência" title="Configurações" />
 
-      <Card className="space-y-4">
+      <section className="space-y-4">
         <SectionTitle>Whitelabel — a plataforma com a sua marca</SectionTitle>
-        <div className="grid gap-4 sm:grid-cols-3">
-          <div>
-            <Label>Nome da agência</Label>
-            <Input
-              value={settings.agencyName}
-              onChange={(e) => setSettings({ ...settings, agencyName: e.target.value })}
-            />
-          </div>
-          <div>
-            <Label>Tagline (rodapé)</Label>
-            <Input
-              value={settings.tagline}
-              onChange={(e) => setSettings({ ...settings, tagline: e.target.value })}
-            />
-          </div>
-          <div>
-            <Label>Cor de destaque</Label>
-            <div className="flex gap-2">
-              <input
-                type="color"
-                value={settings.accentColor}
-                onChange={(e) => setSettings({ ...settings, accentColor: e.target.value })}
-                className="h-9 w-12 cursor-pointer rounded-md border border-edge bg-surface-2"
-              />
-              <Input
-                value={settings.accentColor}
-                onChange={(e) => setSettings({ ...settings, accentColor: e.target.value })}
-              />
-            </div>
-          </div>
-        </div>
+        <FormGrid>
+          <Field label="Nome da agência" required width="name">
+            {(field) => (
+              <Input {...field} value={settings.agencyName} onChange={(e) => setSettings({ ...settings, agencyName: e.target.value })} />
+            )}
+          </Field>
+          <Field label="Tagline" hint="Sai no rodapé e nas peças do cliente.">
+            {(field) => (
+              <Input {...field} value={settings.tagline} onChange={(e) => setSettings({ ...settings, tagline: e.target.value })} />
+            )}
+          </Field>
+          <Field label="Cor de destaque" hint="O sistema deriva os tons com contraste garantido.">
+            {(field) => (
+              <div className="flex gap-2">
+                <input
+                  type="color"
+                  aria-label="Escolher a cor de destaque"
+                  value={settings.accentColor}
+                  onChange={(e) => setSettings({ ...settings, accentColor: e.target.value })}
+                  className="h-[var(--ui-h)] w-12 shrink-0 cursor-pointer rounded-sm border border-edge bg-surface-sunken"
+                />
+                <Input
+                  {...field}
+                  className="tnum max-w-[130px]"
+                  value={settings.accentColor}
+                  onChange={(e) => setSettings({ ...settings, accentColor: e.target.value })}
+                />
+              </div>
+            )}
+          </Field>
+        </FormGrid>
         <div className="flex items-center gap-4 border-t border-edge pt-4">
-          <div className="grid size-14 shrink-0 place-items-center overflow-hidden rounded-lg border border-edge bg-surface-2">
+          <div className="grid size-14 shrink-0 place-items-center overflow-hidden rounded-md border border-edge bg-surface-sunken">
             {settings.logoMime ? (
               // eslint-disable-next-line @next/next/no-img-element
               <img src={`/api/settings/logo?v=${logoVersion}`} alt="logo" className="size-full object-contain" />
             ) : (
-              <span className="text-xl font-bold text-accent">
+              <span className="d4 font-bold text-text">
                 {settings.agencyName.charAt(0).toUpperCase()}
               </span>
             )}
           </div>
           <div>
             <Label>Logo da agência</Label>
-            <p className="mb-2 text-xs text-muted">
+            <p className="mb-2 t5 text-text-muted">
               Aparece no cabeçalho e nas telas que o cliente/profissional vê ao entrar pelo convite.
             </p>
             <div className="flex items-center gap-2">
-              <label className="cursor-pointer rounded-md border border-edge bg-surface-2 px-3 py-1.5 text-sm transition-colors hover:border-accent">
+              <label className="t3 inline-flex h-10 cursor-pointer items-center rounded-sm border border-edge bg-surface px-4 font-medium transition-colors hover:bg-surface-sunken">
                 Enviar logo
                 <input
                   type="file"
@@ -158,7 +159,7 @@ export default function SettingsPage() {
                     setSettings((prev) => (prev ? { ...prev, logoMime: "" } : prev));
                     setLogoVersion((v) => v + 1);
                   }}
-                  className="rounded-md border border-edge px-3 py-1.5 text-sm text-muted transition-colors hover:border-red-500/60 hover:text-red-500"
+                  className="t3 inline-flex h-10 items-center rounded-sm border border-edge px-4 font-medium text-text-muted transition-colors hover:border-negative/60 hover:text-negative"
                 >
                   Remover
                 </button>
@@ -167,13 +168,13 @@ export default function SettingsPage() {
           </div>
         </div>
         {!settings.canManagePlatform && (
-          <p className="border-t border-edge pt-4 text-xs text-muted">
+          <p className="border-t border-edge pt-4 t5 text-text-muted">
             O modo de IA, as landing pages e as chaves de API são definidos pelo admin da plataforma.
           </p>
         )}
         {settings.canManagePlatform && (
         <div className="space-y-2 border-t border-edge pt-4">
-          <p className="text-xs font-semibold uppercase tracking-wider text-muted">
+          <p className="t6 text-text-muted">
             Custo & features de IA
           </p>
           <div className="grid gap-2 sm:grid-cols-3">
@@ -181,75 +182,74 @@ export default function SettingsPage() {
               [
                 {
                   value: "economy",
-                  label: "💸 Econômico",
+                  label: "Econômico",
                   desc: "Modelo mais barato (Sonnet) em tudo. Menor custo possível.",
                 },
                 {
                   value: "balanced",
-                  label: "⚖️ Equilibrado",
+                  label: "Equilibrado",
                   desc: "Sonnet nos entregáveis táticos; Opus em estratégia, identidade, match e análise de arte.",
                 },
                 {
                   value: "premium",
-                  label: "👑 Premium",
+                  label: "Premium",
                   desc: "Opus (modelo topo) em todas as gerações. Máxima qualidade, maior custo.",
                 },
               ] as const
             ).map((mode) => (
               <label
                 key={mode.value}
-                className={`cursor-pointer rounded-md border p-3 text-sm transition-colors ${
+                className={`t3 cursor-pointer rounded-sm border p-3 transition-colors has-[:focus-visible]:outline-2 has-[:focus-visible]:outline-offset-2 has-[:focus-visible]:outline-brand-edge ${
                   settings.aiMode === mode.value
-                    ? "border-accent bg-accent/10"
-                    : "border-edge bg-surface-2 hover:border-muted"
+                    ? "border-brand-edge bg-brand-wash"
+                    : "border-edge bg-surface hover:bg-surface-sunken"
                 }`}
               >
+                {/* `hidden` tira o rádio da ordem de tabulação: escolher o modo
+                    de IA ficava impossível pelo teclado. `sr-only` mantém o
+                    controle e o foco aparece na moldura. */}
                 <input
                   type="radio"
                   name="aiMode"
-                  className="hidden"
+                  className="sr-only"
                   checked={settings.aiMode === mode.value}
                   onChange={() => setSettings({ ...settings, aiMode: mode.value })}
                 />
                 <span className="font-medium">{mode.label}</span>
-                <span className="mt-1 block text-xs text-muted">{mode.desc}</span>
+                <span className="mt-1 block t5 text-text-muted">{mode.desc}</span>
               </label>
             ))}
           </div>
-          <label className="flex items-start gap-3 rounded-md border border-edge bg-surface-2 p-3 text-sm">
-            <input
-              type="checkbox"
+          {/* Era um checkbox nativo de 13px pintado com a cor da marca (§12).
+              O primitivo tem alvo de 40px, foco visível e caixa desenhada. */}
+          <div className="rounded-sm border border-edge bg-surface p-3">
+            <Checkbox
               checked={settings.landingPagesEnabled}
-              onChange={(e) =>
-                setSettings({ ...settings, landingPagesEnabled: e.target.checked })
-              }
-              className="mt-0.5 accent-[var(--accent)]"
+              onChange={(e) => setSettings({ ...settings, landingPagesEnabled: e.target.checked })}
+              label="Gerador de landing pages"
             />
-            <span>
-              <span className="font-medium">Gerador de landing pages</span>
-              <span className="block text-xs text-muted">
-                É o entregável que mais consome tokens (HTML completo). Desligado, a
-                aba some do workspace e o kit completo pula essa etapa.
-              </span>
-            </span>
-          </label>
+            <p className="t5 mt-1 pl-7 text-text-muted">
+              É o entregável que mais consome tokens (HTML completo). Desligado, a aba some do
+              workspace e o kit completo pula essa etapa.
+            </p>
+          </div>
         </div>
         )}
         <div className="border-t border-edge pt-4">
           <Label>Estilo da casa (injetado em todas as gerações de IA)</Label>
-          <textarea
+          <Textarea
             value={settings.houseStyle}
             onChange={(e) => setSettings({ ...settings, houseStyle: e.target.value })}
             placeholder="Diretrizes da agência que valem para todos os clientes: tom, o que nunca fazer, formatos preferidos..."
-            className="min-h-20 w-full rounded-md border border-edge bg-surface-2 px-3 py-2 text-sm outline-none focus:border-accent"
+            className="min-h-20"
           />
         </div>
         {settings.canManagePlatform && (
         <div className="space-y-2 border-t border-edge pt-4">
-          <p className="text-xs font-semibold uppercase tracking-wider text-muted">
+          <p className="t6 text-text-muted">
             Chaves de API
           </p>
-          <p className="text-xs text-muted">
+          <p className="t5 text-text-muted">
             As chaves ficam apenas no banco local e nunca voltam ao navegador.
             Deixe em branco para manter a atual; digite <code>clear</code> para
             apagar.
@@ -259,9 +259,9 @@ export default function SettingsPage() {
               <Label>
                 Anthropic (Claude){" "}
                 {settings.hasAnthropicKey ? (
-                  <span className="normal-case text-accent">configurada ✓</span>
+                  <span className="normal-case text-text">configurada ✓</span>
                 ) : (
-                  <span className="normal-case text-red-400">não configurada</span>
+                  <span className="normal-case text-negative">não configurada</span>
                 )}
               </Label>
               <Input
@@ -277,9 +277,9 @@ export default function SettingsPage() {
               <Label>
                 Google AI — mockups de imagem{" "}
                 {settings.hasGoogleAiKey ? (
-                  <span className="normal-case text-accent">configurada ✓</span>
+                  <span className="normal-case text-text">configurada ✓</span>
                 ) : (
-                  <span className="normal-case text-muted">
+                  <span className="normal-case text-text-muted">
                     opcional — aistudio.google.com
                   </span>
                 )}
@@ -295,42 +295,42 @@ export default function SettingsPage() {
             </div>
           </div>
 
-          <div className="mt-4 rounded-lg border border-edge bg-surface-2 p-4">
+          <div className="mt-4 space-y-3 rounded-md border border-rule bg-surface-sunken p-4">
             <Label>Conceitos de imagem (grátis, gera várias)</Label>
-            <p className="mb-3 text-xs text-muted">
+            <p className="mb-3 t5 text-text-muted">
               Para <strong>testar e mostrar</strong> direções visuais sem custo. O botão
               “Gerar 4 conceitos” em cada demanda usa este provedor. (Para mockup
               <em> fiel</em> compondo foto real de produto/modelo, use o Google AI acima.)
             </p>
-            <div>
-              <Label>Provedor</Label>
-              <select
-                value={settings.imageProvider}
-                onChange={(e) =>
-                  setSettings({
-                    ...settings,
-                    imageProvider: e.target.value as "huggingface" | "together" | "pollinations",
-                  })
-                }
-                className="w-full rounded-md border border-edge bg-surface px-3 py-2 text-sm text-foreground outline-none focus:border-accent"
-              >
-                <option value="huggingface">Hugging Face — FLUX.1-dev · melhor qualidade (chave grátis)</option>
-                <option value="together">Together AI — FLUX.1-schnell-Free · rápido (chave grátis)</option>
-                <option value="pollinations">Pollinations — sem chave, qualidade menor</option>
-              </select>
-              <p className="mt-1 text-xs text-muted">
-                Recomendado: <strong>Hugging Face FLUX.1-dev</strong> — a melhor qualidade grátis.
-                Crie um token em huggingface.co → Settings → Access Tokens (não pede cartão).
-              </p>
-            </div>
+            <Field
+              label="Provedor"
+              hint="Recomendado: Hugging Face FLUX.1-dev — a melhor qualidade grátis. O token sai em huggingface.co → Settings → Access Tokens (não pede cartão)."
+            >
+              {(field) => (
+                <Select
+                  {...field}
+                  value={settings.imageProvider}
+                  onChange={(e) =>
+                    setSettings({
+                      ...settings,
+                      imageProvider: e.target.value as "huggingface" | "together" | "pollinations",
+                    })
+                  }
+                >
+                  <option value="huggingface">Hugging Face — FLUX.1-dev · melhor qualidade (chave grátis)</option>
+                  <option value="together">Together AI — FLUX.1-schnell-Free · rápido (chave grátis)</option>
+                  <option value="pollinations">Pollinations — sem chave, qualidade menor</option>
+                </Select>
+              )}
+            </Field>
             <div className="mt-3 grid gap-4 sm:grid-cols-2">
               <div>
                 <Label>
                   Hugging Face API Key{" "}
                   {settings.hasHfKey ? (
-                    <span className="normal-case text-accent">configurada ✓</span>
+                    <span className="normal-case text-text">configurada ✓</span>
                   ) : (
-                    <span className="normal-case text-muted">para FLUX.1-dev</span>
+                    <span className="normal-case text-text-muted">para FLUX.1-dev</span>
                   )}
                 </Label>
                 <Input
@@ -344,9 +344,9 @@ export default function SettingsPage() {
                 <Label>
                   Together API Key{" "}
                   {settings.hasTogetherKey ? (
-                    <span className="normal-case text-accent">configurada ✓</span>
+                    <span className="normal-case text-text">configurada ✓</span>
                   ) : (
-                    <span className="normal-case text-muted">para FLUX-schnell</span>
+                    <span className="normal-case text-text-muted">para FLUX-schnell</span>
                   )}
                 </Label>
                 <Input
@@ -363,13 +363,7 @@ export default function SettingsPage() {
         </div>
         )}
         {error && <ErrorBox message={error} />}
-        <div className="flex items-center gap-3">
-          <Button onClick={save} disabled={saving}>
-            {saving ? "Salvando..." : "Salvar configurações"}
-          </Button>
-          {saved && <span className="text-sm text-accent">Aplicado ✓</span>}
-        </div>
-      </Card>
+      </section>
 
       <div id="pagina-publica" className="scroll-mt-20">
         <AgencyPageCard origin={origin} />
@@ -385,11 +379,11 @@ export default function SettingsPage() {
         <InviteGenerator origin={origin} />
       </div>
 
-      <Card className="space-y-3">
+      <section className="space-y-3 border-t border-edge pt-5">
         <SectionTitle>Integrações</SectionTitle>
-        <p className="text-sm text-muted">
-          <span className="text-emerald-500">Ativo</span> = já funciona com sua credencial.{" "}
-          <span className="text-amber-500">Beta</span> = gancho pronto, falta plugar o token.{" "}
+        <p className="t3 text-text-muted">
+          <span className="text-positive">Ativo</span> = já funciona com sua credencial.{" "}
+          <span className="text-caution">Beta</span> = gancho pronto, falta plugar o token.{" "}
           Mensagens ficam em <strong>Mensagens → Conexões</strong>; dados e vendas de cada
           conta em <strong>Cliente → Vendas & Dados</strong>.
         </p>
@@ -399,17 +393,17 @@ export default function SettingsPage() {
             return (
               <div
                 key={integration.name}
-                className="flex items-center justify-between gap-2 rounded-md border border-edge bg-surface-2 px-3 py-2 text-sm"
+                className="flex items-center justify-between gap-2 rounded-md border border-edge bg-surface-sunken px-3 py-2 t3"
               >
                 <div className="min-w-0">
                   <p className="truncate font-medium">{integration.name}</p>
-                  <p className="truncate text-xs text-muted">
+                  <p className="truncate t5 text-text-muted">
                     {integration.area}
                     {integration.where && ` · ${integration.where}`}
                   </p>
                 </div>
                 <span
-                  className={`shrink-0 rounded-full border px-2 py-0.5 text-[10px] uppercase tracking-wide ${badge.cls}`}
+                  className={`shrink-0 rounded-xs border px-2 py-0.5 t5 ${badge.cls}`}
                 >
                   {badge.label}
                 </span>
@@ -417,7 +411,16 @@ export default function SettingsPage() {
             );
           })}
         </div>
-      </Card>
+      </section>
+
+      {/* §5.5 + §11.2: eram CINCO botões chapados na cor da marca nesta tela
+          (um por bloco). Agora o único primário é o Salvar da barra fixa; os
+          blocos com salvamento próprio ficam em secundário. */}
+      <ActionBar note={saved ? "Aplicado ✓" : "As alterações da marca valem para todos os convidados da agência."}>
+        <Button onClick={save} loading={saving} data-testid="settings-save">
+          Salvar configurações
+        </Button>
+      </ActionBar>
     </div>
   );
 }

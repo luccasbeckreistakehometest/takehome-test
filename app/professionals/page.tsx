@@ -31,24 +31,24 @@ export default function ProfessionalsPage() {
     <div className="space-y-6">
       <div className="flex flex-wrap items-center justify-between gap-3">
         <div>
-          <h1 className="font-[family-name:var(--font-display)] text-2xl font-bold tracking-tight">
+          <h1 className="d3">
             Profissionais
           </h1>
-          <p className="mt-1 text-sm text-muted">
+          <p className="t3 measure-lede mt-2 text-text-muted">
             Fotógrafos e designers parceiros — rankeados por elo com base em
             entregas reais e notas de qualidade da IA.
           </p>
         </div>
         <Link
           href="/professionals/new"
-          className="rounded-md bg-accent px-4 py-2 text-sm font-medium text-accent-ink transition-opacity hover:opacity-90"
+          className="rounded-md bg-brand-solid px-4 py-2 t3 font-medium text-brand-ink transition-opacity hover:opacity-90"
         >
           + Cadastrar profissional
         </Link>
       </div>
 
       {professionals.length === 0 ? (
-        <p className="py-12 text-center text-sm text-muted">
+        <p className="py-12 text-center t3 text-text-muted">
           Nenhum profissional ainda. Cadastre (ou envie o link de convite — veja
           Configurações) para começar a fazer match com demandas.
         </p>
@@ -56,13 +56,13 @@ export default function ProfessionalsPage() {
         <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
           {professionals.map((professional) => (
             <Link key={professional.id} href={`/professionals/${professional.id}`}>
-              <Card className="h-full transition-colors hover:border-accent/60">
+              <Card className="h-full transition-colors hover:border-edge">
                 <div className="flex items-start justify-between gap-2">
                   <div>
-                    <p className="font-[family-name:var(--font-display)] text-lg font-semibold">
+                    <p className="d4">
                       {professional.name}
                     </p>
-                    <p className="text-sm text-muted">
+                    <p className="t3 text-text-muted">
                       {ROLE_LABELS[professional.role]} · {professional.location}
                     </p>
                   </div>
@@ -76,7 +76,7 @@ export default function ProfessionalsPage() {
                     <Tag>+{professional.skills.length - 4}</Tag>
                   )}
                 </div>
-                <p className="mt-3 text-xs text-muted">
+                <p className="mt-3 t5 text-text-muted">
                   {professional.stats.completed} demandas concluídas · nota média{" "}
                   {professional.stats.avgScore ?? "—"}
                 </p>
