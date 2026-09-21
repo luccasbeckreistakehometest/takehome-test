@@ -38,7 +38,7 @@ export default function UserMenu({ name, role, showPlans = true }: { name: strin
         aria-expanded={open}
         aria-controls="user-menu"
         onClick={() => setOpen((v) => !v)}
-        className="flex items-center gap-1.5 rounded-md px-2 py-1.5 t5 transition-colors hover:bg-surface-sunken hover:text-text"
+        className="t5 flex min-h-10 items-center gap-1.5 rounded-sm px-2 py-1.5 transition-colors hover:bg-surface-sunken hover:text-text"
         data-testid="user-menu"
       >
         <Icon name="user" size={17} />

@@ -108,7 +108,7 @@ export default function InsightsPage() {
       header: "Cliente",
       width: "240px",
       cell: (c) => (
-        <Link href={`/clients/${c.id}`} className="flex items-center gap-2 font-medium underline-offset-4 hover:underline">
+        <Link href={`/clients/${c.id}`} className="hit-40 flex items-center gap-2 font-medium underline-offset-4 hover:underline">
           <span className="size-2 shrink-0 rounded-full" style={{ backgroundColor: TIER_COLORS[c.tier.tier] }} />
           <span className="truncate">{c.name}</span>
         </Link>

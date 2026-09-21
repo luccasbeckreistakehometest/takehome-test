@@ -97,7 +97,7 @@ export default function MessagesPage() {
           <button
             key={t.key}
             onClick={() => setTab(t.key)}
-            className={`flex items-center gap-1.5 whitespace-nowrap border-b-2 px-3 py-2 t3 transition-colors ${
+            className={`t3 flex min-h-10 items-center gap-1.5 whitespace-nowrap border-b-2 px-3 py-2 transition-colors ${
               tab === t.key
                 ? "border-edge text-text"
                 : "border-transparent text-text-muted hover:text-text"

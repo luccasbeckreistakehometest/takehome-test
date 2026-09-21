@@ -219,7 +219,7 @@ export default function CalendarPage() {
                           <span className={`t5 tnum ${isToday ? "font-medium text-text" : "text-text-muted"}`}>{parseKey(day.key).getDate()}</span>
                           <button
                             onClick={() => setAdding({ date: day.key })}
-                            className="t5 text-text-muted opacity-0 transition-opacity hover:text-text group-hover:opacity-100"
+                            className="t5 hit-40 grid size-5 place-items-center text-text-muted opacity-0 transition-opacity hover:text-text focus-visible:opacity-100 group-hover:opacity-100"
                             aria-label="Novo post neste dia"
                           >
                             +

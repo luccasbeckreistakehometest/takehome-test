@@ -48,7 +48,7 @@ export default function DifferentiatorsStrip() {
         <button
           type="button"
           onClick={() => setExpanded((v) => !v)}
-          className="t5 mt-3 font-medium underline-offset-4 hover:underline"
+          className="t5 mt-3 inline-flex min-h-10 items-center font-medium underline-offset-4 hover:underline"
           data-testid="differentiators-toggle"
         >
           {expanded ? "Mostrar menos" : `Ver todos os diferenciais (${STRIP_ITEMS.length})`}

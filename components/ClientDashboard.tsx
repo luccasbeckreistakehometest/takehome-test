@@ -101,7 +101,7 @@ export default function ClientDashboard({
         <button
           type="button"
           onClick={() => onNavigate(type)}
-          className="t3 block text-left font-medium underline-offset-4 hover:underline"
+          className="t3 hit-40 block text-left font-medium underline-offset-4 hover:underline"
         >
           {GENERATION_LABELS[type]}
         </button>
@@ -164,7 +164,7 @@ export default function ClientDashboard({
                   className="flex w-full items-baseline gap-3 py-2 text-left"
                 >
                   <span className="idx t5 w-6 shrink-0">{String(i + 1).padStart(2, "0")}</span>
-                  <span className="t3 block text-left font-medium underline-offset-4 hover:underline">{step.label}</span>
+                  <span className="t3 hit-40 block text-left font-medium underline-offset-4 hover:underline">{step.label}</span>
                   <span className="t5 text-text-muted">{step.hint}</span>
                 </button>
               </li>

@@ -208,7 +208,11 @@ function AppShell({
                       showPlans={!purchaseBlockReason(session) || session.role === "admin"}
                     />
                   ) : (
-                    <Link href="/login" className={`${buttonClass("primary")} ml-2`}>
+                    // §5.5: "Entrar" é utilitário de navegação, não a ação da
+                    // tela. Chapado na cor da marca, competia com o CTA da
+                    // landing e — antes do B3 — gritava mais alto que "Aceitar
+                    // proposta" na peça da agência.
+                    <Link href="/login" className={`${buttonClass("secondary")} ml-2`}>
                       Entrar
                     </Link>
                   )}

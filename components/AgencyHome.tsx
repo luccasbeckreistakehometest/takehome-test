@@ -400,7 +400,7 @@ function QueueRow({
       data-testid={testId}
       className="flex items-baseline gap-4 border-b border-rule transition-colors duration-[var(--dur-1)] hover:bg-surface-sunken"
     >
-      <Link href={href} className="flex min-w-0 flex-1 items-baseline gap-4 py-2.5">
+      <Link href={href} className="flex min-h-10 min-w-0 flex-1 items-baseline gap-4 py-2.5">
         <span className={`t6 w-32 shrink-0 ${toneClass}`}>{kind}</span>
         <span className="t3 min-w-0 flex-1 truncate font-medium">{subject}</span>
         {meta && <span className="t5 hidden min-w-0 flex-1 truncate text-text-muted md:block">{meta}</span>}
@@ -409,7 +409,7 @@ function QueueRow({
         <button
           type="button"
           onClick={action.onClick}
-          className="t5 shrink-0 py-2.5 pr-1 font-medium underline-offset-4 hover:underline"
+          className="t5 inline-flex min-h-10 shrink-0 items-center pr-1 font-medium underline-offset-4 hover:underline"
         >
           {action.label}
         </button>
