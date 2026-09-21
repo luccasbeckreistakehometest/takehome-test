@@ -13,9 +13,15 @@ const SUGGESTIONS = [
   "Agenda um post no Instagram do kaisan para sábado 9h",
 ];
 
-// Assistente flutuante global: fala em linguagem natural e executa ações
-// reais na plataforma (demandas, reuniões, posts). A conversa persiste
-// entre páginas (sessionStorage) enquanto o navegador estiver aberto.
+// Assistente global: fala em linguagem natural e executa ações reais na
+// plataforma (demandas, reuniões, posts). A conversa persiste entre páginas
+// (sessionStorage) enquanto o navegador estiver aberto.
+//
+// O gatilho NÃO é mais um botão flutuante: medido em 1440 e em 390, o balão
+// parado no canto cobria uma linha de dado, o botão "Enviar agora" e um link
+// do rodapé em toda tela do produto. Ele virou um utilitário da barra
+// superior (§11.3), ao lado dos outros; o painel só aparece depois do clique,
+// que é quando cobrir conteúdo é o combinado.
 // Rotas em que o painel NUNCA aparece: são a peça que a agência mostra ao
 // cliente dela (relatório, proposta, fatura, página pública, aprovação) ou a
 // versão de impressão. Um botão flutuante da ferramenta em cima do documento
@@ -26,6 +32,12 @@ export default function AssistantWidget() {
   const pathname = usePathname() ?? "/";
   const [open, setOpen] = useState(false);
   const [closing, setClosing] = useState(false);
+
+  useEffect(() => {
+    const onOpen = () => setOpen(true);
+    window.addEventListener("ah:assistant-open", onOpen);
+    return () => window.removeEventListener("ah:assistant-open", onOpen);
+  }, []);
 
   function close() {
     setClosing(true);
@@ -83,19 +95,7 @@ export default function AssistantWidget() {
 
   if (DOC_ROUTES.some((re) => re.test(pathname))) return null;
 
-  if (!open) {
-    return (
-      <button
-        onClick={() => setOpen(true)}
-        aria-label="Abrir assistente"
-        className="no-print t5 fixed bottom-5 right-5 z-50 inline-flex h-10 items-center gap-2 rounded-sm border border-edge bg-surface px-3 font-medium shadow-e1 transition-colors duration-[var(--dur-1)] hover:bg-surface-sunken"
-        title="Assistente — fale o que precisa e ele executa"
-      >
-        <Icon name="message" size={16} />
-        Assistente
-      </button>
-    );
-  }
+  if (!open) return null;
 
   return (
     <div className={`no-print fixed bottom-5 right-5 z-50 flex h-[34rem] w-[24rem] max-w-[calc(100vw-2.5rem)] flex-col overflow-hidden rounded-md border border-edge bg-surface shadow-e2 ${
@@ -202,5 +202,21 @@ export default function AssistantWidget() {
         </div>
       </div>
     </div>
+  );
+}
+
+/** Gatilho do assistente na barra superior — onde moram os utilitários. */
+export function AssistantToggle() {
+  return (
+    <button
+      type="button"
+      aria-label="Abrir assistente"
+      data-testid="assistant-open"
+      title="Assistente — fale o que precisa e ele executa"
+      onClick={() => window.dispatchEvent(new Event("ah:assistant-open"))}
+      className="grid size-9 shrink-0 place-items-center rounded-sm text-text-muted transition-colors hover:bg-surface-sunken hover:text-text"
+    >
+      <Icon name="message" size={20} />
+    </button>
   );
 }

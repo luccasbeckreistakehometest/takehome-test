@@ -1010,6 +1010,7 @@ export function Table<R>({
   loading = false,
   total,
   minWidth = 640,
+  rowAttrs,
 }: {
   columns: Array<Column<R>>;
   rows: R[];
@@ -1020,6 +1021,8 @@ export function Table<R>({
   total?: ReactNode[];
   /** Abaixo disto a tabela ROLA; ela nunca se espreme até truncar o cabeçalho. */
   minWidth?: number;
+  /** Atributos por linha — estado (§5.3) e ganchos de teste, nada de estilo. */
+  rowAttrs?: (row: R) => React.HTMLAttributes<HTMLTableRowElement> & Record<string, unknown>;
 }) {
   if (!loading && rows.length === 0 && empty) return <>{empty}</>;
   return (
@@ -1066,8 +1069,15 @@ export function Table<R>({
                   ))}
                 </tr>
               ))
-            : rows.map((r) => (
-                <tr key={rowKey(r)} className="group transition-colors duration-[var(--dur-1)] hover:bg-surface-sunken">
+            : rows.map((r) => {
+                const extra = rowAttrs?.(r) ?? {};
+                const { className: rowClass, ...attrs } = extra as { className?: string };
+                return (
+                <tr
+                  key={rowKey(r)}
+                  {...attrs}
+                  className={cx("group transition-colors duration-[var(--dur-1)] hover:bg-surface-sunken", rowClass)}
+                >
                   {columns.map((c, i) => (
                     <td
                       key={c.key}
@@ -1084,7 +1094,8 @@ export function Table<R>({
                     </td>
                   ))}
                 </tr>
-              ))}
+                );
+              })}
         </tbody>
         {total && (
           <tfoot>
@@ -1164,6 +1175,26 @@ export function EmptyState({
   );
 }
 
+/**
+ * Barra de ação fixa de formulário longo (§11.2). Um `primary`, o aviso do que
+ * está pendente e nada de caçar o Salvar a mil e quatrocentos pixels de
+ * rolagem do campo que ele salva. O espaçador irmão reserva a altura para que
+ * a barra não cubra a última linha do formulário (o defeito que o FAB tinha).
+ */
+export function ActionBar({ note, children }: { note?: ReactNode; children: ReactNode }) {
+  return (
+    <>
+      <div aria-hidden className="h-16" />
+      <div className="no-print fixed inset-x-0 bottom-0 z-30 border-t border-edge bg-canvas shadow-e3">
+        <div className="mx-auto flex max-w-(--container-tool) flex-wrap items-center justify-between gap-3 px-4 py-2.5">
+          <p className="t5 min-w-0 text-text-muted">{note}</p>
+          <div className="flex items-center gap-2">{children}</div>
+        </div>
+      </div>
+    </>
+  );
+}
+
 export function CopyButton({ text, label = "Copiar" }: { text: string; label?: string }) {
   const [copied, setCopied] = useState(false);
   return (
@@ -1193,14 +1224,15 @@ export function Density({
   value,
   children,
   className = "",
+  ...rest
 }: {
   value: "comfortable" | "compact";
   children: ReactNode;
   className?: string;
-}) {
+} & Omit<React.HTMLAttributes<HTMLDivElement>, "children" | "className">) {
   return (
     <DensityCtx.Provider value={value}>
-      <div data-density={value} className={className}>
+      <div data-density={value} className={className} {...rest}>
         {children}
       </div>
     </DensityCtx.Provider>

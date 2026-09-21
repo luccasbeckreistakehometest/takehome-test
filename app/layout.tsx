@@ -14,7 +14,7 @@ import SiteFooter from "@/components/SiteFooter";
 import { appBaseUrl } from "@/lib/legal";
 import JobsIndicator from "@/components/JobsIndicator";
 import GlobalSearch from "@/components/GlobalSearch";
-import AssistantWidget from "@/components/AssistantWidget";
+import AssistantWidget, { AssistantToggle } from "@/components/AssistantWidget";
 import ThemeToggle from "@/components/ThemeToggle";
 import Tour from "@/components/Tour";
 import { tourKind } from "@/lib/tour-steps";
@@ -179,6 +179,7 @@ function AppShell({
                 </Link>
 
                 <div className="ml-auto flex items-center gap-0.5">
+                  {isAgency && <AssistantToggle />}
                   <ThemeToggle />
                   {session && session.role !== "admin" && (
                     <ActivityBell

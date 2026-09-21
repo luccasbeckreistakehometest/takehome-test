@@ -10,7 +10,8 @@ import {
   type Project,
   type ProjectStatus,
 } from "@/lib/marketplace-types";
-import { ErrorBox, Select, Spinner, Tag } from "@/components/ui";
+import { Density, EmptyState, ErrorBox, Field, Select, Skeleton, Spinner, Tag } from "@/components/ui";
+import { buttonClass } from "@/lib/button-class";
 
 // Kanban de produção: todas as demandas de todos os clientes por status.
 // Arraste os cards entre as colunas para mudar o status (HTML5 drag & drop),
@@ -84,41 +85,55 @@ export default function ProductionPage() {
     [refetch]
   );
 
-  if (!projects) {
-    return (
-      <div className="grid place-items-center py-24">
-        <Spinner label="Carregando produção..." />
-      </div>
-    );
-  }
-
   return (
-    <div className="space-y-6">
+    // Densidade `compact` (§4.4): o kanban é ferramenta.
+    <Density value="compact" className="space-y-6" data-testid="production-page">
       <div className="flex flex-wrap items-end justify-between gap-4 border-b border-edge pb-5">
         <div>
-          <h1 className="d3">
-            Produção
-          </h1>
-          <p className="mt-1  t3 text-text-muted">Arraste os cards entre as colunas para mudar a etapa do pipeline.</p>
+          <h1 className="d3">Produção</h1>
+          <p className="t3 measure-lede mt-2 text-text-muted">Arraste os cards entre as colunas para mudar a etapa do pipeline.</p>
         </div>
-        <div className="w-full sm:w-64">
-          <label className="t6 mb-1 block text-text-muted">Filtrar por cliente</label>
-          <Select
-            value={clientFilter}
-            onChange={(event) => setClientFilter(event.target.value)}
+        <div className="flex w-full flex-wrap items-end gap-3 sm:w-auto">
+          <Field label="Filtrar por cliente">
+            {(field) => (
+              <Select {...field} value={clientFilter} onChange={(event) => setClientFilter(event.target.value)} className="sm:w-56">
+                <option value="all">Todos os clientes</option>
+                {clientOptions.map((client) => (
+                  <option key={client.id} value={client.id}>
+                    {client.name}
+                  </option>
+                ))}
+              </Select>
+            )}
+          </Field>
+          {/* O único elemento expressivo desta tela (§5.5): o board não tinha
+              nenhum — e produção existe para PÔR trabalho no board. */}
+          <Link
+            href={clientFilter === "all" ? "/clients" : `/clients/${clientFilter}?tab=projects`}
+            className={buttonClass("primary")}
+            data-testid="production-new"
+            title={clientFilter === "all" ? "Escolha o cliente da demanda" : undefined}
           >
-            <option value="all">Todos os clientes</option>
-            {clientOptions.map((client) => (
-              <option key={client.id} value={client.id}>
-                {client.name}
-              </option>
-            ))}
-          </Select>
+            Nova demanda
+          </Link>
         </div>
       </div>
 
       {error && <ErrorBox message={error} />}
 
+      {projects === null ? (
+        // Esqueleto com A MESMA caixa do board — não um spinner no vazio (§11.4).
+        <div className="flex gap-3 overflow-x-auto pb-4" aria-busy="true" aria-label="Carregando o board">
+          {PROJECT_STATUSES.map((status) => (
+            <div key={status} className="w-64 shrink-0 space-y-2 p-2">
+              <Skeleton className="h-3 w-24" />
+              {[0, 1, 2].map((i) => (
+                <Skeleton key={i} className="h-20 w-full rounded-sm" />
+              ))}
+            </div>
+          ))}
+        </div>
+      ) : (
       <div className="flex gap-3 overflow-x-auto pb-4">
         {PROJECT_STATUSES.map((status) => {
           const column = visible.filter((project) => project.status === status);
@@ -170,7 +185,7 @@ export default function ProductionPage() {
                         setDraggingId(null);
                         setDragOverStatus(null);
                       }}
-                      className={`block cursor-grab rounded-lg border border-edge bg-surface p-3 t3 transition-colors hover:border-edge active:cursor-grabbing ${
+                      className={`block cursor-grab rounded-sm border border-edge bg-surface p-3 t3 transition-colors hover:border-edge active:cursor-grabbing ${
                         isDragging ? "opacity-40" : ""
                       }`}
                     >
@@ -192,8 +207,10 @@ export default function ProductionPage() {
                   );
                 })}
                 {column.length === 0 && (
-                  <p className="rounded-lg border border-dashed border-edge p-3 text-center t5 text-text-muted">
-                    {isOver ? "soltar aqui" : "vazio"}
+                  // §9.4: o estado vazio diz o que VAI aparecer aqui. Era a
+                  // palavra "vazio".
+                  <p className="grid min-h-20 place-items-center rounded-sm border border-dashed border-rule p-3 text-center t5 text-text-muted">
+                    {isOver ? "Solte aqui" : `Nenhuma demanda em ${PROJECT_STATUS_LABELS[status].toLowerCase()}`}
                   </p>
                 )}
               </div>
@@ -201,6 +218,20 @@ export default function ProductionPage() {
           );
         })}
       </div>
-    </div>
+      )}
+
+      {projects !== null && projects.length === 0 && (
+        <EmptyState
+          icon="layers"
+          title="As demandas de todos os clientes aparecem aqui, uma coluna por etapa."
+          condition="A primeira entra pela aba Demandas de um cliente."
+          action={
+            <Link href="/clients" className={buttonClass("secondary")}>
+              Escolher um cliente
+            </Link>
+          }
+        />
+      )}
+    </Density>
   );
 }
