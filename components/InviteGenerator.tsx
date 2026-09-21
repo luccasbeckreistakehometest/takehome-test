@@ -95,7 +95,7 @@ export default function InviteGenerator({ origin }: { origin: string }) {
             className="w-20 rounded-md border border-edge bg-surface-sunken px-3 py-2 t3 outline-none focus:border-edge"
           />
         </div>
-        <Button onClick={create} disabled={creating}>
+        <Button variant="secondary" onClick={create} disabled={creating}>
           {creating ? "Gerando..." : "Gerar link"}
         </Button>
       </div>

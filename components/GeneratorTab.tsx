@@ -159,7 +159,7 @@ export default function GeneratorTab({
                 type="checkbox"
                 checked={refineFromSelected}
                 onChange={(e) => setRefineFromSelected(e.target.checked)}
-                className="accent-[var(--accent)]"
+                className="accent-[var(--brand-solid)]"
               />
               Refinar a partir da versão selecionada
             </label>

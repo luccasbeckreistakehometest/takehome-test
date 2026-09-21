@@ -680,6 +680,21 @@ hr {
   letter-spacing: 0.02em;
 }
 
+/* Caixa e rádio nativos (§11.2 / M4): 18px e `--brand-solid` — a cor DERIVADA
+   com piso de 4,5:1 —, nunca o hex cru da agência. A 13px do sistema não havia
+   alvo de toque nenhum; o invólucro de 40px é do <Checkbox>/<Radio>. */
+input[type="checkbox"],
+input[type="radio"] {
+  width: 18px;
+  height: 18px;
+  accent-color: var(--brand-solid);
+  cursor: pointer;
+}
+input[type="checkbox"]:disabled,
+input[type="radio"]:disabled {
+  cursor: not-allowed;
+}
+
 /* Régua decorativa — nunca o único recurso de hierarquia (§5.2). */
 .rule-t {
   box-shadow: inset 0 1px 0 var(--rule);

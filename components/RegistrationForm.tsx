@@ -242,7 +242,7 @@ export default function RegistrationForm({
         <input
           id="reg-terms"
           type="checkbox"
-          className="mt-1 size-4 accent-[var(--accent)]"
+          className="mt-1 size-4 accent-[var(--brand-solid)]"
           checked={acceptTerms}
           onChange={(e) => setAcceptTerms(e.target.checked)}
           required

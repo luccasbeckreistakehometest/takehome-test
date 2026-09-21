@@ -4,7 +4,7 @@ import { useCallback, useEffect, useState } from "react";
 import Link from "next/link";
 import { useSearchParams } from "next/navigation";
 import { api } from "@/lib/api";
-import { Button, Card, ErrorBox, Input, SectionTitle, Skeleton, Tag } from "@/components/ui";
+import { Button, Card, ChipGroup, ErrorBox, Input, SectionTitle, Skeleton } from "@/components/ui";
 import { Icon } from "@/components/icons";
 import { fmtMoney, useUiLang } from "@/lib/i18n";
 
@@ -252,19 +252,12 @@ export default function PlansView() {
           </p>
         </div>
         {!data.purchaseBlocked && (
-        <div className="flex flex-wrap gap-1 rounded-lg border border-edge bg-surface-sunken p-1" role="group" aria-label="Período de pagamento">
-          {Object.entries(data.periods).map(([key, p]) => (
-            <button
-              key={key}
-              type="button"
-              aria-pressed={period === key}
-              onClick={() => setPeriod(key)}
-              className={`rounded-md px-3 py-1.5 t5 transition-colors ${period === key ? "bg-text text-canvas" : "text-text-muted hover:text-text"}`}
-            >
-              {p.label}
-            </button>
-          ))}
-        </div>
+        <ChipGroup
+          label="Período de pagamento"
+          value={[period]}
+          onChange={(v) => setPeriod(v[v.length - 1] ?? period)}
+          options={Object.entries(data.periods).map(([key, p]) => ({ value: key, label: p.label }))}
+        />
         )}
       </div>
 
@@ -353,44 +346,65 @@ export default function PlansView() {
 
       {!data.purchaseBlocked && (
       <>
-      <div className="grid gap-4 md:grid-cols-3">
+      {/* §5.5 + §9.2: era uma grade de quatro cartões iguais, com preço em
+          Fraunces (figura proporcional, coluna que não alinha) e QUATRO
+          primários laranja. Agora é tabela editorial em coluna — a mesma
+          `.plan-col` da landing —, preço em Archivo tabular e UM primário: o
+          plano recomendado. O resto é secundário. */}
+      <div
+        className="grid border-t border-edge sm:grid-cols-2"
+        style={{ ["--plan-cols" as string]: data.plans?.length ?? 3 }}
+        data-testid="plan-columns"
+      >
         {data.plans?.map((plan) => {
           const isCurrent = current?.id === plan.id;
           const free = plan.monthlyPrice === 0;
+          const showSubscribe = !free && sub?.available && !(isCurrent && sub.recurring && !sub.cancelAtPeriodEnd);
+          // O único primário da tela.
+          const heroAction = plan.recommended && !isCurrent;
           return (
-            <Card key={plan.id} hover className={`relative flex flex-col ${plan.recommended ? "border-edge" : ""}`}>
-              {plan.recommended && (
-                <span className="absolute -top-2.5 left-4 rounded-xs bg-text px-2 py-0.5 text-[10px] font-medium text-canvas">
-                  RECOMENDADO
-                </span>
-              )}
-              <p className="t5 font-medium text-text-muted">{plan.name}</p>
-              <p className="d3 mt-2">
-                {free ? "Grátis" : brl(priceFor(plan.monthlyPrice))}
-                {!free && (
-                  <span className="t3 font-normal text-text-muted">
-                    /{periodInfo.months === 1 ? "mês" : `${periodInfo.months} meses`}
-                  </span>
+            <div key={plan.id} className="plan-col flex flex-col border-b border-rule py-7">
+              <div className="flex items-baseline justify-between gap-2">
+                <p className="t5 font-medium">{plan.name}</p>
+                {plan.recommended && <p className="t6 text-text-muted">recomendado</p>}
+                {isCurrent && !plan.recommended && <p className="t6 text-text-muted">plano atual</p>}
+              </div>
+              <p className="n1 mt-4">
+                {free ? (
+                  "Grátis"
+                ) : (
+                  <>
+                    {brl(priceFor(plan.monthlyPrice))}
+                    <span className="t5 font-normal text-text-muted">
+                      /{periodInfo.months === 1 ? "mês" : `${periodInfo.months} meses`}
+                    </span>
+                  </>
                 )}
               </p>
-              <div className="mt-1">
-                <Tag>{plan.unlimited ? "IA sem cota (uso justo)" : QUALITY_LABEL[plan.quality]}</Tag>
-              </div>
-              <ul className="mt-4 flex-1 space-y-1.5 t3 text-text-muted">
+              <p className="t5 mt-2 border-t border-rule pt-2 text-text-muted">
+                {plan.unlimited ? "IA sem cota (uso justo)" : QUALITY_LABEL[plan.quality]}
+              </p>
+              <ul className="mt-5 flex-1">
                 {plan.highlights.map((h) => (
-                  <li key={h} className="flex items-start gap-1.5">
-                    <Icon name="check" size={14} className="mt-0.5 shrink-0 text-text" /> {h}
+                  <li key={h} className="t4 measure-prose border-b border-rule py-2 text-text-muted">
+                    {h}
                   </li>
                 ))}
               </ul>
-              {!free && sub?.available && !(isCurrent && sub.recurring && !sub.cancelAtPeriodEnd) && (
-                <Button className="mt-4 w-full" disabled={busy} onClick={() => subscribe(plan.id)} data-testid={`subscribe-${plan.id}`}>
+              {showSubscribe && (
+                <Button
+                  className="mt-6 w-full"
+                  variant={heroAction ? "primary" : "secondary"}
+                  disabled={busy}
+                  onClick={() => subscribe(plan.id)}
+                  data-testid={`subscribe-${plan.id}`}
+                >
                   {periodInfo.months === 1 ? "Assinar no cartão · mensal" : `Assinar no cartão · a cada ${periodInfo.months} meses`}
                 </Button>
               )}
               <Button
-                className={`${!free && sub?.available ? "mt-2" : "mt-4"} w-full`}
-                variant={(isCurrent && free) || (!free && sub?.available) ? "ghost" : "primary"}
+                className={showSubscribe ? "mt-2 w-full" : "mt-6 w-full"}
+                variant={heroAction && !showSubscribe ? "primary" : "secondary"}
                 disabled={busy || (isCurrent && free)}
                 onClick={() => (free ? chooseFree(plan.id) : checkout({ kind: "plan", planId: plan.id, period }))}
                 data-testid={`plan-${plan.id}`}
@@ -405,7 +419,7 @@ export default function PlansView() {
                       ? `Pagar mais ${periodInfo.label.split(" ")[0].toLowerCase()}`
                       : "Pagar e ativar"}
               </Button>
-            </Card>
+            </div>
           );
         })}
       </div>
@@ -419,16 +433,18 @@ export default function PlansView() {
         <p className="mb-3 t3 text-text-muted">
           Cada ação de IA consome coins; ações que falham não são cobradas. Coins comprados não expiram.
         </p>
-        <div className="grid gap-x-8 gap-y-5 border-y border-edge py-4 sm:grid-cols-3">
+        {/* §9.2: contagem de coins e preço em figura tabular, alinhados pelo
+            dígito — estavam em display proporcional. */}
+        <div className="grid border-t border-edge sm:grid-cols-3" style={{ ["--plan-cols" as string]: data.packs.length }}>
           {data.packs.map((pack) => (
-            <div key={pack.id} className="rounded-lg border border-edge bg-surface-sunken p-4 text-center">
-              <p className="d3 text-text">
+            <div key={pack.id} className="plan-col flex flex-col border-b border-rule py-5">
+              <p className="n1">
                 {pack.coins}
-                {pack.bonus > 0 && <span className="t3 text-positive"> +{pack.bonus}</span>}
+                {pack.bonus > 0 && <span className="t3 font-normal text-positive"> +{pack.bonus}</span>}
               </p>
-              <p className="t5 text-text-muted">coins{pack.bonus > 0 && " (com bônus)"}</p>
-              <p className="mt-2 d4 font-semibold">{brl(pack.price)}</p>
-              <Button className="mt-2 w-full" variant="ghost" disabled={busy} onClick={() => checkout({ kind: "coins", packId: pack.id })}>
+              <p className="t5 mt-1 text-text-muted">coins{pack.bonus > 0 && " (com bônus)"}</p>
+              <p className="n3 mt-3 border-t border-rule pt-3">{brl(pack.price)}</p>
+              <Button className="mt-3 w-full" variant="secondary" disabled={busy} onClick={() => checkout({ kind: "coins", packId: pack.id })}>
                 Comprar
               </Button>
             </div>

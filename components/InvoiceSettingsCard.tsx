@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { api } from "@/lib/api";
-import { Button, Card, ErrorBox, Input, Label, SectionTitle } from "./ui";
+import { Button, Card, ErrorBox, Field, FormGrid, Input, SectionTitle } from "./ui";
 
 type Settings = { pixKey: string; beneficiaryName: string; city: string; dueDay: number; lateNote: string };
 
@@ -56,32 +56,39 @@ export default function InvoiceSettingsCard() {
           As faturas dos clientes saem com Pix copia e cola e QR da sua chave. O pagamento cai direto na sua conta — a Marqa não passa o dinheiro nem cobra taxa. A confirmação do pagamento é sua.
         </p>
       </div>
-      <div className="grid gap-3 sm:grid-cols-2">
-        <div>
-          <Label htmlFor="pix-key">Chave Pix</Label>
-          <Input id="pix-key" value={form.pixKey} onChange={(e) => set({ pixKey: e.target.value })} placeholder="CNPJ, CPF, e-mail, celular ou chave aleatória" data-testid="pix-key" />
-        </div>
-        <div>
-          <Label htmlFor="pix-name">Nome de quem recebe</Label>
-          <Input id="pix-name" value={form.beneficiaryName} maxLength={60} onChange={(e) => set({ beneficiaryName: e.target.value })} placeholder="Como aparece no banco" data-testid="pix-name" />
-        </div>
-        <div>
-          <Label htmlFor="pix-city">Cidade</Label>
-          <Input id="pix-city" value={form.city} maxLength={40} onChange={(e) => set({ city: e.target.value })} placeholder="Ex.: São Paulo" data-testid="pix-city" />
-        </div>
-        <div>
-          <Label htmlFor="pix-due">Dia do vencimento</Label>
-          <Input id="pix-due" type="number" min={1} max={28} value={form.dueDay} onChange={(e) => set({ dueDay: Number(e.target.value) })} />
-        </div>
-        <div className="sm:col-span-2">
-          <Label htmlFor="pix-late">Aviso de atraso (opcional)</Label>
-          <Input id="pix-late" value={form.lateNote} maxLength={200} onChange={(e) => set({ lateNote: e.target.value })} placeholder="Ex.: após o vencimento, multa de 2% conforme contrato" />
-        </div>
-      </div>
+      {/* §11.2: a largura comunica o conteúdo esperado, e a instrução sai do
+          placeholder. "Dia do vencimento" tinha 337px para dois dígitos. */}
+      <FormGrid>
+        <Field label="Chave Pix" hint="CNPJ, CPF, e-mail, celular ou chave aleatória." required>
+          {(field) => <Input {...field} value={form.pixKey} onChange={(e) => set({ pixKey: e.target.value })} data-testid="pix-key" />}
+        </Field>
+        <Field label="Nome de quem recebe" hint="Como aparece no banco." required width="name">
+          {(field) => (
+            <Input {...field} value={form.beneficiaryName} maxLength={60} onChange={(e) => set({ beneficiaryName: e.target.value })} data-testid="pix-name" />
+          )}
+        </Field>
+        <Field label="Cidade" required width="name">
+          {(field) => <Input {...field} value={form.city} maxLength={40} onChange={(e) => set({ city: e.target.value })} data-testid="pix-city" />}
+        </Field>
+        <Field label="Dia do vencimento" hint="De 1 a 28." width="pct">
+          {(field) => (
+            <Input {...field} type="number" min={1} max={28} className="tnum" value={form.dueDay} onChange={(e) => set({ dueDay: Number(e.target.value) })} />
+          )}
+        </Field>
+        <Field
+          label="Aviso de atraso"
+          hint="Opcional — sai impresso na fatura."
+          counter={`${form.lateNote.length}/200`}
+        >
+          {(field) => (
+            <Input {...field} value={form.lateNote} maxLength={200} onChange={(e) => set({ lateNote: e.target.value })} placeholder="Após o vencimento, multa de 2% conforme contrato" />
+          )}
+        </Field>
+      </FormGrid>
       {error && <ErrorBox message={error} />}
       <div className="flex flex-wrap items-center gap-3">
-        <Button onClick={save} disabled={saving} data-testid="pix-save">
-          {saving ? "Salvando..." : "Salvar recebimentos"}
+        <Button variant="secondary" onClick={save} loading={saving} data-testid="pix-save">
+          Salvar recebimentos
         </Button>
         {saved && <span className="t3 text-text">Salvo ✓</span>}
         <span className={`t5 ${ready ? "text-positive" : "text-text-muted"}`}>{ready ? "Pronto para enviar faturas" : "Faltam dados para enviar faturas"}</span>

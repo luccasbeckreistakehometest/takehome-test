@@ -276,7 +276,7 @@ export default function ClientForm({
               type="checkbox"
               checked={form.selfServe}
               onChange={(e) => set("selfServe", e.target.checked)}
-              className="mt-0.5 accent-[var(--accent)]"
+              className="mt-0.5 accent-[var(--brand-solid)]"
             />
             <span>
               <span className="font-medium">Quero gerenciar minha conta eu mesmo(a)</span>

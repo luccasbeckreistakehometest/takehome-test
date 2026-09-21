@@ -59,7 +59,7 @@ export default function ApprovalRulesCard() {
           type="checkbox"
           checked={rules.autoPostDraft}
           onChange={(e) => set({ autoPostDraft: e.target.checked })}
-          className="mt-0.5 accent-[var(--accent)]"
+          className="mt-0.5 accent-[var(--brand-solid)]"
           data-testid="rule-auto-post"
         />
         <span>
@@ -96,7 +96,7 @@ export default function ApprovalRulesCard() {
           type="checkbox"
           checked={rules.notifyWhatsapp}
           onChange={(e) => set({ notifyWhatsapp: e.target.checked })}
-          className="mt-0.5 accent-[var(--accent)]"
+          className="mt-0.5 accent-[var(--brand-solid)]"
           data-testid="rule-notify-whatsapp"
         />
         <span>
@@ -122,7 +122,7 @@ export default function ApprovalRulesCard() {
       </div>
       {error && <ErrorBox message={error} />}
       <div className="flex items-center gap-3">
-        <Button onClick={save} disabled={saving} data-testid="rules-save">
+        <Button variant="secondary" onClick={save} disabled={saving} data-testid="rules-save">
           {saving ? "Salvando..." : "Salvar regras"}
         </Button>
         {saved && <span className="t3 text-text">Aplicado ✓</span>}

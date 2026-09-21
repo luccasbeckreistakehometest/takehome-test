@@ -99,7 +99,7 @@ export default function AgencyPageCard({ origin }: { origin: string }) {
           </div>
         </div>
         <label className="flex items-center gap-2 rounded-md border border-edge bg-surface-sunken px-3 py-2 t3">
-          <input type="checkbox" checked={config.published} onChange={(e) => setConfig({ ...config, published: e.target.checked })} className="accent-[var(--accent)]" data-testid="page-published" />
+          <input type="checkbox" checked={config.published} onChange={(e) => setConfig({ ...config, published: e.target.checked })} className="accent-[var(--brand-solid)]" data-testid="page-published" />
           Publicada
         </label>
       </div>
@@ -175,7 +175,7 @@ export default function AgencyPageCard({ origin }: { origin: string }) {
             <div className="max-h-56 space-y-1 overflow-y-auto">
               {data.portfolio.map((item) => (
                 <label key={item.id} className="flex items-center gap-2 rounded-md border border-edge bg-surface-sunken px-2.5 py-1.5 t3" data-testid="portfolio-option">
-                  <input type="checkbox" checked={portfolioIds.includes(item.id)} onChange={() => setPortfolioIds((l) => toggle(l, item.id))} className="accent-[var(--accent)]" />
+                  <input type="checkbox" checked={portfolioIds.includes(item.id)} onChange={() => setPortfolioIds((l) => toggle(l, item.id))} className="accent-[var(--brand-solid)]" />
                   {/* eslint-disable-next-line @next/next/no-img-element */}
                   <img src={`/api/files/${item.id}`} alt="" className="size-8 rounded object-cover" />
                   <span className="min-w-0 flex-1 truncate">
@@ -189,14 +189,14 @@ export default function AgencyPageCard({ origin }: { origin: string }) {
         <div>
           <p className="t6 text-text-muted">Clientes na página</p>
           <label className="mb-2 flex items-center gap-2 t5 text-text-muted">
-            <input type="checkbox" checked={config.showClients} onChange={(e) => setConfig({ ...config, showClients: e.target.checked })} className="accent-[var(--accent)]" />
+            <input type="checkbox" checked={config.showClients} onChange={(e) => setConfig({ ...config, showClients: e.target.checked })} className="accent-[var(--brand-solid)]" />
             Mostrar a faixa “quem confia na gente”
           </label>
           <p className="mb-2 t5 text-text-muted">Marque apenas quem consentiu em aparecer. O logo vem dos arquivos de identidade visual do cliente; sem logo, mostra o nome.</p>
           <div className="max-h-56 space-y-1 overflow-y-auto">
             {data.clients.map((client) => (
               <label key={client.id} className="flex items-center gap-2 rounded-md border border-edge bg-surface-sunken px-2.5 py-1.5 t3" data-testid="showcase-option">
-                <input type="checkbox" checked={clientIds.includes(client.id)} onChange={() => setClientIds((l) => toggle(l, client.id))} className="accent-[var(--accent)]" />
+                <input type="checkbox" checked={clientIds.includes(client.id)} onChange={() => setClientIds((l) => toggle(l, client.id))} className="accent-[var(--brand-solid)]" />
                 <span className="min-w-0 flex-1 truncate">{client.name}</span>
                 {client.hasLogo && <span className="t6 text-text">logo</span>}
               </label>
@@ -207,7 +207,7 @@ export default function AgencyPageCard({ origin }: { origin: string }) {
 
       {error && <ErrorBox message={error} />}
       <div className="flex items-center gap-3">
-        <Button onClick={save} disabled={saving} data-testid="page-save">
+        <Button variant="secondary" onClick={save} disabled={saving} data-testid="page-save">
           {saving ? "Salvando..." : "Salvar página"}
         </Button>
         {saved && <span className="t3 text-text">Aplicado ✓</span>}

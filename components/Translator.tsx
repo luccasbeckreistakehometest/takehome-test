@@ -88,8 +88,9 @@ export function LangToggle() {
         localStorage.setItem("uiLang", current === "en" ? "pt" : "en");
         window.location.reload();
       }}
-      className="rounded-md border border-edge bg-surface-sunken px-2 py-1 t5 font-semibold text-text-muted transition-colors hover:border-edge hover:text-text"
+      className="t5 grid h-9 min-w-10 shrink-0 place-items-center rounded-sm px-2 font-medium text-text-muted transition-colors hover:bg-surface-sunken hover:text-text"
       title="Idioma da interface / UI language"
+      aria-label="Trocar o idioma da interface — português ou inglês"
     >
       PT/EN
     </button>

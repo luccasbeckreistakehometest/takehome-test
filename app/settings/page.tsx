@@ -11,7 +11,7 @@ type SettingsView = AgencySettings & {
   hasTogetherKey?: boolean;
   hasHfKey?: boolean;
 };
-import { Button, ErrorBox, Input, Label, PageHeader, SectionTitle, Textarea } from "@/components/ui";
+import { ActionBar, Button, Checkbox, ErrorBox, Field, FormGrid, Input, Label, PageHeader, SectionTitle, Select, Textarea } from "@/components/ui";
 import InviteGenerator from "@/components/InviteGenerator";
 import ApprovalRulesCard from "@/components/ApprovalRulesCard";
 import AgencyPageCard from "@/components/AgencyPageCard";
@@ -85,39 +85,39 @@ export default function SettingsPage() {
 
       <section className="space-y-4">
         <SectionTitle>Whitelabel — a plataforma com a sua marca</SectionTitle>
-        <div className="grid gap-4 sm:grid-cols-3">
-          <div>
-            <Label>Nome da agência</Label>
-            <Input
-              value={settings.agencyName}
-              onChange={(e) => setSettings({ ...settings, agencyName: e.target.value })}
-            />
-          </div>
-          <div>
-            <Label>Tagline (rodapé)</Label>
-            <Input
-              value={settings.tagline}
-              onChange={(e) => setSettings({ ...settings, tagline: e.target.value })}
-            />
-          </div>
-          <div>
-            <Label>Cor de destaque</Label>
-            <div className="flex gap-2">
-              <input
-                type="color"
-                value={settings.accentColor}
-                onChange={(e) => setSettings({ ...settings, accentColor: e.target.value })}
-                className="h-9 w-12 cursor-pointer rounded-md border border-edge bg-surface-sunken"
-              />
-              <Input
-                value={settings.accentColor}
-                onChange={(e) => setSettings({ ...settings, accentColor: e.target.value })}
-              />
-            </div>
-          </div>
-        </div>
+        <FormGrid>
+          <Field label="Nome da agência" required width="name">
+            {(field) => (
+              <Input {...field} value={settings.agencyName} onChange={(e) => setSettings({ ...settings, agencyName: e.target.value })} />
+            )}
+          </Field>
+          <Field label="Tagline" hint="Sai no rodapé e nas peças do cliente.">
+            {(field) => (
+              <Input {...field} value={settings.tagline} onChange={(e) => setSettings({ ...settings, tagline: e.target.value })} />
+            )}
+          </Field>
+          <Field label="Cor de destaque" hint="O sistema deriva os tons com contraste garantido.">
+            {(field) => (
+              <div className="flex gap-2">
+                <input
+                  type="color"
+                  aria-label="Escolher a cor de destaque"
+                  value={settings.accentColor}
+                  onChange={(e) => setSettings({ ...settings, accentColor: e.target.value })}
+                  className="h-[var(--ui-h)] w-12 shrink-0 cursor-pointer rounded-sm border border-edge bg-surface-sunken"
+                />
+                <Input
+                  {...field}
+                  className="tnum max-w-[130px]"
+                  value={settings.accentColor}
+                  onChange={(e) => setSettings({ ...settings, accentColor: e.target.value })}
+                />
+              </div>
+            )}
+          </Field>
+        </FormGrid>
         <div className="flex items-center gap-4 border-t border-edge pt-4">
-          <div className="grid size-14 shrink-0 place-items-center overflow-hidden rounded-lg border border-edge bg-surface-sunken">
+          <div className="grid size-14 shrink-0 place-items-center overflow-hidden rounded-md border border-edge bg-surface-sunken">
             {settings.logoMime ? (
               // eslint-disable-next-line @next/next/no-img-element
               <img src={`/api/settings/logo?v=${logoVersion}`} alt="logo" className="size-full object-contain" />
@@ -133,7 +133,7 @@ export default function SettingsPage() {
               Aparece no cabeçalho e nas telas que o cliente/profissional vê ao entrar pelo convite.
             </p>
             <div className="flex items-center gap-2">
-              <label className="cursor-pointer rounded-md border border-edge bg-surface-sunken px-3 py-1.5 t3 transition-colors hover:border-edge">
+              <label className="t3 inline-flex h-10 cursor-pointer items-center rounded-sm border border-edge bg-surface px-4 font-medium transition-colors hover:bg-surface-sunken">
                 Enviar logo
                 <input
                   type="file"
@@ -159,7 +159,7 @@ export default function SettingsPage() {
                     setSettings((prev) => (prev ? { ...prev, logoMime: "" } : prev));
                     setLogoVersion((v) => v + 1);
                   }}
-                  className="rounded-md border border-edge px-3 py-1.5 t3 text-text-muted transition-colors hover:border-negative/60 hover:text-negative"
+                  className="t3 inline-flex h-10 items-center rounded-sm border border-edge px-4 font-medium text-text-muted transition-colors hover:border-negative/60 hover:text-negative"
                 >
                   Remover
                 </button>
@@ -199,16 +199,19 @@ export default function SettingsPage() {
             ).map((mode) => (
               <label
                 key={mode.value}
-                className={`cursor-pointer rounded-md border p-3 t3 transition-colors ${
+                className={`t3 cursor-pointer rounded-sm border p-3 transition-colors has-[:focus-visible]:outline-2 has-[:focus-visible]:outline-offset-2 has-[:focus-visible]:outline-brand-edge ${
                   settings.aiMode === mode.value
-                    ? "border-edge bg-surface-sunken"
-                    : "border-edge bg-surface-sunken hover:border-edge"
+                    ? "border-brand-edge bg-brand-wash"
+                    : "border-edge bg-surface hover:bg-surface-sunken"
                 }`}
               >
+                {/* `hidden` tira o rádio da ordem de tabulação: escolher o modo
+                    de IA ficava impossível pelo teclado. `sr-only` mantém o
+                    controle e o foco aparece na moldura. */}
                 <input
                   type="radio"
                   name="aiMode"
-                  className="hidden"
+                  className="sr-only"
                   checked={settings.aiMode === mode.value}
                   onChange={() => setSettings({ ...settings, aiMode: mode.value })}
                 />
@@ -217,23 +220,19 @@ export default function SettingsPage() {
               </label>
             ))}
           </div>
-          <label className="flex items-start gap-3 rounded-md border border-edge bg-surface-sunken p-3 t3">
-            <input
-              type="checkbox"
+          {/* Era um checkbox nativo de 13px pintado com a cor da marca (§12).
+              O primitivo tem alvo de 40px, foco visível e caixa desenhada. */}
+          <div className="rounded-sm border border-edge bg-surface p-3">
+            <Checkbox
               checked={settings.landingPagesEnabled}
-              onChange={(e) =>
-                setSettings({ ...settings, landingPagesEnabled: e.target.checked })
-              }
-              className="mt-0.5 accent-[var(--accent)]"
+              onChange={(e) => setSettings({ ...settings, landingPagesEnabled: e.target.checked })}
+              label="Gerador de landing pages"
             />
-            <span>
-              <span className="font-medium">Gerador de landing pages</span>
-              <span className="block t5 text-text-muted">
-                É o entregável que mais consome tokens (HTML completo). Desligado, a
-                aba some do workspace e o kit completo pula essa etapa.
-              </span>
-            </span>
-          </label>
+            <p className="t5 mt-1 pl-7 text-text-muted">
+              É o entregável que mais consome tokens (HTML completo). Desligado, a aba some do
+              workspace e o kit completo pula essa etapa.
+            </p>
+          </div>
         </div>
         )}
         <div className="border-t border-edge pt-4">
@@ -296,34 +295,34 @@ export default function SettingsPage() {
             </div>
           </div>
 
-          <div className="mt-4 rounded-lg border border-edge bg-surface-sunken p-4">
+          <div className="mt-4 space-y-3 rounded-md border border-rule bg-surface-sunken p-4">
             <Label>Conceitos de imagem (grátis, gera várias)</Label>
             <p className="mb-3 t5 text-text-muted">
               Para <strong>testar e mostrar</strong> direções visuais sem custo. O botão
               “Gerar 4 conceitos” em cada demanda usa este provedor. (Para mockup
               <em> fiel</em> compondo foto real de produto/modelo, use o Google AI acima.)
             </p>
-            <div>
-              <Label>Provedor</Label>
-              <select
-                value={settings.imageProvider}
-                onChange={(e) =>
-                  setSettings({
-                    ...settings,
-                    imageProvider: e.target.value as "huggingface" | "together" | "pollinations",
-                  })
-                }
-                className="w-full rounded-md border border-edge bg-surface px-3 py-2 t3 text-text outline-none focus:border-edge"
-              >
-                <option value="huggingface">Hugging Face — FLUX.1-dev · melhor qualidade (chave grátis)</option>
-                <option value="together">Together AI — FLUX.1-schnell-Free · rápido (chave grátis)</option>
-                <option value="pollinations">Pollinations — sem chave, qualidade menor</option>
-              </select>
-              <p className="mt-1 t5 text-text-muted">
-                Recomendado: <strong>Hugging Face FLUX.1-dev</strong> — a melhor qualidade grátis.
-                Crie um token em huggingface.co → Settings → Access Tokens (não pede cartão).
-              </p>
-            </div>
+            <Field
+              label="Provedor"
+              hint="Recomendado: Hugging Face FLUX.1-dev — a melhor qualidade grátis. O token sai em huggingface.co → Settings → Access Tokens (não pede cartão)."
+            >
+              {(field) => (
+                <Select
+                  {...field}
+                  value={settings.imageProvider}
+                  onChange={(e) =>
+                    setSettings({
+                      ...settings,
+                      imageProvider: e.target.value as "huggingface" | "together" | "pollinations",
+                    })
+                  }
+                >
+                  <option value="huggingface">Hugging Face — FLUX.1-dev · melhor qualidade (chave grátis)</option>
+                  <option value="together">Together AI — FLUX.1-schnell-Free · rápido (chave grátis)</option>
+                  <option value="pollinations">Pollinations — sem chave, qualidade menor</option>
+                </Select>
+              )}
+            </Field>
             <div className="mt-3 grid gap-4 sm:grid-cols-2">
               <div>
                 <Label>
@@ -364,12 +363,6 @@ export default function SettingsPage() {
         </div>
         )}
         {error && <ErrorBox message={error} />}
-        <div className="flex items-center gap-3">
-          <Button onClick={save} disabled={saving}>
-            {saving ? "Salvando..." : "Salvar configurações"}
-          </Button>
-          {saved && <span className="t3 text-text">Aplicado ✓</span>}
-        </div>
       </section>
 
       <div id="pagina-publica" className="scroll-mt-20">
@@ -419,6 +412,15 @@ export default function SettingsPage() {
           })}
         </div>
       </section>
+
+      {/* §5.5 + §11.2: eram CINCO botões chapados na cor da marca nesta tela
+          (um por bloco). Agora o único primário é o Salvar da barra fixa; os
+          blocos com salvamento próprio ficam em secundário. */}
+      <ActionBar note={saved ? "Aplicado ✓" : "As alterações da marca valem para todos os convidados da agência."}>
+        <Button onClick={save} loading={saving} data-testid="settings-save">
+          Salvar configurações
+        </Button>
+      </ActionBar>
     </div>
   );
 }

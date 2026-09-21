@@ -371,7 +371,7 @@ export function Checkbox({
       <input
         ref={ref}
         type="checkbox"
-        className="size-4 shrink-0 rounded-xs border-edge accent-[var(--brand-solid)]"
+        className="size-[18px] shrink-0 rounded-xs border-edge accent-[var(--brand-solid)]"
         {...props}
       />
       <span>{label}</span>
@@ -386,7 +386,7 @@ export function Radio({
 }: React.InputHTMLAttributes<HTMLInputElement> & { label: ReactNode }) {
   return (
     <label className={cx("t3 flex min-h-10 cursor-pointer items-center gap-2.5 text-text", className)}>
-      <input type="radio" className="size-4 shrink-0 accent-[var(--brand-solid)]" {...props} />
+      <input type="radio" className="size-[18px] shrink-0 accent-[var(--brand-solid)]" {...props} />
       <span>{label}</span>
     </label>
   );
@@ -422,7 +422,7 @@ export function Switch({
         <span
           className={cx(
             "absolute top-0.5 size-3.5 rounded-full transition-[left] duration-[var(--dur-1)] ease-[var(--ease)]",
-            checked ? "left-4 bg-brand-ink" : "left-0.5 bg-text-text-muted",
+            checked ? "left-4 bg-brand-ink" : "left-0.5 bg-text-muted",
           )}
         />
       </span>

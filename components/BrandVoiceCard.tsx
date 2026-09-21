@@ -95,11 +95,11 @@ export default function BrandVoiceCard({ clientId }: { clientId: string }) {
         </div>
         <div className="space-y-2 t3">
           <label className="flex items-center gap-2">
-            <input type="checkbox" checked={form.requireCta} onChange={(e) => setForm({ ...form, requireCta: e.target.checked })} className="accent-[var(--accent)]" />
+            <input type="checkbox" checked={form.requireCta} onChange={(e) => setForm({ ...form, requireCta: e.target.checked })} className="accent-[var(--brand-solid)]" />
             Todo post precisa de uma chamada para ação
           </label>
           <label className="flex items-center gap-2">
-            <input type="checkbox" checked={form.flagClaims} onChange={(e) => setForm({ ...form, flagClaims: e.target.checked })} className="accent-[var(--accent)]" />
+            <input type="checkbox" checked={form.flagClaims} onChange={(e) => setForm({ ...form, flagClaims: e.target.checked })} className="accent-[var(--brand-solid)]" />
             Sinalizar alegações sem fonte (“o melhor”, “100%”, “comprovado”)
           </label>
         </div>
