@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { Icon, type IconName } from "./icons";
+import { Button, Dialog } from "./ui";
 import WelcomeLogin from "./WelcomeLogin";
 
 type Role = "agency" | "client" | "managed" | "professional";
@@ -98,67 +99,63 @@ export default function OnboardingModal({
     }
   }
 
-  if (!open) return null;
   const flow = FLOWS[role];
+  if (!open) return null;
   const current = flow.steps[step];
   const isLast = step === flow.steps.length - 1;
 
+  // Diálogo do sistema (§11.3): foco preso, Esc fecha, rótulo de papel.
+  // Era um scrim de mão, sem role, sem aria-modal e sem saída pelo teclado —
+  // e é a primeira tela que uma agência nova vê.
   return (
-    <div className="scrim fixed inset-0 z-[80] grid place-items-center p-4" data-testid="welcome">
-      <div className="animate-pop-in w-full max-w-lg rounded-md border border-edge bg-surface p-6 shadow-e2">
-        <div className="mb-4 flex items-center justify-between">
-          <p className="t6 text-text-muted">{flow.title}</p>
-          <button onClick={() => close("skip")} aria-label="Fechar" className="text-text-muted transition-colors hover:text-text">
-            <Icon name="x" size={18} />
-          </button>
-        </div>
-
-        {showLogin && <WelcomeLogin />}
-
-        <div className="flex gap-4">
-          <span className="grid size-12 shrink-0 place-items-center rounded-sm bg-surface-sunken text-text">
-            <Icon name={current.icon} size={24} />
-          </span>
-          <div>
-            <h3 className="d4 font-semibold">{current.title}</h3>
-            <p className="t3 measure-lede mt-2 text-text-muted">{current.body}</p>
-            {current.href && (
-              <a
-                href={current.href}
-                className="mt-3 inline-block t3 font-medium text-text hover:underline"
-              >
-                {current.cta}
-              </a>
-            )}
-          </div>
-        </div>
-
-        {/* Progresso + navegação */}
-        <div className="mt-6 flex items-center justify-between">
-          <div className="flex gap-1.5">
+    <Dialog
+      open={open}
+      onClose={() => close("skip")}
+      title={flow.title}
+      eyebrow="Primeiros passos"
+      size={640}
+      testId="welcome"
+      footer={
+        <div className="flex w-full items-center justify-between gap-4">
+          <div className="flex gap-1.5" aria-hidden="true">
             {flow.steps.map((_, i) => (
               <span
                 key={i}
-                className={`h-1.5 rounded-full transition-all ${
-                  i === step ? "w-6 bg-text" : "w-1.5 bg-rule"
+                className={`h-1.5 rounded-full transition-all duration-[var(--dur-1)] ${
+                  i === step ? "w-6 bg-text" : "w-1.5 bg-edge"
                 }`}
               />
             ))}
           </div>
-          <div className="flex gap-2">
-            <button onClick={() => close("skip")} className="rounded-md px-3 py-1.5 t3 text-text-muted hover:text-text" data-testid="welcome-skip">
+          <div className="flex items-center gap-2">
+            <Button variant="quiet" onClick={() => close("skip")} data-testid="welcome-skip">
               Pular
-            </button>
-            <button
-              data-testid="welcome-next"
-              onClick={() => (isLast ? close("done") : setStep((s) => s + 1))}
-              className="rounded-md bg-brand-solid px-4 py-1.5 t3 font-medium text-brand-ink transition-opacity hover:opacity-90"
-            >
+            </Button>
+            <Button data-testid="welcome-next" onClick={() => (isLast ? close("done") : setStep((s) => s + 1))}>
               {isLast ? "Começar" : "Próximo"}
-            </button>
+            </Button>
           </div>
         </div>
+      }
+    >
+      {showLogin && <WelcomeLogin />}
+      <p className="t5 text-text-muted">
+        Passo {step + 1} de {flow.steps.length}
+      </p>
+      <div className="mt-3 flex gap-4">
+        <span className="grid size-12 shrink-0 place-items-center rounded-sm bg-surface-sunken text-text">
+          <Icon name={current.icon} size={24} />
+        </span>
+        <div className="min-w-0">
+          <h3 className="t1 font-medium">{current.title}</h3>
+          <p className="t3 measure-lede mt-2 text-text-muted">{current.body}</p>
+          {current.href && (
+            <a href={current.href} className="t3 mt-3 inline-block font-medium text-brand-text underline underline-offset-4">
+              {current.cta}
+            </a>
+          )}
+        </div>
       </div>
-    </div>
+    </Dialog>
   );
 }

@@ -12,6 +12,12 @@ const eslintConfig = defineConfig([
     "out/**",
     "build/**",
     "next-env.d.ts",
+    // Artefatos GERADOS (todos já no .gitignore). O relatório HTML do
+    // Playwright sozinho traz ~2.600 problemas de um bundle minificado e
+    // esconde a linha de base real do código-fonte.
+    "playwright-report/**",
+    "test-results/**",
+    "data/**",
   ]),
 ]);
 

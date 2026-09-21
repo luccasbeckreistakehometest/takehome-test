@@ -12,7 +12,7 @@
 // e por peso, não por uma pílula. Abaixo de 1024px o trilho vira gaveta, aberta
 // pelo botão da barra superior.
 
-import { useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { Icon } from "./icons";
@@ -25,10 +25,10 @@ export default function AppRail({ brandName }: { brandName: string }) {
   const drawerRef = useRef<HTMLDivElement>(null);
   const moreActive = AGENCY_MORE_NAV.some((item) => navItemActive(item, pathname));
 
-  // A gaveta fecha ao trocar de rota: navegar é o fim do trabalho dela.
-  useEffect(() => {
-    setDrawerOpen(false);
-  }, [pathname]);
+  // A gaveta fecha ao navegar — no clique, não num efeito disparado pela
+  // mudança de rota: escrever estado dentro de efeito é exatamente o que o
+  // compilador do React aponta, e o clique é o evento real.
+  const closeDrawer = useCallback(() => setDrawerOpen(false), []);
 
   useEffect(() => {
     const onOpen = () => setDrawerOpen(true);
@@ -64,7 +64,7 @@ export default function AppRail({ brandName }: { brandName: string }) {
       <nav aria-label="Navegação" data-testid="agency-nav" className="flex flex-col">
         {AGENCY_NAV_GROUPS.map((group, gi) => (
           <div key={group.label} className={gi > 0 ? "mt-6" : ""}>
-            <p className="t6 mb-1 px-4 text-text-faint">{group.label}</p>
+            <p className="t6 mb-1 px-4 text-text-muted">{group.label}</p>
             {group.items.map((item) => {
               const active = navItemActive(item, pathname);
               return (
@@ -73,6 +73,7 @@ export default function AppRail({ brandName }: { brandName: string }) {
                   href={item.href}
                   data-tour={item.tour}
                   aria-current={active ? "page" : undefined}
+                  onClick={closeDrawer}
                   className={itemClass(active)}
                 >
                   <Icon name={item.icon} size={16} className="shrink-0" />
@@ -91,8 +92,8 @@ export default function AppRail({ brandName }: { brandName: string }) {
           aria-expanded={moreOpen}
           onClick={() => setMoreOpen((v) => !v)}
           data-testid="nav-more"
-          className={`t6 flex w-full items-center justify-between px-4 py-2 text-text-faint transition-colors hover:text-text-muted ${
-            moreActive ? "text-text-muted" : ""
+          className={`t6 flex w-full items-center justify-between px-4 py-2 transition-colors hover:text-text ${
+            moreActive ? "text-text" : "text-text-muted"
           }`}
         >
           Mais
@@ -109,6 +110,7 @@ export default function AppRail({ brandName }: { brandName: string }) {
                   href={item.href}
                   data-tour={item.tour}
                   aria-current={active ? "page" : undefined}
+                  onClick={closeDrawer}
                   className={itemClass(active)}
                 >
                   <Icon name={item.icon} size={16} className="shrink-0" />
@@ -130,7 +132,7 @@ export default function AppRail({ brandName }: { brandName: string }) {
         data-testid="app-rail"
       >
         <div className="sticky top-0 max-h-dvh overflow-y-auto py-5">
-          <p className="t6 mb-5 truncate px-4 text-text-faint">{brandName}</p>
+          <p className="t6 mb-5 truncate px-4 text-text-muted">{brandName}</p>
           {railBody}
         </div>
       </aside>
@@ -146,11 +148,11 @@ export default function AppRail({ brandName }: { brandName: string }) {
             className="animate-pop-in absolute inset-y-0 left-0 w-[17rem] overflow-y-auto border-r border-edge bg-surface py-5 shadow-e2"
           >
             <div className="mb-5 flex items-center justify-between px-4">
-              <p className="t6 truncate text-text-faint">{brandName}</p>
+              <p className="t6 truncate text-text-muted">{brandName}</p>
               <button
                 type="button"
                 aria-label="Fechar navegação"
-                onClick={() => setDrawerOpen(false)}
+                onClick={closeDrawer}
                 className="grid size-8 place-items-center rounded-sm text-text-muted hover:bg-surface-sunken"
               >
                 <Icon name="x" size={16} />

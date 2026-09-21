@@ -81,7 +81,7 @@ export function Button({
         "after:absolute after:inset-x-0 after:top-1/2 after:h-10 after:-translate-y-1/2 after:content-[''] max-md:after:h-11",
         "transition-[background-color,border-color,color,filter] duration-[var(--dur-1)] ease-[var(--ease)]",
         // Sem opacidade global: opacidade quebra o contraste do rótulo.
-        "disabled:cursor-not-allowed disabled:border-rule disabled:bg-surface-sunken disabled:text-text-faint disabled:hover:brightness-100",
+        "disabled:cursor-not-allowed disabled:border-rule disabled:bg-surface-sunken disabled:text-text-muted disabled:hover:brightness-100",
         BUTTON_VARIANTS[variant],
         className,
       )}
@@ -126,7 +126,7 @@ export function IconButton({
         "relative grid size-[var(--ui-h)] shrink-0 place-items-center rounded-sm",
         "after:absolute after:top-1/2 after:left-1/2 after:size-10 after:-translate-x-1/2 after:-translate-y-1/2 after:content-[''] max-md:after:size-11",
         "transition-colors duration-[var(--dur-1)] ease-[var(--ease)]",
-        "disabled:cursor-not-allowed disabled:text-text-faint",
+        "disabled:cursor-not-allowed disabled:text-text-muted",
         BUTTON_VARIANTS[variant],
         className,
       )}
@@ -289,7 +289,7 @@ const CONTROL = cx(
   "transition-colors duration-[var(--dur-1)] ease-[var(--ease)]",
   "border-edge hover:border-text-faint",
   "aria-invalid:border-negative",
-  "disabled:cursor-not-allowed disabled:border-rule disabled:bg-surface-sunken disabled:text-text-faint",
+  "disabled:cursor-not-allowed disabled:border-rule disabled:bg-surface-sunken disabled:text-text-muted",
   // `:read-only` do CSS casa com QUALQUER elemento que não seja editável — e
   // isso inclui todo <select>. Era por isso que o select aparecia rebaixado ao
   // lado de um input branco no mesmo formulário. O atributo é o que importa.
@@ -411,7 +411,7 @@ export function Switch({
       aria-checked={checked}
       disabled={disabled}
       onClick={() => onChange(!checked)}
-      className="t3 group flex min-h-10 items-center gap-2.5 text-text disabled:cursor-not-allowed disabled:text-text-faint"
+      className="t3 group flex min-h-10 items-center gap-2.5 text-text disabled:cursor-not-allowed disabled:text-text-muted"
     >
       <span
         className={cx(
@@ -656,15 +656,20 @@ export function Dialog({
   open,
   onClose,
   title,
+  eyebrow,
   size = 640,
   footer,
+  testId,
   children,
 }: {
   open: boolean;
   onClose: () => void;
   title: string;
+  /** Rótulo t6 acima do título — o papel da peça, não o seu nome. */
+  eyebrow?: string;
   size?: 480 | 640 | 800;
   footer?: ReactNode;
+  testId?: string;
   children: ReactNode;
 }) {
   const box = useRef<HTMLDivElement>(null);
@@ -699,7 +704,10 @@ export function Dialog({
   }, [open, trap]);
   if (!open) return null;
   return (
-    <div className="fixed inset-0 z-50 grid place-items-center overflow-y-auto bg-[rgba(16,15,14,.45)] p-4">
+    <div
+      className="scrim fixed inset-0 z-[80] grid place-items-center overflow-y-auto p-4"
+      data-testid={testId}
+    >
       <div
         ref={box}
         role="dialog"
@@ -709,7 +717,10 @@ export function Dialog({
         className="animate-pop-in w-full rounded-md border border-rule bg-surface shadow-e2"
       >
         <div className="flex items-start justify-between gap-4 border-b border-rule px-6 py-4">
-          <h2 className="d4">{title}</h2>
+          <div className="min-w-0">
+            {eyebrow && <p className="t6 mb-1 text-text-muted">{eyebrow}</p>}
+            <h2 className="d4">{title}</h2>
+          </div>
           <IconButton name="x" label="Fechar" onClick={onClose} size={20} className="-mr-2" />
         </div>
         <div className="px-6 py-5">{children}</div>
@@ -741,7 +752,7 @@ export function Drawer({
   }, [open, onClose]);
   if (!open) return null;
   return (
-    <div className="fixed inset-0 z-50 flex justify-end bg-[rgba(16,15,14,.45)]">
+    <div className="scrim fixed inset-0 z-[80] flex justify-end">
       <div
         role="dialog"
         aria-modal="true"

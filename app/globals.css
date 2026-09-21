@@ -24,6 +24,12 @@
   --n-200: #c9c4ba;
   --n-300: #aba599;
   --n-400: #8b857a;
+  /* Degrau extra da rampa: o único cinza que passa de 3:1 nas SEIS superfícies
+     do produto (surface/sunken/canvas, nos dois temas). A §5.2 media faint e
+     edge só contra a `surface`; medidos contra `surface-sunken` — onde um
+     placeholder e a borda de um input de fato vivem — n-400 no claro e n-500 no
+     escuro davam 2,97:1, abaixo do piso de 3:1 que o próprio doc fixa. */
+  --n-450: #7f796e;
   --n-500: #6d675e;
   --n-600: #524d46;
   --n-700: #3b3733;
@@ -44,9 +50,9 @@
   --surface-raised: var(--n-0);
   --text: var(--n-900); /* 18,20:1 sobre surface */
   --text-muted: var(--n-500); /* 5,60:1 */
-  --text-faint: var(--n-400); /* 3,66:1 — placeholder, travessão */
+  --text-faint: var(--n-450); /* 4,32:1 sobre surface · 3,50:1 sobre sunken */
   --rule: var(--n-150); /* 1,42:1 — régua DECORATIVA, nunca sozinha */
-  --edge: var(--n-400); /* 3,66:1 — borda ESTRUTURAL (WCAG 1.4.11) */
+  --edge: var(--n-450); /* 4,51:1 sobre surface · 3,65:1 sobre sunken (1.4.11) */
 
   /* ---------- 3. Semântica — só estado, nunca decoração (§5.3) ----------- */
   --positive: #1b6b44; /* 6,50:1 */
@@ -143,9 +149,9 @@
   --surface-raised: var(--n-850);
   --text: var(--n-50); /* 16,42:1 */
   --text-muted: var(--n-400); /* 4,97:1 */
-  --text-faint: var(--n-500); /* 3,25:1 */
+  --text-faint: var(--n-450); /* 4,21:1 sobre surface · 3,85:1 sobre sunken */
   --rule: var(--n-700); /* 1,54:1 */
-  --edge: var(--n-500); /* 3,25:1 */
+  --edge: var(--n-450); /* 4,21:1 sobre surface · 3,85:1 sobre sunken (1.4.11) */
 
   --positive: #57c98d; /* 8,79:1 */
   --positive-wash: #1f2b23;
@@ -851,9 +857,9 @@ hr {
   --surface-raised: var(--n-0);
   --text: var(--n-900);
   --text-muted: var(--n-500);
-  --text-faint: var(--n-400);
+  --text-faint: var(--n-450);
   --rule: var(--n-150);
-  --edge: var(--n-400);
+  --edge: var(--n-450);
   --positive: #1b6b44;
   --positive-wash: #eef3f0;
   --negative: #a32b22;
@@ -904,9 +910,9 @@ hr {
     --surface-sunken: #ffffff;
     --text: #171514;
     --text-muted: #6d675e;
-    --text-faint: #8b857a;
+    --text-faint: #7f796e;
     --rule: #dcd8d0;
-    --edge: #8b857a;
+    --edge: #7f796e;
   }
   body {
     background: #fff;

@@ -80,7 +80,7 @@ function CreateDemandButton({
           setState("idle");
         }
       }}
-      className="inline-flex items-center justify-center gap-1.5 rounded border border-edge bg-surface-sunken px-2 py-0.5 t5 text-text-muted transition-colors hover:border-edge hover:text-text disabled:opacity-50"
+      className="inline-flex items-center justify-center gap-1.5 rounded border border-edge bg-surface-sunken px-2 py-0.5 t5 text-text-muted transition-colors hover:border-edge hover:text-text disabled:cursor-not-allowed disabled:border-rule disabled:bg-surface-sunken disabled:text-text-muted"
     >
       {state === "creating" ? (
         "Criando..."
@@ -157,7 +157,7 @@ function SchedulePostButton({
             setState("picking");
           }
         }}
-        className="rounded bg-brand-solid px-2 py-0.5 t5 font-medium text-brand-ink disabled:opacity-50"
+        className="rounded-sm border border-transparent bg-brand-solid px-2 py-0.5 t5 font-medium text-brand-ink disabled:cursor-not-allowed disabled:border-rule disabled:bg-surface-sunken disabled:text-text-muted"
       >
         {state === "saving" ? "..." : "Confirmar"}
       </button>
@@ -207,7 +207,7 @@ function ActionButton({
           setBusy(false);
         }
       }}
-      className="inline-flex items-center justify-center gap-1.5 rounded border border-edge bg-background px-2 py-1 t5 text-text-muted transition-colors hover:border-edge hover:text-text disabled:opacity-50"
+      className="inline-flex items-center justify-center gap-1.5 rounded border border-edge bg-background px-2 py-1 t5 text-text-muted transition-colors hover:border-edge hover:text-text disabled:cursor-not-allowed disabled:border-rule disabled:bg-surface-sunken disabled:text-text-muted"
     >
       {busy ? (busyLabel ?? "...") : label}
     </button>
@@ -331,7 +331,7 @@ export function StrategyAnalysisView({
                           setCreatingDemand(null);
                         }
                       }}
-                      className="inline-flex items-center justify-center gap-1.5 rounded border border-edge bg-background px-2 py-1 t5 text-text-muted transition-colors hover:border-edge hover:text-text disabled:opacity-50"
+                      className="inline-flex items-center justify-center gap-1.5 rounded border border-edge bg-background px-2 py-1 t5 text-text-muted transition-colors hover:border-edge hover:text-text disabled:cursor-not-allowed disabled:border-rule disabled:bg-surface-sunken disabled:text-text-muted"
                     >
                       {creatingDemand === i ? (
                         "IA escrevendo o brief..."

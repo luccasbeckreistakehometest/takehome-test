@@ -25,6 +25,9 @@ export function buttonClass(variant: ButtonVariant = "primary", size: "md" | "lg
     "t3 relative inline-flex items-center justify-center gap-2 rounded-sm font-medium",
     size === "lg" ? "h-12 px-6 text-[15px]" : "h-[var(--ui-h)] px-4",
     "transition-[background-color,border-color,color,filter] duration-[var(--dur-1)] ease-[var(--ease)]",
+    // §11.1: desabilitado é `text-muted` sobre `surface-sunken` com régua —
+    // nunca opacidade global, que derruba o contraste do rótulo para 2,97:1.
+    "disabled:cursor-not-allowed disabled:border-rule disabled:bg-surface-sunken disabled:text-text-muted disabled:hover:brightness-100",
     BUTTON_VARIANTS[variant],
   ].join(" ");
 }

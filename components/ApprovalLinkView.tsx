@@ -218,7 +218,7 @@ export default function ApprovalLinkView({
                   type="button"
                   onClick={approveAll}
                   disabled={busy !== null}
-                  className="w-full rounded-sm bg-brand-solid px-4 py-3 t2 font-medium text-brand-ink transition-[filter] hover:brightness-95 disabled:bg-surface-sunken disabled:text-text-faint"
+                  className="w-full rounded-sm border border-transparent bg-brand-solid px-4 py-3 t2 font-medium text-brand-ink transition-[filter] hover:brightness-95 disabled:cursor-not-allowed disabled:border-rule disabled:bg-surface-sunken disabled:text-text-muted"
                   data-testid="approve-all"
                 >
                   {t.approveAll} ({pending.length})
@@ -300,7 +300,7 @@ function ItemCard({
                   onClick={async () => {
                     if (await onDecide("changes_requested", note)) setAsking(false);
                   }}
-                  className="flex-1 rounded-lg bg-brand-solid px-3 py-2.5 font-medium text-brand-ink disabled:opacity-40"
+                  className="flex-1 rounded-sm border border-transparent bg-brand-solid px-3 py-2.5 font-medium text-brand-ink disabled:cursor-not-allowed disabled:border-rule disabled:bg-surface-sunken disabled:text-text-muted"
                   data-testid="changes-send"
                 >
                   {t.send}
@@ -316,7 +316,7 @@ function ItemCard({
                 type="button"
                 disabled={busy}
                 onClick={() => onDecide("approved")}
-                className="flex-1 rounded-lg bg-brand-solid px-3 py-2.5 font-semibold text-brand-ink disabled:opacity-50"
+                className="flex-1 rounded-sm border border-transparent bg-brand-solid px-3 py-2.5 font-semibold text-brand-ink disabled:cursor-not-allowed disabled:border-rule disabled:bg-surface-sunken disabled:text-text-muted"
                 data-testid="item-approve"
               >
                 {t.approve}
