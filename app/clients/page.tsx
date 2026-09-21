@@ -74,8 +74,11 @@ export default function ClientsPage() {
               key={client.id}
               className="border-b border-rule align-baseline transition-colors duration-[var(--dur-1)] hover:bg-surface-sunken"
             >
-              <td className="py-2.5">
-                <Link href={`/clients/${client.id}`} className="t3 block truncate font-medium">
+              <td>
+                <Link
+                  href={`/clients/${client.id}`}
+                  className="t3 flex min-h-10 items-center truncate py-2.5 font-medium"
+                >
                   {client.name}
                 </Link>
               </td>

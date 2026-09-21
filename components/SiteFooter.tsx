@@ -15,13 +15,13 @@ export default function SiteFooter({ brandName, tagline }: { brandName: string; 
           {identity.document ? ` · ${identity.document}` : ""}
         </p>
         <nav aria-label="Links institucionais" className="flex flex-wrap gap-x-4 gap-y-1">
-          <Link href="/termos" className="hover:text-text">Termos</Link>
-          <Link href="/privacidade" className="hover:text-text">Privacidade</Link>
-          <Link href="/reembolso" className="hover:text-text">Reembolso</Link>
-          <Link href="/cookies" className="hover:text-text">Cookies</Link>
-          <Link href="/contato" className="hover:text-text">Contato</Link>
+          <Link href="/termos" className="inline-flex min-h-10 items-center hover:text-text">Termos</Link>
+          <Link href="/privacidade" className="inline-flex min-h-10 items-center hover:text-text">Privacidade</Link>
+          <Link href="/reembolso" className="inline-flex min-h-10 items-center hover:text-text">Reembolso</Link>
+          <Link href="/cookies" className="inline-flex min-h-10 items-center hover:text-text">Cookies</Link>
+          <Link href="/contato" className="inline-flex min-h-10 items-center hover:text-text">Contato</Link>
           {support.whatsapp && (
-            <a href={`https://wa.me/${support.whatsapp}`} target="_blank" rel="noopener noreferrer" className="hover:text-text">
+            <a href={`https://wa.me/${support.whatsapp}`} target="_blank" rel="noopener noreferrer" className="inline-flex min-h-10 items-center hover:text-text">
               WhatsApp
             </a>
           )}

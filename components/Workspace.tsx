@@ -296,7 +296,7 @@ export default function Workspace({
               data-tour={`ws-group-${g.key}`}
               aria-current={g.key === activeGroup ? "true" : undefined}
               onClick={() => setTab(g.tabs[0].key)}
-              className={`t6 shrink-0 whitespace-nowrap py-1 transition-colors duration-[var(--dur-1)] ${
+              className={`t6 inline-flex min-h-10 shrink-0 items-center whitespace-nowrap transition-colors duration-[var(--dur-1)] ${
                 g.key === activeGroup ? "text-text" : "text-text-muted hover:text-text"
               }`}
             >

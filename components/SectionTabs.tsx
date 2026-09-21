@@ -20,7 +20,7 @@ export default function SectionTabs({ tabs, label }: { tabs: SectionTab[]; label
             href={tab.href}
             data-testid={tab.testId}
             aria-current={active ? "page" : undefined}
-            className={`t3 -mb-px border-b-2 py-2 transition-colors duration-[var(--dur-1)] ${
+            className={`t3 -mb-px inline-flex min-h-10 items-center border-b-2 py-2 transition-colors duration-[var(--dur-1)] ${
               active ? "border-text font-medium text-text" : "border-transparent text-text-muted hover:text-text"
             }`}
           >

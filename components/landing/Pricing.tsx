@@ -221,7 +221,7 @@ export default function Pricing({
                     <td className="py-3 text-right">
                       <Link
                         href={`/criar-conta?type=${accountType}`}
-                        className="t5 font-medium underline-offset-4 hover:underline"
+                        className="t5 inline-flex min-h-10 items-center font-medium underline-offset-4 hover:underline"
                       >
                         {t.buy}
                       </Link>

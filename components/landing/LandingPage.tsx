@@ -467,7 +467,7 @@ export default function LandingPage({
               <Link
                 key={href}
                 href={href}
-                className="t4 py-1 text-text-muted underline-offset-4 hover:text-text hover:underline"
+                className="t4 inline-flex min-h-10 items-center text-text-muted underline-offset-4 hover:text-text hover:underline"
               >
                 {label}
               </Link>

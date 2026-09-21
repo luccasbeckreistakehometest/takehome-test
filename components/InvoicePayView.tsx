@@ -118,7 +118,7 @@ export default function InvoicePayView({
         ) : null}
         <div className="min-w-0">
           <p className="t6 truncate text-n-500">{agency.name}</p>
-          {agency.tagline && <p className="t5 truncate text-n-400">{agency.tagline}</p>}
+          {agency.tagline && <p className="t5 truncate text-n-500">{agency.tagline}</p>}
         </div>
       </div>
 

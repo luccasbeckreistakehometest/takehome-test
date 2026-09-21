@@ -244,7 +244,7 @@ export default function AgencyHome() {
           <div className="mt-12">
             <div className="flex items-baseline justify-between border-b border-edge pb-2">
               <h2 className="t6 text-text-muted">Carteira de clientes</h2>
-              <Link href="/clients" className="t5 font-medium underline-offset-4 hover:underline">
+              <Link href="/clients" className="t5 inline-flex min-h-10 items-center font-medium underline-offset-4 hover:underline">
                 Ver todos
               </Link>
             </div>
@@ -304,7 +304,7 @@ export default function AgencyHome() {
             <section className="mt-8 border-t border-edge pt-2">
               <div className="flex items-baseline justify-between">
                 <h2 className="t6 text-text-muted">Cobranças</h2>
-                <Link href="/invoices" className="t5 font-medium underline-offset-4 hover:underline">
+                <Link href="/invoices" className="t5 inline-flex min-h-10 items-center font-medium underline-offset-4 hover:underline">
                   Abrir
                 </Link>
               </div>

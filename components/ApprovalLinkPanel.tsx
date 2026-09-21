@@ -249,14 +249,14 @@ export function ApprovalLinkDialog({
 export function ApprovalLinkCard({ clientId, clientName }: { clientId: string; clientName: string }) {
   const [open, setOpen] = useState(false);
   return (
-    <div className="flex flex-wrap items-center justify-between gap-3 rounded-md border border-edge bg-surface p-5 shadow-sm" data-testid="approval-link-card">
+    <div className="flex flex-wrap items-center justify-between gap-3 rounded-md border border-rule bg-surface p-5" data-testid="approval-link-card">
       <div>
         <p className="flex items-center gap-2 font-medium">
           <Icon name="check" size={16} className="text-text" /> Aprovação por link
         </p>
         <p className="t3 measure-lede mt-2 text-text-muted">Mande posts e entregas pelo WhatsApp. O cliente aprova sem senha e o post já entra na agenda.</p>
       </div>
-      <Button onClick={() => setOpen(true)} data-testid="approval-link-open">
+      <Button variant="secondary" onClick={() => setOpen(true)} data-testid="approval-link-open">
         <Icon name="send" size={14} /> Enviar para aprovação
       </Button>
       {open && <ApprovalLinkDialog clients={[{ id: clientId, name: clientName }]} defaultClientId={clientId} onClose={() => setOpen(false)} />}

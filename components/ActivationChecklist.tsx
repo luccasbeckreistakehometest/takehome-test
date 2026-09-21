@@ -148,7 +148,7 @@ export default function ActivationChecklist({ expect, intro }: { expect: Activat
         <button
           type="button"
           onClick={dismiss}
-          className="t5 font-medium underline-offset-4 hover:underline"
+          className="t5 inline-flex min-h-10 items-center font-medium underline-offset-4 hover:underline"
           data-testid="activation-dismiss"
         >
           {progress.complete ? "Fechar" : "Ocultar"}

@@ -106,7 +106,7 @@ export default function PulseOverviewCard({ mode }: { mode: "home" | "full" }) {
             ? "Nenhuma resposta ainda — os clientes respondem no portal depois de cada aprovação e uma vez por mês."
             : "Nenhum cliente em risco."}
         </p>
-        <Link href="/insights#pulso" className="t5 mt-2 inline-block font-medium underline-offset-4 hover:underline">
+        <Link href="/insights#pulso" className="t5 mt-2 inline-flex min-h-10 items-center font-medium underline-offset-4 hover:underline">
           Ver tendência por cliente
         </Link>
       </section>
@@ -117,7 +117,7 @@ export default function PulseOverviewCard({ mode }: { mode: "home" | "full" }) {
       <div className="flex items-baseline justify-between border-b border-edge pb-2">
         <h2 className="t6 text-text-muted">{mode === "home" ? "Clientes em risco" : "Pulso dos clientes"}</h2>
         {mode === "home" && (
-          <Link href="/insights#pulso" className="t5 font-medium underline-offset-4 hover:underline">
+          <Link href="/insights#pulso" className="t5 inline-flex min-h-10 items-center font-medium underline-offset-4 hover:underline">
             Ver todos
           </Link>
         )}
