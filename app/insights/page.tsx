@@ -106,7 +106,7 @@ export default function InsightsPage() {
     {
       key: "name",
       header: "Cliente",
-      width: "240px",
+      width: "200px",
       cell: (c) => (
         <Link href={`/clients/${c.id}`} className="hit-40 flex items-center gap-2 font-medium underline-offset-4 hover:underline">
           <span className="size-2 shrink-0 rounded-full" style={{ backgroundColor: TIER_COLORS[c.tier.tier] }} />
@@ -114,9 +114,9 @@ export default function InsightsPage() {
         </Link>
       ),
     },
-    { key: "tier", header: "Elo", width: "110px", cell: (c) => c.tier.tier },
-    { key: "paid", header: "Pagas", width: "90px", align: "right", cell: (c) => c.paidProjects },
-    { key: "gen", header: "Entregáveis", width: "120px", align: "right", cell: (c) => c.generations },
+    { key: "tier", header: "Elo", width: "90px", cell: (c) => c.tier.tier },
+    { key: "paid", header: "Pagas", width: "80px", align: "right", cell: (c) => c.paidProjects },
+    { key: "gen", header: "Entregáveis", width: "110px", align: "right", cell: (c) => c.generations },
   ];
 
   const funnelMax = Math.max(1, ...Object.values(data.funnel.byStatus));
@@ -177,13 +177,20 @@ export default function InsightsPage() {
                     <span className="w-44 shrink-0 truncate text-text-muted">
                       {PROJECT_STATUS_LABELS[status]}
                     </span>
-                    <div className="h-5 flex-1 overflow-hidden rounded bg-surface-sunken">
-                      <div
-                        className="flex h-full items-center justify-end rounded-xs bg-text px-2 text-[11px] font-medium text-canvas transition-all duration-700"
-                        style={{ width: `${Math.max((value / funnelMax) * 100, value ? 8 : 0)}%` }}
-                      >
-                        {value > 0 && value}
-                      </div>
+                    {/* §9.3: eixo de valor começando em zero, sem moldura e
+                        sem barra desenhada onde o valor é zero — o quadradinho
+                        preto de um zero mentia sobre o dado. */}
+                    <div className="h-5 flex-1 rounded-xs bg-surface-sunken">
+                      {value > 0 ? (
+                        <div
+                          className="flex h-full items-center justify-end rounded-xs bg-text px-2 text-[11px] font-medium text-canvas transition-all duration-700"
+                          style={{ width: `${Math.max((value / funnelMax) * 100, 8)}%` }}
+                        >
+                          {value}
+                        </div>
+                      ) : (
+                        <span className="sr-only">0</span>
+                      )}
                     </div>
                   </div>
                 );
@@ -195,8 +202,12 @@ export default function InsightsPage() {
         {/* Ritmo da semana */}
         <Card>
           <SectionTitle>Ritmo dos últimos 7 dias</SectionTitle>
-          {data.activityByDay.length === 0 ? (
-            <p className="t3 text-text-muted">Sem atividade registrada na semana.</p>
+          {data.activityByDay.length === 0 || activityMax <= 0 || data.activityByDay.every((d) => d.c === 0) ? (
+            <EmptyState
+              icon="chart"
+              title="As ações da agência dos últimos sete dias aparecem aqui, uma barra por dia."
+              condition="Conta geração de entregável, aprovação, post agendado e mensagem."
+            />
           ) : (
             <div className="flex h-40 items-end justify-between gap-2">
               {data.activityByDay.map((day) => (
@@ -276,7 +287,7 @@ export default function InsightsPage() {
             caption="Clientes da carteira por elo, demandas pagas e entregáveis gerados"
             rows={pageRows}
             rowKey={(c) => c.id}
-            minWidth={560}
+            minWidth={480}
             columns={clientColumns}
             empty={
               <EmptyState

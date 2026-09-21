@@ -1182,16 +1182,15 @@ export function EmptyState({
  * a barra não cubra a última linha do formulário (o defeito que o FAB tinha).
  */
 export function ActionBar({ note, children }: { note?: ReactNode; children: ReactNode }) {
+  // `sticky`, não `fixed`: fixo em viewport, a barra passava POR CIMA do
+  // trilho de 248px. Grudada no fim da coluna de conteúdo ela respeita a casca.
   return (
-    <>
-      <div aria-hidden className="h-16" />
-      <div className="no-print fixed inset-x-0 bottom-0 z-30 border-t border-edge bg-canvas shadow-e3">
-        <div className="mx-auto flex max-w-(--container-tool) flex-wrap items-center justify-between gap-3 px-4 py-2.5">
-          <p className="t5 min-w-0 text-text-muted">{note}</p>
-          <div className="flex items-center gap-2">{children}</div>
-        </div>
+    <div className="no-print sticky bottom-0 z-30 -mx-4 mt-6 border-t border-edge bg-canvas px-4 shadow-e3">
+      <div className="flex flex-wrap items-center justify-between gap-3 py-2.5">
+        <p className="t5 min-w-0 text-text-muted">{note}</p>
+        <div className="flex items-center gap-2">{children}</div>
       </div>
-    </>
+    </div>
   );
 }
 

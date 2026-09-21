@@ -123,7 +123,7 @@ export default function ProductionPage() {
 
       {projects === null ? (
         // Esqueleto com A MESMA caixa do board — não um spinner no vazio (§11.4).
-        <div className="flex gap-3 overflow-x-auto pb-4" aria-busy="true" aria-label="Carregando o board">
+        <div className="scroll-x flex gap-3 pb-4" aria-busy="true" aria-label="Carregando o board">
           {PROJECT_STATUSES.map((status) => (
             <div key={status} className="w-64 shrink-0 space-y-2 p-2">
               <Skeleton className="h-3 w-24" />
@@ -134,7 +134,7 @@ export default function ProductionPage() {
           ))}
         </div>
       ) : (
-      <div className="flex gap-3 overflow-x-auto pb-4">
+      <div className="scroll-x flex gap-3 pb-4">
         {PROJECT_STATUSES.map((status) => {
           const column = visible.filter((project) => project.status === status);
           const isOver = dragOverStatus === status;
@@ -210,7 +210,7 @@ export default function ProductionPage() {
                   // §9.4: o estado vazio diz o que VAI aparecer aqui. Era a
                   // palavra "vazio".
                   <p className="grid min-h-20 place-items-center rounded-sm border border-dashed border-rule p-3 text-center t5 text-text-muted">
-                    {isOver ? "Solte aqui" : `Nenhuma demanda em ${PROJECT_STATUS_LABELS[status].toLowerCase()}`}
+                    {isOver ? "Solte aqui" : "As demandas desta etapa aparecem aqui"}
                   </p>
                 )}
               </div>

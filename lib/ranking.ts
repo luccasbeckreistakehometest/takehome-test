@@ -1,4 +1,5 @@
 // Ranking gamificado estilo elo (sem XP): Bronze → Prata → Ouro → Platina.
+import { EM_DASH } from "./type";
 // Calculado a partir de dados reais da plataforma, nunca editável à mão.
 // Cada elo expõe progress (0-100 rumo ao próximo nível) e as métricas que
 // movem o ponteiro — é isso que dá ao usuário um motivo para voltar.
@@ -42,7 +43,7 @@ export function professionalTier(stats: {
   const score = avgScore ?? 0;
   const metrics = (targetCompleted?: number, targetScore?: number): TierMetric[] => [
     { label: "Demandas concluídas", value: completed, target: targetCompleted },
-    { label: "Nota média das entregas", value: avgScore ?? "n/d", target: targetScore },
+    { label: "Nota média das entregas", value: avgScore ?? EM_DASH, target: targetScore },
   ];
   if (completed >= 10 && score >= 85) {
     return {
@@ -153,7 +154,7 @@ export function agencyTier(stats: AgencyStats): TierInfo {
     { label: "Clientes ativos", value: activeClients, target: targetClients },
     { label: "Demandas pagas", value: paidProjects, target: targetPaid },
     { label: "Entregáveis gerados", value: generations },
-    { label: "Nota média das entregas", value: avgScore ?? "n/d", target: targetScore },
+    { label: "Nota média das entregas", value: avgScore ?? EM_DASH, target: targetScore },
     { label: "Profissionais na rede", value: stats.professionals },
     { label: "Ações nos últimos 7 dias", value: stats.weeklyActions },
   ];
