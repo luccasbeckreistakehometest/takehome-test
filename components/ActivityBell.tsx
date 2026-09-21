@@ -47,7 +47,7 @@ export default function ActivityBell({
             load();
           }
         }}
-        className="relative grid size-8 place-items-center rounded-md text-text-muted transition-colors hover:bg-surface-sunken hover:text-text"
+        className="relative grid size-10 place-items-center rounded-sm text-text-muted transition-colors hover:bg-surface-sunken hover:text-text"
         title="Atividade"
       >
         <svg

@@ -130,7 +130,7 @@ export default function ActivationChecklist({ expect, intro }: { expect: Activat
                 {step.done && <Icon name="check" size={16} className="size-3" />}
               </span>
               <span className="min-w-0">
-                <span className={`t3 block font-medium ${step.done ? "text-text-faint line-through" : ""}`}>
+                <span className={`t3 block font-medium ${step.done ? "text-text-muted line-through" : ""}`}>
                   {step.label}
                 </span>
                 <span className="t5 block text-text-muted">{step.hint}</span>

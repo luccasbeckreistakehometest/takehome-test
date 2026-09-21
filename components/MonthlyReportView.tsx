@@ -61,7 +61,7 @@ function Figures({ rows }: { rows: { label: string; value: React.ReactNode; hint
         <div key={row.label} className="flex items-baseline justify-between gap-4 border-b border-rule py-2">
           <dt className="t4 min-w-0 text-text-muted">
             {row.label}
-            {row.hint && <span className="t5 ml-2 text-text-muted">{row.hint}</span>}
+            {row.hint && <span className="t5 block text-text-muted">{row.hint}</span>}
           </dt>
           <dd className="n3 shrink-0">{row.value}</dd>
         </div>
@@ -128,6 +128,9 @@ export default function MonthlyReportView({
             <p className="t1 prose-doc" data-testid="report-summary">
               {summary.executiveSummary}
             </p>
+            {/* M7: "Recomendações para o próximo mês" quebrava em duas linhas
+                enquanto o par ficava em uma, e as duas colunas perdiam a linha
+                de base. Rótulo curto e itens alinhados pela grade. */}
             <div className="mt-6 grid gap-8 md:grid-cols-2">
               <div>
                 <p className="t6 border-b border-rule pb-1 text-text-muted">Destaques do mês</p>
@@ -140,7 +143,7 @@ export default function MonthlyReportView({
                 </ul>
               </div>
               <div>
-                <p className="t6 border-b border-rule pb-1 text-text-muted">Recomendações para o próximo mês</p>
+                <p className="t6 border-b border-rule pb-1 text-text-muted">Para o próximo mês</p>
                 <ul>
                   {summary.recommendations.map((r, i) => (
                     <li key={i} className="t3 measure-prose border-b border-rule py-2">
@@ -245,7 +248,7 @@ export default function MonthlyReportView({
               </>
             ) : (
               <p className="t3 text-text-muted">
-                Sem métricas de mídia conectadas neste mês. <Dash />
+                Sem métricas de mídia conectadas neste mês.
               </p>
             )}
           </div>
@@ -263,7 +266,7 @@ export default function MonthlyReportView({
               />
             ) : (
               <p className="t3 text-text-muted">
-                Sem vendas registradas neste mês. <Dash />
+                Sem vendas registradas neste mês.
               </p>
             )}
           </div>
@@ -347,7 +350,7 @@ export default function MonthlyReportView({
             </>
           ) : (
             <p className="t3 text-text-muted">
-              Sem respostas de satisfação neste mês. <Dash />
+              Sem respostas de satisfação neste mês.
             </p>
           )}
         </DocSection>

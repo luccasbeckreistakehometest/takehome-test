@@ -1151,6 +1151,7 @@ export const UI_DICT: Record<string, string> = {
   "exemplo — sem chave de IA": "sample — no AI key",
   "Destaques do mês": "This month's highlights",
   "Recomendações para o próximo mês": "Recommendations for next month",
+  "Para o próximo mês": "For next month",
   "O resumo executivo da IA ainda não foi gerado para este mês.": "The AI executive summary has not been generated for this month yet.",
   "Entregas no mês": "Deliveries this month",
   "Aprovadas pelo cliente": "Approved by the client",

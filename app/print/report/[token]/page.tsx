@@ -42,12 +42,14 @@ export default function PrintMonthlyReportPage({ params }: { params: Promise<{ t
     // de 160mm igual à do papel e folha de impressão de verdade (§10). O botão
     // de PDF é a única coisa que não imprime.
     <article className="doc my-8 px-8 py-10 sm:px-12">
-      <button
-        onClick={() => window.print()}
-        className="no-print fixed bottom-6 right-6 z-50 h-10 rounded-sm bg-brand-solid px-4 font-medium text-brand-ink shadow-e1 transition-[filter] hover:brightness-95"
-      >
-        Salvar como PDF
-      </button>
+      <div className="no-print mb-6 flex justify-end">
+        <button
+          onClick={() => window.print()}
+          className="t3 inline-flex h-10 items-center rounded-sm border border-transparent bg-brand-solid px-4 font-medium text-brand-ink transition-[filter] hover:brightness-95"
+        >
+          Salvar como PDF
+        </button>
+      </div>
 
       <div className="doc-cover">
         <div className="doc-rule" />

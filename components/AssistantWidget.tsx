@@ -214,7 +214,7 @@ export function AssistantToggle() {
       data-testid="assistant-open"
       title="Assistente — fale o que precisa e ele executa"
       onClick={() => window.dispatchEvent(new Event("ah:assistant-open"))}
-      className="grid size-9 shrink-0 place-items-center rounded-sm text-text-muted transition-colors hover:bg-surface-sunken hover:text-text"
+      className="grid size-10 shrink-0 place-items-center rounded-sm text-text-muted transition-colors hover:bg-surface-sunken hover:text-text"
     >
       <Icon name="message" size={20} />
     </button>

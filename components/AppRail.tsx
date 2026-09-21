@@ -53,7 +53,7 @@ export default function AppRail({ brandName }: { brandName: string }) {
   }, [drawerOpen]);
 
   const itemClass = (active: boolean) =>
-    `relative flex items-center gap-2.5 py-2 pl-4 pr-3 t3 transition-colors duration-[var(--dur-1)] ${
+    `relative flex min-h-10 items-center gap-2.5 py-2 pl-4 pr-3 t3 transition-colors duration-[var(--dur-1)] ${
       active
         ? "font-medium text-text before:absolute before:inset-y-1 before:left-0 before:w-0.5 before:bg-brand-solid before:content-['']"
         : "text-text-muted hover:bg-surface-sunken hover:text-text"
@@ -92,7 +92,7 @@ export default function AppRail({ brandName }: { brandName: string }) {
           aria-expanded={moreOpen}
           onClick={() => setMoreOpen((v) => !v)}
           data-testid="nav-more"
-          className={`t6 flex w-full items-center justify-between px-4 py-2 transition-colors hover:text-text ${
+          className={`t6 flex min-h-10 w-full items-center justify-between px-4 py-2 transition-colors hover:text-text ${
             moreActive ? "text-text" : "text-text-muted"
           }`}
         >
@@ -153,7 +153,7 @@ export default function AppRail({ brandName }: { brandName: string }) {
                 type="button"
                 aria-label="Fechar navegação"
                 onClick={closeDrawer}
-                className="grid size-8 place-items-center rounded-sm text-text-muted hover:bg-surface-sunken"
+                className="grid size-10 place-items-center rounded-sm text-text-muted hover:bg-surface-sunken"
               >
                 <Icon name="x" size={16} />
               </button>
@@ -174,7 +174,7 @@ export function RailToggle() {
       aria-label="Menu de navegação"
       data-testid="nav-mobile"
       onClick={() => window.dispatchEvent(new Event("ah:rail-open"))}
-      className="grid size-9 shrink-0 place-items-center rounded-sm text-text-muted transition-colors hover:bg-surface-sunken hover:text-text lg:hidden"
+      className="grid size-10 shrink-0 place-items-center rounded-sm text-text-muted transition-colors hover:bg-surface-sunken hover:text-text lg:hidden"
     >
       <Icon name="menu" size={20} />
     </button>

@@ -495,7 +495,7 @@ export function Panel({
       // `panel` é o gancho do documento: dentro de `.doc` (globals.css §10) um
       // painel deixa de ser caixa e vira seção com régua — o documento não tem
       // cartões, tem seções.
-      className={cx("panel rounded-md border border-rule bg-surface", className)}
+      className={cx("panel min-w-0 rounded-md border border-rule bg-surface", className)}
       {...rest}
     >
       {(title || actions) && (
@@ -504,7 +504,7 @@ export function Panel({
           {actions && <div className="flex shrink-0 items-center gap-1">{actions}</div>}
         </div>
       )}
-      <div className={flush ? "" : "p-[var(--pad-x)]"}>{children}</div>
+      <div className={cx("min-w-0", flush ? "" : "p-[var(--pad-x)]")}>{children}</div>
     </div>
   );
 }

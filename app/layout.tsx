@@ -163,7 +163,7 @@ function AppShell({
                         ? `/professionals/${session.refId}`
                         : "/"
                   }
-                  className={`flex shrink-0 items-center gap-2 ${isAgency ? "lg:hidden" : ""}`}
+                  className={`flex min-h-10 shrink-0 items-center gap-2 rounded-sm px-1 ${isAgency ? "lg:hidden" : ""}`}
                 >
                   {brand.logoUrl ? (
                     // eslint-disable-next-line @next/next/no-img-element
@@ -195,7 +195,7 @@ function AppShell({
                       href="/settings"
                       title="Configurações"
                       aria-label="Configurações"
-                      className="grid size-9 place-items-center rounded-sm text-text-muted transition-colors hover:bg-surface-sunken hover:text-text"
+                      className="grid size-10 place-items-center rounded-sm text-text-muted transition-colors hover:bg-surface-sunken hover:text-text"
                     >
                       <Icon name="settings" size={20} />
                     </Link>
