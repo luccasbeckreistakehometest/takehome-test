@@ -50,30 +50,30 @@ export default async function AnalyticsPage({ searchParams }: Props) {
       <div className="flex flex-wrap items-end justify-between gap-3">
         <div>
           <p className="t6 text-text-muted">
-            <Link href="/admin" className="hover:text-text">Admin</Link> / Analytics
+            <Link href="/admin" className="inline-flex min-h-10 items-center hover:text-text">Admin</Link> / Analytics
           </p>
           <h1 className="d3">Funil e origens</h1>
           <p className="t3 measure-lede mt-2 text-text-muted">Sem cookie: um visitante é um hash que muda todo dia. Eventos crus ficam 90 dias; o resumo diário fica.</p>
         </div>
-        <a href={`/api/admin/analytics?format=csv&days=${days}`} className="rounded-md border border-edge bg-surface-sunken px-3 py-2 t3 hover:border-edge">
+        <a href={`/api/admin/analytics?format=csv&days=${days}`} className="t3 inline-flex min-h-10 items-center rounded-sm border border-edge bg-surface px-4 transition-colors hover:bg-surface-sunken">
           Baixar CSV
         </a>
       </div>
 
       <div className="flex flex-wrap gap-2 t3">
         {[7, 30, 90].map((d) => (
-          <Link key={d} href={qs({ days: d })} className={`rounded-xs border px-3 py-1 ${d === days ? "border-text bg-text text-canvas" : "border-edge"}`}>
+          <Link key={d} href={qs({ days: d })} className={`inline-flex min-h-10 items-center rounded-sm border px-3 ${d === days ? "border-brand-edge bg-brand-wash text-text" : "border-edge text-text-muted hover:text-text"}`}>
             {`${d} dias`}
           </Link>
         ))}
-        <span className="mx-1 w-px bg-edge" />
+        <span aria-hidden className="mx-1 my-1 w-px bg-rule" />
         {["", ...AUDIENCES].map((a) => (
-          <Link key={a || "all"} href={qs({ audience: a })} className={`rounded-xs border px-3 py-1 ${a === audience ? "border-text bg-text text-canvas" : "border-edge"}`}>
+          <Link key={a || "all"} href={qs({ audience: a })} className={`inline-flex min-h-10 items-center rounded-sm border px-3 ${a === audience ? "border-brand-edge bg-brand-wash text-text" : "border-edge text-text-muted hover:text-text"}`}>
             {AUDIENCE_LABEL[a]}
           </Link>
         ))}
         {source && (
-          <Link href={qs({ source: "" })} className="rounded-full border border-edge px-3 py-1">{`origem: ${source} ×`}</Link>
+          <Link href={qs({ source: "" })} className="inline-flex min-h-10 items-center rounded-sm border border-edge px-3">{`origem: ${source} ×`}</Link>
         )}
       </div>
 

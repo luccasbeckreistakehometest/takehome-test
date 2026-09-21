@@ -261,7 +261,7 @@ export default function AdminPage() {
               {data.agencies.map((a) => (
                 <tr key={a.id}>
                   <td className="py-2 pr-3">
-                    <button type="button" onClick={() => setAgency(a.id)} className="font-medium hover:text-text">
+                    <button type="button" onClick={() => setAgency(a.id)} className="inline-flex min-h-10 items-center font-medium underline-offset-4 hover:underline">
                       {a.name}
                     </button>
                     <span className="block font-mono t5 text-text-muted">/a/{a.slug}</span>
@@ -279,13 +279,13 @@ export default function AdminPage() {
                       <span className="mt-1 flex flex-wrap gap-2">
                         <button
                           type="button"
-                          className="text-text hover:underline"
+                          className="inline-flex min-h-10 items-center text-text hover:underline"
                           onClick={() => moderatePage(a.id, { pageIndexable: !a.pageIndexable })}
                         >
                           {a.pageIndexable ? "Tirar do Google" : "Liberar no Google"}
                         </button>
                         {a.pagePublished && (
-                          <button type="button" className="text-negative hover:underline" onClick={() => moderatePage(a.id, { unpublish: true })}>
+                          <button type="button" className="inline-flex min-h-10 items-center text-negative hover:underline" onClick={() => moderatePage(a.id, { unpublish: true })}>
                             Despublicar
                           </button>
                         )}
