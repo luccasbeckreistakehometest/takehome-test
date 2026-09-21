@@ -932,3 +932,122 @@ continua em aberto.
   telas reescritas, mas várias rotas devolvem `0`; a troca para `null` é
   trabalho de backend, fora do sistema de design.
 - **Leitor de tela e CLS/LCP.** Não medidos.
+
+---
+
+## 17. Segunda auditoria adversarial (21/09/2026)
+
+Um revisor adversarial percorreu a branch inteira com capturas e medições. Esta
+seção registra o que ele encontrou, o que foi corrigido e com que número — e as
+divergências que o sistema assume de propósito.
+
+Método: build de produção com `DATA_DIR` descartável, banco semeado (agência
+`Estúdio Norte`, marca `#1f6f5c`, 70 clientes, proposta/fatura/aprovação/
+relatório/página pública com token), 23 rotas × 2 larguras × 2 temas = 92
+capturas lidas; contraste WCAG de **todo** nó de texto, rolagem lateral do
+documento, contagem de elementos chapados na cor da marca, `[data-density]`,
+alvo de toque com a área transparente incluída e o que o FAB cobre.
+
+### 17.1 Bloqueadores
+
+| # | Defeito | Correção | Medida |
+|---|---|---|---|
+| B1 | `/admin` rolava **2,4×** de lado: o log de primeiros acessos juntava os eventos com `""` e virava um token de 3.416px | `join(" · ")` + `min-w-0 break-words` | rolagem lateral 0 em 1440 e 390; `mobile.spec.ts:43` verde |
+| B2 | `OnboardingModal` e `MarcaModeChoice` montavam scrim na mão: sem `role="dialog"`, sem `aria-modal`, `Esc` não fechava, 12 tabulações saíam do modal — e é a primeira tela de uma agência nova | Os dois passam pelo `<Dialog>` da §11.3 (foco preso + `Esc`), que só era usado na galeria; o `Dialog` ganhou `eyebrow` e `testId` | tours e onboarding verdes nos 4 papéis |
+| B3 | As cinco peças do cliente saíam emolduradas pela casca da Marqa: logo da plataforma, "Entrar" laranja (mais alto que "Aceitar proposta") e rodapé institucional | `lib/doc-routes.ts` (puro, 6 testes) + `lib/route-brand.ts` + carimbo `x-marqa-path` no porteiro + `AppShell` separado do documento | as cinco rotas renderizam 100% na marca da agência, sem casca |
+
+### 17.2 Altos
+
+- **Densidade (H1).** `compact` existia no CSS e no `<Density>` e `[data-density]`
+  contava **0** em todas as telas. Entra nas nove telas de ferramenta da §4.4.
+- **Primitivas (H2).** 24 de 41 exportações estavam sem uso enquanto markup cru
+  carregava as telas (`Table`: 1 uso contra 23 `<table>` à mão). Portadas:
+  `/finance`, `/insights` (carteira), a tabela de entregáveis do workspace, os
+  formulários de `/settings` e de Recebimentos. `Pagination`, `ActionBar`,
+  `ChipGroup`, `Field`, `FormGrid`, `InputAffix`, `EmptyState` e `Skeleton`
+  passam a ter uso real. **Aliases legados mantidos de propósito:** `Card` (=
+  `Panel`, 30 telas) e a variante `ghost` (= `secondary`, 79 chamadas) —
+  trocá-los é renomeação em massa sem ganho de desenho.
+- **Tabela de dinheiro (H3).** `/finance` alinhava seis colunas numéricas à
+  esquerda com largura automática; agora largura declarada, `table-layout:
+  fixed`, número à direita em figura tabular, cabeçalho alinhado igual à célula
+  e linha de total com régua `edge`.
+- **Um elemento expressivo (H4/§5.5).** `/settings` tinha 5 campos chapados na
+  marca, `/plans` 4, `/production` nenhum, a aprovação 4 e o workspace 2.
+  Formulário longo ganhou `<ActionBar>`; produção ganhou "Nova demanda"; o
+  "Entrar" da barra superior virou secundário. **Medido: no máximo 2 por tela, e
+  o segundo é sempre o monograma de 28px da agência** — a marca como *marca*
+  (§11.4 `BrandLockup`), não como ação. No desktop o trilho substitui o
+  monograma e a conta fecha em 1.
+- **Desabilitado (H5).** Media 2,97:1 nos dois temas (`text-faint` sobre
+  `surface-sunken`) e caía justamente no "Entrar" do login, no "Aceitar
+  proposta" e no formulário público. Passa a `text-muted` sobre
+  `surface-sunken` com régua: **4,54:1**. As seis ocorrências de
+  `disabled:opacity-*` foram removidas (opacidade global derruba o contraste).
+- **Texto esmaecido (H6).** `text-faint` carregava texto essencial de 11–14px em
+  23 rotas. Esse texto foi para `text-muted` (4,54–5,60:1, AA). E a rampa ganhou
+  **`--n-450` (`#7f796e`)**: a §5.2 media `faint` e `edge` só contra a
+  `surface`, mas contra `surface-sunken` — onde placeholder e borda de input de
+  fato vivem — davam 2,97:1, abaixo do piso de 3:1 do próprio doc. `n-450` é o
+  único cinza acima de 3:1 nas **seis** superfícies do produto (3,50–4,51).
+- **`<select>` nativo no celular (H7).** As duas fileiras de abas do workspace
+  viravam dois `<select>` crus ao lado de controles desenhados. Agora é a mesma
+  navegação em toda largura, rolando na horizontal.
+- **FAB (H8).** O balão do assistente ficava parado no canto e cobria uma linha
+  de dado a 1440 e o "Enviar agora" e um link do rodapé a 390. Virou utilitário
+  da barra superior. O botão "Salvar como PDF" das peças tinha o mesmo defeito e
+  saiu do `fixed`.
+- **Planos (H9).** Quatro cartões iguais com preço em Fraunces (figura
+  proporcional) e quatro primários. Vira a `.plan-col` editorial que já existia
+  na landing, preço e coins em Archivo tabular, um primário.
+- **Comprimento (H10).** `/` media 4.403px de ~70 linhas iguais e `/insights`
+  8.016px listando os mesmos ~70 clientes **duas vezes** com 70 selos
+  "Saudável". Hoje mostra 8 e diz quantos faltam; Insights vira `<Table>` +
+  `<Pagination>` (10/página) e o Pulso abre com a distribuição, listando só quem
+  pede ação. **Medido: 1.725px e 1.730px.**
+
+### 17.3 Médios
+
+Feitos: M1 (29 cabeçalhos de tabela e 3 selos de `t6` para `t5` em caixa de
+sentença — caixa alta volta a ser exclusividade do `t6`), M2 (largura que
+comunica: "Dia do vencimento" de 337px para 88px, "Margem-alvo" idem, instrução
+fora do placeholder), M3 e M9 (`.scroll-x`/`.scroll-y`: sombra de afordância só
+do lado em que ainda há conteúdo, em CSS puro — entra nas fileiras de aba, no
+kanban, na tabela comparativa da landing e em 8 listas de altura travada), M4
+(caixa e rádio nativos de 13px com o hex cru da marca → 18px com
+`--brand-solid`; o rádio do modo de IA estava com `hidden`, fora da tabulação),
+M5 (a coluna vazia do kanban dizia "vazio"), M6 (esqueleto no lugar do spinner
+em `/finance`, `/production` e no painel do cliente), M7 (três travessões soltos
+no relatório, a dica do KPI que quebrava na linha do valor, e o rótulo de duas
+linhas que tirava as colunas da linha de base), M11 (98 alvos sub-40 em
+`/settings`, 89 em `/clients`; a chave PT/EN media 15×12).
+
+**Não feito:** M8 e M10 não existiam na lista recebida. O `<select>` nativo
+**estilizado** (`<Select>` da §11.2, com `appearance:none`, altura, borda e seta
+do sistema) continua sendo a escolha: uma listbox reescrita à mão perde o
+teclado do navegador, e a §11.2 proíbe o `<select>` **cru**, não o nativo
+vestido.
+
+### 17.4 Números finais (build de produção, banco semeado)
+
+| Medida | Antes | Depois |
+|---|---|---|
+| Rolagem lateral do documento | `/admin` 3.416px em 1440 | **0** em 46 combinações de tela × largura × tema |
+| Nós de texto abaixo de AA | 23 rotas | **0** |
+| `[data-density]` em tela | 0 | **compact nas 9 telas da §4.4** |
+| Campos chapados na marca | até 6 numa tela | **máx. 2** (o 2º é o monograma da agência) |
+| Alvos sub-40px | 98 (`/settings`), 89 (`/clients`), 81 (`/admin`) | **1, 0 e 1** |
+| FAB cobrindo conteúdo | toda tela do produto | **nenhuma** |
+| Altura da Hoje / Insights | 4.403 / 8.016px | **1.725 / 1.730px** |
+| Suíte Playwright | 88 passaram / 1 falhou | **89 passaram / 0 falharam** |
+
+### 17.5 Divergências assumidas
+
+- **O monograma da agência é campo de marca.** Numa tela com botão primário isso
+  dá dois campos. É a marca como identidade (§11.4), não como ação — e abaixo de
+  1024px é o único lugar onde o whitelabel aparece.
+- **As peças (chip) do calendário ficam abaixo de 40px.** Um mês com 35 células
+  não sobrevive a 40px por peça; o "+" de cada dia e todos os controles de
+  cabeçalho têm o alvo completo.
+- **`--n-450` é um degrau a mais que a §5.1 não previa.** Preferível a rebaixar
+  `surface-sunken` para `n-50`, que apagaria o campo rebaixado contra o canvas.
